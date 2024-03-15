@@ -1,0 +1,8 @@
+package com.auth.dto.param;
+
+import lombok.Data;
+
+@Data
+public class UserTokenVerifyParam {
+    private String token;
+}

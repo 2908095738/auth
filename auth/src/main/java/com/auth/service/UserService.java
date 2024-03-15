@@ -1,0 +1,57 @@
+package com.auth.service;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.clinic.Result;
+import com.auth.entity.User;
+import com.auth.entity.param.UserParam;
+import com.auth.entity.UserVO;
+import com.clinic.exception.ReLoginException;
+
+/**
+* @author Lenovo
+* @description 针对表【user】的数据库操作Service
+* @createDate 2023-07-11 14:46:11
+*/
+public interface UserService extends IService<User> {
+
+    Result<Page<User>> search(UserParam param);
+
+    User search(String email);
+
+    /**
+     * 查询
+     * @param email 邮箱
+     * @return 用户信息
+     * @throws IllegalArgumentException 用户 ID 不存在
+     */
+    User searchElseThrow(String email) throws IllegalArgumentException;
+
+    /**
+     * 用户账号状态是否正常
+     * @param user 用户信息
+     * @return 账号状态正常
+     */
+    Boolean userStateIsNormal(User user);
+
+    /**
+     * 用户账号是否在有效期内（无有效期返回 true）
+     * @param user 用户信息
+     * @return 用户账号在有效期内（无有效期返回 true）
+     */
+    Boolean userIsValidity(User user);
+
+    /**
+     * 用户账号是否可用（状态验证/过期验证）
+     * @param user 用户信息
+     * @return 可用
+     */
+    Boolean userIsUsable(User user);
+
+    /**
+     * 获取登录用户
+     * @return 登录用户（未登录 or 登录信息校验失败 return null）
+     * @throws ReLoginException 用户未登录
+     */
+    UserVO loginUser() throws ReLoginException;
+}
