@@ -1,4 +1,4 @@
-package generator.entity;
+package com.bbs.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -9,10 +9,10 @@ import java.util.Date;
 
 /**
  * 点赞
- * @TableName thumb
+ * @TableName user_thumb
  */
-@TableName(value ="thumb")
-public class Thumb implements Serializable {
+@TableName(value ="user_thumb")
+public class UserThumb implements Serializable {
     /**
      * id
      */
@@ -161,7 +161,7 @@ public class Thumb implements Serializable {
         if (getClass() != that.getClass()) {
             return false;
         }
-        Thumb other = (Thumb) that;
+        UserThumb other = (UserThumb) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
             && (this.getTcId() == null ? other.getTcId() == null : this.getTcId().equals(other.getTcId()))
             && (this.getPostUserId() == null ? other.getPostUserId() == null : this.getPostUserId().equals(other.getPostUserId()))
