@@ -1,15 +1,15 @@
 package com.auth.app.login;
 
-import com.auth.enums.ResourceNames;
-import com.auth.service.ResourceService;
-import com.clinic.Result;
 import com.auth.app.register.RegisterUser;
 import com.auth.cache.UserCache;
 import com.auth.converter.UserConverter;
 import com.auth.entity.User;
+import com.auth.entity.UserVO;
+import com.auth.enums.ResourceNames;
+import com.auth.service.ResourceService;
 import com.auth.service.TokenService;
 import com.auth.service.UserService;
-import com.auth.entity.UserVO;
+import com.clinic.Result;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

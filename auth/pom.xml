@@ -19,7 +19,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.clinic</groupId>
+            <groupId>com.bbs</groupId>
             <artifactId>auth-sdk</artifactId>
             <version>1.0</version>
         </dependency>
@@ -45,7 +45,7 @@
             <version>1.4.6</version>
         </dependency>
         <dependency>
-            <groupId>com.clinic</groupId>
+            <groupId>com.bbs</groupId>
             <artifactId>common</artifactId>
             <version>1.0</version>
         </dependency>
