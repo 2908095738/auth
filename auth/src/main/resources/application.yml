@@ -7,8 +7,6 @@ spring:
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
   redis:
-#      host: 152.136.163.92
-#      port: 6379
       host: localhost
       port: 6379
 dubbo:
@@ -31,5 +29,25 @@ jwt:
   name: token
   token: 123456
   expireTime: 7
+apache:
+  zookeeper:
+    # 服务器连接地址，集群模式则使用逗号分隔如：ip1:host,ip2:host
+    connect-url: 127.0.0.1:2180
+    # 会话超时时间：单位ms
+    session-timeout: 10000
+    # 连接超时时间：单位ms
+    connection-timeout: 10000
+    # ACL权限控制，验证策略
+    scheme: auth
+    # 验证内容id
+    auth_id: admin:123456
+  # 重试策略
+  retry-policy:
+    # 初始化间隔时间
+    base-sleep-time: 1000
+    # 最大重试次数
+    max-retries: 5
+    # 最大重试间隔时间
+    max-sleep: 30000
 
 
