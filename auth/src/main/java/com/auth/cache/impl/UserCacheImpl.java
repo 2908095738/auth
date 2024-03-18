@@ -17,8 +17,7 @@ import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
-import static com.auth.enums.RedisKeys.USER;
-import static com.auth.enums.RedisKeys.USER_EMAIL_AND_ID_MAP;
+import static com.auth.enums.RedisKeys.*;
 import static com.auth.util.RedisUtil.Redisson.*;
 import static java.util.Objects.nonNull;
 import static java.util.concurrent.TimeUnit.DAYS;
@@ -61,7 +60,7 @@ public class UserCacheImpl implements UserCache {
         String uid = searchUidFromRedis(email);
 
 
-        if(isNotBlank(uid)) {
+        if(uidMapIsExist(uid)) {
             // 有 email，无用户信息
             return lockExec(lock, 500, 1000, MILLISECONDS, () ->
                     load(Long.valueOf(uid), 7, DAYS)
@@ -77,8 +76,28 @@ public class UserCacheImpl implements UserCache {
         }
     }
 
+    @Override
+    public User searchByOpenID(String openid) throws IllegalArgumentException {
+        RLock lock = redisson.getSpinLock(USER.LOCK.key(openid));
+        String uidStr = searchUidFromRedisByOpenID(openid);
+        if(uidMapIsExist(uidStr)) {
+            Long uid = Long.valueOf(uidStr);
+            return lockExec(lock, 500, 1000, MILLISECONDS, () -> load(uid, 7, DAYS));
+        } else {
+            return null;    //不存在 OpenID （如果存在账号，则绑定账户微信 or 注册账号）
+        }
+    }
+
+    private Boolean uidMapIsExist(String str) {
+        return isNotBlank(str);
+    }
+
     private String searchUidFromRedis(String email) {
         return redis.getOpt(USER_EMAIL_AND_ID_MAP.key(email)).get();
+    }
+
+    private String searchUidFromRedisByOpenID(String openid) {
+        return redis.getOpt(USER_OPEN_ID_AND_ID_MAP.key(openid)).get();
     }
 
     private void setUserAndEmailMapToRedis(User user) {
@@ -89,7 +108,7 @@ public class UserCacheImpl implements UserCache {
     }
 
     private User searchUserFromDBElseThrow(String email) {
-        return service.searchElseThrow(email);
+        return service.searchByEmailElseThrow(email);
     }
 
     @Override
@@ -114,9 +133,13 @@ public class UserCacheImpl implements UserCache {
      * @throws IllegalArgumentException 对应 ID 用户不存在！
      */
     private User load(Long uid, int timeout, TimeUnit unit) throws IllegalArgumentException {
-        User user = service.getOptById(uid).orElseThrow(() -> new IllegalArgumentException("对应 ID 用户不存在！"));
+        User user = searchByUID(uid);
         redis.set(USER.key(uid), user, timeout, unit);
         return user;
+    }
+
+    private User searchByUID(Long uid) throws IllegalArgumentException {
+        return service.getOptById(uid).orElseThrow(() -> new IllegalArgumentException("对应 ID 用户不存在！"));
     }
 
     private void load(User user, int timeout, TimeUnit unit) {

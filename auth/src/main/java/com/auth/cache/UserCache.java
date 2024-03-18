@@ -23,6 +23,15 @@ public interface UserCache {
      */
     User search(String email) throws InterruptedException, IllegalArgumentException;
 
+    /**
+     * 微信小程序用户查询
+     * @param openid 微信用户唯一标识
+     * @return User
+     * @throws InterruptedException 中断【等待其他线程加载用户数据】行为
+     * @throws IllegalArgumentException 对应用户不存在
+     */
+    User searchByOpenID(String openid) throws InterruptedException, IllegalArgumentException;
+
 
     /**
      * 通过 ID 更新

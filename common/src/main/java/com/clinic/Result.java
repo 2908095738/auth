@@ -40,6 +40,10 @@ public class Result<T> {
         return success(codeEnum.getCode(), data, codeEnum.getMsg());
     }
 
+    public static <T> Result<T> success(Integer code, String msg) {
+        return new Result<>(code, null, msg);
+    }
+
     public static <T> Result<T> success(Integer code, T data, String msg) {
         return new Result<>(code, data, msg);
     }

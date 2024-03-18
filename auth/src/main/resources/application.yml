@@ -2,16 +2,15 @@ server:
   port: 9999
 spring:
   datasource:
-    url: jdbc:mysql://152.136.163.92:3306/pan_back?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://192.168.1.135:3306/pan_back?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: AvQ5rJPdFh8e
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
   redis:
 #      host: 152.136.163.92
 #      port: 6379
-      host: bj-crs-j1ozavqn.sql.tencentcdb.com
-      port: 21800
-      password: fsdef12vfsd
+      host: localhost
+      port: 6379
 dubbo:
     application:
       name: auth

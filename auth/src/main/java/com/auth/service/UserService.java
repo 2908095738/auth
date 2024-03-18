@@ -25,7 +25,7 @@ public interface UserService extends IService<User> {
      * @return 用户信息
      * @throws IllegalArgumentException 用户 ID 不存在
      */
-    User searchElseThrow(String email) throws IllegalArgumentException;
+    User searchByEmailElseThrow(String email) throws IllegalArgumentException;
 
     /**
      * 用户账号状态是否正常
