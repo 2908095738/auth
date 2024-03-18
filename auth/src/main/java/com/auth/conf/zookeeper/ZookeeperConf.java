@@ -3,6 +3,7 @@ package com.auth.conf.zookeeper;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -18,18 +19,23 @@ public class ZookeeperConf {
     private static final long serialVersionUID = -9025878246972668136L;
 
     // 服务器连接地址，集群模式则使用逗号分隔如：ip1:host,ip2:host
+    @Value("${apache.zookeeper.connect-url}")
     private String connectUrl;
 
     // 会话超时时间：单位ms
+    @Value("${apache.zookeeper.session-timeout}")
     private Integer sessionTimeout;
 
     // 连接超时时间：单位ms
+    @Value("${apache.zookeeper.connection-timeout}")
     private Integer connectionTimeout;
 
     // ACL权限控制，验证策略
+    @Value("${apache.zookeeper.scheme}")
     private String scheme;
 
     // 验证内容id
+    @Value("${apache.zookeeper.auth_id}")
     private String authId;
 
     @Resource
