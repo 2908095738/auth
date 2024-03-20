@@ -2,7 +2,7 @@ package com.auth.service;
 
 import com.auth.entity.User;
 import com.auth.entity.UserVO;
-import com.clinic.exception.ReLoginException;
+import com.bbs.exception.ReLoginException;
 
 import javax.servlet.http.HttpServletRequest;
 

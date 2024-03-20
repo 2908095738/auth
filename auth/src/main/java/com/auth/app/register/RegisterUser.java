@@ -5,14 +5,14 @@ import cn.hutool.db.DbRuntimeException;
 import com.auth.enums.ResourceNames;
 import com.auth.service.ResourceService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.clinic.Result;
+import com.bbs.Result;
 import com.auth.converter.UserConverter;
 import com.auth.dao.UserDao;
 import com.auth.entity.User;
 import com.auth.entity.UserGroup;
 import com.auth.mapper.UserMapper;
 import com.auth.service.UserGroupService;
-import com.clinic.enums.UserStateEnum;
+import com.bbs.enums.UserStateEnum;
 import lombok.Data;
 import net.sf.jsqlparser.util.validation.metadata.DatabaseException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,9 +31,9 @@ import javax.validation.constraints.NotNull;
 
 import java.util.Random;
 
-import static com.clinic.Result.failed;
-import static com.clinic.Result.success;
-import static com.clinic.enums.CodeEnum.FAILED_USER_INFO_DUPLICATION;
+import static com.bbs.Result.failed;
+import static com.bbs.Result.success;
+import static com.bbs.enums.CodeEnum.FAILED_USER_INFO_DUPLICATION;
 
 @RestController
 @RequestMapping

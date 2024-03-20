@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.auth.entity.RoleResource;
 import com.auth.service.RoleResourceService;
 import com.auth.mapper.RoleResourceMapper;
-import com.clinic.Result;
+import com.bbs.Result;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;

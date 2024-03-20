@@ -2,7 +2,7 @@ package com.auth.app.verify;
 
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
-import com.clinic.Result;
+import com.bbs.Result;
 import com.auth.cache.UserCache;
 import com.auth.converter.UserConverter;
 import com.auth.entity.User;
@@ -24,9 +24,9 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import java.util.Date;
 
-import static com.clinic.Result.success;
-import static com.clinic.Result.successNull;
-import static com.clinic.enums.CodeEnum.SUCCESS_USER_LOGIN;
+import static com.bbs.Result.success;
+import static com.bbs.Result.successNull;
+import static com.bbs.enums.CodeEnum.SUCCESS_USER_LOGIN;
 
 @Slf4j
 @RestController

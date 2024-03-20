@@ -1,8 +1,8 @@
 package com.auth.conf;
 
-import com.clinic.Result;
-import com.clinic.exception.ReLoginException;
-import com.clinic.exception.BusinessException;
+import com.bbs.Result;
+import com.bbs.exception.ReLoginException;
+import com.bbs.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;

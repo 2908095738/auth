@@ -5,7 +5,7 @@ import com.auth.controller.RoleController;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.auth.entity.Role;
-import com.clinic.Result;
+import com.bbs.Result;
 
 /**
  *

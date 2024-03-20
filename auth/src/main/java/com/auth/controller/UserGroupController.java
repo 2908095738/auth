@@ -1,6 +1,6 @@
 package com.auth.controller;
 
-import com.clinic.Result;
+import com.bbs.Result;
 import com.auth.entity.UserGroup;
 import com.auth.service.UserGroupService;
 import org.springframework.web.bind.annotation.DeleteMapping;

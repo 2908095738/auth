@@ -1,4 +1,4 @@
-package com.clinic.util;
+package com.bbs.util;
 
 public class PageUtil {
 

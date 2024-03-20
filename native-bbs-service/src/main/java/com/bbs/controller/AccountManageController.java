@@ -1,57 +1,87 @@
 package com.bbs.controller;
 
+import com.bbs.Result;
+import com.bbs.dto.GetUserAccountDto;
+import com.bbs.dto.param.UpdateAccountParam;
+import com.bbs.service.NewsService;
+import com.bbs.service.UserAccountService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.Objects;
 
 /**
  *用户账号管理
  */
 @RestController
-@RequestMapping("/account/manage")
+@RequestMapping("/account")
 public class AccountManageController {
+
+
+    private UserAccountService service;
+
+    private NewsService newsService;
+
+
+
+
     /**
      * 查看用户账号信息+发布文章列表
      * 头像、昵称、性别、年龄；点赞数、收藏数、积分数、关注数、粉丝数、是否认证
-     * 文章1：头像、昵称、文章标题、内容概要、评论数、收藏数、点赞数
+     * 文章1：文章标题、内容概要、html、评论数、收藏数、点赞数、图片、视频、评论详情
      */
-
-
-    /**
-     * 进行实名认证
-     */
-
-
-    /**
-     * 进行企业认证
-     */
-
-
-    /**
-     * 查看认证信息
-     */
-
-
-    /**
-     * 查看用户设置
-     * 账号信息、字体大小、黑名单
-     */
-
+    @GetMapping()
+    public Result<GetUserAccountDto> getAccountByUserId(){
+//TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
+        Long userId = 1L;
+        //获取用户账号信息
+        GetUserAccountDto result = service.getByUserId(userId);
+        if(Objects.nonNull(result)){
+            result.setAge(18);//TODO currentUser
+            //获取发布文章列表
+            List<GetUserAccountDto.GetUserNewsDto> newsResult = newsService.getListByUserId(userId);
+            result.setNewsResult(newsResult);
+        }
+        return Result.success(result);
+    }
 
     /**
      * 修改用户设置
      * 账号信息、字体大小、黑名单
      */
+    @PostMapping()
+    public Result updateAccountByUserId(@RequestBody UpdateAccountParam param){
+        //TODO 修改用户信息 authService.XXX(param)
+
+        //修改账户信息
+        service.updateAccountByUserId(param);
+        return Result.success();
+    }
+
 
     /**
      * 粉丝账户列表
      */
 
+
     /**
      * 关注账户列表
      */
+
 
     /**
      * 收藏文章列表
      */
 
+
+    @Autowired
+    public AccountManageController(UserAccountService service, NewsService newsService) {
+        this.service = service;
+        this.newsService = newsService;
+    }
 }

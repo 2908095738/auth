@@ -2,7 +2,7 @@ package com.auth.cache;
 
 import cn.hutool.core.lang.tree.Tree;
 import com.auth.entity.Resource;
-import com.clinic.Result;
+import com.bbs.Result;
 
 import java.util.List;
 import java.util.Map;

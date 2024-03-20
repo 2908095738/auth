@@ -1,16 +1,15 @@
 package com.auth.app.user.admin;
 
-import cn.hutool.core.lang.Opt;
 import com.auth.entity.UserGroup;
 import com.auth.service.UserGroupService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.clinic.Result;
+import com.bbs.Result;
 import com.auth.app.register.RegisterUser;
 import com.auth.cache.UserCache;
 import com.auth.entity.User;
 import com.auth.mapper.UserMapper;
 import com.auth.service.PermissionService;
-import com.clinic.exception.BusinessException;
+import com.bbs.exception.BusinessException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,8 +25,8 @@ import javax.validation.constraints.NotNull;
 
 import java.util.Date;
 
-import static com.clinic.Result.failed;
-import static com.clinic.Result.success;
+import static com.bbs.Result.failed;
+import static com.bbs.Result.success;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;

@@ -2,10 +2,10 @@ package com.auth.controller;
 
 import com.auth.service.RoleResourceService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.clinic.Result;
+import com.bbs.Result;
 import com.auth.entity.Role;
 import com.auth.service.RoleService;
-import com.clinic.entity.vo.BaseParam;
+import com.bbs.entity.vo.BaseParam;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

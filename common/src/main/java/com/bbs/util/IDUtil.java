@@ -1,4 +1,4 @@
-package com.clinic.util;
+package com.bbs.util;
 
 import cn.hutool.core.lang.Snowflake;
 import cn.hutool.core.util.IdUtil;

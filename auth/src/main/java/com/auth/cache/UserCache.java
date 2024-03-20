@@ -1,7 +1,7 @@
 package com.auth.cache;
 
 import com.auth.entity.User;
-import com.clinic.exception.BusinessException;
+import com.bbs.exception.BusinessException;
 
 public interface UserCache {
 

@@ -1,12 +1,12 @@
 package com.bbs.mapper;
 
 import com.bbs.entity.UserAccount;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 
 /**
  * @Entity com.bbs.entity.UserAccount
  */
-public interface UserAccountMapper extends BaseMapper<UserAccount> {
+public interface UserAccountMapper extends MPJBaseMapper<UserAccount> {
 
 }
 

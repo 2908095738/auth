@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.auth.entity.Role;
 import com.auth.mapper.RoleMapper;
 import com.auth.service.RoleService;
-import com.clinic.Result;
+import com.bbs.Result;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.stereotype.Service;
 

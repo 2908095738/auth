@@ -15,7 +15,7 @@ import com.auth.enums.ResourceTypeEnum;
 import com.auth.mapper.ResourceMapper;
 import com.auth.service.*;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.clinic.Result;
+import com.bbs.Result;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Lazy;

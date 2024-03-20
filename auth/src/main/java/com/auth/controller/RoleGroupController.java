@@ -1,7 +1,7 @@
 package com.auth.controller;
 
 import com.auth.dto.RoleGroupVo;
-import com.clinic.Result;
+import com.bbs.Result;
 import com.auth.appService.AppRoleGroupService;
 import com.auth.entity.RoleGroup;
 import org.springframework.web.bind.annotation.DeleteMapping;

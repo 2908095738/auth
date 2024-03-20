@@ -1,8 +1,8 @@
-package com.clinic.exception;
+package com.bbs.exception;
 
-import com.clinic.enums.CodeEnum;
+import com.bbs.enums.CodeEnum;
 
-import static com.clinic.enums.CodeEnum.*;
+import static com.bbs.enums.CodeEnum.*;
 
 public class ReLoginException extends BusinessException {
 

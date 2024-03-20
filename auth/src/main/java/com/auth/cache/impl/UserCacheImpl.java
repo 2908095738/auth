@@ -5,7 +5,7 @@ import com.auth.cache.UserCache;
 import com.auth.entity.User;
 import com.auth.service.UserService;
 import com.auth.util.RedisUtil;
-import com.clinic.exception.BusinessException;
+import com.bbs.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;

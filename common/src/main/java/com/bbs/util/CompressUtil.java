@@ -1,4 +1,4 @@
-package com.clinic.util;
+package com.bbs.util;
 
 import com.github.luben.zstd.Zstd;
 import lombok.extern.slf4j.Slf4j;

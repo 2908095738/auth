@@ -6,7 +6,7 @@ import com.auth.entity.User;
 import com.auth.entity.param.UserParam;
 import com.auth.service.UserService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.clinic.Result;
+import com.bbs.Result;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

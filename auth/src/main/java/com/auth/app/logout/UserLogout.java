@@ -1,6 +1,6 @@
 package com.auth.app.logout;
 
-import com.clinic.Result;
+import com.bbs.Result;
 import com.auth.service.TokenService;
 import com.auth.entity.UserVO;
 import lombok.extern.slf4j.Slf4j;

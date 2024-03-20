@@ -9,7 +9,7 @@ import com.auth.entity.Resource;
 import com.auth.enums.ResourceTypeEnum;
 import com.auth.service.ResourceService;
 import com.auth.util.RedisUtil;
-import com.clinic.Result;
+import com.bbs.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.ZSetOperations;

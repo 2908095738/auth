@@ -1,4 +1,4 @@
-package com.clinic.enums;
+package com.bbs.enums;
 
 import cn.hutool.core.util.EnumUtil;
 import lombok.AllArgsConstructor;
@@ -6,7 +6,6 @@ import lombok.Getter;
 
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Getter
 @AllArgsConstructor

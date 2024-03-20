@@ -1,12 +1,12 @@
 package com.bbs.mapper;
 
 import com.bbs.entity.News;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 
 /**
  * @Entity com.bbs.entity.News
  */
-public interface NewsMapper extends BaseMapper<News> {
+public interface NewsMapper extends MPJBaseMapper<News> {
 
 }
 

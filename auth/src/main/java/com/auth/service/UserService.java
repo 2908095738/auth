@@ -2,11 +2,11 @@ package com.auth.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.clinic.Result;
+import com.bbs.Result;
 import com.auth.entity.User;
 import com.auth.entity.param.UserParam;
 import com.auth.entity.UserVO;
-import com.clinic.exception.ReLoginException;
+import com.bbs.exception.ReLoginException;
 
 /**
 * @author Lenovo

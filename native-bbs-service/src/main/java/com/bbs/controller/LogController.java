@@ -4,15 +4,15 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.entity.OperationLog;
 import com.bbs.service.OperationLogService;
 import com.bbs.util.ThreadLocalUtil;
-import com.clinic.Result;
-import com.clinic.entity.vo.BaseParam;
+import com.bbs.Result;
+import com.bbs.entity.vo.BaseParam;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
-import static com.clinic.Result.success;
+import static com.bbs.Result.success;
 import static java.util.Objects.nonNull;
 
 /**
