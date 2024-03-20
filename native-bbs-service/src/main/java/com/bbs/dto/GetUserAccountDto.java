@@ -3,11 +3,10 @@ package com.bbs.dto;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.Data;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 @Data
 public class GetUserAccountDto {
@@ -122,7 +121,7 @@ public class GetUserAccountDto {
      * 文章列表
      */
     @TableField(exist = false)
-    private List<GetUserNewsDto> newsResult;
+    private Page<GetUserNewsDto> newsResult;
 
     /**
      * 文章列表实体
@@ -149,24 +148,6 @@ public class GetUserAccountDto {
         private String summary;
 
         /**
-         * 全部内容
-         */
-        @TableField(value = "content")
-        private String content;
-
-        /**
-         * 图片信息集合
-         */
-        @TableField(exist = false)
-        private List<ImageInfo> imageInfoList = new ArrayList<>();
-
-        /**
-         * 媒体文件信息集合
-         */
-        @TableField(exist = false)
-        private List<MediaInfo> mediaInfoList = new ArrayList<>();
-
-        /**
          * 标签id
          */
         @TableField(value = "tag_id")
@@ -183,12 +164,6 @@ public class GetUserAccountDto {
          */
         @TableField(value = "comment_count")
         private Integer commentCount;
-
-        /**
-         * 最后回复时间
-         */
-        @TableField(value = "last_reply_time")
-        private Date lastReplyTime;
 
         /**
          * 点赞数
@@ -225,64 +200,6 @@ public class GetUserAccountDto {
          */
         @TableField(value = "essence")
         private Integer essence;
-
-        /**
-         * 评论列表
-         */
-        @TableField(exist = false)
-        private List<CommentByNewIdDto> commentByNewIdDtoList;
-
-        /**
-         * 评论列表实体
-         */
-        @Data
-        public class CommentByNewIdDto{
-
-            /**
-             *
-             */
-            @TableId(value = "id", type = IdType.AUTO)
-            private Long id;
-
-            /**
-             * 点赞数
-             */
-            @TableField(value = "like_count")
-            private Long likeCount;
-
-            /**
-             * 评论内容
-             */
-            @TableField(value = "content")
-            private String content;
-
-            /**
-             * 话题Id
-             */
-            @TableField(value = "new_id")
-            private Long newId;
-
-            /**
-             * IP
-             */
-            @TableField(value = "ip")
-            private String ip;
-
-            /**
-             * 评论人id
-             */
-            @TableField(value = "create_id")
-            private Long createId;
-
-            /**
-             * 创建时间
-             */
-            @TableField(value = "create_time")
-            private Date createTime;
-
-
-
-        }
 
     }
 

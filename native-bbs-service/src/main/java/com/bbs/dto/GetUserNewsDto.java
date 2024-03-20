@@ -1,38 +1,27 @@
-package com.bbs.entity;
+package com.bbs.dto;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
-import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
-
-/**
- * 文章内容
- * @TableName news
- */
-@TableName(value ="news")
+import java.util.List;
 @Data
-public class News implements Serializable {
+public class GetUserNewsDto {
+
     /**
      * 主键
      */
-    @TableId(value = "new_id", type = IdType.AUTO)
-    private Long newId;
+    @TableId(value = "news_id", type = IdType.AUTO)
+    private Long newsId;
 
     /**
      * 标题
      */
     @TableField(value = "title")
     private String title;
-
-    /**
-     * 用户名
-     */
-    @TableField(value = "user_name")
-    private String userName;
 
     /**
      * 内容摘要
@@ -47,16 +36,16 @@ public class News implements Serializable {
     private String content;
 
     /**
-     * 图片
+     * 图片信息集合
      */
-    @TableField(value = "imageurl")
-    private String imageurl;
+    @TableField(exist = false)
+    private List<ImageInfo> imageInfoList = new ArrayList<>();
 
     /**
-     * 视频数
+     * 媒体文件信息集合
      */
-    @TableField(value = "view_total")
-    private Long viewTotal;
+    @TableField(exist = false)
+    private List<MediaInfo> mediaInfoList = new ArrayList<>();
 
     /**
      * 标签id
@@ -89,12 +78,6 @@ public class News implements Serializable {
     private Integer likeCount;
 
     /**
-     * 状态 10.待审核 20.已发布 110.待审核删除 120.已发布删除
-     */
-    @TableField(value = "status")
-    private Integer status;
-
-    /**
      * 创建id
      */
     @TableField(value = "create_id")
@@ -105,12 +88,6 @@ public class News implements Serializable {
      */
     @TableField(value = "create_time")
     private Date createTime;
-
-    /**
-     * 修改id
-     */
-    @TableField(value = "update_id")
-    private Long updateId;
 
     /**
      * 修改时间
@@ -131,11 +108,59 @@ public class News implements Serializable {
     private Integer essence;
 
     /**
-     * 权重 =P表示热度因子(评论数+点赞数+浏览数)；T表示距离发帖的时间（单位为小时）；G表示"重力因子"（gravityth power），即将帖子排名往下拉的力量，默认值为1.8;  权重小于0时表示强制下沉，不再在热门榜上显示;  超出时间限制的热门话题权重在重新计算时设置为0        KaTeX公式表示：Score = \dfrac{P-1}{(T+2)^G}
+     * 评论列表
      */
-    @TableField(value = "weight")
-    private Double weight;
-
     @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
+    private List<GetUserNewsDto.CommentByNewIdDto> commentByNewIdDtoList;
+
+    /**
+     * 评论列表实体
+     */
+    @Data
+    public class CommentByNewIdDto{
+
+        /**
+         *
+         */
+        @TableId(value = "id", type = IdType.AUTO)
+        private Long id;
+
+        /**
+         * 点赞数
+         */
+        @TableField(value = "like_count")
+        private Long likeCount;
+
+        /**
+         * 评论内容
+         */
+        @TableField(value = "content")
+        private String content;
+
+        /**
+         * 话题Id
+         */
+        @TableField(value = "new_id")
+        private Long newId;
+
+        /**
+         * IP
+         */
+        @TableField(value = "ip")
+        private String ip;
+
+        /**
+         * 评论人id
+         */
+        @TableField(value = "create_id")
+        private Long createId;
+
+        /**
+         * 创建时间
+         */
+        @TableField(value = "create_time")
+        private Date createTime;
+
+    }
+
 }
