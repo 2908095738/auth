@@ -23,18 +23,6 @@ public class Comment implements Serializable {
     private Long id;
 
     /**
-     * 父类id
-     */
-    @TableField(value = "parent_id")
-    private Long parentId;
-
-    /**
-     * 父类类型
-     */
-    @TableField(value = "type")
-    private Integer type;
-
-    /**
      * 点赞数
      */
     @TableField(value = "like_count")
