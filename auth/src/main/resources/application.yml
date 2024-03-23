@@ -36,3 +36,13 @@ apache:
     scheme: auth
     # 验证内容id
     auth_id: admin:123456
+  # 重试策略
+  retry-policy:
+    # 初始化间隔时间
+    base-sleep-time: 1000
+    # 最大重试次数
+    max-retries: 5
+    # 最大重试间隔时间
+    max-sleep: 30000
+
+
