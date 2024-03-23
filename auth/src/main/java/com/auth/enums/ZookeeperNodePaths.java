@@ -1,0 +1,70 @@
+package com.auth.enums;
+
+/**
+ * Zookeeper 节点路径
+ */
+public class ZookeeperNodePaths {
+
+    private ZookeeperNodePaths() {}
+
+    public static class CacheConf {
+
+        public static class User {
+            /**
+             * 用户信息缓存过期时间：随机上限
+             */
+            public static final String TIMEOUT_MAX = "/conf/cache/user/timeout/max";
+
+            /**
+             * 用户信息缓存过期时间：随机下限
+             */
+            public static final String TIMEOUT_MIN = "/conf/cache/user/timeout/min";
+
+            /**
+             * 用户信息缓存布隆过滤器配置：过滤器 redis key
+             */
+            public static final String FILTER_KEY = "/conf/cache/user/filter/key";
+
+            /**
+             * 用户信息缓存布隆过滤器配置：过滤器容量
+             */
+            public static final String FILTER_EXPECTED_INSERTIONS = "/conf/cache/user/filter/expectedInsertions";
+
+            /**
+             * 用户信息缓存布隆过滤器配置：过滤器期望误差
+             */
+            public static final String FILTER_FALSE_PROBABILITY = "/conf/cache/user/filter/falseProbability";
+
+            /**
+             * UID 与其他用户【类唯一】字段映射：过期时间随机上限
+             */
+            public static final String UID_MAP_TIMEOUT_MAX = "/conf/cache/user/map/timeout/max";
+
+            /**
+             * UID 与其他用户【类唯一】字段映射：过期时间随机下限
+             */
+            public static final String UID_MAP_TIMEOUT_MIN = "/conf/cache/user/map/timeout/min";
+        }
+    }
+
+    public static class LockConf {
+        public static class UserCache {
+            public static final String WAIT = "/conf/lock/cache/user/wait";
+            public static final String LEASE = "/conf/lock/cache/user/lease";
+        }
+    }
+
+    /**
+     * 微信小程序
+     */
+    public static class VXProgram {
+        /**
+         * 应用 ID
+         */
+        public static final String APP_ID = "/vx/appid";
+        /**
+         * 密钥
+         */
+        public static final String SECRET = "/vx/secret";
+    }
+}

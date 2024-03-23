@@ -114,7 +114,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public User searchElseThrow(String email) throws IllegalArgumentException {
+    public User searchByEmailElseThrow(String email) throws IllegalArgumentException {
         return Opt.ofNullable(search(email)).orElseThrow(() -> new IllegalArgumentException("对应邮箱用户不存在！"));
     }
 }

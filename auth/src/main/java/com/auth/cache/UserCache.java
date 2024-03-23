@@ -1,9 +1,17 @@
 package com.auth.cache;
 
 import com.auth.entity.User;
-import com.bbs.exception.BusinessException;
+import com.auth.entity.UserBind;
+import com.auth.entity.VXUser;
+import com.clinic.exception.BusinessException;
 
 public interface UserCache {
+
+    void setUser(User user);
+
+    void setUserAndOpenIDMap(UserBind userBind);
+
+    void setUserAndPhoneMap(User user);
 
     /**
      * 查询用户
@@ -23,10 +31,29 @@ public interface UserCache {
      */
     User search(String email) throws InterruptedException, IllegalArgumentException;
 
+    /**
+     * 微信小程序用户查询
+     * @param openid 微信用户唯一标识
+     * @return User
+     * @throws InterruptedException 中断【等待其他线程加载用户数据】行为
+     * @throws IllegalArgumentException 对应用户不存在
+     */
+    VXUser searchByOpenID(String openid) throws InterruptedException, IllegalArgumentException;
+
 
     /**
      * 通过 ID 更新
      * @param user User
      */
     void updateByID(User user) throws InterruptedException, BusinessException;
+
+    /**
+     * 手机号用户查询
+     * @param phone 手机号
+     * @return User
+     * @throws IllegalArgumentException 对应用户不存在
+     */
+    User searchByPhone(Integer phone) throws InterruptedException, IllegalArgumentException;
+
+    User searchByPhone(String phone) throws InterruptedException, IllegalArgumentException;
 }

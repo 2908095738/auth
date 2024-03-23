@@ -4,6 +4,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.jwt.JWTUtil;
 import com.auth.entity.User;
+import com.auth.entity.VXUser;
 import com.auth.service.TokenService;
 import com.bbs.enums.CodeEnum;
 import com.bbs.exception.ReLoginException;
@@ -17,9 +18,12 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static cn.hutool.core.bean.BeanUtil.toBean;
+import static com.auth.api.vx.VXLoginAuthAPI.OPEN_ID_KEY;
+import static com.auth.api.vx.VXLoginAuthAPI.SESSION_KEY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Slf4j
@@ -49,13 +53,25 @@ public class TokenServiceImpl implements TokenService {
      */
     @Override
     public String createToken(User user) {
-        HashMap<String, Object> map = new HashMap<>();
+        return JWTUtil.createToken(createJWTTokeParam(user), key.getBytes());
+    }
+
+    private Map<String, Object> createJWTTokeParam(User user) {
+        Map<String, Object> map = new HashMap<>();
         Date date = DateUtil.parse(DateUtil.now());
         Date failureTokenTime = DateUtil.offsetDay(date, + expireTime);
         map.put("id", user.getId());
         map.put("name",user.getName());
         map.put("failureTokenTime",failureTokenTime.getTime());
-        return JWTUtil.createToken  (map, key.getBytes());
+        return map;
+    }
+
+    @Override
+    public String createToken(VXUser user) {
+        Map<String, Object> param = createJWTTokeParam(user);
+        param.put(OPEN_ID_KEY, user.getOpenid());
+        param.put(SESSION_KEY, user.getSession_key());
+        return JWTUtil.createToken(param, key.getBytes());
     }
 
     @Override

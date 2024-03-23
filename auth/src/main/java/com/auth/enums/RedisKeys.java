@@ -16,7 +16,10 @@ import java.util.Map;
 public enum RedisKeys {
 
     USER("user", "用户缓存"),
-    USER_EMAIL_AND_ID_MAP("user:email", "用户邮箱映射（邮箱-ID）"),
+    USER_EMAIL_AND_ID_MAP("user:email", "用户ID与邮箱映射（邮箱-ID）"),
+    USER_OPEN_ID_AND_ID_MAP("user:vx", "用户ID与微信openId映射（openId-ID）"),
+
+    USER_PHONE_AND_ID_MAP("user:phone", "用户ID与手机号映射（phone-ID）"),
 
     RESOURCE("resource", "资源"),
     RESOURCE_PAGE_TREE("resource:page:tree", "页面资源 Tree"),
@@ -90,6 +93,11 @@ public enum RedisKeys {
         public String key(Long mark) {
             return key(mark.toString());
         }
+
+        public String key(Integer mark) {
+            return key(mark.toString());
+        }
+
         public String key() {
             return prefix + ":" + LOCK_SUFFIX;
         }

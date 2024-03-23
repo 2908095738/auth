@@ -2,7 +2,8 @@ package com.auth.service;
 
 import com.auth.entity.User;
 import com.auth.entity.UserVO;
-import com.bbs.exception.ReLoginException;
+import com.auth.entity.VXUser;
+import com.clinic.exception.ReLoginException;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -21,6 +22,8 @@ public interface TokenService {
     void extendLoginTime(User user);
 
     String createToken(User user);
+
+    String createToken(VXUser user);
 
     /**
      * 设置登录标识

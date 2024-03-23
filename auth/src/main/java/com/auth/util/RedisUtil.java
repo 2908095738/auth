@@ -9,13 +9,21 @@ import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RLock;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
 
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+/**
+ * Redis 工具类
+ * - Spring Retry 教程：<a href=https://springdoc.cn/spring-retry-guide/>教程</a>
+ * - Redis命令重试操作参考：<a href=https://www.cnblogs.com/zimug/p/13507850.html>参考</a>
+ */
 @Component
 public class RedisUtil {
 
@@ -116,7 +124,12 @@ public class RedisUtil {
         return zGet(key, startScore.doubleValue(), endScore.doubleValue());
     }
 
+    public void expire(String key, long timeout, TimeUnit unit) {
+        redis.expire(key, timeout, unit);
+    }
+
     @Slf4j
+    @Component
     public static class Redisson {
 
         /**
@@ -128,7 +141,7 @@ public class RedisUtil {
         }
 
         /**
-         * 加锁执行代码
+         * 加锁执行代码，抢锁失败 or 异常则直接执行
          * @param function 代码
          * @param lock Redisson Lock
          * @param waitTime  等待获取锁时间
@@ -142,9 +155,14 @@ public class RedisUtil {
                 if(lock.tryLock(waitTime, leaseTime, unit)) {
                     log.debug("Redisson: 获取锁 key={}", lock.getName());
                     try {
-                        return function.get();
+                        TimeInterval timer = DateUtil.timer();
+                        R result = function.get();
+                        long interval = timer.interval();
+                        log.debug("Redisson: 分布式锁业务代码执行完成 key={}; 耗时（毫秒）={}", lock.getName(), interval);
+                        timer.interval();
+                        return result;
                     } finally {
-                        if(lock.isLocked()) {
+                        if(lock.isLocked()) {   //判断是否持有锁，并释放
                             lock.unlock();
                             log.debug("Redisson: 释放锁 key={}", lock.getName());
                         }
@@ -154,13 +172,13 @@ public class RedisUtil {
                 log.error("Redisson: 分布式锁，中断异常！！！key={}", lock.getName());
                 e.printStackTrace();
             }
-            if(lock.getHoldCount() > 0) forceUnlock(lock);
-            return function.get();
+            if(lock.getHoldCount() > 0) forceUnlock(lock);  //出现异常后，依旧持有锁，则暴力解锁
+            return function.get();  //再执行业务
         }
 
 
         /**
-         * 加锁执行代码
+         * 加锁执行代码，抢锁失败 or 异常则直接执行
          * @param function 代码
          * @param lock Redisson Lock
          * @param waitTime  等待获取锁时间
@@ -175,7 +193,7 @@ public class RedisUtil {
                         TimeInterval timer = DateUtil.timer();
                         function.run();
                         long interval = timer.interval();
-                        log.info("Redisson: 执行完成 key={}; 耗时（毫秒）={}", lock.getName(), interval);
+                        log.debug("Redisson: 执行完成 key={}; 耗时（毫秒）={}", lock.getName(), interval);
                         timer.interval();
                         return;
                     } finally {
@@ -191,6 +209,48 @@ public class RedisUtil {
             }
             if(lock.getHoldCount() > 0) forceUnlock(lock);
             function.run();
+        }
+
+        @Resource
+        private DataSourceTransactionManager transactionManager;
+
+        @Resource
+        private TransactionDefinition transactionDefinition;
+
+        /**
+         * 加锁执行代码（回滚，失败/异常执行 elseFun）
+         * @param function 业务代码
+         * @param lock Redisson Lock
+         * @param waitTime  等待获取锁时间
+         * @param leaseTime 自动解锁时间
+         * @param unit 时间单位
+         */
+        public <R> R lockExec(Supplier<R> function, RLock lock, int waitTime, int leaseTime, TimeUnit unit) {
+            TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
+            try {
+                if(lock.tryLock(waitTime, leaseTime, unit)) {
+                    log.debug("Redisson: 获取锁 key={}", lock.getName());
+                    try {
+                        TimeInterval timer = DateUtil.timer();
+                        R result = function.get();
+                        transactionManager.commit(transaction);
+                        log.debug("Redisson: 分布式锁业务代码执行完成 key={}; 耗时（毫秒）={}", lock.getName(), timer.interval());
+                        timer.interval();
+                        return result;
+                    } finally {
+                        if(lock.isLocked()) {   //判断是否持有锁，并释放
+                            lock.unlock();
+                            log.debug("Redisson: 释放锁 key={}", lock.getName());
+                        }
+                    }
+                }
+            } catch (InterruptedException e) {
+                transactionManager.rollback(transaction);
+                log.error("Redisson: 分布式锁，中断异常！！！key={}", lock.getName());
+                e.printStackTrace();
+            }
+            if(lock.getHoldCount() > 0) forceUnlock(lock);  //出现异常后，依旧持有锁，则暴力解锁，再执行业务
+            return function.get();
         }
     }
 }

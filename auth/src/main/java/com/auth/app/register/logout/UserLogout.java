@@ -1,4 +1,4 @@
-package com.auth.app.logout;
+package com.auth.app.register.logout;
 
 import com.bbs.Result;
 import com.auth.service.TokenService;
