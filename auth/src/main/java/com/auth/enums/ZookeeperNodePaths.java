@@ -9,6 +9,18 @@ public class ZookeeperNodePaths {
 
     public static class CacheConf {
 
+        public static class Token {
+            /**
+             * 登录凭证缓存过期时间：随机上限
+             */
+            public static final String TIMEOUT_MAX = "/conf/cache/token/timeout/max";
+
+            /**
+             * 登录凭证缓存过期时间：随机下限
+             */
+            public static final String TIMEOUT_MIN = "/conf/cache/token/timeout/min";
+        }
+
         public static class User {
             /**
              * 用户信息缓存过期时间：随机上限

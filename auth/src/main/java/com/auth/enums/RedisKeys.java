@@ -21,6 +21,8 @@ public enum RedisKeys {
 
     USER_PHONE_AND_ID_MAP("user:phone", "用户ID与手机号映射（phone-ID）"),
 
+    USER_UID_AND_TOKEN_MAP("user:token", "用户ID与登录Token映射（token-uid）"),
+
     RESOURCE("resource", "资源"),
     RESOURCE_PAGE_TREE("resource:page:tree", "页面资源 Tree"),
     RESOURCE_PARENT_ID_MAP("resource:parent:id:map", "页面资源映射（Map<parentId,resourceId>）"),
