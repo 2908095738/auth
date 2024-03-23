@@ -3,7 +3,7 @@ package com.auth.cache;
 import com.auth.entity.User;
 import com.auth.entity.UserBind;
 import com.auth.entity.VXUser;
-import com.clinic.exception.BusinessException;
+import com.bbs.exception.BusinessException;
 
 public interface UserCache {
 

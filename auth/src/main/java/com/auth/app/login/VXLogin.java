@@ -7,7 +7,7 @@ import com.auth.entity.User;
 import com.auth.api.vx.VXLoginAuthAPI;
 import com.auth.entity.VXUser;
 import com.auth.service.TokenService;
-import com.clinic.Result;
+import com.bbs.Result;
 import com.clinic.enums.LoginType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.clinic.Result.failed;
-import static com.clinic.Result.success;
+import static com.bbs.Result.failed;
+import static com.bbs.Result.success;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 

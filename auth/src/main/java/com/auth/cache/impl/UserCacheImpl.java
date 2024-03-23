@@ -10,7 +10,7 @@ import com.auth.enums.ZookeeperNodePaths;
 import com.auth.service.UserService;
 import com.auth.util.RedisUtil;
 import com.auth.util.ZKUtil;
-import com.clinic.exception.BusinessException;
+import com.bbs.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
