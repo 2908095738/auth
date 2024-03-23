@@ -49,14 +49,14 @@ public class News implements Serializable {
     /**
      * 图片
      */
-    @TableField(value = "imageurl")
-    private String imageurl;
+    @TableField(value = "image_url")
+    private String imageUrl;
 
     /**
-     * 视频数
+     * 视频
      */
-    @TableField(value = "view_total")
-    private Long viewTotal;
+    @TableField(value = "view_url")
+    private String viewUrl;
 
     /**
      * 标签id

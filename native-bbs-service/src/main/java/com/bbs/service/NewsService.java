@@ -4,12 +4,21 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.bbs.dto.GetUserAccountDto;
 import com.bbs.dto.GetUserNewsDto;
+import com.bbs.dto.param.CreateNewParam;
 import com.bbs.entity.News;
 
 /**
  *
  */
 public interface NewsService extends IService<News> {
+
+    /**
+     * 创建文章/视频
+     * @param
+     * @return
+     */
+    void createNews(CreateNewParam param);
+
 
     /**
      *查询用户主页上发布内容集合
@@ -25,4 +34,5 @@ public interface NewsService extends IService<News> {
      * @return
      */
     GetUserNewsDto getOneById(Long newId);
+
 }

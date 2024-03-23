@@ -8,8 +8,9 @@ import com.bbs.mapper.UserAccountMapper;
 import com.bbs.service.UserAccountService;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.query.MPJLambdaQueryWrapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
 
 /**
  *
@@ -33,10 +34,11 @@ public class UserAccountServiceImpl extends MPJBaseServiceImpl<UserAccountMapper
         updateById(converter.toEntity(param));
     }
 
-    @Autowired
-    public UserAccountServiceImpl(UserAccountConverter converter) {
+    @Resource
+    public void setConverter(UserAccountConverter converter) {
         this.converter = converter;
     }
+
 
 }
 

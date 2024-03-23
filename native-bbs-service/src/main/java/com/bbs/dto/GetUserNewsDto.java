@@ -45,7 +45,7 @@ public class GetUserNewsDto {
      * 媒体文件信息集合
      */
     @TableField(exist = false)
-    private List<MediaInfo> mediaInfoList = new ArrayList<>();
+    private MediaInfo mediaInfoList;
 
     /**
      * 标签id
@@ -72,9 +72,9 @@ public class GetUserNewsDto {
     private Date lastReplyTime;
 
     /**
-     * 点赞数
+     * 点赞数(或直接取值，或统计数据库点赞数量)
      */
-    @TableField(value = "like_count")
+    @TableField(exist = false)
     private Integer likeCount;
 
     /**
@@ -107,11 +107,13 @@ public class GetUserNewsDto {
     @TableField(value = "essence")
     private Integer essence;
 
+
     /**
      * 评论列表
      */
     @TableField(exist = false)
-    private List<GetUserNewsDto.CommentByNewIdDto> commentByNewIdDtoList;
+    private List<CommentByNewIdDto> commentByNewIdDtoList;
+
 
     /**
      * 评论列表实体
@@ -126,9 +128,9 @@ public class GetUserNewsDto {
         private Long id;
 
         /**
-         * 点赞数
+         * 点赞数(或直接取值，或统计数据库点赞数量)
          */
-        @TableField(value = "like_count")
+        @TableField(exist = false)
         private Long likeCount;
 
         /**
