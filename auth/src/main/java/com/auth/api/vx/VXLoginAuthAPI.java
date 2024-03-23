@@ -1,4 +1,4 @@
-package com.auth.util;
+package com.auth.api.vx;
 
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
@@ -51,7 +51,7 @@ public class VXLoginAuthAPI {
     }
 
     /**
-     * 响应信息
+     * 响应参数
      */
     @Data
     @NoArgsConstructor

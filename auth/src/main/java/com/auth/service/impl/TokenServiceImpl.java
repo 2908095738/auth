@@ -22,8 +22,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static cn.hutool.core.bean.BeanUtil.toBean;
-import static com.auth.util.VXLoginAuthAPI.OPEN_ID_KEY;
-import static com.auth.util.VXLoginAuthAPI.SESSION_KEY;
+import static com.auth.api.vx.VXLoginAuthAPI.OPEN_ID_KEY;
+import static com.auth.api.vx.VXLoginAuthAPI.SESSION_KEY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Slf4j

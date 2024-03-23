@@ -1,9 +1,17 @@
 package com.auth.cache;
 
 import com.auth.entity.User;
+import com.auth.entity.UserBind;
+import com.auth.entity.VXUser;
 import com.clinic.exception.BusinessException;
 
 public interface UserCache {
+
+    void setUser(User user);
+
+    void setUserAndOpenIDMap(UserBind userBind);
+
+    void setUserAndPhoneMap(User user);
 
     /**
      * 查询用户
@@ -30,7 +38,7 @@ public interface UserCache {
      * @throws InterruptedException 中断【等待其他线程加载用户数据】行为
      * @throws IllegalArgumentException 对应用户不存在
      */
-    User searchByOpenID(String openid) throws InterruptedException, IllegalArgumentException;
+    VXUser searchByOpenID(String openid) throws InterruptedException, IllegalArgumentException;
 
 
     /**
@@ -38,4 +46,14 @@ public interface UserCache {
      * @param user User
      */
     void updateByID(User user) throws InterruptedException, BusinessException;
+
+    /**
+     * 手机号用户查询
+     * @param phone 手机号
+     * @return User
+     * @throws IllegalArgumentException 对应用户不存在
+     */
+    User searchByPhone(Integer phone) throws InterruptedException, IllegalArgumentException;
+
+    User searchByPhone(String phone) throws InterruptedException, IllegalArgumentException;
 }

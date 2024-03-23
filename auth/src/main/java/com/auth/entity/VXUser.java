@@ -1,6 +1,5 @@
 package com.auth.entity;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -9,7 +8,6 @@ import java.io.Serializable;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@AllArgsConstructor
 @NoArgsConstructor
 public class VXUser extends User implements Serializable {
 
@@ -22,4 +20,9 @@ public class VXUser extends User implements Serializable {
      * 用户唯一标识
      */
     private String openid;
+
+    public VXUser(User user, String openid) {
+        super(user.getId(), user.getEmail(), user.getName(), user.getPassword(), user.getPhone(), user.getSalt(), user.getState(), user.getStateStr(), user.getExpirationTime(), user.getCreateTime(), user.getUpdateTime(), user.getUserGroupList());
+        this.openid = openid;
+    }
 }
