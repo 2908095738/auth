@@ -1,5 +1,7 @@
 package com.auth.util;
 
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.date.TimeInterval;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.springframework.stereotype.Component;
@@ -22,8 +24,10 @@ public class ZKUtil {
      */
     public String getForPath(String path) throws RuntimeException {
         try {
+            TimeInterval timer = DateUtil.timer();
             String dataStr = new String(client.getData().forPath(path), StandardCharsets.UTF_8);
-            log.debug("Zookeeper： 获取数据 path={}, data={}", path, dataStr);
+            long interval = timer.interval();
+            log.debug("Zookeeper： 获取数据 path={}, data={}; 耗时（毫秒）={}", path, dataStr, interval);
             return dataStr;
         } catch (Exception e) {
             log.error("无法从 ZK 获取系统参数配置!!!");

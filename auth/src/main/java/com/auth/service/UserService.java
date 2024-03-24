@@ -54,4 +54,10 @@ public interface UserService extends IService<User> {
      * @throws ReLoginException 用户未登录
      */
     UserVO loginUser() throws ReLoginException;
+
+    /**
+     * 通过手机号注册用户
+     * @return UID
+     */
+    User registerByPhone(Long phone);
 }

@@ -86,13 +86,13 @@ public class UserCacheImpl implements UserCache {
         return zkUtil.getIntForPath(ZookeeperNodePaths.CacheConf.User.UID_MAP_TIMEOUT_MIN);
     }
 
-    @Retryable(value = RestClientException.class, maxAttempts = 3, backoff = @Backoff(delay = 5000L, multiplier = 2))
+    @Retryable(value = RestClientException.class, backoff = @Backoff(delay = 5000L, multiplier = 2))
     @Override
     public void setUser(User user) {
         redis.set(USER.key(user.getId()), toJsonPrettyStr(user), RandomUtil.randomInt(1, 5), TimeUnit.MINUTES);
     }
 
-    @Retryable(value = RestClientException.class, maxAttempts = 3, backoff = @Backoff(delay = 5000L, multiplier = 2))
+    @Retryable(value = RestClientException.class, backoff = @Backoff(delay = 5000L, multiplier = 2))
     @Override
     public void setUserAndOpenIDMap(UserBind userBind) {
         User user = userBind.getUser();
@@ -106,7 +106,7 @@ public class UserCacheImpl implements UserCache {
         setUserIDAndOpenIDMapExpire(openIDMapKey);
     }
 
-    @Retryable(value = RestClientException.class, maxAttempts = 3, backoff = @Backoff(delay = 5000L, multiplier = 2))
+    @Retryable(value = RestClientException.class, backoff = @Backoff(delay = 5000L, multiplier = 2))
     @Override
     public void setUserAndPhoneMap(User user) {
         String userCacheKey = getUserCacheKey(user);
@@ -186,11 +186,11 @@ public class UserCacheImpl implements UserCache {
         return redissonUtil.lockExec(() -> {
             Long uid = searchUid(openid);
             if(nonNull(uid)) {  // 微信已经绑定账号了
-                String userCacheKey = USER.key(uid);
-                User user = redis.get(userCacheKey, User.class);
+                String key = USER.key(uid);
+                User user = redis.get(key, User.class);
                 if(isNull(user)) {  // 长时间未登录，需要重新加载数据到缓存
-                    user = searchByUID(uid);
-                    redis.set(userCacheKey, user, RandomUtil.randomInt(getUserCacheTimeoutMin(), getUserCacheTimeoutMax()), MINUTES);
+                    user = searchDBByUID(uid);
+                    redis.set(key, user, RandomUtil.randomInt(getUserCacheTimeoutMin(), getUserCacheTimeoutMax()), MINUTES);
                 }
                 return new VXUser(user, openid);
             } else {
@@ -260,21 +260,27 @@ public class UserCacheImpl implements UserCache {
     public User searchByPhone(Long phone) throws IllegalArgumentException {
         return redissonUtil.lockExec(() -> {
                     Long uid = searchUid(phone);
+                    User user;
                     if(nonNull(uid)) {
                         String userCacheKey = USER.key(uid);
-                        User user = redis.get(userCacheKey, User.class);
+                        user = redis.get(userCacheKey, User.class);
                         if(isNull(user)) {  //长时间未登录，缓存的用户信息被删除，需要重新设置
-                            user = searchByUID(uid);
+                            user = searchDBByUID(uid);
                             redis.set(userCacheKey, user, RandomUtil.randomInt(getUserCacheTimeoutMin(), getUserCacheTimeoutMax()), MINUTES);
                         }
                         return user;
                     } else {
                         // 缓存无法查询，按 phone 从数据库查询，加载并重置缓存中的映射和用户信息
-                        User user = dao.selectByPhone(phone);
-                        checkArgument(nonNull(user), "账号未注册，请检查手机号输入是否正确");
-                        setUserAndPhoneMap(user);
-                        return user;
+                        user = dao.selectByPhone(phone);
+                        if(nonNull(user)) {
+                            setUserAndPhoneMap(user);
+                        } else {
+                            // 注册
+                            user = service.registerByPhone(phone);
+                            setUser(user);
+                        }
                     }
+                    return user;
                 },
                 redisson.getSpinLock(USER_PHONE_AND_ID_MAP.LOCK.key(phone)),
                 zkUtil.getIntForPath(ZookeeperNodePaths.LockConf.UserCache.WAIT),
@@ -298,12 +304,12 @@ public class UserCacheImpl implements UserCache {
      * @throws IllegalArgumentException 对应 ID 用户不存在！
      */
     private User load(Long uid, int timeout, TimeUnit unit) throws IllegalArgumentException {
-        User user = searchByUID(uid);
+        User user = searchDBByUID(uid);
         redis.set(USER.key(uid), user, timeout, unit);
         return user;
     }
 
-    private User searchByUID(Long uid) throws IllegalArgumentException {
+    private User searchDBByUID(Long uid) throws IllegalArgumentException {
         return service.getOptById(uid).orElseThrow(() -> new IllegalArgumentException("对应 ID 用户不存在！"));
     }
 

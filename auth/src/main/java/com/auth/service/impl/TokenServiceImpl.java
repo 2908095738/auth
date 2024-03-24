@@ -3,6 +3,8 @@ package com.auth.service.impl;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.jwt.JWTUtil;
+import com.auth.cache.TokenCache;
+import com.auth.cache.UserCache;
 import com.auth.entity.User;
 import com.auth.entity.VXUser;
 import com.auth.service.TokenService;
@@ -24,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import static cn.hutool.core.bean.BeanUtil.toBean;
 import static com.auth.api.vx.VXLoginAuthAPI.OPEN_ID_KEY;
 import static com.auth.api.vx.VXLoginAuthAPI.SESSION_KEY;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Slf4j
@@ -40,6 +43,12 @@ public class TokenServiceImpl implements TokenService {
 
     @Value("${jwt.name}")
     private String tokenName;
+
+    @Resource
+    private TokenCache cache;
+
+    @Resource
+    private UserCache userCache;
 
     @Resource(name = "protoStuffTemplate")
     private RedisTemplate<String, String> redisTemplate;
@@ -103,9 +112,14 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public UserVO verify(String token) throws ReLoginException {
         if(verifyToken(token)) {
-            UserVO user = parseToken(token);
-            if(isNotBlank(redisTemplate.opsForValue().get(getTokenKey(user.getId())))) {
-                return user;
+            Long id = parseToken(token).getId();
+            if(nonNull(cache.getToken(id))) {
+                try {
+                    User user = userCache.search(id);
+                    return new UserVO(user.getId(), user.getName(), user.getEmail(), user.getPhone().toString());
+                } catch (InterruptedException e) {
+                    throw new ReLoginException(CodeEnum.FAILED_USER_INFO_DUPLICATION);
+                }
             }
         }
         throw new ReLoginException(CodeEnum.FAILED_USER_INFO_DUPLICATION);
