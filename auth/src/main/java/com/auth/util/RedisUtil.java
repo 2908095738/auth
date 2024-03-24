@@ -229,7 +229,7 @@ public class RedisUtil {
          * @param leaseTime 自动解锁时间
          * @param unit 时间单位
          */
-        public <R> R lockExec(Supplier<R> function, RLock lock, int waitTime, int leaseTime, TimeUnit unit) {
+        public <R> R lockExec(Supplier<R> function, RLock lock, int waitTime, int leaseTime, TimeUnit unit) throws RuntimeException {
             TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
             try {
                 if(lock.tryLock(waitTime, leaseTime, unit)) {

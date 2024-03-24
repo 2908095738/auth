@@ -48,12 +48,12 @@ public interface UserCache {
     void updateByID(User user) throws InterruptedException, BusinessException;
 
     /**
-     * 手机号用户查询
+     * 手机号用户查询 or 注册用户
      * @param phone 手机号
      * @return User
      * @throws IllegalArgumentException 对应用户不存在
      */
-    User searchByPhone(Long phone) throws InterruptedException, IllegalArgumentException;
+    User searchOrRegisterByPhone(Long phone) throws InterruptedException, IllegalArgumentException;
 
-    User searchByPhone(String phone) throws InterruptedException, IllegalArgumentException;
+    User searchOrRegisterByPhone(String phone) throws InterruptedException, IllegalArgumentException;
 }

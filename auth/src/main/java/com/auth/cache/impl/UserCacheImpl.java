@@ -257,7 +257,7 @@ public class UserCacheImpl implements UserCache {
     }
 
     @Override
-    public User searchByPhone(Long phone) throws IllegalArgumentException {
+    public User searchOrRegisterByPhone(Long phone) throws IllegalArgumentException {
         return redissonUtil.lockExec(() -> {
                     Long uid = searchUid(phone);
                     User user;
@@ -290,9 +290,9 @@ public class UserCacheImpl implements UserCache {
     }
 
     @Override
-    public User searchByPhone(String phone) throws IllegalArgumentException {
+    public User searchOrRegisterByPhone(String phone) throws IllegalArgumentException {
         checkArgument(isNoneBlank(phone) && phone.length() == 11);
-        return searchByPhone(Long.valueOf(phone));
+        return searchOrRegisterByPhone(Long.valueOf(phone));
     }
 
     /**

@@ -80,7 +80,7 @@ public class VXLogin {
         checkArgument(LoginType.checkFormat(param.type));
         if(LoginType.PHONE.getCode().equals(param.type)) {
             checkArgument(isNoneBlank(param.phone) && param.phone.length() == 11);
-            User user = cache.searchByPhone(param.phone);
+            User user = cache.searchOrRegisterByPhone(param.phone);
             String token = verifyAndExpireToken(user);
             return success(new VO(user.getName(), token));
 
