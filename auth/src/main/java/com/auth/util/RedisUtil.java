@@ -112,6 +112,10 @@ public class RedisUtil {
         redis.opsForValue().set(key, JSONUtil.toJsonPrettyStr(data), timeout, unit);
     }
 
+    public void set(String key, String data, int timeout, TimeUnit unit) {
+        redis.opsForValue().set(key, data, timeout, unit);
+    }
+
     public void zSet(String key, Set<ZSetOperations.TypedTuple<String>> tuples) {
         redis.opsForZSet().add(key, tuples);
     }

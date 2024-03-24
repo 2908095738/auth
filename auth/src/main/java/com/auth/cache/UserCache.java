@@ -36,7 +36,7 @@ public interface UserCache {
      * @param openid 微信用户唯一标识
      * @return User
      * @throws InterruptedException 中断【等待其他线程加载用户数据】行为
-     * @throws IllegalArgumentException 对应用户不存在
+     * @throws IllegalArgumentException 账号未绑定微信，需要绑定微信后重试
      */
     VXUser searchByOpenID(String openid) throws InterruptedException, IllegalArgumentException;
 
@@ -53,7 +53,7 @@ public interface UserCache {
      * @return User
      * @throws IllegalArgumentException 对应用户不存在
      */
-    User searchByPhone(Integer phone) throws InterruptedException, IllegalArgumentException;
+    User searchByPhone(Long phone) throws InterruptedException, IllegalArgumentException;
 
     User searchByPhone(String phone) throws InterruptedException, IllegalArgumentException;
 }

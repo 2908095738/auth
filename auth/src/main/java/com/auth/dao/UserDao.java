@@ -51,7 +51,7 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
         return lambdaQuery().eq(nonNull(phone),User::getPhone,phone).one();
     }
 
-    public User selectByPhone(Integer phone){
+    public User selectByPhone(Long phone){
         return selectByPhone(phone.toString());
     }
 }

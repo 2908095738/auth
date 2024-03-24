@@ -2,16 +2,20 @@ package com.auth.app.login;
 
 import com.auth.api.vx.GetAppID;
 import com.auth.api.vx.GetSecret;
+import com.auth.cache.TokenCache;
 import com.auth.cache.UserCache;
 import com.auth.entity.User;
 import com.auth.api.vx.VXLoginAuthAPI;
+import com.auth.entity.UserVO;
 import com.auth.entity.VXUser;
 import com.auth.service.TokenService;
 import com.bbs.Result;
 import com.clinic.enums.LoginType;
+import com.google.common.base.Preconditions;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,6 +26,7 @@ import static com.bbs.Result.failed;
 import static com.bbs.Result.success;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
+import static org.apache.logging.log4j.util.Strings.isNotBlank;
 
 @RestController
 @RequestMapping
@@ -34,6 +39,8 @@ public class VXLogin {
     private final GetSecret getSecret;
 
     private final TokenService tokenService;
+
+    private final TokenCache tokenCache;
 
     @Data
     @NoArgsConstructor
@@ -73,32 +80,44 @@ public class VXLogin {
     @PostMapping("/vx/login")
     public Result<VO> login(@RequestBody VXLoginParam param) throws InterruptedException {
         checkArgument(LoginType.checkFormat(param.type));
-        checkArgument(isNoneBlank(param.code) && isNoneBlank(param.phone) && param.phone.length() == 11);
         try {
             if(LoginType.PHONE.getCode().equals(param.type)) {
                 checkArgument(isNoneBlank(param.phone) && param.phone.length() == 11);
                 User user = cache.searchByPhone(param.phone);
-                String token = tokenService.createToken(user);
+                String token = verifyAndExpireToken(user);
                 return success(new VO(user.getName(), token));
 
             } else if (LoginType.WX.getCode().equals(param.type)){
                 checkArgument(isNoneBlank(param.code));
                 String openid = VXLoginAuthAPI.getInstance(getAppID.get(), getSecret.get()).auth(param.code).getOpenid();
                 VXUser vxUser = cache.searchByOpenID(openid);
-                String token = tokenService.createToken(vxUser);
+                String token = verifyAndExpireToken(vxUser);
                 return success(new VO(vxUser.getName(), token));
             }
             return failed("登陆失败，请检查登录类型是否正确");
         } catch (IllegalArgumentException e) {
-            return failed(401, "未绑定用户信息，请重新绑定");
+            return failed(401, "未绑定账号信息，请重新绑定");
         }
     }
 
+    private String verifyAndExpireToken(User user) {
+        String token = tokenCache.getToken(user.getId());
+        if(isNotBlank(token)) {
+            UserVO vo = tokenService.verify(token);
+            tokenCache.expireToken(vo.getId());
+        } else {
+            token = tokenService.createToken(user);
+            tokenCache.setToken(user.getId(), token);
+        }
+        return token;
+    }
+
     @Autowired
-    public VXLogin(UserCache cache, GetAppID getAppID, GetSecret getSecret, TokenService tokenService) {
+    public VXLogin(UserCache cache, GetAppID getAppID, GetSecret getSecret, TokenService tokenService, TokenCache tokenCache) {
         this.cache = cache;
         this.getAppID = getAppID;
         this.getSecret = getSecret;
         this.tokenService = tokenService;
+        this.tokenCache = tokenCache;
     }
 }
