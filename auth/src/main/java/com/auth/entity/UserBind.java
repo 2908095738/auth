@@ -6,7 +6,10 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
+
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 用户绑定表
@@ -14,6 +17,8 @@ import lombok.Data;
  */
 @TableName(value ="user_bind")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserBind implements Serializable {
     /**
      * 主键
@@ -56,4 +61,9 @@ public class UserBind implements Serializable {
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+    public UserBind(String openId, Long userId) {
+        this.openId = openId;
+        this.userId = userId;
+    }
 }

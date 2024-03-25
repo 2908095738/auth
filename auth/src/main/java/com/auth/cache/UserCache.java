@@ -13,6 +13,8 @@ public interface UserCache {
 
     void setUserAndPhoneMap(User user);
 
+    void setUserAndPhoneAndOpenIDMap(User user, String openID);
+
     /**
      * 查询用户
      * @param uid 用户 ID
@@ -56,4 +58,13 @@ public interface UserCache {
     User searchOrRegisterByPhone(Long phone) throws InterruptedException, IllegalArgumentException;
 
     User searchOrRegisterByPhone(String phone) throws InterruptedException, IllegalArgumentException;
+
+    /**
+     * 通过手机号查询用户（需要加锁！！！！）
+     * @param phone 手机号
+     * @return 用户
+     */
+    User searchByPhoneNoLockNoLoad(String phone) throws InterruptedException;
+
+    Long searchUIDByCache(String phone) throws InterruptedException;
 }

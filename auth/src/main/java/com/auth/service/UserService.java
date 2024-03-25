@@ -56,8 +56,20 @@ public interface UserService extends IService<User> {
     UserVO loginUser() throws ReLoginException;
 
     /**
-     * 通过手机号注册用户
+     * 通过手机号注册用户（无锁、无事务）
+     * @param phone 手机号
      * @return UID
+     * @throws IllegalArgumentException 手机号已被注册
      */
-    User registerByPhone(Long phone);
+    User registerByPhoneNoLockNoLoad(Long phone) throws IllegalArgumentException;
+
+    User registerByPhoneNoLockNoLoad(String phone) throws IllegalArgumentException;
+
+    /**
+     * 通过手机号注册用户（无锁、无事务、未加载缓存）
+     * @param phone 手机号
+     * @return UID
+     * @throws IllegalArgumentException 手机号已被注册
+     */
+    User registerByPhoneNoLockAndNoLoadCache(Long phone) throws IllegalArgumentException;
 }

@@ -17,7 +17,6 @@ import com.clinic.enums.UserStateEnum;
 import com.clinic.exception.BusinessException;
 import com.clinic.exception.ReLoginException;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
-import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 
 import static com.clinic.Result.success;
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
@@ -92,9 +92,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public User registerByPhone(Long phone) {
+    public User registerByPhoneNoLockNoLoad(Long phone) throws IllegalArgumentException {
+        return registerByPhoneNoLockAndNoLoadCache(phone);
+    }
+
+    @Override
+    public User registerByPhoneNoLockNoLoad(String phone) throws IllegalArgumentException {
+        return registerByPhoneNoLockNoLoad(Long.valueOf(phone));
+    }
+
+    @Override
+    public User registerByPhoneNoLockAndNoLoadCache(Long phone) throws IllegalArgumentException {
         User user = dao.selectByPhone(phone);
-        Preconditions.checkArgument(nonNull(user), "该手机号已被注册，如被注册可申请客服解除");
+        checkArgument(nonNull(user), "该手机号已被注册，如被注册可申请客服解除");
         user = new User();
         user.setPhone(phone);
         user.setName(phone.toString());

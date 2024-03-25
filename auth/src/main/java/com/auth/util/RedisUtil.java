@@ -229,7 +229,7 @@ public class RedisUtil {
          * @param leaseTime 自动解锁时间
          * @param unit 时间单位
          */
-        public <R> R lockExec(Supplier<R> function, RLock lock, int waitTime, int leaseTime, TimeUnit unit) throws RuntimeException {
+        public <R> R lockExec(Supplier<R> function, RLock lock, int waitTime, int leaseTime, TimeUnit unit) throws IllegalArgumentException {
             TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
             try {
                 if(lock.tryLock(waitTime, leaseTime, unit)) {
@@ -241,6 +241,12 @@ public class RedisUtil {
                         log.debug("Redisson: 分布式锁业务代码执行完成 key={}; 耗时（毫秒）={}", lock.getName(), timer.interval());
                         timer.interval();
                         return result;
+                    } catch (IllegalArgumentException e){
+                        throw new IllegalArgumentException(e);  // 避开 lock 对参数检查异常的捕获
+                    } catch (Exception e){
+                        transactionManager.rollback(transaction);
+                        log.error("Redisson: 业务异常，触发回滚！！！");
+                        e.printStackTrace();
                     } finally {
                         if(lock.isLocked()) {   //判断是否持有锁，并释放
                             lock.unlock();

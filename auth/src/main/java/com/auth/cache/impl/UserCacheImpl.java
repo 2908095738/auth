@@ -7,6 +7,7 @@ import com.auth.entity.User;
 import com.auth.entity.UserBind;
 import com.auth.entity.VXUser;
 import com.auth.enums.ZookeeperNodePaths;
+import com.auth.service.UserBindService;
 import com.auth.service.UserService;
 import com.auth.util.RedisUtil;
 import com.auth.util.ZKUtil;
@@ -56,7 +57,11 @@ public class UserCacheImpl implements UserCache {
 
     private final UserService service;
 
-    private final UserDao dao;
+    @Resource
+    private UserBindService userBindService;
+
+    @Resource
+    private UserDao dao;
 
     public String getFilterKey() {
         return zkUtil.getForPath(ZookeeperNodePaths.CacheConf.User.FILTER_KEY);
@@ -79,11 +84,11 @@ public class UserCacheImpl implements UserCache {
     }
 
     public Integer getUIDMapCacheTimeoutMin() {
-        return zkUtil.getIntForPath(ZookeeperNodePaths.CacheConf.User.UID_MAP_TIMEOUT_MAX);
+        return zkUtil.getIntForPath(ZookeeperNodePaths.CacheConf.User.UID_MAP_TIMEOUT_MIN);
     }
 
     public Integer getUIDMapCacheTimeoutMax() {
-        return zkUtil.getIntForPath(ZookeeperNodePaths.CacheConf.User.UID_MAP_TIMEOUT_MIN);
+        return zkUtil.getIntForPath(ZookeeperNodePaths.CacheConf.User.UID_MAP_TIMEOUT_MAX);
     }
 
     @Retryable(value = RestClientException.class, backoff = @Backoff(delay = 5000L, multiplier = 2))
@@ -110,7 +115,7 @@ public class UserCacheImpl implements UserCache {
     @Override
     public void setUserAndPhoneMap(User user) {
         String userCacheKey = getUserCacheKey(user);
-        String phoneMapKey = getUserIDAndPhoneMap(user);
+        String phoneMapKey = getUserIDAndPhoneMapKey(user);
         redis.multiSet(new HashMap<String, String>() {{
             put(userCacheKey, toJsonPrettyStr(user));
             put(phoneMapKey, user.getId().toString());
@@ -119,16 +124,42 @@ public class UserCacheImpl implements UserCache {
         setUserIDAndPhoneMapExpire(phoneMapKey);
     }
 
+    @Override
+    public void setUserAndPhoneAndOpenIDMap(User user, String openID) {
+        String userCacheKey = getUserCacheKey(user);
+        String openIDMapKey = getUserIDAndOpenIDMap(openID);
+        String phoneMapKey = getUserIDAndPhoneMapKey(user);
+        redis.multiSet(new HashMap<String, String>() {{
+            put(openIDMapKey, user.getId().toString());
+            put(phoneMapKey, user.getId().toString());
+        }});
+        setUserCacheExpire(userCacheKey);
+        setUserIDAndOpenIDMapExpire(openIDMapKey);
+        setUserIDAndPhoneMapExpire(phoneMapKey);
+    }
+
     private String getUserCacheKey(User user) {
         return USER.key(user.getId());
     }
 
     private String getUserIDAndOpenIDMap(UserBind userBind) {
-        return USER_OPEN_ID_AND_ID_MAP.key(userBind.getOpenId());
+        return getUserIDAndOpenIDMap(userBind.getOpenId());
     }
 
-    private String getUserIDAndPhoneMap(User user) {
-        return USER_PHONE_AND_ID_MAP.key(user.getPhone());
+    private String getUserIDAndOpenIDMap(String openID) {
+        return USER_OPEN_ID_AND_ID_MAP.key(openID);
+    }
+
+    private String getUserIDAndPhoneMapKey(User user) {
+        return getUserIDAndPhoneMapKey(user.getPhone());
+    }
+
+    private String getUserIDAndPhoneMapKey(String phone) {
+        return getUserIDAndPhoneMapKey(Long.valueOf(phone));
+    }
+
+    private String getUserIDAndPhoneMapKey(Long phone) {
+        return USER_PHONE_AND_ID_MAP.key(phone);
     }
 
     private void setUserCacheExpire(String userCacheKey) {
@@ -194,7 +225,7 @@ public class UserCacheImpl implements UserCache {
                 }
                 return new VXUser(user, openid);
             } else {
-                UserBind userBind = dao.searchUserBind(openid);
+                UserBind userBind = userBindService.searchUserBind(openid);
                 checkArgument(nonNull(userBind), "微信未绑定账号，请绑定账号后重试");
                 //微信已经绑定账号了，但长时间未登录，导致缓存数据清除
                 setUserAndOpenIDMap(userBind);
@@ -276,8 +307,8 @@ public class UserCacheImpl implements UserCache {
                             setUserAndPhoneMap(user);
                         } else {
                             // 注册
-                            user = service.registerByPhone(phone);
-                            setUser(user);
+                            user = service.registerByPhoneNoLockAndNoLoadCache(phone);
+                            setUserAndPhoneMap(user);
                         }
                     }
                     return user;
@@ -293,6 +324,35 @@ public class UserCacheImpl implements UserCache {
     public User searchOrRegisterByPhone(String phone) throws IllegalArgumentException {
         checkArgument(isNoneBlank(phone) && phone.length() == 11);
         return searchOrRegisterByPhone(Long.valueOf(phone));
+    }
+
+    /**
+     * 通过手机号查询用户（需要加锁！！！！）
+     * @param phone 手机号
+     * @return 用户/NULL
+     */
+    @Override
+    public User searchByPhoneNoLockNoLoad(String phone) throws InterruptedException {
+        try {
+            Long uid = searchUIDByCache(phone);
+            User user;
+            if (nonNull(uid)) {
+                user = search(uid);
+            } else {
+                user = dao.selectByPhone(phone);
+            }
+            return user;
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public Long searchUIDByCache(String phone) throws IllegalArgumentException {
+        String phoneMapKey = getUserIDAndPhoneMapKey(phone);
+        String uidStr = redis.get(phoneMapKey);
+        checkArgument(isNotBlank(uidStr), "UID 对应用户不存在");
+        return Long.valueOf(uidStr);
     }
 
     /**
