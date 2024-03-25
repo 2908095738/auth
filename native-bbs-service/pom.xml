@@ -84,7 +84,16 @@
             <version>1.8.0</version>
         </dependency>
 
-
+        <dependency>
+            <groupId>ws.schild</groupId>
+            <artifactId>jave-core</artifactId>
+            <version>2.7.3</version>
+        </dependency>
+        <dependency>
+            <groupId>ws.schild</groupId>
+            <artifactId>jave-nativebin-win64</artifactId>
+            <version>2.7.3</version>
+        </dependency>
 
 
 
@@ -100,6 +109,11 @@
             <version>1.0</version>
         </dependency>
 
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
 
 
 
@@ -191,6 +205,19 @@
             <artifactId>annotations</artifactId>
             <version>24.1.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+            <version>1.5</version>
+        </dependency>
+        <dependency>
+            <groupId>com.bbs</groupId>
+            <artifactId>native-bbs-service</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+
     </dependencies>
 
     <dependencyManagement>

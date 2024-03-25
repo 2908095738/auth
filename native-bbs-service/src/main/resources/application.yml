@@ -1,21 +1,25 @@
 server:
   port: 8080
 spring:
+  main:
+    allow-bean-definition-overriding: true
   datasource:
-    url: jdbc:mysql://localhost:3306/native_bbs?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://192.168.100.8:3306/native_bbs?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
   redis:
-      host: 152.136.163.92
+      host: 192.168.100.6
       port: 6379
 #    host: bj-crs-j1ozavqn.sql.tencentcdb.com
 #    port: 21800
 #    password: fsdef12vfsd
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 100MB
+      enabled: true
+      max-file-size: 1000MB
+      max-request-size: 1000MB
+      resolve-lazily: false
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.log4j2.Log4j2Impl
@@ -26,7 +30,19 @@ logging:
   file:
     path: logs/
   config: classpath:logback-spring.xml
-
+news:
+  image:
+    path: E:\ideawork\native-bbs-system\native-bbs-service\src\main\resources\nview
+    down:
+      prefix: /image
+  file:
+    path: E:\ideawork\native-bbs-system\native-bbs-service\src\main\resources\nfile
+    down:
+      prefix: /file
+  video:
+    path: E:\ideawork\native-bbs-system\native-bbs-service\src\main\resources\nvideo
+    down:
+      prefix: /video
 tokenName: token
 authServerIP: localhost
 authServerPort: 9999
