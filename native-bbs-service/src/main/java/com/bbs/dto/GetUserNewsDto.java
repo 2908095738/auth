@@ -3,6 +3,7 @@ package com.bbs.dto;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -112,7 +113,7 @@ public class GetUserNewsDto {
      * 评论列表
      */
     @TableField(exist = false)
-    private List<CommentByNewIdDto> commentByNewIdDtoList;
+    private Page<CommentByNewIdDto> commentByNewIdDtoList;
 
 
     /**

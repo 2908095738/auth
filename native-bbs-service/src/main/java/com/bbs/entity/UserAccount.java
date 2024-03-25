@@ -58,6 +58,30 @@ public class UserAccount implements Serializable {
     private Integer score;
 
     /**
+     * 被点赞数
+     */
+    @TableField(value = "like_count")
+    private Long likeCount;
+
+    /**
+     * 关注数
+     */
+    @TableField(value = "follower_count")
+    private Long followerCount;
+
+    /**
+     * 粉丝数
+     */
+    @TableField(value = "fan_count")
+    private Long fanCount;
+
+    /**
+     * 收藏数
+     */
+    @TableField(value = "favorite_count")
+    private Long favoriteCount;
+
+    /**
      * 店铺类型
      */
     @TableField(value = "store_type")

@@ -1,17 +1,20 @@
 package com.bbs.controller;
 
+import com.auth.entity.UserVO;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.dto.GetUserAccountDto;
 import com.bbs.dto.param.UpdateAccountParam;
 import com.bbs.service.NewsService;
 import com.bbs.service.UserAccountService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
 import java.util.Objects;
 
 /**
@@ -24,6 +27,20 @@ public class AccountManageController {
     private UserAccountService service;
 
     private NewsService newsService;
+
+    /**
+     * 创建登录用户账号信息
+     * 头像、昵称、性别、年龄；点赞数、积分数、收藏数、关注数、粉丝数、是否企业认证、是否实名认证
+     */
+    @PutMapping()
+    public Result<Long> createAccount(){
+//TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
+        UserVO currentUser = new UserVO();
+        //获取用户账号信息
+        Long userId = service.create(currentUser);
+        return Result.success(userId);
+    }
+
 
 
     /**
@@ -60,12 +77,12 @@ public class AccountManageController {
         return Result.success();
     }
 
-
-
-
-    @Autowired
-    public AccountManageController(UserAccountService service, NewsService newsService) {
+    @Resource
+    public void setService(UserAccountService service) {
         this.service = service;
+    }
+    @Resource
+    public void setNewsService(NewsService newsService) {
         this.newsService = newsService;
     }
 }

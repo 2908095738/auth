@@ -56,6 +56,30 @@ public class GetUserAccountDto {
     private Integer score;
 
     /**
+     * 被点赞数
+     */
+    @TableField(value = "like_count")
+    private Long likeCount;
+
+    /**
+     * 关注数
+     */
+    @TableField(value = "follower_count")
+    private Long followerCount;
+
+    /**
+     * 粉丝数
+     */
+    @TableField(value = "fan_count")
+    private Long fanCount;
+
+    /**
+     * 收藏数
+     */
+    @TableField(value = "favorite_count")
+    private Long favoriteCount;
+
+    /**
      * 店铺类型
      */
     @TableField(value = "store_type")
@@ -84,7 +108,6 @@ public class GetUserAccountDto {
      */
     @TableField(value = "remark")
     private String remark;
-
 
     /**
      * 真实姓名
@@ -142,12 +165,6 @@ public class GetUserAccountDto {
         private String title;
 
         /**
-         * 内容摘要
-         */
-        @TableField(value = "summary")
-        private String summary;
-
-        /**
          * 标签id
          */
         @TableField(value = "tag_id")
@@ -158,12 +175,6 @@ public class GetUserAccountDto {
          */
         @TableField(value = "ip")
         private String ip;
-
-        /**
-         * 评论数
-         */
-        @TableField(value = "comment_count")
-        private Integer commentCount;
 
         /**
          * 点赞数
