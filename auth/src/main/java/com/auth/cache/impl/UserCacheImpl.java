@@ -154,7 +154,8 @@ public class UserCacheImpl implements UserCache {
         return getUserIDAndPhoneMapKey(user.getPhone());
     }
 
-    private String getUserIDAndPhoneMapKey(String phone) {
+    @Override
+    public String getUserIDAndPhoneMapKey(String phone) {
         return getUserIDAndPhoneMapKey(Long.valueOf(phone));
     }
 
@@ -162,15 +163,17 @@ public class UserCacheImpl implements UserCache {
         return USER_PHONE_AND_ID_MAP.key(phone);
     }
 
-    private void setUserCacheExpire(String userCacheKey) {
+    @Override
+    public void setUserCacheExpire(String userCacheKey) {
         redis.expire(userCacheKey, RandomUtil.randomInt(getUserCacheTimeoutMin(), getUserCacheTimeoutMax()), MINUTES);
     }
 
-    private void setUserIDAndOpenIDMapExpire(String openIDMapKey) {
+    public void setUserIDAndOpenIDMapExpire(String openIDMapKey) {
         redis.expire(openIDMapKey, RandomUtil.randomInt(getUIDMapCacheTimeoutMin(), getUIDMapCacheTimeoutMax()), MINUTES);
     }
 
-    private void setUserIDAndPhoneMapExpire(String phoneMapKey) {
+    @Override
+    public void setUserIDAndPhoneMapExpire(String phoneMapKey) {
         redis.expire(phoneMapKey, RandomUtil.randomInt(getUIDMapCacheTimeoutMin(), getUIDMapCacheTimeoutMax()), MINUTES);
     }
 
@@ -334,7 +337,7 @@ public class UserCacheImpl implements UserCache {
     @Override
     public User searchByPhoneNoLockNoLoad(String phone) throws InterruptedException {
         try {
-            Long uid = searchUIDByCache(phone);
+            Long uid = searchUIDByCacheThrow(phone);
             User user;
             if (nonNull(uid)) {
                 user = search(uid);
@@ -347,12 +350,19 @@ public class UserCacheImpl implements UserCache {
         }
     }
 
+
     @Override
-    public Long searchUIDByCache(String phone) throws IllegalArgumentException {
+    public Long searchUIDByCache(String phone) {
         String phoneMapKey = getUserIDAndPhoneMapKey(phone);
         String uidStr = redis.get(phoneMapKey);
-        checkArgument(isNotBlank(uidStr), "UID 对应用户不存在");
-        return Long.valueOf(uidStr);
+        return isNotBlank(uidStr) ? Long.valueOf(uidStr) : null;
+    }
+
+    @Override
+    public Long searchUIDByCacheThrow(String phone) throws IllegalArgumentException {
+        Long uid = searchUIDByCache(phone);
+        checkArgument(nonNull(uid), "UID 对应用户不存在");
+        return uid;
     }
 
     /**

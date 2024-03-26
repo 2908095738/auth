@@ -15,6 +15,12 @@ public interface UserCache {
 
     void setUserAndPhoneAndOpenIDMap(User user, String openID);
 
+    String getUserIDAndPhoneMapKey(String phone);
+
+    void setUserCacheExpire(String userCacheKey);
+
+    void setUserIDAndPhoneMapExpire(String phoneMapKey);
+
     /**
      * 查询用户
      * @param uid 用户 ID
@@ -66,5 +72,7 @@ public interface UserCache {
      */
     User searchByPhoneNoLockNoLoad(String phone) throws InterruptedException;
 
-    Long searchUIDByCache(String phone) throws InterruptedException;
+    Long searchUIDByCacheThrow(String phone) throws InterruptedException;
+
+    Long searchUIDByCache(String phone);
 }

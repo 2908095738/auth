@@ -25,6 +25,8 @@ public enum RedisKeys {
 
     USER_PHONE_REGISTER("user:register", "用户手机号注册"),
 
+    USER_PHONE_CHANGE("user:phone:change", "用户手机号注册"),
+
     RESOURCE("resource", "资源"),
     RESOURCE_PAGE_TREE("resource:page:tree", "页面资源 Tree"),
     RESOURCE_PARENT_ID_MAP("resource:parent:id:map", "页面资源映射（Map<parentId,resourceId>）"),

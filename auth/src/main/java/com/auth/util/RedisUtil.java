@@ -241,12 +241,6 @@ public class RedisUtil {
                         log.debug("Redisson: 分布式锁业务代码执行完成 key={}; 耗时（毫秒）={}", lock.getName(), timer.interval());
                         timer.interval();
                         return result;
-                    } catch (IllegalArgumentException e){
-                        throw new IllegalArgumentException(e);  // 避开 lock 对参数检查异常的捕获
-                    } catch (Exception e){
-                        transactionManager.rollback(transaction);
-                        log.error("Redisson: 业务异常，触发回滚！！！");
-                        e.printStackTrace();
                     } finally {
                         if(lock.isLocked()) {   //判断是否持有锁，并释放
                             lock.unlock();
@@ -254,9 +248,11 @@ public class RedisUtil {
                         }
                     }
                 }
-            } catch (InterruptedException e) {
+            } catch (IllegalArgumentException e){
+                throw new IllegalArgumentException(e);  // 避开 lock 对参数检查异常的捕获
+            } catch (Exception e) {
                 transactionManager.rollback(transaction);
-                log.error("Redisson: 分布式锁，中断异常！！！key={}", lock.getName());
+                log.error("Redisson: 业务异常，触发回滚！！！");
                 e.printStackTrace();
             }
             if(lock.getHoldCount() > 0) forceUnlock(lock);  //出现异常后，依旧持有锁，则暴力解锁，再执行业务
