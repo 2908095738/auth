@@ -28,7 +28,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 
 import static com.clinic.Result.success;
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
@@ -103,9 +102,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public User registerByPhoneNoLockAndNoLoadCache(Long phone) throws IllegalArgumentException {
-        User user = dao.selectByPhone(phone);
-        checkArgument(nonNull(user), "该手机号已被注册，如被注册可申请客服解除");
-        user = new User();
+        User user = new User();
         user.setPhone(phone);
         user.setName(phone.toString());
         if(!save(user)) throw new BusinessException("通过手机号注册用户失败");
