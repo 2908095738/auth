@@ -32,15 +32,15 @@ logging:
   config: classpath:logback-spring.xml
 news:
   image:
-    path: E:\ideawork\native-bbs-system\native-bbs-service\src\main\resources\nview
+    path: E:\ideawork\native-bbs-system\native-bbs-service\src\main\resources\nview\
     down:
       prefix: /image
   file:
-    path: E:\ideawork\native-bbs-system\native-bbs-service\src\main\resources\nfile
+    path: E:\ideawork\native-bbs-system\native-bbs-service\src\main\resources\nfile\
     down:
       prefix: /file
   video:
-    path: E:\ideawork\native-bbs-system\native-bbs-service\src\main\resources\nvideo
+    path: E:\ideawork\native-bbs-system\native-bbs-service\src\main\resources\nvideo\
     down:
       prefix: /video
 tokenName: token

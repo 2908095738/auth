@@ -14,13 +14,7 @@ public class GetUserAccountDto {
     /**
      *
      */
-    @TableField(value = "id")
-    private Long id;
-
-    /**
-     *
-     */
-    @TableField(value = "user_id")
+    @TableId(value = "user_id")
     private Long userId;
 
 
@@ -34,13 +28,13 @@ public class GetUserAccountDto {
     /**
      * 呢称
      */
-    @TableField(value = "nick_name")
+    @TableField(exist = false)
     private String nickName;
 
     /**
      * 头像路径
      */
-    @TableField(value = "avatar_path")
+    @TableField(exist = false)
     private String avatarPath;
 
     /**
@@ -82,31 +76,31 @@ public class GetUserAccountDto {
     /**
      * 店铺类型
      */
-    @TableField(value = "store_type")
+    @TableField(exist = false)
     private Integer storeType;
 
     /**
      * 营业执照
      */
-    @TableField(value = "business_license")
+    @TableField(exist = false)
     private String businessLicense;
 
     /**
      * 是否有店铺认证
      */
-    @TableField(value = "store_certification")
+    @TableField(exist = false)
     private Integer storeCertification;
 
     /**
      * 个人标签
      */
-    @TableField(value = "u_tag")
+    @TableField(exist = false)
     private String uTag;
 
     /**
      * 个人简介
      */
-    @TableField(value = "remark")
+    @TableField(exist = false)
     private String remark;
 
     /**

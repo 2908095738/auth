@@ -41,10 +41,11 @@ public class NewController {
         param.setCreateId(1L);//currentUser.getid
         String ip = IpConfig.getIpAdrress(request);//获取ip
         param.setIp(ip);
+        //获取url
 
+        //创建文章表
         newsService.createNews(param);
-
-        // 触发内容事件，通过消息队列将其存入 Elasticsearch 服务器
+        //创建文章text表
 
         // 计算内容分数
 

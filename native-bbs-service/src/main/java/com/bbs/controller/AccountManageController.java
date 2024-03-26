@@ -4,13 +4,10 @@ import com.auth.entity.UserVO;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.dto.GetUserAccountDto;
-import com.bbs.dto.param.UpdateAccountParam;
 import com.bbs.service.NewsService;
 import com.bbs.service.UserAccountService;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -68,14 +65,13 @@ public class AccountManageController {
      * 修改用户设置
      * 账号信息、字体大小、黑名单
      */
-    @PostMapping()
-    public Result updateAccountByUserId(@RequestBody UpdateAccountParam param){
-        //TODO 修改用户信息 authService.XXX(param)
-
-        //修改账户信息
-        service.updateAccountByUserId(param);
-        return Result.success();
-    }
+//    @PostMapping()
+//    public Result updateAccountByUserId(@RequestBody UpdateAccountParam param){
+//        //修改用户信息 authService.XXX(param)
+//        //修改账户信息
+//        service.updateAccountByUserId(param);
+//        return Result.success();
+//    }
 
     @Resource
     public void setService(UserAccountService service) {
