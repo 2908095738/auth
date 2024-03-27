@@ -7,6 +7,7 @@ import com.auth.entity.User;
 import com.auth.entity.UserBind;
 import com.auth.entity.VXUser;
 import com.auth.enums.ZookeeperNodePaths;
+import com.auth.service.UserBindService;
 import com.auth.service.UserService;
 import com.auth.util.RedisUtil;
 import com.auth.util.ZKUtil;
@@ -56,7 +57,11 @@ public class UserCacheImpl implements UserCache {
 
     private final UserService service;
 
-    private final UserDao dao;
+    @Resource
+    private UserBindService userBindService;
+
+    @Resource
+    private UserDao dao;
 
     public String getFilterKey() {
         return zkUtil.getForPath(ZookeeperNodePaths.CacheConf.User.FILTER_KEY);
@@ -79,20 +84,20 @@ public class UserCacheImpl implements UserCache {
     }
 
     public Integer getUIDMapCacheTimeoutMin() {
-        return zkUtil.getIntForPath(ZookeeperNodePaths.CacheConf.User.UID_MAP_TIMEOUT_MAX);
-    }
-
-    public Integer getUIDMapCacheTimeoutMax() {
         return zkUtil.getIntForPath(ZookeeperNodePaths.CacheConf.User.UID_MAP_TIMEOUT_MIN);
     }
 
-    @Retryable(value = RestClientException.class, maxAttempts = 3, backoff = @Backoff(delay = 5000L, multiplier = 2))
+    public Integer getUIDMapCacheTimeoutMax() {
+        return zkUtil.getIntForPath(ZookeeperNodePaths.CacheConf.User.UID_MAP_TIMEOUT_MAX);
+    }
+
+    @Retryable(value = RestClientException.class, backoff = @Backoff(delay = 5000L, multiplier = 2))
     @Override
     public void setUser(User user) {
         redis.set(USER.key(user.getId()), toJsonPrettyStr(user), RandomUtil.randomInt(1, 5), TimeUnit.MINUTES);
     }
 
-    @Retryable(value = RestClientException.class, maxAttempts = 3, backoff = @Backoff(delay = 5000L, multiplier = 2))
+    @Retryable(value = RestClientException.class, backoff = @Backoff(delay = 5000L, multiplier = 2))
     @Override
     public void setUserAndOpenIDMap(UserBind userBind) {
         User user = userBind.getUser();
@@ -106,11 +111,11 @@ public class UserCacheImpl implements UserCache {
         setUserIDAndOpenIDMapExpire(openIDMapKey);
     }
 
-    @Retryable(value = RestClientException.class, maxAttempts = 3, backoff = @Backoff(delay = 5000L, multiplier = 2))
+    @Retryable(value = RestClientException.class, backoff = @Backoff(delay = 5000L, multiplier = 2))
     @Override
     public void setUserAndPhoneMap(User user) {
         String userCacheKey = getUserCacheKey(user);
-        String phoneMapKey = getUserIDAndPhoneMap(user);
+        String phoneMapKey = getUserIDAndPhoneMapKey(user);
         redis.multiSet(new HashMap<String, String>() {{
             put(userCacheKey, toJsonPrettyStr(user));
             put(phoneMapKey, user.getId().toString());
@@ -119,27 +124,56 @@ public class UserCacheImpl implements UserCache {
         setUserIDAndPhoneMapExpire(phoneMapKey);
     }
 
+    @Override
+    public void setUserAndPhoneAndOpenIDMap(User user, String openID) {
+        String userCacheKey = getUserCacheKey(user);
+        String openIDMapKey = getUserIDAndOpenIDMap(openID);
+        String phoneMapKey = getUserIDAndPhoneMapKey(user);
+        redis.multiSet(new HashMap<String, String>() {{
+            put(openIDMapKey, user.getId().toString());
+            put(phoneMapKey, user.getId().toString());
+        }});
+        setUserCacheExpire(userCacheKey);
+        setUserIDAndOpenIDMapExpire(openIDMapKey);
+        setUserIDAndPhoneMapExpire(phoneMapKey);
+    }
+
     private String getUserCacheKey(User user) {
         return USER.key(user.getId());
     }
 
     private String getUserIDAndOpenIDMap(UserBind userBind) {
-        return USER_OPEN_ID_AND_ID_MAP.key(userBind.getOpenId());
+        return getUserIDAndOpenIDMap(userBind.getOpenId());
     }
 
-    private String getUserIDAndPhoneMap(User user) {
-        return USER_PHONE_AND_ID_MAP.key(user.getPhone());
+    private String getUserIDAndOpenIDMap(String openID) {
+        return USER_OPEN_ID_AND_ID_MAP.key(openID);
     }
 
-    private void setUserCacheExpire(String userCacheKey) {
+    private String getUserIDAndPhoneMapKey(User user) {
+        return getUserIDAndPhoneMapKey(user.getPhone());
+    }
+
+    @Override
+    public String getUserIDAndPhoneMapKey(String phone) {
+        return getUserIDAndPhoneMapKey(Long.valueOf(phone));
+    }
+
+    private String getUserIDAndPhoneMapKey(Long phone) {
+        return USER_PHONE_AND_ID_MAP.key(phone);
+    }
+
+    @Override
+    public void setUserCacheExpire(String userCacheKey) {
         redis.expire(userCacheKey, RandomUtil.randomInt(getUserCacheTimeoutMin(), getUserCacheTimeoutMax()), MINUTES);
     }
 
-    private void setUserIDAndOpenIDMapExpire(String openIDMapKey) {
+    public void setUserIDAndOpenIDMapExpire(String openIDMapKey) {
         redis.expire(openIDMapKey, RandomUtil.randomInt(getUIDMapCacheTimeoutMin(), getUIDMapCacheTimeoutMax()), MINUTES);
     }
 
-    private void setUserIDAndPhoneMapExpire(String phoneMapKey) {
+    @Override
+    public void setUserIDAndPhoneMapExpire(String phoneMapKey) {
         redis.expire(phoneMapKey, RandomUtil.randomInt(getUIDMapCacheTimeoutMin(), getUIDMapCacheTimeoutMax()), MINUTES);
     }
 
@@ -186,15 +220,15 @@ public class UserCacheImpl implements UserCache {
         return redissonUtil.lockExec(() -> {
             Long uid = searchUid(openid);
             if(nonNull(uid)) {  // 微信已经绑定账号了
-                String userCacheKey = USER.key(uid);
-                User user = redis.get(userCacheKey, User.class);
+                String key = USER.key(uid);
+                User user = redis.get(key, User.class);
                 if(isNull(user)) {  // 长时间未登录，需要重新加载数据到缓存
-                    user = searchByUID(uid);
-                    redis.set(userCacheKey, user, RandomUtil.randomInt(getUserCacheTimeoutMin(), getUserCacheTimeoutMax()), MINUTES);
+                    user = searchDBByUID(uid);
+                    redis.set(key, user, RandomUtil.randomInt(getUserCacheTimeoutMin(), getUserCacheTimeoutMax()), MINUTES);
                 }
                 return new VXUser(user, openid);
             } else {
-                UserBind userBind = dao.searchUserBind(openid);
+                UserBind userBind = userBindService.searchUserBind(openid);
                 checkArgument(nonNull(userBind), "微信未绑定账号，请绑定账号后重试");
                 //微信已经绑定账号了，但长时间未登录，导致缓存数据清除
                 setUserAndOpenIDMap(userBind);
@@ -257,24 +291,30 @@ public class UserCacheImpl implements UserCache {
     }
 
     @Override
-    public User searchByPhone(Long phone) throws IllegalArgumentException {
+    public User searchOrRegisterByPhone(Long phone) throws IllegalArgumentException {
         return redissonUtil.lockExec(() -> {
                     Long uid = searchUid(phone);
+                    User user;
                     if(nonNull(uid)) {
                         String userCacheKey = USER.key(uid);
-                        User user = redis.get(userCacheKey, User.class);
+                        user = redis.get(userCacheKey, User.class);
                         if(isNull(user)) {  //长时间未登录，缓存的用户信息被删除，需要重新设置
-                            user = searchByUID(uid);
+                            user = searchDBByUID(uid);
                             redis.set(userCacheKey, user, RandomUtil.randomInt(getUserCacheTimeoutMin(), getUserCacheTimeoutMax()), MINUTES);
                         }
                         return user;
                     } else {
                         // 缓存无法查询，按 phone 从数据库查询，加载并重置缓存中的映射和用户信息
-                        User user = dao.selectByPhone(phone);
-                        checkArgument(nonNull(user), "账号未注册，请检查手机号输入是否正确");
-                        setUserAndPhoneMap(user);
-                        return user;
+                        user = dao.selectByPhone(phone);
+                        if(nonNull(user)) {
+                            setUserAndPhoneMap(user);
+                        } else {
+                            // 注册
+                            user = service.registerByPhoneNoLockAndNoLoadCache(phone);
+                            setUserAndPhoneMap(user);
+                        }
                     }
+                    return user;
                 },
                 redisson.getSpinLock(USER_PHONE_AND_ID_MAP.LOCK.key(phone)),
                 zkUtil.getIntForPath(ZookeeperNodePaths.LockConf.UserCache.WAIT),
@@ -284,9 +324,45 @@ public class UserCacheImpl implements UserCache {
     }
 
     @Override
-    public User searchByPhone(String phone) throws IllegalArgumentException {
+    public User searchOrRegisterByPhone(String phone) throws IllegalArgumentException {
         checkArgument(isNoneBlank(phone) && phone.length() == 11);
-        return searchByPhone(Long.valueOf(phone));
+        return searchOrRegisterByPhone(Long.valueOf(phone));
+    }
+
+    /**
+     * 通过手机号查询用户（需要加锁！！！！）
+     * @param phone 手机号
+     * @return 用户/NULL
+     */
+    @Override
+    public User searchByPhoneNoLockNoLoad(String phone) throws InterruptedException {
+        try {
+            Long uid = searchUIDByCacheThrow(phone);
+            User user;
+            if (nonNull(uid)) {
+                user = search(uid);
+            } else {
+                user = dao.selectByPhone(phone);
+            }
+            return user;
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+
+    @Override
+    public Long searchUIDByCache(String phone) {
+        String phoneMapKey = getUserIDAndPhoneMapKey(phone);
+        String uidStr = redis.get(phoneMapKey);
+        return isNotBlank(uidStr) ? Long.valueOf(uidStr) : null;
+    }
+
+    @Override
+    public Long searchUIDByCacheThrow(String phone) throws IllegalArgumentException {
+        Long uid = searchUIDByCache(phone);
+        checkArgument(nonNull(uid), "UID 对应用户不存在");
+        return uid;
     }
 
     /**
@@ -298,12 +374,12 @@ public class UserCacheImpl implements UserCache {
      * @throws IllegalArgumentException 对应 ID 用户不存在！
      */
     private User load(Long uid, int timeout, TimeUnit unit) throws IllegalArgumentException {
-        User user = searchByUID(uid);
+        User user = searchDBByUID(uid);
         redis.set(USER.key(uid), user, timeout, unit);
         return user;
     }
 
-    private User searchByUID(Long uid) throws IllegalArgumentException {
+    private User searchDBByUID(Long uid) throws IllegalArgumentException {
         return service.getOptById(uid).orElseThrow(() -> new IllegalArgumentException("对应 ID 用户不存在！"));
     }
 

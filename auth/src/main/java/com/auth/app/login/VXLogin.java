@@ -9,21 +9,21 @@ import com.auth.api.vx.VXLoginAuthAPI;
 import com.auth.entity.UserVO;
 import com.auth.entity.VXUser;
 import com.auth.service.TokenService;
-import com.bbs.Result;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.clinic.Result;
 import com.clinic.enums.LoginType;
-import com.google.common.base.Preconditions;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.bbs.Result.failed;
-import static com.bbs.Result.success;
+import static com.clinic.Result.failed;
+import static com.clinic.Result.success;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.logging.log4j.util.Strings.isNotBlank;
@@ -64,7 +64,10 @@ public class VXLogin {
     @NoArgsConstructor
     @AllArgsConstructor
     private static class VO {
-
+        /**
+         * 用户ID
+         */
+        private Long uid;
         /**
          * 用户名称
          */
@@ -80,24 +83,24 @@ public class VXLogin {
     @PostMapping("/vx/login")
     public Result<VO> login(@RequestBody VXLoginParam param) throws InterruptedException {
         checkArgument(LoginType.checkFormat(param.type));
-        try {
-            if(LoginType.PHONE.getCode().equals(param.type)) {
-                checkArgument(isNoneBlank(param.phone) && param.phone.length() == 11);
-                User user = cache.searchByPhone(param.phone);
-                String token = verifyAndExpireToken(user);
-                return success(new VO(user.getName(), token));
+        if(LoginType.PHONE.getCode().equals(param.type)) {
+            checkArgument(isNoneBlank(param.phone) && param.phone.length() == 11);
+            User user = cache.searchOrRegisterByPhone(param.phone);
+            String token = verifyAndExpireToken(user);
+            return success(new VO(user.getId(), user.getName(), token));
 
-            } else if (LoginType.WX.getCode().equals(param.type)){
-                checkArgument(isNoneBlank(param.code));
-                String openid = VXLoginAuthAPI.getInstance(getAppID.get(), getSecret.get()).auth(param.code).getOpenid();
+        } else if (LoginType.WX.getCode().equals(param.type)){
+            checkArgument(isNoneBlank(param.code));
+            String openid = VXLoginAuthAPI.getInstance(getAppID.get(), getSecret.get()).auth(param.code).getOpenid();
+            try {
                 VXUser vxUser = cache.searchByOpenID(openid);
                 String token = verifyAndExpireToken(vxUser);
-                return success(new VO(vxUser.getName(), token));
+                return success(new VO(vxUser.getId(), vxUser.getName(), token));
+            } catch (IllegalArgumentException e) {
+                return success(401, "微信未绑定账号，请绑定账号后重试");
             }
-            return failed("登陆失败，请检查登录类型是否正确");
-        } catch (IllegalArgumentException e) {
-            return failed(401, "未绑定账号信息，请重新绑定");
         }
+        return failed("登陆失败，请检查登录类型是否正确");
     }
 
     private String verifyAndExpireToken(User user) {

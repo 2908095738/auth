@@ -1,9 +1,12 @@
 package com.auth.service.impl;
 
+import com.auth.entity.User;
 import com.auth.entity.UserBind;
 import com.auth.service.UserBindService;
 import com.auth.mapper.UserBindMapper;
 import com.github.yulichang.base.MPJBaseServiceImpl;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +18,15 @@ import org.springframework.stereotype.Service;
 public class UserBindServiceImpl extends MPJBaseServiceImpl<UserBindMapper, UserBind>
     implements UserBindService{
 
+    @Override
+    public UserBind searchUserBind(String openID) {
+        return selectJoinOne(UserBind.class, new MPJLambdaWrapper<UserBind>()
+                .selectAll(UserBind.class)
+                .selectAssociation(User.class, UserBind::getUser)
+                .leftJoin(User.class, User::getId, UserBind::getUserId)
+                .eq(UserBind::getState, NumberUtils.INTEGER_ZERO)
+                .eq(UserBind::getOpenId, openID));
+    }
 }
 
 

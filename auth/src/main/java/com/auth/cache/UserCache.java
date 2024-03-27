@@ -13,6 +13,14 @@ public interface UserCache {
 
     void setUserAndPhoneMap(User user);
 
+    void setUserAndPhoneAndOpenIDMap(User user, String openID);
+
+    String getUserIDAndPhoneMapKey(String phone);
+
+    void setUserCacheExpire(String userCacheKey);
+
+    void setUserIDAndPhoneMapExpire(String phoneMapKey);
+
     /**
      * 查询用户
      * @param uid 用户 ID
@@ -48,12 +56,23 @@ public interface UserCache {
     void updateByID(User user) throws InterruptedException, BusinessException;
 
     /**
-     * 手机号用户查询
+     * 手机号用户查询 or 注册用户
      * @param phone 手机号
      * @return User
      * @throws IllegalArgumentException 对应用户不存在
      */
-    User searchByPhone(Long phone) throws InterruptedException, IllegalArgumentException;
+    User searchOrRegisterByPhone(Long phone) throws InterruptedException, IllegalArgumentException;
 
-    User searchByPhone(String phone) throws InterruptedException, IllegalArgumentException;
+    User searchOrRegisterByPhone(String phone) throws InterruptedException, IllegalArgumentException;
+
+    /**
+     * 通过手机号查询用户（需要加锁！！！！）
+     * @param phone 手机号
+     * @return 用户
+     */
+    User searchByPhoneNoLockNoLoad(String phone) throws InterruptedException;
+
+    Long searchUIDByCacheThrow(String phone) throws InterruptedException;
+
+    Long searchUIDByCache(String phone);
 }

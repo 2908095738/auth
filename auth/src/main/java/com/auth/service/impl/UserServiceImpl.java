@@ -3,17 +3,19 @@ package com.auth.service.impl;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Opt;
+import com.auth.dao.UserDao;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.bbs.Result;
+import com.clinic.Result;
 import com.auth.app.verify.VerifyLogin;
 import com.auth.entity.User;
 import com.auth.entity.param.UserParam;
 import com.auth.mapper.UserMapper;
 import com.auth.service.UserService;
 import com.auth.entity.UserVO;
-import com.bbs.enums.UserStateEnum;
-import com.bbs.exception.ReLoginException;
+import com.clinic.enums.UserStateEnum;
+import com.clinic.exception.BusinessException;
+import com.clinic.exception.ReLoginException;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -25,7 +27,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 
-import static com.bbs.Result.success;
+import static com.clinic.Result.success;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
@@ -37,6 +39,9 @@ import static java.util.Objects.nonNull;
 @Slf4j
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+
+    @Resource
+    private UserDao dao;
 
     @Override
     public Boolean userStateIsNormal(User user) { return UserStateEnum.STATUS_NORMAL.getCode().equals(user.getState()); }
@@ -83,6 +88,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
         }
         throw new ReLoginException();
+    }
+
+    @Override
+    public User registerByPhoneNoLockNoLoad(Long phone) throws IllegalArgumentException {
+        return registerByPhoneNoLockAndNoLoadCache(phone);
+    }
+
+    @Override
+    public User registerByPhoneNoLockNoLoad(String phone) throws IllegalArgumentException {
+        return registerByPhoneNoLockNoLoad(Long.valueOf(phone));
+    }
+
+    @Override
+    public User registerByPhoneNoLockAndNoLoadCache(Long phone) throws IllegalArgumentException {
+        User user = new User();
+        user.setPhone(phone);
+        user.setName(phone.toString());
+        if(!save(user)) throw new BusinessException("通过手机号注册用户失败");
+        return user;
     }
 
     @Override

@@ -10,4 +10,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface UserBindService extends IService<UserBind> {
 
+    UserBind searchUserBind(String openID);
 }
