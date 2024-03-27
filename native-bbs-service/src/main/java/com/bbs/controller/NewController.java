@@ -11,9 +11,12 @@ import com.bbs.service.NewsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Objects;
 
@@ -32,11 +35,11 @@ public class NewController {
 
     /**
      * 创建文章/视频
-     * @param param
-     * @return Result
+     * @param param param
+     * @return Boolean
      */
     @PutMapping
-    public Result createNews(CreateNewParam param){
+    public Result<Boolean> createNews(@RequestBody @Valid CreateNewParam param){
         //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
         param.setCreateId(1L);//currentUser.getid
         //创建文章表
@@ -58,7 +61,7 @@ public class NewController {
      * @return Page<GetUserAccountDto.GetUserNewsDto>
      */
     @GetMapping("/user")
-    public Result<Page<GetUserAccountDto.GetUserNewsDto>> getAccountNews(Long userId,Integer current, Integer size){
+    public Result<Page<GetUserAccountDto.GetUserNewsDto>> getAccountNews(@NotNull Long userId,@NotNull Integer current, @NotNull Integer size){
         Page<GetUserAccountDto.GetUserNewsDto> newsResult = newsService.getListByUserId(userId,current,size,false);
         return Result.success(newsResult);
     }
@@ -71,7 +74,7 @@ public class NewController {
      * @return Page<GetUserAccountDto.GetUserNewsDto>
      */
     @GetMapping("/recommend")
-    public Result<Page<GetUserAccountDto.GetUserNewsDto>> getRecommendNews(Integer current, Integer size){
+    public Result<Page<GetUserAccountDto.GetUserNewsDto>> getRecommendNews(@NotNull Integer current, @NotNull Integer size){
         Page<GetUserAccountDto.GetUserNewsDto> newsResult = newsService.getListByRecommend(current,size);
         return Result.success(newsResult);
     }
@@ -85,7 +88,7 @@ public class NewController {
      * @return Page<GetUserAccountDto.GetUserNewsDto>
      */
     @GetMapping("/follower")
-    public Result<Page<GetUserAccountDto.GetUserNewsDto>> getFollowerNews(List<Long> userIds, Integer current, Integer size){
+    public Result<Page<GetUserAccountDto.GetUserNewsDto>> getFollowerNews(@NotNull List<Long> userIds, @NotNull Integer current, @NotNull Integer size){
         Page<GetUserAccountDto.GetUserNewsDto> newsResult = newsService.getListByFollower(userIds,current,size);
         return Result.success(newsResult);
     }
@@ -103,7 +106,7 @@ public class NewController {
      * @return GetUserNewsDto
      */
     @GetMapping
-    public Result<GetUserNewsDto> getOneById(Long newId, Integer current, Integer size){
+    public Result<GetUserNewsDto> getOneById(@NotNull Long newId, @NotNull Integer current, @NotNull Integer size){
         GetUserNewsDto newsResult = newsService.getOneById(newId);
         if(Objects.nonNull(newsResult)){
             //获取评论分页列表

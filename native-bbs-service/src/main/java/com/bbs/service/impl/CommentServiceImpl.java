@@ -11,6 +11,7 @@ import com.bbs.service.CommentService;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,10 +28,10 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
 
     /**
      * 查询评论、点赞
-     * @param newId
-     * @param current
-     * @param size
-     * @return
+     * @param newId 内容id
+     * @param current 第几页
+     * @param size 几条
+     * @return GetUserNewsDto.CommentByNewIdDto
      */
     @Override
     public Page<GetUserNewsDto.CommentByNewIdDto> getPageByNewId(Long newId, Integer current, Integer size) {
@@ -45,6 +46,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
             result.getRecords().forEach(o -> o.setLikeCount(count));
         }
         return result;
+    }
+
+    @Resource
+    public void setThumbCache(ThumbCache thumbCache) {
+        this.thumbCache = thumbCache;
     }
 }
 

@@ -10,10 +10,13 @@ import com.bbs.util.IpConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 /**
  * 评论
@@ -27,11 +30,12 @@ public class CommentController {
 
     /**
      * 添加评论
-     * @param
-     * @return
+     * @param param param
+     * @param request request
+     * @return Boolean
      */
     @PutMapping
-    public Result createComment(CreateCommentParam param, HttpServletRequest request){
+    public Result<Boolean> createComment(@RequestBody @Valid CreateCommentParam param, HttpServletRequest request){
         //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
         param.setCreateId(1L);//currentUser.getid
         String ip = IpConfig.getIpAdrress(request);//获取ip
@@ -42,7 +46,7 @@ public class CommentController {
 
         //通知对应的用户
 
-        return Result.success();
+        return Result.success(true);
     }
 
     /**
@@ -53,7 +57,7 @@ public class CommentController {
      * @return Page<GetUserNewsDto.CommentByNewIdDto>
      */
     @GetMapping
-    public Result<Page<GetUserNewsDto.CommentByNewIdDto>> getPageByNewId(Long newId, Integer current, Integer size){
+    public Result<Page<GetUserNewsDto.CommentByNewIdDto>> getPageByNewId(@NotNull Long newId, @NotNull Integer current, @NotNull Integer size){
         //获取评论分页列表
         Page<GetUserNewsDto.CommentByNewIdDto> list = service.getPageByNewId(newId, current, size);
         return Result.success(list);

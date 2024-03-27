@@ -5,8 +5,11 @@ import com.bbs.cache.ThumbCache;
 import com.bbs.dto.param.CreateThumbParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
 
 /**
  * 点赞
@@ -20,11 +23,11 @@ public class ThumbController {
 
     /**
      * 添加点赞
-     * @param
-     * @return
+     * @param param param
+     * @return Boolean
      */
     @PutMapping
-    public Result createThumb(CreateThumbParam param){
+    public Result<Boolean> createThumb(@RequestBody @Valid CreateThumbParam param){
         //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
         //保存点赞数据
         param.setUserId(1L);//currentUser.getid

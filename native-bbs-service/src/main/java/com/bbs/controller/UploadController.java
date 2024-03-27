@@ -14,8 +14,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -48,47 +50,45 @@ public class UploadController {
      * 根据文件大小
      * 判断是否压缩:入队，压缩，落地，入队
      * 返回url
-     *
-     *
-     * @param file
-     * @return
+     * @param fileList 文件
+     * @return List<String>
      */
     @PostMapping("/upload")
-    public Result<String> upload(@RequestParam("file") MultipartFile file) {
+    public Result<List<String>> upload(@RequestParam("file") List<MultipartFile> fileList) {
+        List<String> filePathList = new ArrayList<>();
         //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
-        log.info("文件上传:{}", file);
-        String originalFilename = file.getOriginalFilename();
-        try {
+        log.info("文件上传:{}", fileList);
+        fileList.forEach(file->{
+            try {
+                //文件的请求路径根据文件类型分类
+                String type = FileTypeUtil.getType(file.getInputStream());
+                String filePath = "";
+                if(fileType.get(type)==1){//图片
+                    filePath = imagePath + DateFormatUtils.format(new Date(),"YYYYMMDDHHmmss")+"UID1."+type;
+                }else if(fileType.get(type)==2){//视频
+                    filePath = videoPath + DateFormatUtils.format(new Date(),"YYYYMMDDHHmmss")+"UID1."+type;
+                }
 
-            //文件的请求路径根据文件类型分类
-            String type = FileTypeUtil.getType(file.getInputStream());
-            String filePath = "";
-            if(fileType.get(type)==1){//图片
-                filePath = imagePath + DateFormatUtils.format(new Date(),"YYYYMMDDHHmmss")+"UID1."+type;
-            }else if(fileType.get(type)==2){//视频
-                filePath = videoPath + DateFormatUtils.format(new Date(),"YYYYMMDDHHmmss")+"UID1."+type;
-            }
-
-            //判断大小，处理
-            double size = file.getSize();
-            if( size < FileUtils.MAX_ALLOWED_FILE_SIZE){
-                //直接落地
-                file.transferTo(new File(filePath));
+                //判断大小，处理
+                double size = file.getSize();
+                if( size < FileUtils.MAX_ALLOWED_FILE_SIZE){
+                    //直接落地
+                    file.transferTo(new File(filePath));
                 }else {
-                //压缩落地
-                FileUtils.compressionVideo(FileUtils.multipartFileToFile(file), "native-bbs-service\\src\\main\\resources\\nvideo\\"+DateFormatUtils.format(new Date(),"YYYYMMDDHHmmss")+"UID1");
+                    //压缩落地
+                    FileUtils.compressionVideo(FileUtils.multipartFileToFile(file), "native-bbs-service\\src\\main\\resources\\nvideo\\"+DateFormatUtils.format(new Date(),"YYYYMMDDHHmmss")+"UID1");
+                }
+                //删除源文件
+                FileUtils.delteTempFile(FileUtils.multipartFileToFile(file));
+                filePathList.add(filePath);
+            } catch (IOException e) {
+                e.printStackTrace();
+                log.error("文件上传失败:", e);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
-            //删除源文件
-            FileUtils.delteTempFile(FileUtils.multipartFileToFile(file));
-            return Result.success(filePath);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            log.error("文件上传失败:{}", e);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return Result.failed("文件上传失败");
+        });
+        return Result.success(filePathList);
     }
 
 
