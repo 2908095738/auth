@@ -1,4 +1,4 @@
-package com.clinic.enums;
+package com.bbs.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

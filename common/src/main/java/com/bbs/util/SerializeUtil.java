@@ -1,4 +1,4 @@
-package com.clinic.util;
+package com.bbs.util;
 
 import com.dyuproject.protostuff.LinkedBuffer;
 import com.dyuproject.protostuff.ProtobufIOUtil;

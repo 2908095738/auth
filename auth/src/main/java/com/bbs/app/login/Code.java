@@ -1,7 +1,7 @@
 package com.bbs.app.login;
 
 import com.bbs.util.captcha.CaptchaUtil;
-import com.clinic.Result;
+import com.bbs.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

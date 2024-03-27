@@ -3,13 +3,13 @@ package com.bbs.app.user.admin;
 import com.bbs.entity.UserGroup;
 import com.bbs.service.UserGroupService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.clinic.Result;
+import com.bbs.Result;
 import com.bbs.app.register.RegisterUser;
 import com.bbs.cache.UserCache;
 import com.bbs.entity.User;
 import com.bbs.mapper.UserMapper;
 import com.bbs.service.PermissionService;
-import com.clinic.exception.BusinessException;
+import com.bbs.exception.BusinessException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,8 +25,8 @@ import javax.validation.constraints.NotNull;
 
 import java.util.Date;
 
-import static com.clinic.Result.failed;
-import static com.clinic.Result.success;
+import static com.bbs.Result.failed;
+import static com.bbs.Result.success;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;

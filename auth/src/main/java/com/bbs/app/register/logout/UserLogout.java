@@ -1,6 +1,6 @@
 package com.bbs.app.register.logout;
 
-import com.clinic.Result;
+import com.bbs.Result;
 import com.bbs.service.TokenService;
 import com.bbs.entity.UserVO;
 import lombok.extern.slf4j.Slf4j;

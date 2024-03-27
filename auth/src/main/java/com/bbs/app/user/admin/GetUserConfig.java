@@ -4,7 +4,7 @@ import com.bbs.cache.UserCache;
 import com.bbs.entity.User;
 import com.bbs.entity.UserGroup;
 import com.bbs.service.UserGroupService;
-import com.clinic.Result;
+import com.bbs.Result;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,8 +16,8 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
 
-import static com.clinic.Result.failed;
-import static com.clinic.Result.success;
+import static com.bbs.Result.failed;
+import static com.bbs.Result.success;
 import static java.util.Objects.nonNull;
 
 @Slf4j

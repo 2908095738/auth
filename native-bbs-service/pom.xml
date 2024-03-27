@@ -285,7 +285,7 @@
                 </executions>
                 <configuration>
                     <includeSystemScope>true</includeSystemScope>
-                    <mainClass>com.clinic.ClinicServer</mainClass>
+                    <mainClass>com.bbs.ClinicServer</mainClass>
                 </configuration>
             </plugin>
         </plugins>

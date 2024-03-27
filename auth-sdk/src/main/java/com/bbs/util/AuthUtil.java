@@ -4,7 +4,7 @@ import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.clinic.Result;
+import com.bbs.Result;
 import com.bbs.enums.APIEnum;
 import com.bbs.entity.UserVO;
 import lombok.extern.slf4j.Slf4j;

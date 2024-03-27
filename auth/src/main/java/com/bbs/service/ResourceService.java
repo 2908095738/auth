@@ -6,7 +6,7 @@ import com.bbs.controller.ResourceController;
 import com.bbs.entity.Resource;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.clinic.Result;
+import com.bbs.Result;
 
 import java.util.List;
 

@@ -3,8 +3,8 @@ package com.bbs.service;
 import com.bbs.entity.ResourceType;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.clinic.Result;
-import com.clinic.entity.vo.BaseParam;
+import com.bbs.Result;
+import com.bbs.entity.vo.BaseParam;
 
 /**
 * @author 路晨霖

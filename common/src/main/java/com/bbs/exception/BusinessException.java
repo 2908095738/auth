@@ -1,6 +1,6 @@
-package com.clinic.exception;
+package com.bbs.exception;
 
-import com.clinic.enums.CodeEnum;
+import com.bbs.enums.CodeEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

@@ -1,4 +1,4 @@
-package com.clinic.entity.vo;
+package com.bbs.entity.vo;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.AllArgsConstructor;

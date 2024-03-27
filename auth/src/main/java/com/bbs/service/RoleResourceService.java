@@ -5,7 +5,7 @@ import com.bbs.entity.Resource;
 import com.bbs.entity.RoleResource;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.clinic.Result;
+import com.bbs.Result;
 
 /**
 * @author 路晨霖

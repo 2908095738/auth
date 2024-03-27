@@ -9,7 +9,7 @@ import com.bbs.enums.ResourceNames;
 import com.bbs.service.ResourceService;
 import com.bbs.service.TokenService;
 import com.bbs.service.UserService;
-import com.clinic.Result;
+import com.bbs.Result;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,9 +22,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 
-import static com.clinic.Result.failed;
-import static com.clinic.Result.success;
-import static com.clinic.enums.CodeEnum.SUCCESS_USER_LOGIN;
+import static com.bbs.Result.failed;
+import static com.bbs.Result.success;
+import static com.bbs.enums.CodeEnum.SUCCESS_USER_LOGIN;
 import static java.util.Objects.nonNull;
 
 @RestController

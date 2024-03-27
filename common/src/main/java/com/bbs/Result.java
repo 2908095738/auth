@@ -1,7 +1,7 @@
-package com.clinic;
+package com.bbs;
 
-import com.clinic.enums.CodeEnum;
-import com.clinic.exception.BusinessException;
+import com.bbs.enums.CodeEnum;
+import com.bbs.exception.BusinessException;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -2,11 +2,11 @@ package com.bbs.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.clinic.Result;
+import com.bbs.Result;
 import com.bbs.entity.User;
 import com.bbs.entity.param.UserParam;
 import com.bbs.entity.UserVO;
-import com.clinic.exception.ReLoginException;
+import com.bbs.exception.ReLoginException;
 
 /**
 * @author Lenovo
