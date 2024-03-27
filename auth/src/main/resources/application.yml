@@ -14,7 +14,7 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.log4j2.Log4j2Impl
 logging:
   level:
-    com.auth: debug
+    com.bbs: debug
     com.baomidou: debug
   file:
     path: logs/
