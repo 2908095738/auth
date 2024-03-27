@@ -6,6 +6,12 @@ import lombok.Data;
 public class CreateCommentParam {
 
     /**
+     * 父类id
+     */
+    private Long parentId;
+
+
+    /**
      * 评论内容
      */
     private String content;

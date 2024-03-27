@@ -1,9 +1,8 @@
 package com.bbs.controller;
 
 import com.bbs.Result;
-import com.bbs.converter.ThumbConverter;
+import com.bbs.cache.ThumbCache;
 import com.bbs.dto.param.CreateThumbParam;
-import com.bbs.service.ThumbService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,8 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/thumb")
 public class ThumbController {
 
-    private ThumbService service;
-    private ThumbConverter converter;
+
+    private ThumbCache cache;
 
     /**
      * 添加点赞
@@ -27,9 +26,11 @@ public class ThumbController {
     @PutMapping
     public Result createThumb(CreateThumbParam param){
         //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
+        //保存点赞数据
         param.setUserId(1L);//currentUser.getid
-        service.save(converter.toEntity(param));
-        // 计算内容分数
+        //更新用户、内容、评论对应点赞数量:redis
+        cache.create(param);
+        // 计算积分
 
         //通知对应的用户
 
@@ -39,9 +40,8 @@ public class ThumbController {
 
 
     @Autowired
-    public ThumbController(ThumbService service, ThumbConverter converter) {
-        this.service = service;
-        this.converter = converter;
+    public ThumbController(ThumbCache cache) {
+        this.cache = cache;
     }
 
 }

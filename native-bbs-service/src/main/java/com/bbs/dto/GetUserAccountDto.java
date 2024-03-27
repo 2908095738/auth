@@ -53,25 +53,31 @@ public class GetUserAccountDto {
      * 被点赞数
      */
     @TableField(value = "like_count")
-    private Long likeCount;
+    private Integer likeCount;
 
     /**
      * 关注数
      */
     @TableField(value = "follower_count")
-    private Long followerCount;
+    private Integer followerCount;
 
     /**
      * 粉丝数
      */
     @TableField(value = "fan_count")
-    private Long fanCount;
+    private Integer fanCount;
 
     /**
      * 收藏数
      */
     @TableField(value = "favorite_count")
-    private Long favoriteCount;
+    private Integer favoriteCount;
+
+    /**
+     * 浏览数
+     */
+    @TableField(value = "page_view_count")
+    private Integer pageViewCount;
 
     /**
      * 店铺类型
@@ -173,7 +179,7 @@ public class GetUserAccountDto {
         /**
          * 点赞数
          */
-        @TableField(value = "like_count")
+        @TableField(exist = false)
         private Integer likeCount;
 
         /**
@@ -205,6 +211,12 @@ public class GetUserAccountDto {
          */
         @TableField(value = "essence")
         private Integer essence;
+
+        /**
+         * 状态 10.待审核 20.已发布 110.待审核用户删除 120.已发布用户删除 100010.待审核管理员删除 100020.已发布管理员删除
+         */
+        @TableField(value = "status")
+        private Integer status;
 
     }
 

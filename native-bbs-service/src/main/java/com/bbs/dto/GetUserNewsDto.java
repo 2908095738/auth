@@ -33,7 +33,7 @@ public class GetUserNewsDto {
     /**
      * 全部内容
      */
-    @TableField(value = "content")
+    @TableField(exist = false)
     private String content;
 
     /**
@@ -46,7 +46,7 @@ public class GetUserNewsDto {
      * 媒体文件信息集合
      */
     @TableField(exist = false)
-    private MediaInfo mediaInfoList;
+    private List<MediaInfo> mediaInfoList;
 
     /**
      * 标签id
@@ -129,10 +129,16 @@ public class GetUserNewsDto {
         private Long id;
 
         /**
+         * 父类id
+         */
+        @TableField(value = "parent_id")
+        private Long parentId;
+
+        /**
          * 点赞数(或直接取值，或统计数据库点赞数量)
          */
         @TableField(exist = false)
-        private Long likeCount;
+        private Integer likeCount;
 
         /**
          * 评论内容

@@ -54,7 +54,7 @@ public class AccountManageController {
         if(Objects.nonNull(result)){
             result.setAge(18);//TODO currentUser
             //获取发布文章列表
-            Page<GetUserAccountDto.GetUserNewsDto> newsResult = newsService.getListByUserId(userId,1,10);
+            Page<GetUserAccountDto.GetUserNewsDto> newsResult = newsService.getListByUserId(userId,1,10,true);
             result.setNewsResult(newsResult);
         }
         return Result.success(result);

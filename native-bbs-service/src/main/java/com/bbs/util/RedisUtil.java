@@ -5,6 +5,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -69,8 +72,8 @@ public class RedisUtil {
         return protoStuffTemplate.boundValueOps(key).get();
     }
 
-    public Long increment(String key) {
-        return protoStuffTemplate.boundValueOps(key).increment();
+    public void incr(String key, Integer v){
+        protoStuffTemplate.opsForValue().increment(key, v);
     }
 
     /**
@@ -80,5 +83,23 @@ public class RedisUtil {
      */
     public Boolean setIfPresent(String key, String value) {
         return protoStuffTemplate.opsForValue().setIfPresent(key, value);
+    }
+
+    //hash
+
+    public void hashSet(String key, Map<String, String> values) {
+        protoStuffTemplate.opsForHash().putAll(key, values);
+    }
+
+    public Object hashGet(String key, String hashKey) {
+        return protoStuffTemplate.opsForHash().get(key, hashKey);
+    }
+
+    public List<Object> hashGet(String key, Collection<Object> hashKeys) {
+        return protoStuffTemplate.opsForHash().multiGet(key, hashKeys);
+    }
+
+    public void hashSet(String key, Object hashKey, String value) {
+        protoStuffTemplate.opsForHash().put(key, hashKey, value);
     }
 }

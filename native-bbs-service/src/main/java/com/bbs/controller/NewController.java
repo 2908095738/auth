@@ -6,15 +6,14 @@ import com.bbs.dto.GetUserAccountDto;
 import com.bbs.dto.GetUserNewsDto;
 import com.bbs.dto.param.CreateNewParam;
 import com.bbs.service.CommentService;
+import com.bbs.service.NewContentService;
 import com.bbs.service.NewsService;
-import com.bbs.util.IpConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Objects;
 
@@ -29,24 +28,21 @@ public class NewController {
 
     private CommentService commentService;
 
+    private NewContentService newContentService;
 
     /**
      * 创建文章/视频
-     * @param
-     * @return
+     * @param param
+     * @return Result
      */
     @PutMapping
-    public Result createNews(CreateNewParam param, HttpServletRequest request){
+    public Result createNews(CreateNewParam param){
         //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
         param.setCreateId(1L);//currentUser.getid
-        String ip = IpConfig.getIpAdrress(request);//获取ip
-        param.setIp(ip);
-        //获取url
-
         //创建文章表
-        newsService.createNews(param);
+        Long id = newsService.createNews(param);
         //创建文章text表
-
+        newContentService.createByNew(id,param.getContent());
         // 计算内容分数
 
         return Result.success();
@@ -63,7 +59,7 @@ public class NewController {
      */
     @GetMapping("/user")
     public Result<Page<GetUserAccountDto.GetUserNewsDto>> getAccountNews(Long userId,Integer current, Integer size){
-        Page<GetUserAccountDto.GetUserNewsDto> newsResult = newsService.getListByUserId(userId,current,size);
+        Page<GetUserAccountDto.GetUserNewsDto> newsResult = newsService.getListByUserId(userId,current,size,false);
         return Result.success(newsResult);
     }
 
@@ -72,7 +68,7 @@ public class NewController {
      * 查询推荐页上的内容简要信息
      * @param current 第几页
      * @param size 几条
-     * @return
+     * @return Page<GetUserAccountDto.GetUserNewsDto>
      */
     @GetMapping("/recommend")
     public Result<Page<GetUserAccountDto.GetUserNewsDto>> getRecommendNews(Integer current, Integer size){
@@ -86,7 +82,7 @@ public class NewController {
      * @param userIds 用户id
      * @param current 第几页
      * @param size 几条
-     * @return
+     * @return Page<GetUserAccountDto.GetUserNewsDto>
      */
     @GetMapping("/follower")
     public Result<Page<GetUserAccountDto.GetUserNewsDto>> getFollowerNews(List<Long> userIds, Integer current, Integer size){
@@ -94,12 +90,17 @@ public class NewController {
         return Result.success(newsResult);
     }
 
+    /**
+     * 查询热门内容
+     */
+    //TODO
+
 
 
     /**
      *根据主键查全部内容、评论、点赞
      * @param newId 文章id
-     * @return
+     * @return GetUserNewsDto
      */
     @GetMapping
     public Result<GetUserNewsDto> getOneById(Long newId, Integer current, Integer size){
@@ -115,8 +116,9 @@ public class NewController {
 
 
     @Autowired
-    public NewController(NewsService newsService, CommentService commentService) {
+    public NewController(NewsService newsService, CommentService commentService, NewContentService newContentService) {
         this.newsService = newsService;
         this.commentService = commentService;
+        this.newContentService = newContentService;
     }
 }

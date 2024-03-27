@@ -1,10 +1,10 @@
 package com.bbs.service.impl;
 
 import com.auth.entity.UserVO;
+import com.bbs.cache.ThumbCache;
 import com.bbs.converter.UserAccountConverter;
 import com.bbs.dto.GetUserAccountDto;
 import com.bbs.dto.param.UpdateAccountParam;
-import com.bbs.entity.Thumb;
 import com.bbs.entity.UserAccount;
 import com.bbs.mapper.UserAccountMapper;
 import com.bbs.service.UserAccountService;
@@ -23,7 +23,7 @@ public class UserAccountServiceImpl extends MPJBaseServiceImpl<UserAccountMapper
 
     private UserAccountConverter converter;
 
-
+    private ThumbCache thumbCache;
 
     @Override
     public Long create(UserVO currentUser) {
@@ -37,10 +37,13 @@ public class UserAccountServiceImpl extends MPJBaseServiceImpl<UserAccountMapper
     @Override
     public GetUserAccountDto getByUserId(Long userId) {
         MPJLambdaWrapper<GetUserAccountDto> wrapper = new MPJLambdaWrapper<>();
-        wrapper.selectAll(UserAccount.class)
-                .selectCount(Thumb::getId,GetUserAccountDto::getLikeCount)
-                .leftJoin(Thumb.class,Thumb::getPostUserId,UserAccount::getUserId);
-        return wrapper.one();
+        GetUserAccountDto result = wrapper.selectAll(UserAccount.class).one();
+        result.setLikeCount(thumbCache.countBy(null,userId,null,2));//点赞
+        //粉丝result.setFanCount();
+        //收藏result.setFavoriteCount();
+        //关注result.setFollowerCount();
+        //浏览量
+        return result;
     }
 
     @Override
@@ -52,8 +55,10 @@ public class UserAccountServiceImpl extends MPJBaseServiceImpl<UserAccountMapper
     public void setConverter(UserAccountConverter converter) {
         this.converter = converter;
     }
-
-
+    @Resource
+    public void setThumbCache(ThumbCache thumbCache) {
+        this.thumbCache = thumbCache;
+    }
 }
 
 

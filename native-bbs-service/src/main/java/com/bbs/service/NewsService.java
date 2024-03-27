@@ -14,43 +14,14 @@ import java.util.List;
  */
 public interface NewsService extends IService<News> {
 
-    /**
-     * 创建文章/视频
-     * @param
-     * @return
-     */
-    void createNews(CreateNewParam param);
 
+    Long createNews(CreateNewParam param);
 
-    /**
-     *查询用户主页上发布内容集合
-     * @param userId
-     * @return
-     */
-    Page<GetUserAccountDto.GetUserNewsDto> getListByUserId(Long userId, Integer current, Integer size);
+    Page<GetUserAccountDto.GetUserNewsDto> getListByUserId(Long userId, Integer current, Integer size, boolean flag);
 
-
-    /**
-     *根据主键查全部内容、评论、点赞
-     * @param newId
-     * @return
-     */
     GetUserNewsDto getOneById(Long newId);
 
-    /**
-     * 查询推荐页上的内容简要信息
-     * @param current 第几页
-     * @param size 几条
-     * @return
-     */
     Page<GetUserAccountDto.GetUserNewsDto> getListByRecommend(Integer current, Integer size);
 
-    /**
-     * 查询关注页上的内容简要信息
-     * @param userIds 用户id
-     * @param current 第几页
-     * @param size 几条
-     * @return
-     */
     Page<GetUserAccountDto.GetUserNewsDto> getListByFollower(List<Long> userIds, Integer current, Integer size);
 }
