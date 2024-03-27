@@ -9,7 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.retry.annotation.EnableRetry;
 
 @Slf4j
-@MapperScan({"com.auth.mapper"})
+@MapperScan({"com.bbs.mapper"})
 @EnableRetry    //启用操作重试
 @SpringBootApplication
 public class AuthServer implements ApplicationRunner {
