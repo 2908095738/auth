@@ -1,17 +1,20 @@
 package com.bbs.interceptor;
 
-import com.auth.entity.UserVO;
-import com.auth.util.AuthUtil;
-import com.bbs.util.ThreadLocalUtil;
+
+import com.bbs.entity.UserVO;
 import com.bbs.exception.ReLoginException;
+import com.bbs.util.AuthUtil;
+import com.bbs.util.ThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
+
 import static com.alibaba.fastjson2.JSON.toJSONString;
 import static java.util.Objects.nonNull;
 

@@ -1,11 +1,12 @@
 package com.bbs.service.impl;
 
-import com.auth.entity.UserVO;
+
 import com.bbs.cache.ThumbCache;
 import com.bbs.converter.UserAccountConverter;
 import com.bbs.dto.GetUserAccountDto;
 import com.bbs.dto.param.UpdateAccountParam;
 import com.bbs.entity.UserAccount;
+import com.bbs.entity.UserVO;
 import com.bbs.mapper.UserAccountMapper;
 import com.bbs.service.UserAccountService;
 import com.github.yulichang.base.MPJBaseServiceImpl;

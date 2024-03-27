@@ -2,7 +2,6 @@ package com.bbs.enums;
 
 import cn.hutool.core.util.EnumUtil;
 import lombok.Getter;
-
 import java.util.Map;
 
 /**
@@ -54,5 +53,5 @@ public enum RedisKeys {
     }
 
 
-    public static final Map<String, com.auth.enums.RedisKeys> map = EnumUtil.getEnumMap(com.auth.enums.RedisKeys.class);
+    public static final Map<String,RedisKeys> map = EnumUtil.getEnumMap(RedisKeys.class);
 }

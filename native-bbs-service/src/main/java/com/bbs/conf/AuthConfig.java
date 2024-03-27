@@ -1,6 +1,7 @@
 package com.bbs.conf;
 
-import com.auth.util.AuthUtil;
+
+import com.bbs.util.AuthUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

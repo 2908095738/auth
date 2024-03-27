@@ -1,8 +1,9 @@
 package com.bbs.converter;
 
-import com.auth.entity.UserVO;
+
 import com.bbs.dto.param.UpdateAccountParam;
 import com.bbs.entity.UserAccount;
+import com.bbs.entity.UserVO;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")

@@ -1,16 +1,16 @@
 package com.bbs.controller;
 
-import com.auth.entity.UserVO;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.dto.GetUserAccountDto;
+import com.bbs.entity.UserVO;
 import com.bbs.service.NewsService;
 import com.bbs.service.UserAccountService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import javax.annotation.Resource;
 import java.util.Objects;
 

@@ -1,6 +1,7 @@
 package com.bbs.util;
 
-import com.auth.entity.UserVO;
+
+import com.bbs.entity.UserVO;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
