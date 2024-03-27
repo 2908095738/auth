@@ -1,7 +1,7 @@
 package com.bbs.controller;
 
 import com.bbs.dto.RoleGroupVo;
-import com.clinic.Result;
+import com.bbs.Result;
 import com.bbs.appService.AppRoleGroupService;
 import com.bbs.entity.RoleGroup;
 import org.springframework.web.bind.annotation.DeleteMapping;

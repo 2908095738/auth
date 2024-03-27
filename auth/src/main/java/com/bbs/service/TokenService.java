@@ -3,7 +3,7 @@ package com.bbs.service;
 import com.bbs.entity.User;
 import com.bbs.entity.UserVO;
 import com.bbs.entity.VXUser;
-import com.clinic.exception.ReLoginException;
+import com.bbs.exception.ReLoginException;
 
 import javax.servlet.http.HttpServletRequest;
 

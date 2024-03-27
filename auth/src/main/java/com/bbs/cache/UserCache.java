@@ -3,7 +3,7 @@ package com.bbs.cache;
 import com.bbs.entity.User;
 import com.bbs.entity.UserBind;
 import com.bbs.entity.VXUser;
-import com.clinic.exception.BusinessException;
+import com.bbs.exception.BusinessException;
 
 public interface UserCache {
 

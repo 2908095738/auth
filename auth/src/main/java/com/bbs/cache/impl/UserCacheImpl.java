@@ -11,7 +11,7 @@ import com.bbs.service.UserBindService;
 import com.bbs.service.UserService;
 import com.bbs.util.RedisUtil;
 import com.bbs.util.ZKUtil;
-import com.clinic.exception.BusinessException;
+import com.bbs.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
