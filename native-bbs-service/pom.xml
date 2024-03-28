@@ -139,13 +139,6 @@
             <artifactId>annotations</artifactId>
             <version>24.1.0</version>
         </dependency>
-
-        <dependency>
-            <groupId>com.bbs</groupId>
-            <artifactId>native-bbs-service</artifactId>
-            <version>1.0</version>
-        </dependency>
-
     </dependencies>
 
     <dependencyManagement>
@@ -173,11 +166,6 @@
                 <configuration>
                     <skipTests>true</skipTests>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>2.7.0</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -230,6 +218,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>2.7.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -240,7 +229,7 @@
                 </executions>
                 <configuration>
                     <includeSystemScope>true</includeSystemScope>
-                    <mainClass>com.bbs.BbsServer</mainClass>
+                    <mainClass>com.bbs.content.BbsServer</mainClass>
                 </configuration>
             </plugin>
         </plugins>

@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.bbs.mapper.NewContentMapper">
+<mapper namespace="com.bbs.content.mapper.NewContentMapper">
 
-    <resultMap id="BaseResultMap" type="com.bbs.entity.NewContent">
+    <resultMap id="BaseResultMap" type="com.bbs.content.entity.NewContent">
             <id property="newId" column="new_id" jdbcType="INTEGER"/>
             <result property="content" column="content" jdbcType="VARCHAR"/>
     </resultMap>

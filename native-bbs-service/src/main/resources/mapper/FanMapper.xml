@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.bbs.mapper.FanMapper">
+<mapper namespace="com.bbs.content.mapper.FanMapper">
 
-    <resultMap id="BaseResultMap" type="com.bbs.entity.Fan">
+    <resultMap id="BaseResultMap" type="com.bbs.content.entity.Fan">
             <id property="accountId" column="account_id" jdbcType="BIGINT"/>
             <result property="fAccountId" column="f_account_id" jdbcType="BIGINT"/>
             <result property="type" column="type" jdbcType="TINYINT"/>

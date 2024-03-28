@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.bbs.mapper.RoleGroupMapper">
+<mapper namespace="com.bbs.auth.mapper.RoleGroupMapper">
 
-    <resultMap id="BaseResultMap" type="com.bbs.entity.RoleGroup">
+    <resultMap id="BaseResultMap" type="com.bbs.auth.entity.RoleGroup">
             <id property="id" column="id" jdbcType="BIGINT"/>
             <result property="roleId" column="role_id" jdbcType="BIGINT"/>
             <result property="groupId" column="group_id" jdbcType="BIGINT"/>
@@ -14,7 +14,7 @@
         id,role_id,group_id
     </sql>
 
-<select id="selectRoleGroupNameList" resultType="com.bbs.dto.RoleGroupVo" >
+<select id="selectRoleGroupNameList" resultType="com.bbs.auth.dto.RoleGroupVo" >
     SELECT
         g.id,
         g.NAME,
