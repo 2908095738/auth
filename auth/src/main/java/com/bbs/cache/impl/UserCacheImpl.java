@@ -13,7 +13,6 @@ import com.bbs.util.RedisUtil;
 import com.bbs.util.ZKUtil;
 import com.bbs.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,18 +62,6 @@ public class UserCacheImpl implements UserCache {
     @Resource
     private UserDao dao;
 
-    public String getFilterKey() {
-        return zkUtil.getForPath(ZookeeperNodePaths.CacheConf.User.FILTER_KEY);
-    }
-
-    public Long getExpectedInsertions() {
-        return zkUtil.getLongForPath(ZookeeperNodePaths.CacheConf.User.FILTER_EXPECTED_INSERTIONS);
-    }
-
-    public Double getFalseProbability() {
-        return zkUtil.getDoubleForPath(ZookeeperNodePaths.CacheConf.User.FILTER_FALSE_PROBABILITY);
-    }
-
     public Integer getUserCacheTimeoutMin() {
         return Integer.parseInt(zkUtil.getForPath(ZookeeperNodePaths.CacheConf.User.TIMEOUT_MIN));
     }
@@ -95,6 +82,11 @@ public class UserCacheImpl implements UserCache {
     @Override
     public void setUser(User user) {
         redis.set(USER.key(user.getId()), toJsonPrettyStr(user), RandomUtil.randomInt(1, 5), TimeUnit.MINUTES);
+    }
+
+    @Override
+    public User getUser(Long uid) {
+        return redis.get(USER.key(uid), User.class);
     }
 
     @Retryable(value = RestClientException.class, backoff = @Backoff(delay = 5000L, multiplier = 2))
@@ -140,6 +132,10 @@ public class UserCacheImpl implements UserCache {
 
     private String getUserCacheKey(User user) {
         return USER.key(user.getId());
+    }
+
+    private String getUserCacheKey(Long uid) {
+        return USER.key(uid);
     }
 
     private String getUserIDAndOpenIDMap(UserBind userBind) {
@@ -217,7 +213,7 @@ public class UserCacheImpl implements UserCache {
 
     @Override
     public VXUser searchByOpenID(String openid) throws IllegalArgumentException {
-        return redissonUtil.lockExec(() -> {
+        return redissonUtil.lockAlwaysExec(() -> {
             Long uid = searchUid(openid);
             if(nonNull(uid)) {  // 微信已经绑定账号了
                 String key = USER.key(uid);
@@ -240,12 +236,6 @@ public class UserCacheImpl implements UserCache {
                 zkUtil.getIntForPath(ZookeeperNodePaths.LockConf.UserCache.LEASE),
                 MILLISECONDS
         );
-    }
-
-    private RBloomFilter<Object> bloomFilter() {
-        RBloomFilter<Object> filter = redisson.getBloomFilter(getFilterKey());
-        filter.tryInit(getExpectedInsertions(), getFalseProbability());
-        return filter;
     }
 
     private Boolean uidMapIsExist(String str) {
@@ -292,7 +282,7 @@ public class UserCacheImpl implements UserCache {
 
     @Override
     public User searchOrRegisterByPhone(Long phone) throws IllegalArgumentException {
-        return redissonUtil.lockExec(() -> {
+        return redissonUtil.lockAlwaysExec(() -> {
                     Long uid = searchUid(phone);
                     User user;
                     if(nonNull(uid)) {
@@ -335,12 +325,12 @@ public class UserCacheImpl implements UserCache {
      * @return 用户/NULL
      */
     @Override
-    public User searchByPhoneNoLockNoLoad(String phone) throws InterruptedException {
+    public User searchByPhoneNoLockNoLoad(String phone) {
         try {
-            Long uid = searchUIDByCacheThrow(phone);
+            Long uid = searchUid(phone);
             User user;
             if (nonNull(uid)) {
-                user = search(uid);
+                user = getUser(uid);
             } else {
                 user = dao.selectByPhone(phone);
             }
@@ -359,10 +349,12 @@ public class UserCacheImpl implements UserCache {
     }
 
     @Override
-    public Long searchUIDByCacheThrow(String phone) throws IllegalArgumentException {
-        Long uid = searchUIDByCache(phone);
-        checkArgument(nonNull(uid), "UID 对应用户不存在");
-        return uid;
+    public void expireUserAndPhoneMap(User user) {
+        String userCacheKey = getUserCacheKey(user.getId());
+        setUserCacheExpire(userCacheKey);
+        String phoneMapKey = getUserIDAndPhoneMapKey(user.getPhone());
+        setUserIDAndPhoneMapExpire(phoneMapKey);
+
     }
 
     /**

@@ -6,12 +6,12 @@ import cn.hutool.jwt.JWTUtil;
 import com.bbs.cache.TokenCache;
 import com.bbs.cache.UserCache;
 import com.bbs.entity.User;
-import com.bbs.entity.VXUser;
 import com.bbs.service.TokenService;
 import com.bbs.enums.CodeEnum;
 import com.bbs.exception.ReLoginException;
 import com.bbs.entity.UserVO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -24,8 +24,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static cn.hutool.core.bean.BeanUtil.toBean;
-import static com.bbs.api.vx.VXLoginAuthAPI.OPEN_ID_KEY;
-import static com.bbs.api.vx.VXLoginAuthAPI.SESSION_KEY;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -76,14 +74,6 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public String createToken(VXUser user) {
-        Map<String, Object> param = createJWTTokeParam(user);
-        param.put(OPEN_ID_KEY, user.getOpenid());
-        param.put(SESSION_KEY, user.getSession_key());
-        return JWTUtil.createToken(param, key.getBytes());
-    }
-
-    @Override
     public void setLoginFlag(Long uid) {
         redisTemplate.opsForValue().set(getTokenKey(uid), DateUtil.now(), expireTime, TimeUnit.DAYS);
     }
@@ -102,6 +92,19 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public String getToken(HttpServletRequest request) {
         return request.getHeader(tokenName);
+    }
+
+    @Override
+    public String verifyAndExpireToken(User user) {
+        String token = cache.getToken(user.getId());
+        if(Strings.isNotBlank(token)) {
+            UserVO vo = verify(token);
+            cache.expireToken(vo.getId());
+        } else {
+            token = createToken(user);
+            cache.setToken(user.getId(), token);
+        }
+        return token;
     }
 
     @Override
@@ -138,22 +141,12 @@ public class TokenServiceImpl implements TokenService {
      */
     @Override
     public Boolean verifyToken(String token) {
-        if(isNotBlank(token))
+        if(isNotBlank(token)) {
             return JWTUtil.verify(token, key.getBytes());
+        }
         return false;
     }
 
-    /**
-     * 更新redis中登录时间
-     */
-    public void extendLoginTime(UserVO user) {
-        setLoginFlag(user.getId());
-    }
-
-    @Override
-    public void extendLoginTime(User user) {
-        setLoginFlag(user.getId());
-    }
 
     /**
      * JWT解析token返回用户信息

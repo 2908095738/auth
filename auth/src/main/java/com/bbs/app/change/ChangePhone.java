@@ -13,6 +13,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 import org.redisson.api.RedissonClient;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,7 +30,6 @@ import java.util.HashMap;
 import static cn.hutool.json.JSONUtil.toJsonPrettyStr;
 import static com.bbs.enums.RedisKeys.*;
 import static com.bbs.Result.success;
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -38,6 +38,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 @RequestMapping
 public class ChangePhone {
 
+    @Lazy
     @Resource
     private DB db;
 
@@ -50,9 +51,11 @@ public class ChangePhone {
     @Resource
     private ZKUtil zkUtil;
 
+    @Lazy
     @Resource
     private Cache cache;
 
+    @Lazy
     @Resource
     private Condition check;
 
@@ -72,7 +75,7 @@ public class ChangePhone {
     @PostMapping("/wx/phone")
     public Result<Boolean> change(@Valid @RequestBody Param param) {
         String newPhone = param.phone;
-        return redissonUtil.lockExec(() -> {
+        return redissonUtil.lockAlwaysExec(() -> {
             User user = search(newPhone);  //该手机未绑定账号时，user=null
 
             //该手机号未被绑定时，执行修改（PS: 先修改库，缓存的旧值，用于防止穿透）
@@ -95,13 +98,16 @@ public class ChangePhone {
         Long uid = cache.searchUID(phone);
         if(check.cacheIsExists(uid)) {
             user = cache.search(USER.key(uid));
-            if(isNull(user)) user = db.search(uid);
+            if(isNull(user)) {
+                user = db.search(uid);
+            }
         } else {
             user = db.search(phone);
         }
         return user;
     }
 
+    @NoArgsConstructor
     @Component
     private static class DB {
         @Resource
@@ -111,8 +117,8 @@ public class ChangePhone {
             return service.lambdaQuery().eq(User::getPhone, phone).one();
         }
 
-        public Boolean update(Param param) {
-            return service.lambdaUpdate().set(User::getPhone, param.phone).eq(User::getId, param.uid).update();
+        public void update(Param param) {
+            service.lambdaUpdate().set(User::getPhone, param.phone).eq(User::getId, param.uid).update();
         }
 
         public User search(Long uid) {
@@ -121,6 +127,7 @@ public class ChangePhone {
     }
 
     @Component
+    @NoArgsConstructor
     private static class Cache {
 
         @Resource
@@ -163,6 +170,7 @@ public class ChangePhone {
     }
 
     @Component
+    @NoArgsConstructor
     private static class Condition {
 
         private Boolean cacheIsExists(Long uidCache) {
@@ -170,7 +178,9 @@ public class ChangePhone {
         }
 
         private Boolean notRegistered(User user) throws BusinessException {
-            if(nonNull(user)) throw new BusinessException("修改用户手机号失败：缓存UID用户，查询数据库不存在");
+            if(nonNull(user)) {
+                throw new BusinessException("修改用户手机号失败：缓存UID用户，查询数据库不存在");
+            }
             return true;
         }
     }

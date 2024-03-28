@@ -29,7 +29,7 @@ import static java.util.Objects.nonNull;
 
 @RestController
 @RequestMapping
-public class Login {
+public class Email {
 
     private final UserCache cache;
 
@@ -57,17 +57,23 @@ public class Login {
     }
 
     @PostMapping("/user")
-    public Result<UserVO> login(@RequestBody UserLoginParam param) throws InterruptedException, IllegalArgumentException {
+    public Result<UserVO> emailLogin(@RequestBody UserLoginParam param) throws InterruptedException, IllegalArgumentException {
         User user = cache.search(param.getEmail());
-        if(!service.userIsValidity(user)) return failed(400, "账号已过期！");
-        if(!service.userStateIsNormal(user)) return failed(400, "账号状态不可用，请联系客服了解详情！");
+        if(!service.userIsValidity(user)) {
+            return failed(400, "账号已过期！");
+        }
+        if(!service.userStateIsNormal(user)) {
+            return failed(400, "账号状态不可用，请联系客服了解详情！");
+        }
         if(verifyPassword(param.getPassword(), user)){
             tokenService.setLoginFlag(user.getId());
             UserVO vo = converter.toVO(user);
 
             // 设置诊所名称
             com.bbs.entity.Resource clinicNameConfig = resourceService.searchUserConfig(vo.getId(), ResourceNames.UserConfig.CLINIC_NAME.getName());
-            if(nonNull(clinicNameConfig)) vo.setClinicName(clinicNameConfig.getValue());
+            if(nonNull(clinicNameConfig)) {
+                vo.setClinicName(clinicNameConfig.getValue());
+            }
 
             vo.setToken(tokenService.createToken(user));
             return success(SUCCESS_USER_LOGIN, vo);
@@ -81,7 +87,7 @@ public class Login {
     }
 
     @Autowired
-    public Login(UserCache cache, TokenService tokenService, UserConverter converter, UserService service) {
+    public Email(UserCache cache, TokenService tokenService, UserConverter converter, UserService service) {
         this.cache = cache;
         this.tokenService = tokenService;
         this.converter = converter;

@@ -6,5 +6,9 @@ public interface TokenCache {
 
     String getToken(Long uid);
 
+    /**
+     * 延长 Token 过期时间
+     * @param uid 用户ID
+     */
     void expireToken(Long uid);
 }

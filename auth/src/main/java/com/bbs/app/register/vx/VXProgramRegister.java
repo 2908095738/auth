@@ -74,34 +74,32 @@ public class VXProgramRegister {
 
     @PutMapping("/vx")
     public Result<UserVO> register(@RequestBody Param param) {
-        return redissonUtil.lockExec(() -> {
+        return redissonUtil.lockAlwaysExec(() -> {
                     checkPhone(param);
                     User user;
-                    try {
-                        user = cache.searchByPhoneNoLockNoLoad(param.phone);
-                        //用户不存在，注册
-                        if(isNull(user)) {
-                            user = service.registerByPhoneNoLockNoLoad(param.phone);
-                        //用户存在，检查有没有绑定微信
+                    user = cache.searchByPhoneNoLockNoLoad(param.phone);
+                    //用户不存在，注册
+                    if(isNull(user)) {
+                        user = service.registerByPhoneNoLockNoLoad(param.phone);
+                    //用户存在，检查有没有绑定微信
+                    } else {
+                        String openid = VXLoginAuthAPI.getInstance(getAppID.get(), getSecret.get()).auth(param.code).getOpenid();
+                        UserBind bind = userBindService.lambdaQuery().eq(UserBind::getUserId, user.getId()).one();
+                        //未绑定微信，绑定微信
+                        if(isNull(bind)) {
+                            if(!userBindService.save(new UserBind(openid, user.getId()))) {
+                                throw new BusinessException("保存微信关联用户失败");
+                            }
+                        //已绑定微信，更换绑定的微信 PS: 2021/3/25 11:07
                         } else {
-                            String openid = VXLoginAuthAPI.getInstance(getAppID.get(), getSecret.get()).auth(param.code).getOpenid();
-                            UserBind bind = userBindService.lambdaQuery().eq(UserBind::getUserId, user.getId()).one();
-                            //未绑定微信，绑定微信
-                            if(isNull(bind)) {
-                                if(!userBindService.save(new UserBind(openid, user.getId())))
-                                    throw new BusinessException("保存微信关联用户失败");
-                            //已绑定微信，更换绑定的微信 PS: 2021/3/25 11:07
-                            } else {
-                                if(!userBindService.lambdaUpdate()
-                                        .set(UserBind::getOpenId, openid).eq(UserBind::getUserId, user.getId()).update())
-                                    throw new BusinessException("更换绑定微信失败");
+                            if(!userBindService.lambdaUpdate()
+                                    .set(UserBind::getOpenId, openid).eq(UserBind::getUserId, user.getId()).update()) {
+                                throw new BusinessException("更换绑定微信失败");
                             }
                         }
-                        cache.setUserAndPhoneAndOpenIDMap(user, param.code);
-                        return success(user);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
                     }
+                    cache.setUserAndPhoneAndOpenIDMap(user, param.code);
+                    return success(user);
                 },
                 redisson.getSpinLock(USER_PHONE_REGISTER.LOCK.key(param.phone)),
                 zkUtil.getIntForPath(ZookeeperNodePaths.LockConf.UserCache.WAIT),

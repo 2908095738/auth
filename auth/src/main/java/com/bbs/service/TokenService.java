@@ -17,14 +17,7 @@ public interface TokenService {
 
     UserVO parseToken(String token);
 
-    void extendLoginTime(UserVO user);
-
-    void extendLoginTime(User user);
-
     String createToken(User user);
-
-    String createToken(VXUser user);
-
     /**
      * 设置登录标识
      * @param uid 用户 ID（主键）
@@ -40,4 +33,6 @@ public interface TokenService {
     void clearLoginFlag(Long uid);
 
     String getToken(HttpServletRequest request);
+
+    String verifyAndExpireToken(User user);
 }

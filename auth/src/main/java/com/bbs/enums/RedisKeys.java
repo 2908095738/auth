@@ -25,7 +25,9 @@ public enum RedisKeys {
 
     USER_PHONE_REGISTER("user:register", "用户手机号注册"),
 
-    USER_PHONE_CHANGE("user:phone:change", "用户手机号注册"),
+    USER_PHONE_CODE("user:phone:code", "用户手机号短信"),
+
+    USER_LOGIN_PHONE("user:login:phone", "用户手机号登录"),
 
     RESOURCE("resource", "资源"),
     RESOURCE_PAGE_TREE("resource:page:tree", "页面资源 Tree"),

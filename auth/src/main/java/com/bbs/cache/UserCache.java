@@ -9,6 +9,8 @@ public interface UserCache {
 
     void setUser(User user);
 
+    User getUser(Long uid);
+
     void setUserAndOpenIDMap(UserBind userBind);
 
     void setUserAndPhoneMap(User user);
@@ -70,9 +72,13 @@ public interface UserCache {
      * @param phone 手机号
      * @return 用户
      */
-    User searchByPhoneNoLockNoLoad(String phone) throws InterruptedException;
-
-    Long searchUIDByCacheThrow(String phone) throws InterruptedException;
+    User searchByPhoneNoLockNoLoad(String phone);
 
     Long searchUIDByCache(String phone);
+
+    /**
+     * 延长过期时间
+     * @param user 用户
+     */
+    void expireUserAndPhoneMap(User user);
 }
