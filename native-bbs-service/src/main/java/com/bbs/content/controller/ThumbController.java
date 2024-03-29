@@ -32,7 +32,7 @@ public class ThumbController {
     public Result<Boolean> createThumb(@RequestBody @Valid CreateThumbParam param){
         //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
         //保存点赞数据
-        param.setUserId(1L);//currentUser.getid
+//        param.setUserId(1L);//currentUser.getid
         //更新用户、内容、评论对应点赞数量:redis
         cache.create(param);
         //通知对应的用户

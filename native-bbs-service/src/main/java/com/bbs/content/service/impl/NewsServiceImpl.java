@@ -3,13 +3,12 @@ package com.bbs.content.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.content.cache.ThumbCache;
 import com.bbs.content.converter.NewsConverter;
-import com.bbs.content.dto.param.CreateNewParam;
-import com.bbs.content.enums.NewCommentStatus;
-import com.bbs.content.mapper.NewsMapper;
-import com.bbs.content.dto.GetUserAccountDto;
 import com.bbs.content.dto.GetUserNewsDto;
+import com.bbs.content.dto.param.CreateNewParam;
 import com.bbs.content.entity.NewContent;
 import com.bbs.content.entity.News;
+import com.bbs.content.enums.NewCommentStatus;
+import com.bbs.content.mapper.NewsMapper;
 import com.bbs.content.service.NewsService;
 import com.bbs.content.util.SensitiveFilter;
 import com.github.yulichang.base.MPJBaseServiceImpl;
@@ -49,6 +48,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
         // 过滤敏感词
         news.setTitle(sensitiveFilter.filter(news.getTitle()));
         news.setStatus(NewCommentStatus.WAIT_FOR_REVIEW.getCode());
+        news.setUpdateId(news.getCreateId());
         save(news);
         return news.getNewId();
     }
@@ -62,23 +62,17 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
      * @return GetUserAccountDto.GetUserNewsDto
      */
     @Override
-    public Page<GetUserAccountDto.GetUserNewsDto> getListByUserId(Long userId, Integer current, Integer size, boolean flag) {
-        MPJLambdaWrapper<GetUserAccountDto.GetUserNewsDto> wrapper = new MPJLambdaWrapper<>();
-        wrapper.selectAll(News.class)
+    public Page<GetUserNewsDto> getListByUserId(Long userId, Integer current, Integer size, boolean flag) {
+        Page<GetUserNewsDto> result = selectJoinListPage(new Page<>(current, size), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
+                .selectAll(News.class)
                 .orderBy(true,false,News::getCreateTime)
-                .eq(News::getCreateId,userId);
-
-        if(flag)
-            wrapper.in(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode(), NewCommentStatus.WAIT_FOR_REVIEW.getCode());
-        {
-            wrapper.eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode());
-        }
-
-        Page<GetUserAccountDto.GetUserNewsDto> result = wrapper.page(new Page<>(current, size));
+                .eq(News::getCreateId,userId)
+                .in(flag,News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode(), NewCommentStatus.WAIT_FOR_REVIEW.getCode())
+                .eq(!flag,News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
+        );
         if(isNotEmpty(result.getRecords()))
-            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewsId(), null, null, 1)));
+            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
         return result;
-
     }
 
 
@@ -89,13 +83,13 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
      * @return GetUserAccountDto.GetUserNewsDto
      */
     @Override
-    public Page<GetUserAccountDto.GetUserNewsDto> getListByRecommend(Integer current, Integer size) {
-        Page<GetUserAccountDto.GetUserNewsDto> result = selectJoinListPage(new Page<>(current, size), GetUserAccountDto.GetUserNewsDto.class, new MPJLambdaWrapper<News>()
+    public Page<GetUserNewsDto> getListByRecommend(Integer current, Integer size) {
+        Page<GetUserNewsDto> result = selectJoinListPage(new Page<>(current, size), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
                 .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
                 .orderBy(true, false, News::getCreateTime, News::getLastReplyTime));
         if(isNotEmpty(result.getRecords()))
-            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewsId(), null, null, 1)));
+            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
         return result;
     }
 
@@ -107,15 +101,15 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
      * @return GetUserAccountDto.GetUserNewsDto
      */
     @Override
-    public Page<GetUserAccountDto.GetUserNewsDto> getListByFollower(List<Long> userIds, Integer current, Integer size) {
-        Page<GetUserAccountDto.GetUserNewsDto> result = selectJoinListPage(new Page<>(current, size), GetUserAccountDto.GetUserNewsDto.class, new MPJLambdaWrapper<News>()
+    public Page<GetUserNewsDto> getListByFollower(List<Long> userIds, Integer current, Integer size) {
+        Page<GetUserNewsDto> result = selectJoinListPage(new Page<>(current, size), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
                 .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
                 .orderBy(true, false, News::getCreateTime)
                 .in(News::getCreateId, userIds));
 
         if(isNotEmpty(result.getRecords()))
-            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewsId(), null, null, 1)));
+            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
         return result;
     }
 
@@ -128,14 +122,14 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
      */
     @Override
     public GetUserNewsDto getOneById(Long newId) {
-        MPJLambdaWrapper<GetUserNewsDto> wrapper = new MPJLambdaWrapper<>();
-        GetUserNewsDto result = wrapper.selectAll(News.class)
+        GetUserNewsDto result = selectJoinOne(GetUserNewsDto.class, new MPJLambdaWrapper<News>()
+                .selectAll(News.class)
                 .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
                 .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
                 .eq(News::getNewId, newId)
-                .one();
+        );
         if(Objects.nonNull(result))
-            result.setLikeCount(thumbCache.countBy(result.getNewsId(), null, null, 1));
+            result.setLikeCount(thumbCache.countBy(result.getNewId(), null, null, 1));
         return result;
     }
 

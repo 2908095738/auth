@@ -2,8 +2,6 @@ package com.bbs.content.dto.param;
 
 import lombok.Data;
 
-import java.util.Date;
-
 @Data
 public class CreateNewParam {
 
@@ -44,20 +42,6 @@ public class CreateNewParam {
      */
     private String viewUrl;
 
-    /**
-     * 评论数
-     */
-    private Integer commentCount = 0;
-
-    /**
-     * 最后回复时间
-     */
-    private Date lastReplyTime = new Date();
-
-    /**
-     * 点赞数(或直接取值，或统计数据库点赞数量)
-     */
-    private Integer likeCount = 0;
 
     /**
      * 创建id

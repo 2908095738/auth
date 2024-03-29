@@ -1,12 +1,12 @@
 package com.bbs.content.mapper;
 
 import com.bbs.content.entity.Comment;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 
 /**
  * @Entity com.bbs.entity.Comment
  */
-public interface CommentMapper extends BaseMapper<Comment> {
+public interface CommentMapper extends MPJBaseMapper<Comment> {
 
 }
 

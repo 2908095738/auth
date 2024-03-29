@@ -1,10 +1,9 @@
 package com.bbs.content.util;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -13,9 +12,8 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class RedisUtil {
 
-    @Autowired
-    @Qualifier("protoStuffTemplate")
-    private RedisTemplate protoStuffTemplate;
+    @Resource(name = "protoStuffTemplate")
+    private RedisTemplate<String, String> protoStuffTemplate;
 
     /**
      * 设置过期时间，单位秒
@@ -49,7 +47,7 @@ public class RedisUtil {
      * @param key 键
      * @param value 值
      */
-    public void set(String key, Object value) {
+    public void set(String key, String value) {
         protoStuffTemplate.boundValueOps(key).set(value);
     }
 
@@ -59,7 +57,7 @@ public class RedisUtil {
      * @param value 值
      * @param expireTime 过期时间
      */
-    public void set(String key, Object value, Long expireTime) {
+    public void set(String key, String value, Long expireTime) {
         protoStuffTemplate.boundValueOps(key).set(value, expireTime, TimeUnit.SECONDS);
     }
 
@@ -69,7 +67,7 @@ public class RedisUtil {
      * @return 查询成功：值，查询失败，null
      */
     public Object get(String key) {
-        return protoStuffTemplate.boundValueOps(key).get();
+        return protoStuffTemplate.opsForValue().get(key);
     }
 
     public void incr(String key, Integer v){

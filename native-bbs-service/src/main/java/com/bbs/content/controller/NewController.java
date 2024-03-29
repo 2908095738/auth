@@ -2,9 +2,8 @@ package com.bbs.content.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
-import com.bbs.content.dto.param.CreateNewParam;
-import com.bbs.content.dto.GetUserAccountDto;
 import com.bbs.content.dto.GetUserNewsDto;
+import com.bbs.content.dto.param.CreateNewParam;
 import com.bbs.content.service.CommentService;
 import com.bbs.content.service.NewContentService;
 import com.bbs.content.service.NewsService;
@@ -61,8 +60,8 @@ public class NewController {
      * @return Page<GetUserAccountDto.GetUserNewsDto>
      */
     @GetMapping("/user")
-    public Result<Page<GetUserAccountDto.GetUserNewsDto>> getAccountNews(@NotNull Long userId,@NotNull Integer current, @NotNull Integer size){
-        Page<GetUserAccountDto.GetUserNewsDto> newsResult = newsService.getListByUserId(userId,current,size,false);
+    public Result<Page<GetUserNewsDto>> getAccountNews(@NotNull Long userId,@NotNull Integer current, @NotNull Integer size,@NotNull Boolean flag){
+        Page<GetUserNewsDto> newsResult = newsService.getListByUserId(userId,current,size,flag);
         return Result.success(newsResult);
     }
 
@@ -74,8 +73,8 @@ public class NewController {
      * @return Page<GetUserAccountDto.GetUserNewsDto>
      */
     @GetMapping("/recommend")
-    public Result<Page<GetUserAccountDto.GetUserNewsDto>> getRecommendNews(@NotNull Integer current, @NotNull Integer size){
-        Page<GetUserAccountDto.GetUserNewsDto> newsResult = newsService.getListByRecommend(current,size);
+    public Result<Page<GetUserNewsDto>> getRecommendNews(@NotNull Integer current, @NotNull Integer size){
+        Page<GetUserNewsDto> newsResult = newsService.getListByRecommend(current,size);
         return Result.success(newsResult);
     }
 
@@ -88,8 +87,8 @@ public class NewController {
      * @return Page<GetUserAccountDto.GetUserNewsDto>
      */
     @GetMapping("/follower")
-    public Result<Page<GetUserAccountDto.GetUserNewsDto>> getFollowerNews(@NotNull List<Long> userIds, @NotNull Integer current, @NotNull Integer size){
-        Page<GetUserAccountDto.GetUserNewsDto> newsResult = newsService.getListByFollower(userIds,current,size);
+    public Result<Page<GetUserNewsDto>> getFollowerNews(@NotNull List<Long> userIds, @NotNull Integer current, @NotNull Integer size){
+        Page<GetUserNewsDto> newsResult = newsService.getListByFollower(userIds,current,size);
         return Result.success(newsResult);
     }
 

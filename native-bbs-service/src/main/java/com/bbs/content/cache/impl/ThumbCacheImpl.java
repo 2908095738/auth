@@ -33,14 +33,13 @@ public class ThumbCacheImpl implements ThumbCache {
      */
     @Override
     public void create(CreateThumbParam param) {
-        switch (param.getType()){
-            case 1:
-                addThumb(RedisKeys.NEW_THUMB_COMMENT.key() + param.getNewId(),RedisKeys.NEW_THUMB.key(),param.getUserId());
-            case 2:
-                addThumb(RedisKeys.NEW_THUMB_COMMENT.key() + param.getNewId(),RedisKeys.COMMENT_THUMB.key()+param.getCommentId(),param.getUserId());
+        if (param.getType()==1) {
+            addThumb(RedisKeys.NEW_THUMB_COMMENT.getPrefix() + param.getNewId(), RedisKeys.NEW_THUMB.getPrefix(), param.getUserId());
+        }else if(param.getType()==2){
+            addThumb(RedisKeys.NEW_THUMB_COMMENT.getPrefix() + param.getNewId(),RedisKeys.COMMENT_THUMB.getPrefix()+param.getCommentId(),param.getUserId());
         }
         //用户总点赞数+1
-        redis.incr(RedisKeys.USER_THUMB.key() + param.getPostUserId(),1);
+        redis.incr(RedisKeys.USER_THUMB.getPrefix() + param.getPostUserId(),1);
     }
 
 
@@ -74,7 +73,7 @@ public class ThumbCacheImpl implements ThumbCache {
             case 1:
                 return countNewThumb(newId);
             case 2:
-                Object json = redis.get(RedisKeys.USER_THUMB.key() + userId);
+                Object json = redis.get(RedisKeys.USER_THUMB.getPrefix() + userId);
                 return Objects.isNull(json)? 0 : JSON.parseObject(json.toString(), Integer.class);
             case 3:
                 return countCommentThumb(newId,commentIds);
@@ -89,14 +88,13 @@ public class ThumbCacheImpl implements ThumbCache {
      */
     @Override
     public void cancel(CancelThumbParam param) {
-        switch (param.getType()){
-            case 1:
-                delThumb(RedisKeys.NEW_THUMB_COMMENT.key() + param.getNewId(),RedisKeys.NEW_THUMB.key(),param.getUserId());
-            case 2:
-                addThumb(RedisKeys.NEW_THUMB_COMMENT.key() + param.getNewId(),RedisKeys.COMMENT_THUMB.key()+param.getCommentId(),param.getUserId());
+        if (param.getType()==1) {
+            delThumb(RedisKeys.NEW_THUMB_COMMENT.getPrefix() + param.getNewId(),RedisKeys.NEW_THUMB.getPrefix(),param.getUserId());
+        }else if(param.getType()==2){
+            addThumb(RedisKeys.NEW_THUMB_COMMENT.getPrefix() + param.getNewId(),RedisKeys.COMMENT_THUMB.getPrefix()+param.getCommentId(),param.getUserId());
         }
         //用户总点赞数-1
-        redis.incr(RedisKeys.USER_THUMB.key() + param.getPostUserId(),-1);
+        redis.incr(RedisKeys.USER_THUMB.getPrefix() + param.getPostUserId(),-1);
     }
 
     /**
@@ -117,14 +115,14 @@ public class ThumbCacheImpl implements ThumbCache {
 
     //文章点赞数
     private Integer countNewThumb(Long newId) {
-        String json = (String) redis.hashGet(RedisKeys.NEW_THUMB_COMMENT.key() + newId, RedisKeys.NEW_THUMB.key());
+        String json = (String) redis.hashGet(RedisKeys.NEW_THUMB_COMMENT.getPrefix()+ newId, RedisKeys.NEW_THUMB.getPrefix());
         Set<Integer> userIds = StringUtils.isBlank(json)? new HashSet<>() : JSON.parseObject(json, new TypeReference<Set<Integer>>(){});
         return userIds.size();
     }
 
     //评论点赞数
     private Integer countCommentThumb(Long newId, List<Long> commentIds) {
-        String json = (String) redis.hashGet(RedisKeys.NEW_THUMB_COMMENT.key() + newId, RedisKeys.COMMENT_THUMB.key()+commentIds);
+        String json = (String) redis.hashGet(RedisKeys.NEW_THUMB_COMMENT.getPrefix() + newId, RedisKeys.COMMENT_THUMB.getPrefix()+commentIds);
         List<Set<Integer>> userIds = StringUtils.isBlank(json)? new ArrayList<>(): JSON.parseObject(json, new TypeReference<List<Set<Integer>>>(){});
         return Math.toIntExact(userIds.stream().map(Set::size).count());
     }

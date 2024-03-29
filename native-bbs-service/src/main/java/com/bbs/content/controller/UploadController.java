@@ -2,6 +2,7 @@ package com.bbs.content.controller;
 
 import cn.hutool.core.io.FileTypeUtil;
 import com.bbs.Result;
+import com.bbs.content.service.FileService;
 import com.bbs.content.util.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -31,6 +32,7 @@ public class UploadController {
     @Value("${news.video.path}")
     private String videoPath;
 
+    private FileService fileService;
 
     private Map<String,Integer> fileType = new HashMap<String,Integer>(){{
         put("jpg",1);
@@ -58,25 +60,37 @@ public class UploadController {
         List<String> filePathList = new ArrayList<>();
         //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
         log.info("文件上传:{}", fileList);
-        fileList.forEach(file->{
+        for (int i = 0; i < fileList.size(); i++) {
+            MultipartFile file = fileList.get(i);
             try {
                 //文件的请求路径根据文件类型分类
                 String type = FileTypeUtil.getType(file.getInputStream());
                 String filePath = "";
                 if(fileType.get(type)==1){//图片
-                    filePath = imagePath + DateFormatUtils.format(new Date(),"YYYYMMDDHHmmss")+"UID1."+type;
+                    filePath = imagePath + DateFormatUtils.format(new Date(),"YYYYMMDDHHmmss")+"UID1"+(i+1)+"."+type;
+                    //判断大小，处理
+                    double size = file.getSize();
+                    if( size < FileUtils.MAX_ALLOWED_P_SIZE){
+                        file.transferTo(new File(filePath));
+                    }{
+                        file.transferTo(new File(filePath));
+                        //放入队列，压缩文件，放入成功队列
+                        //异步：压缩落地,放入队列,
+                        FileUtils.doWithPhoto(filePath);
+                    }
                 }else if(fileType.get(type)==2){//视频
-                    filePath = videoPath + DateFormatUtils.format(new Date(),"YYYYMMDDHHmmss")+"UID1."+type;
-                }
-
-                //判断大小，处理
-                double size = file.getSize();
-                if( size < FileUtils.MAX_ALLOWED_FILE_SIZE){
-                    //直接落地
-                    file.transferTo(new File(filePath));
-                }else {
-                    //压缩落地
-                    FileUtils.compressionVideo(FileUtils.multipartFileToFile(file), "native-bbs-service\\src\\main\\resources\\nvideo\\"+DateFormatUtils.format(new Date(),"YYYYMMDDHHmmss")+"UID1");
+                    filePath = videoPath + DateFormatUtils.format(new Date(),"YYYYMMDDHHmmss")+"UID1"+(i+1)+"."+type;
+                    //判断大小，处理
+                    double size = file.getSize();
+                    if( size < FileUtils.MAX_ALLOWED_FILE_SIZE){
+                        //直接落地
+                        file.transferTo(new File(filePath));
+                    }else {
+                        //放入队列，压缩文件，放入成功队列
+//                        fileService.putCompressionQueue(file);
+                        //异步：压缩落地,放入队列,
+                        FileUtils.compressionVideo(FileUtils.multipartFileToFile(file), filePath);
+                    }
                 }
                 //删除源文件
                 FileUtils.delteTempFile(FileUtils.multipartFileToFile(file));
@@ -87,7 +101,7 @@ public class UploadController {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-        });
+        }
         return Result.success(filePathList);
     }
 

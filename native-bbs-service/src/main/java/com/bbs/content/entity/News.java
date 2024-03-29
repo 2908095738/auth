@@ -41,12 +41,6 @@ public class News implements Serializable {
     private String summary;
 
     /**
-     * 全部内容
-     */
-    @TableField(value = "content")
-    private String content;
-
-    /**
      * 图片
      */
     @TableField(value = "image_url")
@@ -74,7 +68,7 @@ public class News implements Serializable {
      * 评论数
      */
     @TableField(value = "comment_count")
-    private Integer commentCount;
+    private Integer commentCount = 0;
 
     /**
      * 最后回复时间
@@ -86,13 +80,13 @@ public class News implements Serializable {
      * 点赞数
      */
     @TableField(value = "like_count")
-    private Integer likeCount;
+    private Integer likeCount = 0;
 
     /**
      * 状态 10.待审核 20.已发布 110.待审核删除 120.已发布删除
      */
     @TableField(value = "status")
-    private Integer status;
+    private Integer status = 10;
 
     /**
      * 创建id

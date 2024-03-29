@@ -6,17 +6,15 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.Data;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 @Data
 public class GetUserNewsDto {
 
     /**
      * 主键
      */
-    @TableId(value = "news_id", type = IdType.AUTO)
-    private Long newsId;
+    @TableId(value = "new_id", type = IdType.AUTO)
+    private Long newId;
 
     /**
      * 标题
@@ -35,18 +33,6 @@ public class GetUserNewsDto {
      */
     @TableField(exist = false)
     private String content;
-
-    /**
-     * 图片信息集合
-     */
-    @TableField(exist = false)
-    private List<ImageInfo> imageInfoList = new ArrayList<>();
-
-    /**
-     * 媒体文件信息集合
-     */
-    @TableField(exist = false)
-    private List<MediaInfo> mediaInfoList;
 
     /**
      * 标签id

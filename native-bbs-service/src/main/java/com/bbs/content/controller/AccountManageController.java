@@ -4,13 +4,15 @@ package com.bbs.content.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.content.dto.GetUserAccountDto;
-import com.bbs.entity.UserVO;
+import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.service.NewsService;
 import com.bbs.content.service.UserAccountService;
+import com.bbs.entity.UserVO;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import javax.annotation.Resource;
 import java.util.Objects;
 
@@ -54,7 +56,7 @@ public class AccountManageController {
         if(Objects.nonNull(result)){
             result.setAge(18);//TODO currentUser
             //获取发布文章列表
-            Page<GetUserAccountDto.GetUserNewsDto> newsResult = newsService.getListByUserId(userId,1,10,true);
+            Page<GetUserNewsDto> newsResult = newsService.getListByUserId(userId,1,10,true);
             result.setNewsResult(newsResult);
         }
         return Result.success(result);
