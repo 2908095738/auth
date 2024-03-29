@@ -53,5 +53,5 @@ public enum RedisKeys {
     }
 
 
-    public static final Map<String,RedisKeys> map = EnumUtil.getEnumMap(RedisKeys.class);
+    public static final Map<String, com.bbs.auth.enums.RedisKeys> map = EnumUtil.getEnumMap(com.bbs.auth.enums.RedisKeys.class);
 }

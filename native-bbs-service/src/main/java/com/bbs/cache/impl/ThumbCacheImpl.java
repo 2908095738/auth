@@ -4,8 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.bbs.cache.ThumbCache;
 import com.bbs.dto.param.CreateThumbParam;
-import com.bbs.enums.RedisKeys;
-import com.bbs.util.RedisUtil;
+import com.bbs.auth.enums.RedisKeys;
+import com.bbs.auth.util.RedisUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 

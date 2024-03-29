@@ -7,14 +7,14 @@ spring:
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
   redis:
-      host: 192.168.100.6
+      host: 127.0.0.1
       port: 6379
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.log4j2.Log4j2Impl
 logging:
   level:
-    com.bbs: debug
+    com.bbs.auth: debug
     com.baomidou: debug
   file:
     path: logs/
@@ -27,7 +27,7 @@ jwt:
 apache:
   zookeeper:
     # 服务器连接地址，集群模式则使用逗号分隔如：ip1:host,ip2:host
-    connect-url: 192.168.100.6:2181
+    connect-url: 127.0.0.1:2181
     # 会话超时时间：单位ms
     session-timeout: 10000
     # 连接超时时间：单位ms
