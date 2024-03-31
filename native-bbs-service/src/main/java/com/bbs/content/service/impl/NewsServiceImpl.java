@@ -41,7 +41,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
      * @return Long
      */
     @Override
-    public Long createNews(CreateNewParam param) {
+    public News createNews(CreateNewParam param) {
        News news = converter.toEntity(param);
        // 转义 HTML 标记，防止在 HTML 标签中注入攻击语句
         news.setTitle(HtmlUtils.htmlEscape(news.getTitle()));
@@ -50,7 +50,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
         news.setStatus(NewCommentStatus.WAIT_FOR_REVIEW.getCode());
         news.setUpdateId(news.getCreateId());
         save(news);
-        return news.getNewId();
+        return news;
     }
 
     /**

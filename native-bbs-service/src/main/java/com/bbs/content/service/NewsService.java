@@ -14,7 +14,7 @@ import java.util.List;
 public interface NewsService extends IService<News> {
 
 
-    Long createNews(CreateNewParam param);
+    News createNews(CreateNewParam param);
 
     Page<GetUserNewsDto> getListByUserId(Long userId, Integer current, Integer size, boolean flag);
 

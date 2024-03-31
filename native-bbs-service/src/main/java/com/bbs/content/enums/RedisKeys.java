@@ -11,13 +11,15 @@ import java.util.Map;
 @Getter
 public enum RedisKeys {
 
-    NEW_THUMB_COMMENT("new_thumb_comment:", "文章id"),
-    NEW_THUMB("new_thumb:", "文章点赞用户"),
+    NEW_THUMB_COMMENT("new_thumb_comment:", "内容id"),
+    NEW_THUMB("new_thumb:", "内容点赞用户"),
     COMMENT("comment:", "评论用户"),
     COMMENT_THUMB("comment_thumb:", "评论点赞用户"),
-    USER_NEW("user_new:", "用户发布的文章"),
+    USER_NEW("user_new:", "用户发布的内容"),
 
     USER_THUMB("user_thumb:", "用户点赞数"),
+
+    HOT_NEWS("hot_news:", "热点内容"),
 
 
     ;

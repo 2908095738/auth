@@ -1,12 +1,14 @@
 package com.bbs.content.util;
 
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -81,6 +83,18 @@ public class RedisUtil {
      */
     public Boolean setIfPresent(String key, String value) {
         return protoStuffTemplate.opsForValue().setIfPresent(key, value);
+    }
+
+    //zset
+    public void zSet(String key, Set<ZSetOperations.TypedTuple<String>> tuples) {
+        protoStuffTemplate.opsForZSet().add(key, tuples);
+    }
+    public Set<String> zGet(String key, Double startScore, Double endScore) {
+        return protoStuffTemplate.opsForZSet().rangeByScore(key, startScore, endScore);
+    }
+
+    public Set<String> zGet(String key, Long startScore, Long endScore) {
+        return zGet(key, startScore.doubleValue(), endScore.doubleValue());
     }
 
     //hash

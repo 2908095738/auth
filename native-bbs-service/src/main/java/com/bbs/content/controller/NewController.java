@@ -2,8 +2,10 @@ package com.bbs.content.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
+import com.bbs.content.cache.NewsCache;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.param.CreateNewParam;
+import com.bbs.content.entity.News;
 import com.bbs.content.service.CommentService;
 import com.bbs.content.service.NewContentService;
 import com.bbs.content.service.NewsService;
@@ -28,6 +30,8 @@ public class NewController {
 
     private NewsService newsService;
 
+    private NewsCache newsCache;
+
     private CommentService commentService;
 
     private NewContentService newContentService;
@@ -40,13 +44,15 @@ public class NewController {
     @PutMapping
     public Result<Boolean> createNews(@RequestBody @Valid CreateNewParam param){
         //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
-        param.setCreateId(1L);//currentUser.getid
+//        param.setCreateId(1L);
         //创建文章表
-        Long id = newsService.createNews(param);
+        News news = newsService.createNews(param);
         //创建文章text表
-        newContentService.createByNew(id,param.getContent());
+        newContentService.createByNew(news.getNewId(),param.getContent());
         // 计算内容分数
 
+        //添加到redis
+        newsCache.create(news);
         return Result.success();
     }
 
@@ -95,7 +101,12 @@ public class NewController {
     /**
      * 查询热门内容
      */
-    //TODO
+    @GetMapping("/hot")
+    public Result<List<GetUserNewsDto>> getHotNews(){
+        List<GetUserNewsDto> newsResult = newsCache.getHot();
+        return Result.success(newsResult);
+    }
+
 
 
 
@@ -118,8 +129,9 @@ public class NewController {
 
 
     @Autowired
-    public NewController(NewsService newsService, CommentService commentService, NewContentService newContentService) {
+    public NewController(NewsService newsService, NewsCache newsCache, CommentService commentService, NewContentService newContentService) {
         this.newsService = newsService;
+        this.newsCache = newsCache;
         this.commentService = commentService;
         this.newContentService = newContentService;
     }
