@@ -21,7 +21,7 @@ import javax.validation.Valid;
 public class ThumbController {
 
 
-    private ThumbCache cache;
+    private final ThumbCache cache;
 
     /**
      * 添加点赞
@@ -32,7 +32,7 @@ public class ThumbController {
     public Result<Boolean> createThumb(@RequestBody @Valid CreateThumbParam param){
         //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
         //保存点赞数据
-//        param.setUserId(1L);//currentUser.getid
+//        param.setUserId(1L);
         //更新用户、内容、评论对应点赞数量:redis
         cache.create(param);
         //通知对应的用户
@@ -48,8 +48,8 @@ public class ThumbController {
     @DeleteMapping
     public Result<Boolean> cancelThumb(@RequestBody @Valid CancelThumbParam param){
         //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
-        //保存点赞数据
-        param.setUserId(1L);//currentUser.getid
+        //删除点赞数据
+//        param.setUserId(1L);
         //更新用户、内容、评论对应点赞数量:redis
         cache.cancel(param);
         //通知对应的用户
