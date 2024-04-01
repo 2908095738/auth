@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.constraints.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,7 +50,8 @@ public class UploadController {
      * @return List<String>
      */
     @PostMapping("/upload")
-    public Result<List<String>> upload(@RequestParam("file")List<MultipartFile> fileList, @RequestParam("newId")Long newId) {
+    public Result<List<String>> upload(@RequestParam("file") @NotNull(message = "上传文件不能为空！")List<MultipartFile> fileList,
+                                       @RequestParam("newId") @NotNull(message = "内容id不能为空！")Long newId) {
         //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
         Long createId = 1L;
         List<String> filePathList = new ArrayList<>();
@@ -107,6 +109,18 @@ public class UploadController {
         FileUtils.delteTempFile(FileUtils.multipartFileToFile(file));
         filePathList.add(filePath);
     }
+
+
+    /**
+     * 删除文件
+     */
+
+
+
+
+
+
+
 
 
     @Autowired

@@ -57,11 +57,27 @@ public class CommentController {
      * @return Page<GetUserNewsDto.CommentByNewIdDto>
      */
     @GetMapping
-    public Result<Page<GetUserNewsDto.CommentByNewIdDto>> getPageByNewId(@NotNull Long newId, @NotNull Integer current, @NotNull Integer size){
+    public Result<Page<GetUserNewsDto.CommentByNewIdDto>> getPageByNewId(@NotNull(message = "内容id不能为空！") Long newId,
+                                                                         @NotNull(message = "页数不能为空！") Integer current,
+                                                                         @NotNull(message = "每页几条不能为空！") Integer size){
         //获取评论分页列表
         Page<GetUserNewsDto.CommentByNewIdDto> list = service.getPageByNewId(newId, current, size);
         return Result.success(list);
     }
+
+    /**
+     * 删除评论
+     */
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -2,6 +2,7 @@ package com.bbs.content.dto.param;
 
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Data
@@ -10,22 +11,26 @@ public class CreateNewParam {
     /**
      * 内容id
      */
+    @NotNull(message = "内容id不能为空！")
     private Long newId;
 
 
     /**
      * 标题
      */
+    @NotNull(message = "标题不能为空！")
     private String title;
 
     /**
-     * 内容摘要
+     * 封面
      */
+    @NotNull(message = "封面不能为空！")
     private String summary;
 
     /**
      * 全部内容
      */
+    @NotNull(message = "全部内容不能为空！")
     private String content;
 
 

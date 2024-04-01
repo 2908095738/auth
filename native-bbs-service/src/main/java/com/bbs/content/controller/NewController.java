@@ -75,6 +75,22 @@ public class NewController {
         return Result.success();
     }
 
+    /**
+     * 删除草稿
+     */
+
+
+
+
+    /**
+     * 删除内容
+     */
+
+
+
+
+
+
 
     /**
      * 查询用户(自己或他人)主页上的内容简要信息
@@ -86,7 +102,10 @@ public class NewController {
      * @return Page<GetUserAccountDto.GetUserNewsDto>
      */
     @GetMapping("/user")
-    public Result<Page<GetUserNewsDto>> getAccountNews(@NotNull Long userId, @NotNull Integer current, @NotNull Integer size, @NotNull Boolean flag) {
+    public Result<Page<GetUserNewsDto>> getAccountNews(@NotNull(message = "用户id不能为空！") Long userId,
+                                                       @NotNull(message = "页数不能为空！") Integer current,
+                                                       @NotNull(message = "每页几条不能为空！") Integer size,
+                                                       @NotNull(message = "是否为此用户属性值不能为空！") Boolean flag) {
         Page<GetUserNewsDto> newsResult = newsService.getListByUserId(userId, current, size, flag);
         return Result.success(newsResult);
     }
@@ -100,7 +119,8 @@ public class NewController {
      * @return Page<GetUserAccountDto.GetUserNewsDto>
      */
     @GetMapping("/recommend")
-    public Result<Page<GetUserNewsDto>> getRecommendNews(@NotNull Integer current, @NotNull Integer size) {
+    public Result<Page<GetUserNewsDto>> getRecommendNews(@NotNull(message = "页数不能为空！") Integer current,
+                                                         @NotNull(message = "每页几条不能为空！") Integer size) {
         Page<GetUserNewsDto> newsResult = newsService.getListByRecommend(current, size);
         return Result.success(newsResult);
     }
@@ -115,7 +135,9 @@ public class NewController {
      * @return Page<GetUserAccountDto.GetUserNewsDto>
      */
     @GetMapping("/follower")
-    public Result<Page<GetUserNewsDto>> getFollowerNews(@NotNull List<Long> userIds, @NotNull Integer current, @NotNull Integer size) {
+    public Result<Page<GetUserNewsDto>> getFollowerNews(@NotNull(message = "关注用户id列表不能为空！") List<Long> userIds,
+                                                        @NotNull(message = "页数不能为空！") Integer current,
+                                                        @NotNull(message = "每页几条不能为空！") Integer size) {
         Page<GetUserNewsDto> newsResult = newsService.getListByFollower(userIds, current, size);
         return Result.success(newsResult);
     }
@@ -125,6 +147,7 @@ public class NewController {
      */
     @GetMapping("/hot")
     public Result<List<GetUserNewsDto>> getHotNews() {
+        //TODO
         List<GetUserNewsDto> newsResult = newsCache.getHot();
         return Result.success(newsResult);
     }
@@ -137,7 +160,9 @@ public class NewController {
      * @return GetUserNewsDto
      */
     @GetMapping
-    public Result<GetUserNewsDto> getOneById(@NotNull Long newId, @NotNull Integer current, @NotNull Integer size) {
+    public Result<GetUserNewsDto> getOneById(@NotNull(message = "内容id不能为空！") Long newId,
+                                             @NotNull(message = "页数不能为空！") Integer current,
+                                             @NotNull(message = "每页几条不能为空！") Integer size) {
         GetUserNewsDto newsResult = newsService.getOneById(newId);
         if (Objects.nonNull(newsResult)) {
             //获取评论分页列表
