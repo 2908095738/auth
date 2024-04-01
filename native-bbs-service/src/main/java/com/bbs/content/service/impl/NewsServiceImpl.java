@@ -6,6 +6,7 @@ import com.bbs.content.converter.NewsConverter;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.param.CreateNewParam;
 import com.bbs.content.entity.NewContent;
+import com.bbs.content.entity.NewTag;
 import com.bbs.content.entity.News;
 import com.bbs.content.enums.NewCommentStatus;
 import com.bbs.content.mapper.NewsMapper;
@@ -73,6 +74,8 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
     public Page<GetUserNewsDto> getListByUserId(Long userId, Integer current, Integer size, boolean flag) {
         Page<GetUserNewsDto> result = selectJoinListPage(new Page<>(current, size), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
+                .selectCollection(NewTag.class,GetUserNewsDto::getTagIds,o->o.result(NewTag::getTagId))
+                .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
                 .orderBy(true,false,News::getCreateTime)
                 .eq(News::getCreateId,userId)
                 .in(flag,News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode(), NewCommentStatus.WAIT_FOR_REVIEW.getCode())
@@ -94,6 +97,8 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
     public Page<GetUserNewsDto> getListByRecommend(Integer current, Integer size) {
         Page<GetUserNewsDto> result = selectJoinListPage(new Page<>(current, size), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
+                .selectCollection(NewTag.class,GetUserNewsDto::getTagIds,o->o.result(NewTag::getTagId))
+                .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
                 .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
                 .orderBy(true, false, News::getCreateTime, News::getLastReplyTime));
         if(isNotEmpty(result.getRecords()))
@@ -112,6 +117,8 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
     public Page<GetUserNewsDto> getListByFollower(List<Long> userIds, Integer current, Integer size) {
         Page<GetUserNewsDto> result = selectJoinListPage(new Page<>(current, size), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
+                .selectCollection(NewTag.class,GetUserNewsDto::getTagIds,o->o.result(NewTag::getTagId))
+                .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
                 .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
                 .orderBy(true, false, News::getCreateTime)
                 .in(News::getCreateId, userIds));
@@ -130,6 +137,8 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
     public GetUserNewsDto getOneById(Long newId) {
         GetUserNewsDto result = selectJoinOne(GetUserNewsDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
+                .selectCollection(NewTag.class,GetUserNewsDto::getTagIds,o->o.result(NewTag::getTagId))
+                .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
                 .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
                 .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
                 .eq(News::getNewId, newId)

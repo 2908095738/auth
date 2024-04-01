@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.List;
+
 @Data
 public class GetUserNewsDto {
 
@@ -35,10 +37,10 @@ public class GetUserNewsDto {
     private String content;
 
     /**
-     * 标签id
+     * 标签ids
      */
-    @TableField(value = "tag_id")
-    private Integer tagId;
+    @TableField(exist = false)
+    private List<Long> tagIds;
 
     /**
      * IP

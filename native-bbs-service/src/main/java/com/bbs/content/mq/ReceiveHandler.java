@@ -35,7 +35,7 @@ public class ReceiveHandler {
     /**
      * 监听队列,压缩文件
      */
-    @RabbitListener(queues = {RabbitmqConfig.EXCHANGE_TOPICS_BBS_INFORM})
+    @RabbitListener(queues = {RabbitmqConfig.QUEUE_INFORM_WAIT_FILE})
     public void receive_bbs(Message message, @Headers Map<String, Object> header, Channel channel) {
         Long deliveryTag = (Long) header.get(AmqpHeaders.DELIVERY_TAG);
         try {
