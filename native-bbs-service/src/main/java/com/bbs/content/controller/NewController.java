@@ -1,5 +1,6 @@
 package com.bbs.content.controller;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.content.cache.NewsCache;
@@ -10,13 +11,13 @@ import com.bbs.content.service.CommentService;
 import com.bbs.content.service.NewContentService;
 import com.bbs.content.service.NewTagService;
 import com.bbs.content.service.NewsService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -65,9 +66,9 @@ public class NewController {
         //创建文章表
         News news = newsService.createNews(param);
         //创建文章text表
-        newContentService.createByNew(param.getNewId(), param.getContent());
+        if(StringUtils.isNotBlank(param.getContent()))newContentService.createByNew(param.getNewId(), param.getContent());
         //添加标签ids
-        newTagService.createByNew(param.getNewId(), param.getTagIds());
+        if(CollUtil.isNotEmpty(param.getTagIds()))newTagService.createByNew(param.getNewId(), param.getTagIds());
         // 计算内容分数
 
         //添加到redis

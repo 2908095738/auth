@@ -15,14 +15,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
 import javax.validation.constraints.NotNull;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
 import static com.bbs.content.util.FileUtils.fileType;
 
 
@@ -57,10 +54,9 @@ public class UploadController {
         List<String> filePathList = new ArrayList<>();
         List<FileDto> compressionFileList = new ArrayList<>();
         List<FileDto> auditFileList = new ArrayList<>();
-        log.info("文件上传:{}", fileList);
-        for (int i = 0; i < fileList.size(); i++) {
-            MultipartFile file = fileList.get(i);
-            try {
+        try {
+            for (int i = 0; i < fileList.size(); i++) {
+                MultipartFile file = fileList.get(i);
                 //文件的请求路径根据文件类型分类
                 String type = FileTypeUtil.getType(file.getInputStream());
                 String filePath = "";
@@ -74,20 +70,18 @@ public class UploadController {
                     filePath = videoPath + DateFormatUtils.format(new Date(),"YYYYMMDDHHmmss")+"UID1"+(i+1)+"."+type;
                     disposeFile(file,filePath,filePathList,compressionFileList,auditFileList,newId,createId);
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-                log.error("文件上传失败:", e);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
             }
-        }
-        if (CollUtil.isNotEmpty(compressionFileList)){
-            //放入队列
-            fileService.putCompressionQueue(compressionFileList);
-        }
-        if (CollUtil.isNotEmpty(auditFileList)){
-            //放入redis
-            fileService.putAuditRedis(auditFileList);
+            if (CollUtil.isNotEmpty(compressionFileList)){
+                //异步压缩
+                fileService.compression(compressionFileList);
+            }
+            if (CollUtil.isNotEmpty(auditFileList)){
+                //放入redis
+                fileService.putAuditRedis(auditFileList);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("文件上传失败:", e);
         }
         return Result.success(filePathList);
     }

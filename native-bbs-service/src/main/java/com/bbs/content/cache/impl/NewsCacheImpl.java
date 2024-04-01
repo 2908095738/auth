@@ -34,7 +34,7 @@ public class NewsCacheImpl implements NewsCache {
 
     @Override
     public List<GetUserNewsDto> getHot() {
-        //先从redis中取，没有再从数据库取
+        //从redis中取前三个id
 
         return null;
     }

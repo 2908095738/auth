@@ -30,7 +30,6 @@ public class CreateNewParam {
     /**
      * 全部内容
      */
-    @NotNull(message = "全部内容不能为空！")
     private String content;
 
 

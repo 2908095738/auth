@@ -38,7 +38,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
 
     @Override
     public Long createNewsId(Long createId, String userName) {
-        News news = new News().setNewId(createId).setUpdateId(createId).setUserName(userName);
+        News news = new News().setCreateId(createId).setUpdateId(createId).setUserName(userName);
         save(news);
         return news.getNewId();
     }
