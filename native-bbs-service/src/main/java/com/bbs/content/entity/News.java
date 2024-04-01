@@ -55,12 +55,6 @@ public class News implements Serializable {
     private String viewUrl;
 
     /**
-     * 标签id
-     */
-    @TableField(value = "tag_id")
-    private Integer tagId;
-
-    /**
      * 位置
      */
     @TableField(value = "ip")
