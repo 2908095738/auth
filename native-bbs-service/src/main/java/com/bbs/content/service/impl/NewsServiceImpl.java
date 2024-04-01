@@ -35,6 +35,14 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
 
     private ThumbCache thumbCache;
 
+    @Override
+    public Long createNewsId(Long createId, String userName) {
+        News news = new News().setNewId(createId).setUpdateId(createId).setUserName(userName);
+        save(news);
+        return news.getNewId();
+    }
+
+
     /**
      * 创建文章或视频
      * @param param 文章或视频
@@ -49,7 +57,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
         news.setTitle(sensitiveFilter.filter(news.getTitle()));
         news.setStatus(NewCommentStatus.WAIT_FOR_REVIEW.getCode());
         news.setUpdateId(news.getCreateId());
-        save(news);
+        updateById(news);
         return news;
     }
 
@@ -112,8 +120,6 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
             result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
         return result;
     }
-
-
 
     /**
      *根据主键查全部内容、点赞

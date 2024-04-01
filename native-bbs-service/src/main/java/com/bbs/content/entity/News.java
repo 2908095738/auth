@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -15,6 +16,7 @@ import java.util.Date;
  */
 @TableName(value ="news")
 @Data
+@Accessors(chain = true)
 public class News implements Serializable {
     /**
      * 主键
@@ -35,7 +37,7 @@ public class News implements Serializable {
     private String userName;
 
     /**
-     * 内容摘要
+     * 封面
      */
     @TableField(value = "summary")
     private String summary;
@@ -59,7 +61,7 @@ public class News implements Serializable {
     private Integer tagId;
 
     /**
-     * IP
+     * 位置
      */
     @TableField(value = "ip")
     private String ip;
@@ -68,7 +70,7 @@ public class News implements Serializable {
      * 评论数
      */
     @TableField(value = "comment_count")
-    private Integer commentCount = 0;
+    private Integer commentCount;
 
     /**
      * 最后回复时间
@@ -80,13 +82,13 @@ public class News implements Serializable {
      * 点赞数
      */
     @TableField(value = "like_count")
-    private Integer likeCount = 0;
+    private Integer likeCount;
 
     /**
-     * 状态 10.待审核 20.已发布 110.待审核删除 120.已发布删除
+     * 状态 10.待审核 20.已发布 110.待审核用户删除 120.已发布用户删除 100010.待审核管理员删除 100020.已发布管理员删除
      */
     @TableField(value = "status")
-    private Integer status = 10;
+    private Integer status;
 
     /**
      * 创建id
@@ -129,6 +131,12 @@ public class News implements Serializable {
      */
     @TableField(value = "weight")
     private Double weight;
+
+    /**
+     * 删除状态：0未删除  1已删除
+     */
+    @TableField(value = "delete_flag")
+    private Integer deleteFlag;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

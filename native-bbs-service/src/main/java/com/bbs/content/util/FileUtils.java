@@ -20,13 +20,28 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @Component
 public class FileUtils {
 
     public static double MAX_ALLOWED_FILE_SIZE = 5000000;
-    public static double MAX_ALLOWED_P_SIZE = 1000000;
+
+    public static Map<String,Integer> fileType = new HashMap<String,Integer>(){{
+        put("jpg",1);
+        put("gif",1);
+        put("png",1);
+        put("JPG",1);
+        put("GIF",1);
+        put("PNG",1);
+        put("mp4",2);
+        put("MP4",2);
+    }};
+
+
+
 
     public static File multipartFileToFile(MultipartFile file) throws Exception {
         File toFile = null;

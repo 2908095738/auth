@@ -23,4 +23,6 @@ public interface NewsService extends IService<News> {
     Page<GetUserNewsDto> getListByRecommend(Integer current, Integer size);
 
     Page<GetUserNewsDto> getListByFollower(List<Long> userIds, Integer current, Integer size);
+
+    Long createNewsId(Long createId, String userName);
 }

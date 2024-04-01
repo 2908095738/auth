@@ -6,8 +6,8 @@ import com.bbs.content.cache.ThumbCache;
 import com.bbs.content.dto.MqAgreeDto;
 import com.bbs.content.dto.param.CancelThumbParam;
 import com.bbs.content.dto.param.CreateThumbParam;
-import com.bbs.content.util.RabbitmqConfig;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import com.bbs.content.mq.RabbitmqConfig;
+import com.bbs.content.mq.RabbitmqSend;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -25,7 +25,7 @@ import java.util.Date;
 @RequestMapping("/thumb")
 public class ThumbController {
 
-    private RabbitTemplate rabbitTemplate;
+    private RabbitmqSend rabbitmqSend;
 
     private final ThumbCache cache;
 
@@ -43,7 +43,7 @@ public class ThumbController {
         //更新用户、内容、评论对应点赞数量:redis
         cache.create(param);
         //通知对应的用户
-        rabbitTemplate.convertAndSend(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM, "inform.agree", JSON.toJSONString(new MqAgreeDto(param.getUserId(),param.getPostUserId(), param.getType(), new Date())));
+        rabbitmqSend.send(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM, "inform.agree", JSON.toJSONString(new MqAgreeDto(param.getUserId(),param.getPostUserId(), param.getType(), new Date())));
         return Result.success();
     }
 
@@ -60,15 +60,15 @@ public class ThumbController {
         //更新用户、内容、评论对应点赞数量:redis
         cache.cancel(param);
         //通知对应的用户
-        rabbitTemplate.convertAndSend(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM, "inform.agree", JSON.toJSONString(new MqAgreeDto(param.getUserId(),param.getPostUserId(), param.getType(), new Date())));
+//        rabbitTemplate.convertAndSend(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM, "inform.agree", JSON.toJSONString(new MqAgreeDto(param.getUserId(),param.getPostUserId(), param.getType(), new Date())));
         return Result.success();
     }
 
 
 
     @Autowired
-    public ThumbController(RabbitTemplate rabbitTemplate, ThumbCache cache) {
-        this.rabbitTemplate = rabbitTemplate;
+    public ThumbController(RabbitmqSend rabbitmqSend, ThumbCache cache) {
+        this.rabbitmqSend = rabbitmqSend;
         this.cache = cache;
     }
 

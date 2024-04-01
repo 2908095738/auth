@@ -12,7 +12,14 @@ spring:
     username: admin
     password: admin
     addresses: 192.168.100.6:5672
-    virtual-host: "/test/host"
+    virtual-host: /test/host
+    connection-timeout: 15000
+    listener:
+      simple:
+        concurrency: 5 #并发
+        max-concurrency: 10 #最大并发
+        prefetch: 1 #每次发送一条消息
+        acknowledge-mode: manual #手动回复ack
   redis:
     host: 192.168.100.6
     port: 6379

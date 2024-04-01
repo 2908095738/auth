@@ -2,8 +2,15 @@ package com.bbs.content.dto.param;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class CreateNewParam {
+
+    /**
+     * 内容id
+     */
+    private Long newId;
 
 
     /**
@@ -23,9 +30,9 @@ public class CreateNewParam {
 
 
     /**
-     * 标签id
+     * 标签ids
      */
-    private Integer tagId;
+    private List<Long> tagIds;
 
     /**
      * IP
@@ -41,12 +48,6 @@ public class CreateNewParam {
      * 视频
      */
     private String viewUrl;
-
-
-    /**
-     * 创建id
-     */
-    private Long createId;
 
     /**
      * 排序

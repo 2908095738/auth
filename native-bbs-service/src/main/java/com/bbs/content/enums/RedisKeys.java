@@ -21,6 +21,7 @@ public enum RedisKeys {
 
     HOT_NEWS("hot_news:", "热点内容"),
 
+    AUDIT_NEWS_USERID("audit_news_userid:", "用户的待审核图片or视频"),
 
     ;
 

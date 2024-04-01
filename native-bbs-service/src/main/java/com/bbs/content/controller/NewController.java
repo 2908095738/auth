@@ -8,6 +8,7 @@ import com.bbs.content.dto.param.CreateNewParam;
 import com.bbs.content.entity.News;
 import com.bbs.content.service.CommentService;
 import com.bbs.content.service.NewContentService;
+import com.bbs.content.service.NewTagService;
 import com.bbs.content.service.NewsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,6 +37,22 @@ public class NewController {
 
     private NewContentService newContentService;
 
+    private NewTagService newTagService;
+
+    /**
+     * 获取内容id：创建id
+     * @return Long
+     */
+    @GetMapping("/id")
+    public Result<Long> getNewsId(){
+        //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
+        String userName = "testName";
+        Long createId = 1L;
+        Long id = newsService.createNewsId(createId,userName);
+        return Result.success(id);
+    }
+
+
     /**
      * 创建文章/视频
      * @param param param
@@ -43,18 +60,20 @@ public class NewController {
      */
     @PutMapping
     public Result<Boolean> createNews(@RequestBody @Valid CreateNewParam param){
-        //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
-//        param.setCreateId(1L);
         //创建文章表
         News news = newsService.createNews(param);
         //创建文章text表
-        newContentService.createByNew(news.getNewId(),param.getContent());
+        newContentService.createByNew(param.getNewId(),param.getContent());
+        //添加标签ids
+        newTagService.createByNew(param.getNewId(),param.getTagIds());
         // 计算内容分数
 
         //添加到redis
         newsCache.create(news);
         return Result.success();
     }
+
+
 
 
 
@@ -129,10 +148,11 @@ public class NewController {
 
 
     @Autowired
-    public NewController(NewsService newsService, NewsCache newsCache, CommentService commentService, NewContentService newContentService) {
+    public NewController(NewsService newsService, NewsCache newsCache, CommentService commentService, NewContentService newContentService, NewTagService newTagService) {
         this.newsService = newsService;
         this.newsCache = newsCache;
         this.commentService = commentService;
         this.newContentService = newContentService;
+        this.newTagService = newTagService;
     }
 }

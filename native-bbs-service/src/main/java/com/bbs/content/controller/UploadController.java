@@ -1,11 +1,14 @@
 package com.bbs.content.controller;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileTypeUtil;
 import com.bbs.Result;
+import com.bbs.content.dto.FileDto;
 import com.bbs.content.service.FileService;
 import com.bbs.content.util.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateFormatUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,9 +20,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import static com.bbs.content.util.FileUtils.fileType;
+
 
 @Slf4j
 @RestController
@@ -34,17 +38,6 @@ public class UploadController {
 
     private FileService fileService;
 
-    private Map<String,Integer> fileType = new HashMap<String,Integer>(){{
-        put("jpg",1);
-        put("gif",1);
-        put("png",1);
-        put("JPG",1);
-        put("GIF",1);
-        put("PNG",1);
-        put("mp4",2);
-        put("MP4",2);
-    }};
-
 
     /**
      * 文件上传接口
@@ -56,9 +49,12 @@ public class UploadController {
      * @return List<String>
      */
     @PostMapping("/upload")
-    public Result<List<String>> upload(@RequestParam("file") List<MultipartFile> fileList) {
-        List<String> filePathList = new ArrayList<>();
+    public Result<List<String>> upload(@RequestParam("file")List<MultipartFile> fileList, @RequestParam("newId")Long newId) {
         //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
+        Long createId = 1L;
+        List<String> filePathList = new ArrayList<>();
+        List<FileDto> compressionFileList = new ArrayList<>();
+        List<FileDto> auditFileList = new ArrayList<>();
         log.info("文件上传:{}", fileList);
         for (int i = 0; i < fileList.size(); i++) {
             MultipartFile file = fileList.get(i);
@@ -68,33 +64,14 @@ public class UploadController {
                 String filePath = "";
                 if(fileType.get(type)==1){//图片
                     filePath = imagePath + DateFormatUtils.format(new Date(),"YYYYMMDDHHmmss")+"UID1"+(i+1)+"."+type;
-                    //判断大小，处理
-                    double size = file.getSize();
-                    if( size < FileUtils.MAX_ALLOWED_P_SIZE){
-                        file.transferTo(new File(filePath));
-                    }{
-                        file.transferTo(new File(filePath));
-                        //放入队列，压缩文件，放入成功队列
-                        //异步：压缩落地,放入队列,
-                        FileUtils.doWithPhoto(filePath);
-                    }
+                    disposeFile(file,filePath,filePathList,compressionFileList,auditFileList,newId,createId);
                 }else if(fileType.get(type)==2){//视频
-                    filePath = videoPath + DateFormatUtils.format(new Date(),"YYYYMMDDHHmmss")+"UID1"+(i+1)+"."+type;
-                    //判断大小，处理
-                    double size = file.getSize();
-                    if( size < FileUtils.MAX_ALLOWED_FILE_SIZE){
-                        //直接落地
-                        file.transferTo(new File(filePath));
-                    }else {
-                        //放入队列，压缩文件，放入成功队列
-//                        fileService.putCompressionQueue(file);
-                        //异步：压缩落地,放入队列,
-                        FileUtils.compressionVideo(FileUtils.multipartFileToFile(file), filePath);
+                    if(fileList.size()>5){
+                        return Result.failed("上传失败，视频数量超过限制！");
                     }
+                    filePath = videoPath + DateFormatUtils.format(new Date(),"YYYYMMDDHHmmss")+"UID1"+(i+1)+"."+type;
+                    disposeFile(file,filePath,filePathList,compressionFileList,auditFileList,newId,createId);
                 }
-                //删除源文件
-                FileUtils.delteTempFile(FileUtils.multipartFileToFile(file));
-                filePathList.add(filePath);
             } catch (IOException e) {
                 e.printStackTrace();
                 log.error("文件上传失败:", e);
@@ -102,21 +79,38 @@ public class UploadController {
                 throw new RuntimeException(e);
             }
         }
+        if (CollUtil.isNotEmpty(compressionFileList)){
+            //放入队列
+            fileService.putCompressionQueue(compressionFileList);
+        }
+        if (CollUtil.isNotEmpty(auditFileList)){
+            //放入redis
+            fileService.putAuditRedis(auditFileList);
+        }
         return Result.success(filePathList);
     }
 
 
+    private void disposeFile(MultipartFile file, String filePath, List<String> filePathList, List<FileDto> compressionFileList, List<FileDto> auditFileList, Long newId, Long createId) throws Exception {
+        //判断大小，处理
+        double size = file.getSize();
+        if( size < FileUtils.MAX_ALLOWED_FILE_SIZE){
+            //直接落地
+            file.transferTo(new File(filePath));
+            //添加到待审核列表
+            auditFileList.add(new FileDto(newId,file,filePath,createId));
+        }else {
+            //添加到待压缩列表
+            compressionFileList.add(new FileDto(newId,file,filePath,createId));
+        }
+        //删除源文件
+        FileUtils.delteTempFile(FileUtils.multipartFileToFile(file));
+        filePathList.add(filePath);
+    }
 
 
-
-
-
-
-
-
-
-
-
-
-
+    @Autowired
+    public UploadController(FileService fileService) {
+        this.fileService = fileService;
+    }
 }
