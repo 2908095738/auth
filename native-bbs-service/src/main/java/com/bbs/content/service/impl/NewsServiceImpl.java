@@ -74,6 +74,8 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
     public Page<GetUserNewsDto> getListByUserId(Long userId, Integer current, Integer size, boolean flag) {
         Page<GetUserNewsDto> result = selectJoinListPage(new Page<>(current, size), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
+                .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
+                .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
                 .selectCollection(NewTag.class,GetUserNewsDto::getTagIds,o->o.result(NewTag::getTagId))
                 .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
                 .orderBy(true,false,News::getCreateTime)
@@ -97,6 +99,8 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
     public Page<GetUserNewsDto> getListByRecommend(Integer current, Integer size) {
         Page<GetUserNewsDto> result = selectJoinListPage(new Page<>(current, size), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
+                .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
+                .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
                 .selectCollection(NewTag.class,GetUserNewsDto::getTagIds,o->o.result(NewTag::getTagId))
                 .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
                 .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
@@ -117,6 +121,8 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
     public Page<GetUserNewsDto> getListByFollower(List<Long> userIds, Integer current, Integer size) {
         Page<GetUserNewsDto> result = selectJoinListPage(new Page<>(current, size), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
+                .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
+                .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
                 .selectCollection(NewTag.class,GetUserNewsDto::getTagIds,o->o.result(NewTag::getTagId))
                 .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
                 .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
