@@ -1,10 +1,12 @@
 package com.bbs.content.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.content.cache.ThumbCache;
 import com.bbs.content.converter.NewsConverter;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.param.CreateNewParam;
+import com.bbs.content.dto.param.QueryNewsParam;
 import com.bbs.content.entity.NewContent;
 import com.bbs.content.entity.NewTag;
 import com.bbs.content.entity.News;
@@ -14,6 +16,7 @@ import com.bbs.content.service.NewsService;
 import com.bbs.content.util.SensitiveFilter;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.HtmlUtils;
 
@@ -62,6 +65,23 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
         return news;
     }
 
+    @Override
+    public Page<GetUserNewsDto> getListByQuery(QueryNewsParam param) {
+        Page<GetUserNewsDto> result = selectJoinListPage(new Page<>(param.getCurrent(), param.getSize()), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
+                .selectAll(News.class)
+                .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
+                .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
+                .selectCollection(NewTag.class,GetUserNewsDto::getTagIds,o->o.result(NewTag::getTagId))
+                .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
+                .like(StringUtils.isNotBlank(param.getTitle()),News::getTitle,param.getTitle())
+                .in(CollUtil.isNotEmpty(param.getTagIds()),NewTag::getTagId,param.getTagIds())
+                .orderBy(true,false,News::getCreateTime)
+        );
+        if(isNotEmpty(result.getRecords()))
+            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
+        return result;
+    }
+
     /**
      * 查询用户主页上发布内容集合
      * @param userId 用户id
@@ -104,7 +124,18 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
                 .selectCollection(NewTag.class,GetUserNewsDto::getTagIds,o->o.result(NewTag::getTagId))
                 .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
                 .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
-                .orderBy(true, false, News::getCreateTime, News::getLastReplyTime));
+                .orderBy(true, false, News::getCreateTime)
+                .or()
+                .orderBy(false, true, News::getCreateTime)
+                .or()
+                .orderBy(true, false, News::getLastReplyTime)
+                .or()
+                .orderBy(false, true, News::getLastReplyTime)
+                .or()
+                .orderBy(true, false,News::getUpdateTime)
+                .or()
+                .orderBy(false, true,News::getUpdateTime)
+        );
         if(isNotEmpty(result.getRecords()))
             result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
         return result;

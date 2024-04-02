@@ -31,19 +31,16 @@ public class ThumbController {
 
 
     /**
-     * 添加点赞
+     * 添加点赞,更新用户、内容、评论对应点赞数量:redis
+     *
      * @param param param
      * @return Boolean
      */
     @PutMapping
-    public Result<Boolean> createThumb(@RequestBody @Valid CreateThumbParam param){
+    public Result<Boolean> createThumb(@RequestBody @Valid CreateThumbParam param) {
         //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
-        //保存点赞数据
-//        param.setUserId(1L);
-        //更新用户、内容、评论对应点赞数量:redis
         cache.create(param);
-        //通知对应的用户
-        rabbitmqSend.send(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM, "inform.agree", JSON.toJSONString(new MqAgreeDto(param.getUserId(),param.getPostUserId(), param.getType(), new Date())));
+        rabbitmqSend.send(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM, RabbitmqConfig.ROUTINGKEY_AGREE, JSON.toJSONString(new MqAgreeDto(param.getUserId(), param.getPostUserId(), param.getType(), new Date())));
         return Result.success();
     }
 
@@ -53,7 +50,7 @@ public class ThumbController {
      * @return Boolean
      */
     @DeleteMapping
-    public Result<Boolean> cancelThumb(@RequestBody @Valid CancelThumbParam param){
+    public Result<Boolean> cancelThumb(@RequestBody @Valid CancelThumbParam param) {
         //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
         //删除点赞数据
 //        param.setUserId(1L);
@@ -63,7 +60,6 @@ public class ThumbController {
 //        rabbitTemplate.convertAndSend(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM, "inform.agree", JSON.toJSONString(new MqAgreeDto(param.getUserId(),param.getPostUserId(), param.getType(), new Date())));
         return Result.success();
     }
-
 
 
     @Autowired

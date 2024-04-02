@@ -6,6 +6,7 @@ import com.bbs.Result;
 import com.bbs.content.cache.NewsCache;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.param.CreateNewParam;
+import com.bbs.content.dto.param.QueryNewsParam;
 import com.bbs.content.entity.News;
 import com.bbs.content.service.CommentService;
 import com.bbs.content.service.NewContentService;
@@ -13,11 +14,15 @@ import com.bbs.content.service.NewTagService;
 import com.bbs.content.service.NewsService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -31,14 +36,13 @@ import java.util.Objects;
 public class NewController {
 
     private NewsService newsService;
-
     private NewsCache newsCache;
-
     private CommentService commentService;
-
     private NewContentService newContentService;
-
     private NewTagService newTagService;
+    private TransactionDefinition transactionDefinition;
+    private DataSourceTransactionManager transactionManager;
+
 
     /**
      * 获取内容id：创建id
@@ -48,8 +52,7 @@ public class NewController {
     @GetMapping("/id")
     public Result<Long> getNewsId() {
         //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
-        String userName = "testName";
-        Long createId = 1L;
+        String userName = "testName";Long createId = 1L;
         Long id = newsService.createNewsId(createId, userName);
         return Result.success(id);
     }
@@ -63,18 +66,32 @@ public class NewController {
      */
     @PutMapping
     public Result<Boolean> createNews(@RequestBody @Valid CreateNewParam param) {
-        //创建文章表
-        News news = newsService.createNews(param);
-        //创建文章text表
-        if(StringUtils.isNotBlank(param.getContent()))newContentService.createByNew(param.getNewId(), param.getContent());
-        //添加标签ids
-        if(CollUtil.isNotEmpty(param.getTagIds()))newTagService.createByNew(param.getNewId(), param.getTagIds());
-        // 计算内容分数
+        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
+        try {
+            News news = newsService.createNews(param);
+            if(StringUtils.isNotBlank(param.getContent()))newContentService.createByNew(param.getNewId(), param.getContent());
+            if(CollUtil.isNotEmpty(param.getTagIds()))newTagService.createByNew(param.getNewId(), param.getTagIds());
+            // 计算内容分数
 
-        //添加到redis
-        newsCache.create(news);
-        return Result.success();
+            newsCache.create(news);
+            transactionManager.commit(transaction);
+            return Result.success();
+        } catch (RuntimeException e) {
+            transactionManager.rollback(transaction);
+            e.printStackTrace();
+        }
+        return Result.failedNull();
     }
+
+
+    /**
+     * 条件查询内容
+     */
+    @GetMapping("/query")
+    public Result<Page<GetUserNewsDto>> getQueryNews(@Valid QueryNewsParam param){
+        return Result.success(newsService.getListByQuery(param));
+    }
+
 
     /**
      * 删除草稿
@@ -166,7 +183,6 @@ public class NewController {
                                              @NotNull(message = "每页几条不能为空！") Integer size) {
         GetUserNewsDto newsResult = newsService.getOneById(newId);
         if (Objects.nonNull(newsResult)) {
-            //获取评论分页列表
             Page<GetUserNewsDto.CommentByNewIdDto> list = commentService.getPageByNewId(newId, current, size);
             newsResult.setCommentByNewIdDtoList(list);
         }
@@ -175,11 +191,13 @@ public class NewController {
 
 
     @Autowired
-    public NewController(NewsService newsService, NewsCache newsCache, CommentService commentService, NewContentService newContentService, NewTagService newTagService) {
+    public NewController(NewsService newsService, NewsCache newsCache, CommentService commentService, NewContentService newContentService, NewTagService newTagService, TransactionDefinition transactionDefinition, DataSourceTransactionManager transactionManager) {
         this.newsService = newsService;
         this.newsCache = newsCache;
         this.commentService = commentService;
         this.newContentService = newContentService;
         this.newTagService = newTagService;
+        this.transactionDefinition = transactionDefinition;
+        this.transactionManager = transactionManager;
     }
 }
