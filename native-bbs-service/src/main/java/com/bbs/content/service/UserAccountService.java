@@ -2,20 +2,17 @@ package com.bbs.content.service;
 
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.bbs.content.dto.param.UpdateAccountParam;
-import com.bbs.content.entity.UserAccount;
 import com.bbs.content.dto.GetUserAccountDto;
-import com.bbs.entity.UserVO;
+import com.bbs.content.entity.UserAccount;
 
 /**
  *
  */
 public interface UserAccountService extends IService<UserAccount> {
 
-    Long create(UserVO currentUser);
+    Boolean create(Long userId);
 
     GetUserAccountDto getByUserId(Long userId);
 
-    void updateAccountByUserId(UpdateAccountParam param);
 
 }

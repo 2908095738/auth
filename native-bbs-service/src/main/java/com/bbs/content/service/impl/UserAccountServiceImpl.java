@@ -2,12 +2,10 @@ package com.bbs.content.service.impl;
 
 
 import com.bbs.content.cache.ThumbCache;
-import com.bbs.content.dto.param.UpdateAccountParam;
-import com.bbs.content.entity.UserAccount;
-import com.bbs.content.mapper.UserAccountMapper;
 import com.bbs.content.converter.UserAccountConverter;
 import com.bbs.content.dto.GetUserAccountDto;
-import com.bbs.entity.UserVO;
+import com.bbs.content.entity.UserAccount;
+import com.bbs.content.mapper.UserAccountMapper;
 import com.bbs.content.service.UserAccountService;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
@@ -27,11 +25,8 @@ public class UserAccountServiceImpl extends MPJBaseServiceImpl<UserAccountMapper
     private ThumbCache thumbCache;
 
     @Override
-    public Long create(UserVO currentUser) {
-        UserAccount userAccount = converter.toEntity(currentUser);
-//        userAccount.setAvatarPath();
-
-        return null;
+    public Boolean create(Long userId) {
+        return save(new UserAccount().setUserId(userId));
     }
 
 
@@ -47,11 +42,6 @@ public class UserAccountServiceImpl extends MPJBaseServiceImpl<UserAccountMapper
         //关注result.setFollowerCount();
         //浏览量
         return result;
-    }
-
-    @Override
-    public void updateAccountByUserId(UpdateAccountParam param) {
-        updateById(converter.toEntity(param));
     }
 
     @Resource

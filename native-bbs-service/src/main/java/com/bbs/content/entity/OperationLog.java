@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.bbs.content.util.ThreadLocalUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -68,7 +67,7 @@ public class OperationLog implements Serializable {
         this.createTime = new Date();
         this.location = location;
         this.service = service;
-        this.userId = ThreadLocalUtil.getCurrentUser().getId();
+//        this.userId = ;
         this.operation = operation;
         this.level = level.toInt();
     }

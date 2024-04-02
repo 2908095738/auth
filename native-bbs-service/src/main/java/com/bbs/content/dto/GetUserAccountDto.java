@@ -14,14 +14,6 @@ public class GetUserAccountDto {
     @TableId(value = "user_id")
     private Long userId;
 
-
-    /**
-     * 第三方用户的唯一标识 例如微信的openid
-     */
-    @TableField(value = "open_id")
-    private String openId;
-
-
     /**
      * 呢称
      */

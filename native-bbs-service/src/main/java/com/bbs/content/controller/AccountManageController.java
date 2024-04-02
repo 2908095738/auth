@@ -7,7 +7,6 @@ import com.bbs.content.dto.GetUserAccountDto;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.service.NewsService;
 import com.bbs.content.service.UserAccountService;
-import com.bbs.entity.UserVO;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,15 +28,13 @@ public class AccountManageController {
 
     /**
      * 创建登录用户账号信息
-     * 头像、昵称、性别、年龄；点赞数、积分数、收藏数、关注数、粉丝数、是否企业认证、是否实名认证
+     * 头像、昵称、性别、年龄、点赞数、积分数、收藏数、关注数、粉丝数、是否企业认证、是否实名认证
      */
     @PutMapping()
-    public Result<Long> createAccount(){
-//TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
-        UserVO currentUser = new UserVO();
+    public Result<Boolean> createAccount(Long userId){
         //获取用户账号信息
-        Long userId = service.create(currentUser);
-        return Result.success(userId);
+        service.create(userId);
+        return Result.success();
     }
 
 
@@ -48,9 +45,8 @@ public class AccountManageController {
      * 发布内容列表  文章or视频1：标题、内容概要、评论数、收藏数、点赞数
      */
     @GetMapping()
-    public Result<GetUserAccountDto> getAccount(){
+    public Result<GetUserAccountDto> getAccount(Long userId){
 //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
-        Long userId = 1L;
         //获取用户账号信息
         GetUserAccountDto result = service.getByUserId(userId);
         if(Objects.nonNull(result)){
@@ -62,18 +58,6 @@ public class AccountManageController {
         return Result.success(result);
     }
 
-
-    /**
-     * 修改用户设置
-     * 账号信息、字体大小、黑名单
-     */
-//    @PostMapping()
-//    public Result updateAccountByUserId(@RequestBody UpdateAccountParam param){
-//        //修改用户信息 authService.XXX(param)
-//        //修改账户信息
-//        service.updateAccountByUserId(param);
-//        return Result.success();
-//    }
 
     @Resource
     public void setService(UserAccountService service) {
