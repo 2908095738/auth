@@ -8,12 +8,12 @@ import com.bbs.content.dto.GetUserAccountDto;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.service.NewsService;
 import com.bbs.content.service.UserAccountService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.Resource;
 import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
@@ -68,16 +68,10 @@ public class AccountManageController {
     }
 
 
-    @Resource
-    public void setService(UserAccountService service) {
+    @Autowired
+    public AccountManageController(UserAccountService service, NewsService newsService, ThumbCache thumbCache) {
         this.service = service;
-    }
-    @Resource
-    public void setNewsService(NewsService newsService) {
         this.newsService = newsService;
-    }
-    @Resource
-    public void setThumbCache(ThumbCache thumbCache) {
         this.thumbCache = thumbCache;
     }
 }

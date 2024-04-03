@@ -1,6 +1,7 @@
 package com.bbs.content.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.bbs.Result;
 import com.bbs.content.cache.ThumbCache;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.entity.Comment;
@@ -46,6 +47,13 @@ public class CommentServiceImpl extends MPJBaseServiceImpl<CommentMapper, Commen
             result.getRecords().forEach(o -> o.setLikeCount(count));
         }
         return result;
+    }
+
+    @Override
+    public Result<Boolean> delById(Long commentId) {
+
+
+        return null;
     }
 
     @Resource

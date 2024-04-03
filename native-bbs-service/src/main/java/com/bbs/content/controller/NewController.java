@@ -13,6 +13,7 @@ import com.bbs.content.service.CommentService;
 import com.bbs.content.service.NewContentService;
 import com.bbs.content.service.NewTagService;
 import com.bbs.content.service.NewsService;
+import com.bbs.content.service.TagService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -45,6 +46,8 @@ public class NewController {
     private CommentService commentService;
     private NewContentService newContentService;
     private NewTagService newTagService;
+
+    private TagService tagService;
     private TransactionDefinition transactionDefinition;
     private DataSourceTransactionManager transactionManager;
 
@@ -75,7 +78,11 @@ public class NewController {
         try {
             News news = newsService.createNews(param);
             if(StringUtils.isNotBlank(param.getContent()))newContentService.createByNew(param.getNewId(), param.getContent());
-            if(CollUtil.isNotEmpty(param.getTagIds()))newTagService.createByNew(param.getNewId(), param.getTagIds());
+            if(CollUtil.isNotEmpty(param.getTagIds())){
+                List<Long> newIds = tagService.addAndUpdateWeight(param.getTagNames(), param.getTagIds());
+                param.getTagIds().addAll(newIds);
+                newTagService.createByNew(param.getNewId(), param.getTagIds());
+            }
             // 计算内容分数
 
             newsCache.create(news);
@@ -204,13 +211,14 @@ public class NewController {
 
 
     @Autowired
-    public NewController(NewsService newsService, NewsCache newsCache, ThumbCache thumbCache, CommentService commentService, NewContentService newContentService, NewTagService newTagService, TransactionDefinition transactionDefinition, DataSourceTransactionManager transactionManager) {
+    public NewController(NewsService newsService, NewsCache newsCache, ThumbCache thumbCache, CommentService commentService, NewContentService newContentService, NewTagService newTagService, TagService tagService, TransactionDefinition transactionDefinition, DataSourceTransactionManager transactionManager) {
         this.newsService = newsService;
         this.newsCache = newsCache;
         this.thumbCache = thumbCache;
         this.commentService = commentService;
         this.newContentService = newContentService;
         this.newTagService = newTagService;
+        this.tagService = tagService;
         this.transactionDefinition = transactionDefinition;
         this.transactionManager = transactionManager;
     }

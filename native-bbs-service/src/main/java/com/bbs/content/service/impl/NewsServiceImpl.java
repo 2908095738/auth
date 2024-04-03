@@ -41,7 +41,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
 
     @Override
     public Long createNewsId(Long createId, String userName) {
-        News news = new News().setCreateId(createId).setUpdateId(createId).setUserName(userName);
+        News news = new News().setCreateId(createId).setUpdateId(createId).setUserName(userName).setDeleteFlag(1);
         save(news);
         return news.getNewId();
     }
@@ -67,9 +67,10 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
        // 转义 HTML 标记，防止在 HTML 标签中注入攻击语句
         news.setTitle(HtmlUtils.htmlEscape(news.getTitle()));
         // 过滤敏感词
-        news.setTitle(sensitiveFilter.filter(news.getTitle()));
-        news.setStatus(NewCommentStatus.WAIT_FOR_REVIEW.getCode());
-        news.setUpdateId(news.getCreateId());
+        news.setTitle(sensitiveFilter.filter(news.getTitle()))
+                .setStatus(NewCommentStatus.WAIT_FOR_REVIEW.getCode())
+                .setUpdateId(news.getCreateId())
+                .setDeleteFlag(0);
         updateById(news);
         return news;
     }

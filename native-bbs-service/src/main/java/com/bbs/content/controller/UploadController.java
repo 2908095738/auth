@@ -28,7 +28,7 @@ import static com.bbs.content.util.FileUtils.fileType;
 
 @Slf4j
 @RestController
-@RequestMapping("/news")
+@RequestMapping("/file")
 public class UploadController {
 
     @Value("${news.image.path}")
@@ -49,7 +49,7 @@ public class UploadController {
      * @param fileList 文件
      * @return List<String>
      */
-    @PostMapping("/upload")
+    @PostMapping()
     public Result<List<String>> upload(@RequestParam("file") @NotNull(message = "上传文件不能为空！")List<MultipartFile> fileList,
                                        @RequestParam("newId") @NotNull(message = "内容id不能为空！")Long newId) {
         //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
@@ -75,7 +75,7 @@ public class UploadController {
                 }
             }
             if (CollUtil.isNotEmpty(compressionFileList)){
-                //异步压缩
+                //压缩
                 fileService.compression(compressionFileList);
             }
             if (CollUtil.isNotEmpty(auditFileList)){
@@ -111,7 +111,7 @@ public class UploadController {
     /**
      * 删除文件
      */
-    @DeleteMapping("/file")
+    @DeleteMapping()
     public Result<Boolean> delFile(@RequestParam("filePathList") @NotNull(message = "删除文件url不能为空！")List<String> filePathList,
                                    @NotNull(message = "内容id不能为空！")Long newId,
                                    @NotNull(message = "用户id不能为空！")Long userId) {

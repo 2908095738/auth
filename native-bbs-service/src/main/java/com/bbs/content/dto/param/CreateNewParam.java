@@ -39,6 +39,11 @@ public class CreateNewParam {
     private List<Long> tagIds;
 
     /**
+     * 自定义标签名
+     */
+    private List<String> tagNames;
+
+    /**
      * IP
      */
     private String ip;
