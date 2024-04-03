@@ -2,7 +2,6 @@ package com.bbs.content.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.bbs.content.cache.ThumbCache;
 import com.bbs.content.converter.NewsConverter;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.param.CreateNewParam;
@@ -12,6 +11,7 @@ import com.bbs.content.entity.NewTag;
 import com.bbs.content.entity.News;
 import com.bbs.content.enums.NewCommentStatus;
 import com.bbs.content.mapper.NewsMapper;
+import com.bbs.content.service.FileService;
 import com.bbs.content.service.NewsService;
 import com.bbs.content.util.SensitiveFilter;
 import com.github.yulichang.base.MPJBaseServiceImpl;
@@ -21,10 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.util.HtmlUtils;
 
 import javax.annotation.Resource;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
-
-import static cn.hutool.core.collection.CollUtil.isNotEmpty;
 
 /**
  *
@@ -37,13 +35,24 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
 
     private SensitiveFilter sensitiveFilter;
 
-    private ThumbCache thumbCache;
+
+    private FileService fileService;
+
 
     @Override
     public Long createNewsId(Long createId, String userName) {
         News news = new News().setCreateId(createId).setUpdateId(createId).setUserName(userName);
         save(news);
         return news.getNewId();
+    }
+
+    @Override
+    public void delete(Long newId, Long userId) {
+        News news = getOptById(newId).orElseThrow(() -> new RuntimeException("数据不存在"));
+        updateById(new News().setNewId(newId).setDeleteFlag(1));
+        List<String> filePathList = Arrays.asList(news.getImageUrl().split(","));
+        filePathList.addAll(Arrays.asList(news.getViewUrl().split(",")));
+        fileService.delFiles(filePathList,newId,userId);
     }
 
 
@@ -67,7 +76,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
 
     @Override
     public Page<GetUserNewsDto> getListByQuery(QueryNewsParam param) {
-        Page<GetUserNewsDto> result = selectJoinListPage(new Page<>(param.getCurrent(), param.getSize()), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
+        return selectJoinListPage(new Page<>(param.getCurrent(), param.getSize()), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
                 .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
                 .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
@@ -75,11 +84,9 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
                 .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
                 .like(StringUtils.isNotBlank(param.getTitle()),News::getTitle,param.getTitle())
                 .in(CollUtil.isNotEmpty(param.getTagIds()),NewTag::getTagId,param.getTagIds())
+                .eq(News::getDeleteFlag,0)
                 .orderBy(true,false,News::getCreateTime)
         );
-        if(isNotEmpty(result.getRecords()))
-            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
-        return result;
     }
 
     /**
@@ -92,7 +99,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
      */
     @Override
     public Page<GetUserNewsDto> getListByUserId(Long userId, Integer current, Integer size, boolean flag) {
-        Page<GetUserNewsDto> result = selectJoinListPage(new Page<>(current, size), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
+        return selectJoinListPage(new Page<>(current, size), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
                 .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
                 .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
@@ -100,12 +107,10 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
                 .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
                 .orderBy(true,false,News::getCreateTime)
                 .eq(News::getCreateId,userId)
+                .eq(News::getDeleteFlag,0)
                 .in(flag,News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode(), NewCommentStatus.WAIT_FOR_REVIEW.getCode())
                 .eq(!flag,News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
         );
-        if(isNotEmpty(result.getRecords()))
-            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
-        return result;
     }
 
 
@@ -117,13 +122,14 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
      */
     @Override
     public Page<GetUserNewsDto> getListByRecommend(Integer current, Integer size) {
-        Page<GetUserNewsDto> result = selectJoinListPage(new Page<>(current, size), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
+        return selectJoinListPage(new Page<>(current, size), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
                 .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
                 .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
                 .selectCollection(NewTag.class,GetUserNewsDto::getTagIds,o->o.result(NewTag::getTagId))
                 .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
                 .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
+                .eq(News::getDeleteFlag,0)
                 .orderBy(true, false, News::getCreateTime)
                 .or()
                 .orderBy(false, true, News::getCreateTime)
@@ -136,9 +142,6 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
                 .or()
                 .orderBy(false, true,News::getUpdateTime)
         );
-        if(isNotEmpty(result.getRecords()))
-            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
-        return result;
     }
 
     /**
@@ -150,19 +153,16 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
      */
     @Override
     public Page<GetUserNewsDto> getListByFollower(List<Long> userIds, Integer current, Integer size) {
-        Page<GetUserNewsDto> result = selectJoinListPage(new Page<>(current, size), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
+        return selectJoinListPage(new Page<>(current, size), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
                 .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
                 .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
                 .selectCollection(NewTag.class,GetUserNewsDto::getTagIds,o->o.result(NewTag::getTagId))
                 .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
                 .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
+                .eq(News::getDeleteFlag,0)
                 .orderBy(true, false, News::getCreateTime)
                 .in(News::getCreateId, userIds));
-
-        if(isNotEmpty(result.getRecords()))
-            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
-        return result;
     }
 
     /**
@@ -172,17 +172,15 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
      */
     @Override
     public GetUserNewsDto getOneById(Long newId) {
-        GetUserNewsDto result = selectJoinOne(GetUserNewsDto.class, new MPJLambdaWrapper<News>()
+        return selectJoinOne(GetUserNewsDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
                 .selectCollection(NewTag.class,GetUserNewsDto::getTagIds,o->o.result(NewTag::getTagId))
                 .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
                 .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
                 .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
                 .eq(News::getNewId, newId)
+                .eq(News::getDeleteFlag,0)
         );
-        if(Objects.nonNull(result))
-            result.setLikeCount(thumbCache.countBy(result.getNewId(), null, null, 1));
-        return result;
     }
 
 
@@ -197,8 +195,9 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
         this.sensitiveFilter = sensitiveFilter;
     }
 
+
     @Resource
-    public void setThumbCache(ThumbCache thumbCache) {
-        this.thumbCache = thumbCache;
+    public void setFileService(FileService fileService) {
+        this.fileService = fileService;
     }
 }

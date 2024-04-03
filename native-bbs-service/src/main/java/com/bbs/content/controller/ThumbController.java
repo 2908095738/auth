@@ -57,7 +57,7 @@ public class ThumbController {
         //更新用户、内容、评论对应点赞数量:redis
         cache.cancel(param);
         //通知对应的用户
-//        rabbitTemplate.convertAndSend(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM, "inform.agree", JSON.toJSONString(new MqAgreeDto(param.getUserId(),param.getPostUserId(), param.getType(), new Date())));
+        rabbitmqSend.send(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM, RabbitmqConfig.ROUTINGKEY_DEL_AGREE, JSON.toJSONString(new MqAgreeDto(param.getUserId(),param.getPostUserId(), param.getType(), new Date())));
         return Result.success();
     }
 

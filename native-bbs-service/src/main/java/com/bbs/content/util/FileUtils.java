@@ -89,6 +89,23 @@ public class FileUtils {
     }
 
 
+
+
+    /**
+     * 删除本地文件
+     * @param filePath
+     */
+    public static void delteFile(String filePath) {
+        File file = new File(filePath);
+        if (!file.exists()) { // 要删除的文件不存在
+            log.info("文件" + filePath + "不存在，删除失败！");
+        } else { // 要删除的文件存在
+            file.delete();// 删除文件
+        }
+    }
+
+
+
     /**
      * 传视频File对象，返回压缩后File对象信息
      *

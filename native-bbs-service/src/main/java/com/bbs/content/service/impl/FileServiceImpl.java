@@ -55,13 +55,24 @@ public class FileServiceImpl implements FileService {
     @Override
     public void putAuditRedis(List<FileDto> auditFileList) {
         FileDto fileDto = auditFileList.get(0);
-        String json = (String) redisUtil.hashGet(RedisKeys.AUDIT_NEWS_USERID.key()+fileDto.getCreateId().toString(),fileDto.getNewId().toString());
+        String json = (String) redisUtil.hashGet(RedisKeys.AUDIT_NEWS_USERID.key()+fileDto.getCreateId(),fileDto.getNewId().toString());
         Set<String> newFiles = StringUtils.isBlank(json)? new HashSet<>() : JSON.parseObject(json, new TypeReference<Set<String>>(){});
         newFiles.addAll(auditFileList.stream().map(FileDto::getFilePath).collect(toSet()));
-        redisUtil.hashSet(RedisKeys.AUDIT_NEWS_USERID.key()+auditFileList.get(0).getCreateId().toString(),fileDto.getNewId().toString(),JSON.toJSONString(newFiles));
+        redisUtil.hashSet(RedisKeys.AUDIT_NEWS_USERID.key()+fileDto.getCreateId(),fileDto.getNewId().toString(),JSON.toJSONString(newFiles));
     }
 
+    @Override
+    public void delFiles(List<String> filePathList, Long newId, Long userId) {
+        filePathList.forEach(FileUtils::delteFile);
+        delFile(filePathList,newId, userId);
+    }
 
+    private void delFile(List<String> filePathList, Long newId, Long userId) {
+        String json = (String) redisUtil.hashGet(RedisKeys.AUDIT_NEWS_USERID.key()+ userId.toString(), newId.toString());
+        Set<String> newFiles = StringUtils.isBlank(json)? new HashSet<>() : JSON.parseObject(json, new TypeReference<Set<String>>(){});
+        newFiles.removeAll(new HashSet<>(filePathList));
+        redisUtil.hashSet(RedisKeys.AUDIT_NEWS_USERID.key()+ userId,newId,JSON.toJSONString(newFiles));
+    }
 
     @Resource
     public void setRedisUtil(RedisUtil redisUtil) {

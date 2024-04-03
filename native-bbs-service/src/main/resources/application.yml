@@ -77,6 +77,6 @@ apache:
     max-retries: 5
     # 最大重试间隔时间
     max-sleep: 30000
-tokenName: token
-authServerIP: localhost
-authServerPort: 9999
+tokenName: Authorization
+authServerIP: 192.168.100.6
+authServerPort: 8080

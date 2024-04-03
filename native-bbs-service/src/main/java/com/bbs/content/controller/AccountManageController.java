@@ -3,6 +3,7 @@ package com.bbs.content.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
+import com.bbs.content.cache.ThumbCache;
 import com.bbs.content.dto.GetUserAccountDto;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.service.NewsService;
@@ -13,7 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.validation.constraints.NotNull;
 import java.util.Objects;
+
+import static cn.hutool.core.collection.CollUtil.isNotEmpty;
 
 /**
  *用户账号管理
@@ -26,12 +30,15 @@ public class AccountManageController {
 
     private NewsService newsService;
 
+    private ThumbCache thumbCache;
+
+
     /**
      * 创建登录用户账号信息
      * 头像、昵称、性别、年龄、点赞数、积分数、收藏数、关注数、粉丝数、是否企业认证、是否实名认证
      */
     @PutMapping()
-    public Result<Boolean> createAccount(Long userId){
+    public Result<Boolean> createAccount(@NotNull Long userId){
         //获取用户账号信息
         service.create(userId);
         return Result.success();
@@ -45,14 +52,16 @@ public class AccountManageController {
      * 发布内容列表  文章or视频1：标题、内容概要、评论数、收藏数、点赞数
      */
     @GetMapping()
-    public Result<GetUserAccountDto> getAccount(Long userId){
+    public Result<GetUserAccountDto> getAccount(boolean flag){
 //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
         //获取用户账号信息
-        GetUserAccountDto result = service.getByUserId(userId);
+        GetUserAccountDto result = service.getByUserId(1L);
         if(Objects.nonNull(result)){
             result.setAge(18);//TODO currentUser
             //获取发布文章列表
-            Page<GetUserNewsDto> newsResult = newsService.getListByUserId(userId,1,10,true);
+            Page<GetUserNewsDto> newsResult = newsService.getListByUserId(1L,1,10,flag);
+            if(isNotEmpty(newsResult.getRecords()))
+                newsResult.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
             result.setNewsResult(newsResult);
         }
         return Result.success(result);
@@ -66,5 +75,9 @@ public class AccountManageController {
     @Resource
     public void setNewsService(NewsService newsService) {
         this.newsService = newsService;
+    }
+    @Resource
+    public void setThumbCache(ThumbCache thumbCache) {
+        this.thumbCache = thumbCache;
     }
 }

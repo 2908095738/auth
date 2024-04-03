@@ -30,4 +30,5 @@ public interface NewsService extends IService<News> {
 
     Long createNewsId(Long createId, String userName);
 
+    void delete(Long newId, Long userId);
 }

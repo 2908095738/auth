@@ -6,7 +6,6 @@ import com.bbs.content.converter.CommentConverter;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.param.CreateCommentParam;
 import com.bbs.content.service.CommentService;
-import com.bbs.content.util.IpConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -31,16 +29,11 @@ public class CommentController {
     /**
      * 添加评论
      * @param param param
-     * @param request request
      * @return Boolean
      */
     @PutMapping
-    public Result<Boolean> createComment(@RequestBody @Valid CreateCommentParam param, HttpServletRequest request){
+    public Result<Boolean> createComment(@RequestBody @Valid CreateCommentParam param){
         //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
-        param.setCreateId(1L);//currentUser.getid
-        String ip = IpConfig.getIpAdrress(request);//获取ip
-        param.setIp(ip);
-
         service.save(converter.toEntity(param));
         // 计算内容分数
 
@@ -60,9 +53,7 @@ public class CommentController {
     public Result<Page<GetUserNewsDto.CommentByNewIdDto>> getPageByNewId(@NotNull(message = "内容id不能为空！") Long newId,
                                                                          @NotNull(message = "页数不能为空！") Integer current,
                                                                          @NotNull(message = "每页几条不能为空！") Integer size){
-        //获取评论分页列表
-        Page<GetUserNewsDto.CommentByNewIdDto> list = service.getPageByNewId(newId, current, size);
-        return Result.success(list);
+        return Result.success(service.getPageByNewId(newId, current, size));
     }
 
     /**

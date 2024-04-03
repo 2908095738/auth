@@ -10,16 +10,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
 import javax.validation.constraints.NotNull;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
 import static com.bbs.content.util.FileUtils.fileType;
 
 
@@ -34,7 +37,7 @@ public class UploadController {
     @Value("${news.video.path}")
     private String videoPath;
 
-    private FileService fileService;
+    private final FileService fileService;
 
 
     /**
@@ -108,7 +111,14 @@ public class UploadController {
     /**
      * 删除文件
      */
+    @DeleteMapping("/file")
+    public Result<Boolean> delFile(@RequestParam("filePathList") @NotNull(message = "删除文件url不能为空！")List<String> filePathList,
+                                   @NotNull(message = "内容id不能为空！")Long newId,
+                                   @NotNull(message = "用户id不能为空！")Long userId) {
+        fileService.delFiles(filePathList,newId,userId);
+        return Result.success();
 
+    }
 
 
 

@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.content.cache.NewsCache;
+import com.bbs.content.cache.ThumbCache;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.param.CreateNewParam;
 import com.bbs.content.dto.param.QueryNewsParam;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,6 +30,8 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Objects;
 
+import static cn.hutool.core.collection.CollUtil.isNotEmpty;
+
 /**
  * 文章/视频
  */
@@ -37,6 +41,7 @@ public class NewController {
 
     private NewsService newsService;
     private NewsCache newsCache;
+    private ThumbCache thumbCache;
     private CommentService commentService;
     private NewContentService newContentService;
     private NewTagService newTagService;
@@ -89,22 +94,23 @@ public class NewController {
      */
     @GetMapping("/query")
     public Result<Page<GetUserNewsDto>> getQueryNews(@Valid QueryNewsParam param){
-        return Result.success(newsService.getListByQuery(param));
+        Page<GetUserNewsDto> result = newsService.getListByQuery(param);
+        if(isNotEmpty(result.getRecords()))
+            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
+        return Result.success(result);
     }
-
-
-    /**
-     * 删除草稿
-     */
-
-
 
 
     /**
      * 删除内容
      */
-
-
+    @DeleteMapping()
+    public Result<Boolean> deleteNews(@NotNull(message = "内容id不能为空！") Long newId){
+        //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
+        Long userId = 1L;
+        newsService.delete(newId,userId);
+        return Result.success();
+    }
 
 
 
@@ -125,6 +131,8 @@ public class NewController {
                                                        @NotNull(message = "每页几条不能为空！") Integer size,
                                                        @NotNull(message = "是否为此用户属性值不能为空！") Boolean flag) {
         Page<GetUserNewsDto> newsResult = newsService.getListByUserId(userId, current, size, flag);
+        if(isNotEmpty(newsResult.getRecords()))
+            newsResult.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
         return Result.success(newsResult);
     }
 
@@ -139,8 +147,10 @@ public class NewController {
     @GetMapping("/recommend")
     public Result<Page<GetUserNewsDto>> getRecommendNews(@NotNull(message = "页数不能为空！") Integer current,
                                                          @NotNull(message = "每页几条不能为空！") Integer size) {
-        Page<GetUserNewsDto> newsResult = newsService.getListByRecommend(current, size);
-        return Result.success(newsResult);
+        Page<GetUserNewsDto> result = newsService.getListByRecommend(current, size);
+        if(isNotEmpty(result.getRecords()))
+            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
+        return Result.success(result);
     }
 
 
@@ -156,8 +166,10 @@ public class NewController {
     public Result<Page<GetUserNewsDto>> getFollowerNews(@NotNull(message = "关注用户id列表不能为空！") List<Long> userIds,
                                                         @NotNull(message = "页数不能为空！") Integer current,
                                                         @NotNull(message = "每页几条不能为空！") Integer size) {
-        Page<GetUserNewsDto> newsResult = newsService.getListByFollower(userIds, current, size);
-        return Result.success(newsResult);
+        Page<GetUserNewsDto> result = newsService.getListByFollower(userIds, current, size);
+        if(isNotEmpty(result.getRecords()))
+            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
+        return Result.success(result);
     }
 
     /**
@@ -181,19 +193,21 @@ public class NewController {
     public Result<GetUserNewsDto> getOneById(@NotNull(message = "内容id不能为空！") Long newId,
                                              @NotNull(message = "页数不能为空！") Integer current,
                                              @NotNull(message = "每页几条不能为空！") Integer size) {
-        GetUserNewsDto newsResult = newsService.getOneById(newId);
-        if (Objects.nonNull(newsResult)) {
+        GetUserNewsDto result = newsService.getOneById(newId);
+        if (Objects.nonNull(result)) {
+            result.setLikeCount(thumbCache.countBy(result.getNewId(), null, null, 1));
             Page<GetUserNewsDto.CommentByNewIdDto> list = commentService.getPageByNewId(newId, current, size);
-            newsResult.setCommentByNewIdDtoList(list);
+            result.setCommentByNewIdDtoList(list);
         }
-        return Result.success(newsResult);
+        return Result.success(result);
     }
 
 
     @Autowired
-    public NewController(NewsService newsService, NewsCache newsCache, CommentService commentService, NewContentService newContentService, NewTagService newTagService, TransactionDefinition transactionDefinition, DataSourceTransactionManager transactionManager) {
+    public NewController(NewsService newsService, NewsCache newsCache, ThumbCache thumbCache, CommentService commentService, NewContentService newContentService, NewTagService newTagService, TransactionDefinition transactionDefinition, DataSourceTransactionManager transactionManager) {
         this.newsService = newsService;
         this.newsCache = newsCache;
+        this.thumbCache = thumbCache;
         this.commentService = commentService;
         this.newContentService = newContentService;
         this.newTagService = newTagService;

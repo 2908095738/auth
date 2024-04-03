@@ -19,8 +19,10 @@ public class RabbitmqConfig {
 
     //队列
     public static final String QUEUE_INFORM_AGREE = "queue_inform_agree";
+    public static final String QUEUE_INFORM_DEL_AGREE = "queue_inform_del_agree";
 
     public static final String ROUTINGKEY_AGREE = "inform.agree";
+    public static final String ROUTINGKEY_DEL_AGREE = "inform.del_agree";
 
 
     //声明论坛模块交换机
@@ -44,6 +46,22 @@ public class RabbitmqConfig {
         return new Queue(QUEUE_INFORM_AGREE);
     }
 
+    //声明QUEUE_INFORM_DEL_AGREE队列
+    @Bean(QUEUE_INFORM_DEL_AGREE)
+    public Queue QUEUE_INFORM_DEL_AGREE() {
+        return new Queue(QUEUE_INFORM_DEL_AGREE);
+    }
+
+
+
+    //QUEUE_INFORM_DEL_AGREE队列绑定交换机，指定routingKey
+    @Bean
+    public Binding BINDING_QUEUE_INFORM_DEL_AGREE(@Qualifier(QUEUE_INFORM_DEL_AGREE) Queue queue,
+                                              @Qualifier(EXCHANGE_TOPICS_CHAT_INFORM) Exchange exchange) {
+        return BindingBuilder.bind(queue).to(exchange).with(ROUTINGKEY_DEL_AGREE).noargs();
+    }
+
+
 
     //QUEUE_INFORM_AGREE队列绑定交换机，指定routingKey
     @Bean
@@ -51,5 +69,6 @@ public class RabbitmqConfig {
                                               @Qualifier(EXCHANGE_TOPICS_CHAT_INFORM) Exchange exchange) {
         return BindingBuilder.bind(queue).to(exchange).with(ROUTINGKEY_AGREE).noargs();
     }
+
 
 }

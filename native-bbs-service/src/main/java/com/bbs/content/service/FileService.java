@@ -9,4 +9,6 @@ public interface FileService {
 
 
     void putAuditRedis(List<FileDto> auditFileList);
+
+    void delFiles(List<String> filePathList, Long newId, Long userId);
 }
