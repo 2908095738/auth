@@ -54,7 +54,7 @@ public class CommentController {
      */
     @DeleteMapping
     public Result<Boolean> deleteComment(@RequestBody Long commentId){
-        return service.delById(commentId);
+        return Result.success(service.delById(commentId));
     }
 
 

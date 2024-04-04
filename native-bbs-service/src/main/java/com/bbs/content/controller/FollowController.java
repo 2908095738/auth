@@ -2,17 +2,19 @@ package com.bbs.content.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.bbs.Result;
-import com.bbs.content.cache.ThumbCache;
-import com.bbs.content.dto.MqAgreeDto;
-import com.bbs.content.dto.param.CancelThumbParam;
-import com.bbs.content.dto.param.CreateThumbParam;
+import com.bbs.content.dto.MqFollowDto;
+import com.bbs.content.dto.param.CreateFollowParam;
+import com.bbs.content.dto.param.DelFollowParam;
+import com.bbs.content.entity.Fan;
 import com.bbs.content.mq.RabbitmqConfig;
 import com.bbs.content.mq.RabbitmqSend;
+import com.bbs.content.service.FanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,34 +22,35 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.Date;
+import java.util.List;
 
 /**
- * 点赞
+ * 关注
  */
 @RestController
-@RequestMapping("/thumb")
-public class ThumbController {
+@RequestMapping()
+public class FollowController {
 
+//    private FanCache fanCache;
     private RabbitmqSend rabbitmqSend;
-
-    private final ThumbCache cache;
+    private FanService fanService;
     private TransactionDefinition transactionDefinition;
     private DataSourceTransactionManager transactionManager;
 
-
     /**
-     * 添加点赞,更新用户、内容、评论对应点赞数量:redis
-     *
+     * 添加关注
      * @param param param
      * @return Boolean
      */
-    @PutMapping
-    public Result<Boolean> createThumb(@RequestBody @Valid CreateThumbParam param) {
+    @PutMapping("/follow")
+    public Result<Boolean> createFollow(@RequestBody @Valid CreateFollowParam param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
-            cache.create(param);
-            rabbitmqSend.send(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM, RabbitmqConfig.ROUTINGKEY_AGREE, JSON.toJSONString(new MqAgreeDto(param.getUserId(), param.getPostUserId(), param.getType(), new Date())));
+            fanService.create(param);
+            //发通知
+            rabbitmqSend.send(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM,RabbitmqConfig.ROUTINGKEY_FOLLOW, JSON.toJSONString(new MqFollowDto(
+                param.getUserId(),param.getFollowUserId(),new Date()
+            )));
             transactionManager.commit(transaction);
             return Result.success();
         } catch (RuntimeException e) {
@@ -57,22 +60,41 @@ public class ThumbController {
         return Result.failedNull();
     }
 
+
     /**
-     * 取消点赞
-     * @param param param
+     * 查询关注
      * @return Boolean
      */
-    @DeleteMapping
-    public Result<Boolean> cancelThumb(@RequestBody @Valid CancelThumbParam param) {
+    @GetMapping("/follow")
+    public Result<List<Fan>> getFollow(){
+        Long userId = 1L;
+        return Result.success(fanService.getFollow(userId));
+    }
+
+
+    /**
+     * 查询粉丝
+     * @return Boolean
+     */
+    @GetMapping("/fan")
+    public Result<List<Fan>> getFan(){
+        Long userId = 1L;
+        return Result.success(fanService.getFan(userId));
+    }
+
+
+    /**
+     * 删除关注
+     */
+    @DeleteMapping("/follow")
+    public Result<Boolean> delFollow(@RequestBody @Valid DelFollowParam param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
-            //删除点赞数据
-    //        param.setUserId(1L);
-            //更新用户、内容、评论对应点赞数量:redis
-            cache.cancel(param);
-            //通知对应的用户
-            rabbitmqSend.send(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM, RabbitmqConfig.ROUTINGKEY_DEL_AGREE, JSON.toJSONString(new MqAgreeDto(param.getUserId(),param.getPostUserId(), param.getType(), new Date())));
+            fanService.delFollow(param);
+            //发通知
+            rabbitmqSend.send(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM,RabbitmqConfig.ROUTINGKEY_UNFOLLOW, JSON.toJSONString(new MqFollowDto(
+                    param.getUserId(),param.getFollowUserId(),new Date()
+            )));
             transactionManager.commit(transaction);
             return Result.success();
         } catch (RuntimeException e) {
@@ -80,16 +102,13 @@ public class ThumbController {
             e.printStackTrace();
         }
         return Result.failedNull();
-
     }
-
 
     @Autowired
-    public ThumbController(RabbitmqSend rabbitmqSend, ThumbCache cache, TransactionDefinition transactionDefinition, DataSourceTransactionManager transactionManager) {
+    public FollowController(RabbitmqSend rabbitmqSend, FanService fanService, TransactionDefinition transactionDefinition, DataSourceTransactionManager transactionManager) {
+        this.fanService = fanService;
         this.rabbitmqSend = rabbitmqSend;
-        this.cache = cache;
         this.transactionDefinition = transactionDefinition;
         this.transactionManager = transactionManager;
     }
-
 }

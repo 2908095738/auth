@@ -5,12 +5,14 @@
 <mapper namespace="com.bbs.content.mapper.FanMapper">
 
     <resultMap id="BaseResultMap" type="com.bbs.content.entity.Fan">
-            <id property="accountId" column="account_id" jdbcType="BIGINT"/>
-            <result property="fAccountId" column="f_account_id" jdbcType="BIGINT"/>
-            <result property="type" column="type" jdbcType="TINYINT"/>
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="followUserId" column="follow_user_id" jdbcType="BIGINT"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        account_id,f_account_id,type
+        id,user_id,follow_user_id,
+        create_time
     </sql>
 </mapper>

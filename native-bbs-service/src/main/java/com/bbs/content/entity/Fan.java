@@ -1,10 +1,13 @@
 package com.bbs.content.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
 import lombok.Data;
+
+import java.io.Serializable;
+import java.util.Date;
 
 /**
  * 粉丝和关注表
@@ -14,22 +17,34 @@ import lombok.Data;
 @Data
 public class Fan implements Serializable {
     /**
+     * 
+     */
+    @TableId(value = "id", type = IdType.AUTO)
+    private Long id;
+
+    /**
      * 账号id
      */
-    @TableId(value = "account_id")
-    private Long accountId;
+    @TableField(value = "user_id")
+    private Long userId;
 
     /**
-     * 粉丝账号id或关注账号id
+     * 关注账号id
      */
-    @TableField(value = "f_account_id")
-    private Long fAccountId;
+    @TableField(value = "follow_user_id")
+    private Long followUserId;
 
     /**
-     * 类型：0粉丝 1关注
+     * 创建时间
      */
-    @TableField(value = "type")
-    private Integer type;
+    @TableField(value = "create_time")
+    private Date createTime;
+
+    /**
+     * 删除状态：0未删除  1已删除
+     */
+    @TableField(value = "delete_flag")
+    private Integer deleteFlag;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

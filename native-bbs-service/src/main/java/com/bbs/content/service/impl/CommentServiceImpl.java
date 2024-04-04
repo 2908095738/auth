@@ -1,7 +1,6 @@
 package com.bbs.content.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.bbs.Result;
 import com.bbs.content.cache.ThumbCache;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.entity.Comment;
@@ -50,10 +49,8 @@ public class CommentServiceImpl extends MPJBaseServiceImpl<CommentMapper, Commen
     }
 
     @Override
-    public Result<Boolean> delById(Long commentId) {
-
-
-        return null;
+    public Boolean delById(Long commentId) {
+        return updateById(new Comment().setId(commentId).setDeleteFlag(1));
     }
 
     @Resource

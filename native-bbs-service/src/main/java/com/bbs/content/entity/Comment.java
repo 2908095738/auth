@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -15,6 +16,7 @@ import java.util.Date;
  */
 @TableName(value ="comment")
 @Data
+@Accessors(chain = true)
 public class Comment implements Serializable {
     /**
      * 
@@ -77,10 +79,16 @@ public class Comment implements Serializable {
     private Date updateTime;
 
     /**
-     * 状态 10.待审核 20.已发布 110.待审核用户删除 120.已发布用户删除 100010.待审核员工删除 100020.已发布员工删除
+     * 暂无  状态 10.待审核 20.已发布 110.待审核用户删除 120.已发布用户删除 100010.待审核管理员删除 100020.已发布管理员删除
      */
     @TableField(value = "status")
     private Integer status;
+
+    /**
+     * 删除状态：0未删除  1已删除
+     */
+    @TableField(value = "delete_flag")
+    private Integer deleteFlag;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
