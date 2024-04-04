@@ -1,11 +1,11 @@
 package com.bbs.content.service;
 
-import com.bbs.content.entity.Facorites;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.bbs.content.entity.Favorites;
 
 /**
  *
  */
-public interface FacoritesService extends IService<Facorites> {
+public interface FavoritesService extends IService<Favorites> {
 
 }
