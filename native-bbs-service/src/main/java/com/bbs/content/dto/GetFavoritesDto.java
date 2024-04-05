@@ -1,23 +1,15 @@
-package com.bbs.content.entity;
+package com.bbs.content.dto;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import lombok.experimental.Accessors;
 
-import java.io.Serializable;
 import java.util.Date;
-
-/**
- * 收藏表
- * @TableName favorites
- */
-@TableName(value ="favorites")
 @Data
-@Accessors(chain = true)
-public class Favorites implements Serializable {
+public class GetFavoritesDto {
+
+
     /**
      *
      */
@@ -37,17 +29,39 @@ public class Favorites implements Serializable {
     private Long newId;
 
     /**
+     * 标题
+     */
+    @TableField(value = "title")
+    private String title;
+
+    /**
+     * 用户名
+     */
+    @TableField(value = "user_name")
+    private String userName;
+
+    /**
+     * 封面
+     */
+    @TableField(value = "summary")
+    private String summary;
+
+    /**
+     * 点赞数
+     */
+    @TableField(value = "like_count")
+    private Integer likeCount;
+
+
+    /**
      * 创建时间
      */
     @TableField(value = "create_time")
     private Date createTime;
 
-    /**
-     * 删除状态：0未删除  1已删除
-     */
-    @TableField(value = "delete_flag")
-    private Integer deleteFlag;
 
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
+
+
+
+
 }

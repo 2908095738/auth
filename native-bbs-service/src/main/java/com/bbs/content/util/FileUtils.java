@@ -4,6 +4,9 @@ package com.bbs.content.util;
 import com.sun.image.codec.jpeg.JPEGCodec;
 import com.sun.image.codec.jpeg.JPEGImageEncoder;
 import lombok.extern.slf4j.Slf4j;
+import org.bytedeco.javacv.FFmpegFrameGrabber;
+import org.bytedeco.javacv.FFmpegFrameRecorder;
+import org.bytedeco.javacv.Java2DFrameConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import ws.schild.jave.AudioAttributes;
@@ -214,7 +217,65 @@ public class FileUtils {
     }
 
 
+    //添加静态代码块
+    static {
+        try {
+            FFmpegFrameGrabber.tryLoad();
+            FFmpegFrameRecorder.tryLoad();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
+    }
+
+    /**
+     * 获取视频中的图片
+     * @param inputStream 视频输入流
+     * @return
+     * @throws Exception
+     */
+    public static BufferedImage grabberVideoFramer(InputStream inputStream) throws Exception {
+        // 最后获取到的视频的图片缓存
+        BufferedImage bufferedImage = null;
+        // Frame对象
+        org.bytedeco.javacv.Frame frame = null;
+        // 标识
+        int flag = 0;
+        FFmpegFrameGrabber fFmpegFrameGrabber = null;
+        try {
+            //获取视频文件
+            fFmpegFrameGrabber = new FFmpegFrameGrabber(inputStream);
+            fFmpegFrameGrabber.start();
+
+            // 获取视频总帧数
+            int ftp = fFmpegFrameGrabber.getLengthInFrames();
+
+            //对视屏 帧数处理
+            while (flag <= ftp) {
+                frame = fFmpegFrameGrabber.grabImage();
+                //对视频的第10帧进行处理
+                if (frame != null && flag == 10) {
+                    // 图片缓存对象
+                    bufferedImage = FrameToBufferedImage(frame);
+                    break;
+                }
+                flag++;
+            }
+        }finally {
+            if(fFmpegFrameGrabber != null) {
+                fFmpegFrameGrabber.stop();
+                fFmpegFrameGrabber.close();
+            }
+        }
+        return bufferedImage;
+    }
+
+    private static BufferedImage FrameToBufferedImage(org.bytedeco.javacv.Frame frame) {
+        // 创建BufferedImage对象
+        Java2DFrameConverter converter = new Java2DFrameConverter();
+        BufferedImage bufferedImage = converter.getBufferedImage(frame);
+        return bufferedImage;
+    }
 
 }
 
