@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: dfs
+  boot:
+    admin:
+      client:
+        url: http://localhost:7003
+        instance:
+          prefer-ip: true
+  redis:
+    host: 192.168.100.6
+    port: 6379
+  # 以下配置会影响：日志上报功能
+  rabbitmq:
+    addresses: 127.0.0.1:5672
+    port: 5672
+    username: admin
+    password: admin
+    virtual-host: /test/host
+    publisher-returns: true
+    publisher-confirm-type: correlated
+server:
+  port: 8080
+logging:
+  level:
+    com.bbs.file: debug
+    com.baomidou: debug
+  file:
+    path: logs/dfs/
+  config: classpath:logback-spring.xml
+fdfs:
+  outurl: http://192.168.100.6:8088/
+  # 读取时间
+  soTimeout: 1500
+  # 连接超时时间
+  connectTimeout: 691
+  # 缩略图
+  thumbImage:
+    # 宽
+    width: 150
+    # 高
+    height: 150
+  # tracker列表
+  trackerList:
+    - 192.168.100.6:22122
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+    enabled-by-default: true
+  endpoint:
+    logfile:
+      external-file: logs/dfs/

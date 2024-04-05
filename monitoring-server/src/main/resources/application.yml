@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: monitoring
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    virtual-host: /
+    username: admin
+    password: admin
+    # 发送者开启 return 确认机制
+    publisher-returns: true
+    # 发送者开启 confirm 确认机制
+    publisher-confirm-type: correlated
+server:
+  port: 7003
+logging:
+  level:
+    com.bbs.monitoring: debug
+  file:
+    path: logs/
+  config: classpath:logback-spring.xml
+auth:
+  host: 192.168.100.6:7005

@@ -1,0 +1,28 @@
+server:
+  port: 7004
+spring:
+  application:
+    name: log
+  datasource:
+    url: jdbc:mysql://192.168.100.8:3306/pan_back?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  rabbitmq:
+    addresses: 127.0.0.1:5672
+    port: 5672
+    username: admin
+    password: admin
+    virtual-host: /test/host
+    publisher-returns: true
+    publisher-confirm-type: correlated
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.log4j2.Log4j2Impl
+logging:
+  level:
+    com.bbs.log: debug
+    com.baomidou: debug
+  file:
+    path: logs/log/
+  config: classpath:logback-spring.xml
