@@ -1,29 +1,27 @@
-package com.bbs.content.service.impl;
+package com.bbs.content.cache.impl;
 
 import cn.hutool.core.io.FileTypeUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.bbs.content.cache.FileCache;
 import com.bbs.content.dto.FileDto;
 import com.bbs.content.enums.RedisKeys;
-import com.bbs.content.service.FileService;
 import com.bbs.content.util.FileUtils;
 import com.bbs.content.util.RedisUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import javax.annotation.Resource;
 import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import static com.bbs.content.util.FileUtils.fileType;
 import static java.util.stream.Collectors.toSet;
 
 @Service
-public class FileServiceImpl implements FileService {
+public class FileCacheImpl implements FileCache {
 
     private RedisUtil redisUtil;
 

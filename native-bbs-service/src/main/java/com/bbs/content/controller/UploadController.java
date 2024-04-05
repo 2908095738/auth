@@ -4,8 +4,8 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileTypeUtil;
 import com.alibaba.fastjson.JSON;
 import com.bbs.Result;
+import com.bbs.content.cache.FileCache;
 import com.bbs.content.dto.FileDto;
-import com.bbs.content.service.FileService;
 import com.bbs.content.util.FileUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -53,7 +53,7 @@ public class UploadController {
     private String videoDownPrefix;
 
 
-    private final FileService fileService;
+    private final FileCache fileCache;
 
 
     @Data
@@ -115,11 +115,11 @@ public class UploadController {
             }
             if (CollUtil.isNotEmpty(compressionFileList)){
                 //压缩
-                fileService.compression(compressionFileList);
+                fileCache.compression(compressionFileList);
             }
             if (CollUtil.isNotEmpty(auditFileList)){
                 //放入redis
-                fileService.putAuditRedis(auditFileList);
+                fileCache.putAuditRedis(auditFileList);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -184,7 +184,7 @@ public class UploadController {
     public Result<Boolean> delFile(@RequestParam("filePathList") @NotNull(message = "删除文件url不能为空！")List<String> filePathList,
                                    @NotNull(message = "内容id不能为空！")Long newId,
                                    @NotNull(message = "用户id不能为空！")Long userId) {
-        fileService.delFiles(filePathList,newId,userId);
+        fileCache.delFiles(filePathList,newId,userId);
         return Result.success();
 
     }
@@ -197,7 +197,7 @@ public class UploadController {
 
 
     @Autowired
-    public UploadController(FileService fileService) {
-        this.fileService = fileService;
+    public UploadController( FileCache fileCache) {
+        this.fileCache = fileCache;
     }
 }

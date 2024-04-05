@@ -1,10 +1,10 @@
-package com.bbs.content.service;
+package com.bbs.content.cache;
 
 import com.bbs.content.dto.FileDto;
 
 import java.util.List;
 
-public interface FileService {
+public interface FileCache {
     void compression(List<FileDto> file);
 
 
