@@ -7,8 +7,6 @@ import com.bbs.content.dto.param.CreateNewParam;
 import com.bbs.content.dto.param.QueryNewsParam;
 import com.bbs.content.entity.News;
 
-import java.util.List;
-
 /**
  *
  */
@@ -26,7 +24,7 @@ public interface NewsService extends IService<News> {
 
     Page<GetUserNewsDto> getListByRecommend(Integer current, Integer size);
 
-    Page<GetUserNewsDto> getListByFollower(List<Long> userIds, Integer current, Integer size);
+    Page<GetUserNewsDto> getListByFollower(Long userIds, Integer current, Integer size);
 
     Long createNewsId(Long createId, String userName);
 

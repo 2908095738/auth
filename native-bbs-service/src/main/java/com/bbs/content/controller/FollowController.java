@@ -11,6 +11,7 @@ import com.bbs.content.entity.Fan;
 import com.bbs.content.mq.RabbitmqConfig;
 import com.bbs.content.mq.RabbitmqSend;
 import com.bbs.content.cache.FanService;
+import com.bbs.content.util.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -69,7 +70,7 @@ public class FollowController {
      */
     @GetMapping("/follow")
     public Result<List<GetFollowOrFanDto>> getFollow(){
-        Long userId = 1L;
+        Long userId = ThreadLocalUtil.getCurrentUserId();
         List<Fan> list = fanService.getFollow(userId);
         if(CollUtil.isNotEmpty(list)){
 //            List<GetFollowOrFanDto> result = list.stream().map(o -> new GetFollowOrFanDto(o.getFollowUserId(), , )).collect(Collectors.toList());
@@ -85,7 +86,7 @@ public class FollowController {
      */
     @GetMapping("/fan")
     public Result<List<GetFollowOrFanDto>> getFan(){
-        Long userId = 1L;
+        Long userId = ThreadLocalUtil.getCurrentUserId();
         List<Fan> list = fanService.getFollow(userId);
         if(CollUtil.isNotEmpty(list)){
 //            List<GetFollowOrFanDto> result = list.stream().map(o -> new GetFollowOrFanDto(o.getUserId(), , )).collect(Collectors.toList());

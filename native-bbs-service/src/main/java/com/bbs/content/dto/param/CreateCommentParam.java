@@ -33,7 +33,6 @@ public class CreateCommentParam {
     /**
      * 评论人id
      */
-    @NotNull(message = "评论人id不能为空！")
     private Long createId;
 
 }

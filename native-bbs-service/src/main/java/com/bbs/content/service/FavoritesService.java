@@ -11,7 +11,7 @@ import com.bbs.content.entity.Favorites;
  *
  */
 public interface FavoritesService extends IService<Favorites> {
-    Favorites create(CreateFavoritesParam param);
+    Favorites create(CreateFavoritesParam param, Long createId);
     Favorites delFavorite(Long id);
     Page<GetFavoritesDto> getFavorites(GetFavoritesParam param);
 

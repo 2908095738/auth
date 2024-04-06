@@ -26,14 +26,11 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler) throws ReLoginException, IOException {
-        String token = request.getHeader("Authorization");
-        if (token != null) {
-            AuthUtil.UserAPI.User user = api.getLoginUser();
-            if (nonNull(user)){
-                log.debug("[LoginInterceptor::afterCompletion] 用户信息：{}", toJSONString(user));
-                ThreadLocalUtil.addCurrentUser(user);
-                return true;
-            }
+        AuthUtil.UserAPI.User user = api.getLoginUser();
+        if (nonNull(user)){
+            log.debug("[LoginInterceptor::afterCompletion] 用户信息：{}", toJSONString(user));
+            ThreadLocalUtil.addCurrentUser(user);
+            return true;
         }
         response.sendError(401,"请重新登陆");
         return false;

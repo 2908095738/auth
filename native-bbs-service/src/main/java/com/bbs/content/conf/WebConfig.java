@@ -67,12 +67,11 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-//        registry.addInterceptor(createLoginInterceptor())
-//                .addPathPatterns("/**")
-//                .excludePathPatterns("/news/upload")
-//                .excludePathPatterns(fileDownPrefix + "/**")
-//                .excludePathPatterns(imageDownPrefix + "/**")
-//                .excludePathPatterns(videoDownPrefix + "/**");
+        registry.addInterceptor(createLoginInterceptor())
+                .addPathPatterns("/**")
+                .excludePathPatterns(fileDownPrefix + "/**")
+                .excludePathPatterns(imageDownPrefix + "/**")
+                .excludePathPatterns(videoDownPrefix + "/**");
     }
 }
 

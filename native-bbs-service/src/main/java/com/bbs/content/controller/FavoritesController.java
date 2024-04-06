@@ -12,6 +12,7 @@ import com.bbs.content.entity.Favorites;
 import com.bbs.content.mq.RabbitmqConfig;
 import com.bbs.content.mq.RabbitmqSend;
 import com.bbs.content.service.FavoritesService;
+import com.bbs.content.util.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -52,11 +53,12 @@ public class FavoritesController {
     public Result<Boolean> createFavorites(@RequestBody @Valid CreateFavoritesParam param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            Favorites result = favoritesService.create(param);
+            Long createId = ThreadLocalUtil.getCurrentUserId();
+            Favorites result = favoritesService.create(param,createId);
             if(Objects.isNull(result))return Result.failed("添加失败！");
             //通知
             rabbitmqSend.send(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM,RabbitmqConfig.ROUTINGKEY_FAVORITE, JSON.toJSONString(new MqFavoritesDto(
-                    param.getUserId(), param.getNewId(), new Date()
+                    createId, param.getNewId(), new Date()
             )));
             transactionManager.commit(transaction);
             return Result.success();

@@ -23,6 +23,13 @@ public class ThreadLocalUtil {
         return userThreadLocal.get();
     }
 
+    /**
+     * 获取当前登录用户方法
+     */
+    public static Long getCurrentUserId(){
+        return userThreadLocal.get().getUserId();
+    }
+
 
     /**
      * 删除当前登录用户方法  在拦截器方法执行后 移除当前用户对象

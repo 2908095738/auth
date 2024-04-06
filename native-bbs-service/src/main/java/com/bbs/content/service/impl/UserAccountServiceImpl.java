@@ -2,11 +2,11 @@ package com.bbs.content.service.impl;
 
 
 import com.bbs.content.cache.ThumbCache;
-import com.bbs.content.converter.UserAccountConverter;
 import com.bbs.content.dto.GetUserAccountDto;
 import com.bbs.content.entity.UserAccount;
 import com.bbs.content.mapper.UserAccountMapper;
 import com.bbs.content.service.UserAccountService;
+import com.bbs.content.util.AuthUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.stereotype.Service;
@@ -20,13 +20,11 @@ import javax.annotation.Resource;
 public class UserAccountServiceImpl extends MPJBaseServiceImpl<UserAccountMapper, UserAccount>
     implements UserAccountService{
 
-    private UserAccountConverter converter;
-
     private ThumbCache thumbCache;
 
     @Override
-    public Boolean create(Long userId) {
-        return save(new UserAccount().setUserId(userId));
+    public Boolean create(AuthUtil.UserAPI.User user) {
+        return save(new UserAccount().setUserId(user.getUserId()).setNickName(user.getNickName()).setAvatarPath(user.getAvatar()));
     }
 
 
@@ -44,10 +42,6 @@ public class UserAccountServiceImpl extends MPJBaseServiceImpl<UserAccountMapper
         return result;
     }
 
-    @Resource
-    public void setConverter(UserAccountConverter converter) {
-        this.converter = converter;
-    }
     @Resource
     public void setThumbCache(ThumbCache thumbCache) {
         this.thumbCache = thumbCache;

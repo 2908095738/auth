@@ -8,6 +8,7 @@ import com.bbs.content.entity.Favorites;
 import com.bbs.content.entity.News;
 import com.bbs.content.mapper.FavoritesMapper;
 import com.bbs.content.service.FavoritesService;
+import com.bbs.content.util.ThreadLocalUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
@@ -22,8 +23,8 @@ public class FavoritesServiceImpl extends MPJBaseServiceImpl<FavoritesMapper, Fa
 
 
     @Override
-    public Favorites create(CreateFavoritesParam param) {
-        Favorites favorites = new Favorites().setNewId(param.getNewId()).setUserId(param.getUserId());
+    public Favorites create(CreateFavoritesParam param, Long createId) {
+        Favorites favorites = new Favorites().setNewId(param.getNewId()).setUserId(createId);
         boolean save = save(favorites);
         if(save){
             return favorites;
@@ -43,13 +44,14 @@ public class FavoritesServiceImpl extends MPJBaseServiceImpl<FavoritesMapper, Fa
 
     @Override
     public Page<GetFavoritesDto> getFavorites(GetFavoritesParam param) {
+        Long createId = ThreadLocalUtil.getCurrentUserId();
         Page<GetFavoritesDto> result = selectJoinListPage(new Page<>(param.getCurrent(), param.getSize()), GetFavoritesDto.class, new MPJLambdaWrapper<Favorites>()
                 .selectAll(Favorites.class)
                 .selectAs(News::getTitle, GetFavoritesDto::getTitle)
                 .selectAs(News::getUserName, GetFavoritesDto::getUserName)
                 .selectAs(News::getSummary, GetFavoritesDto::getSummary)
                 .eq(Favorites::getDeleteFlag,0)
-                .eq(Favorites::getUserId,param.getUserId())
+                .eq(Favorites::getUserId,createId)
                 .like(StringUtils.isNotBlank(param.getTitle()),News::getTitle,param.getTitle())
                 .like(StringUtils.isNotBlank(param.getUserName()),News::getUserName,param.getUserName())
                 .leftJoin(News.class, News::getNewId, Favorites::getNewId)

@@ -7,6 +7,7 @@ import com.bbs.content.converter.NewsConverter;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.param.CreateNewParam;
 import com.bbs.content.dto.param.QueryNewsParam;
+import com.bbs.content.entity.Fan;
 import com.bbs.content.entity.NewContent;
 import com.bbs.content.entity.NewTag;
 import com.bbs.content.entity.News;
@@ -52,7 +53,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
         updateById(new News().setNewId(newId).setDeleteFlag(1));
         List<String> filePathList = Arrays.asList(news.getImageUrl().split(","));
         filePathList.addAll(Arrays.asList(news.getViewUrl().split(",")));
-        fileCache.delFiles(filePathList,newId,userId);
+        fileCache.delFiles(filePathList,newId);
     }
 
 
@@ -147,23 +148,25 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
 
     /**
      * 查询关注页上的内容简要信息
-     * @param userIds 用户id
+     * @param userId 用户id
      * @param current 第几页
      * @param size 几条
      * @return GetUserAccountDto.GetUserNewsDto
      */
     @Override
-    public Page<GetUserNewsDto> getListByFollower(List<Long> userIds, Integer current, Integer size) {
+    public Page<GetUserNewsDto> getListByFollower(Long userId, Integer current, Integer size) {
         return selectJoinListPage(new Page<>(current, size), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
                 .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
                 .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
                 .selectCollection(NewTag.class,GetUserNewsDto::getTagIds,o->o.result(NewTag::getTagId))
                 .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
-                .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
                 .eq(News::getDeleteFlag,0)
+                .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
+                .leftJoin(Fan.class,Fan::getUserId,News::getCreateId)
+                .eq(News::getCreateId, userId)
                 .orderBy(true, false, News::getCreateTime)
-                .in(News::getCreateId, userIds));
+        );
     }
 
     /**

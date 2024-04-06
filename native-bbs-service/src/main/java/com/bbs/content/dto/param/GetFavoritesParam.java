@@ -18,9 +18,5 @@ public class GetFavoritesParam extends BaseParam {
      */
     private String userName;
 
-    /**
-     * 用户id
-     */
-    private Long userId;
 
 }

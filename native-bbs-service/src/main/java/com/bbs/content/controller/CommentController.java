@@ -7,9 +7,11 @@ import com.bbs.content.converter.CommentConverter;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.MqCommentDto;
 import com.bbs.content.dto.param.CreateCommentParam;
+import com.bbs.content.entity.Comment;
 import com.bbs.content.mq.RabbitmqConfig;
 import com.bbs.content.mq.RabbitmqSend;
 import com.bbs.content.service.CommentService;
+import com.bbs.content.util.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,8 +41,10 @@ public class CommentController {
      */
     @PutMapping
     public Result<Boolean> createComment(@RequestBody @Valid CreateCommentParam param){
-        //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
-        service.save(converter.toEntity(param));
+        Long currentUserId = ThreadLocalUtil.getCurrentUserId();
+        Comment comment = converter.toEntity(param);
+        comment.setCreateId(currentUserId);
+        service.save(comment);
         //通知对应的用户
         MqCommentDto mqCommentDto = converter.toMqDto(param);
         rabbitmqSend.send(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM, RabbitmqConfig.ROUTINGKEY_COMMENT, JSON.toJSONString(mqCommentDto));

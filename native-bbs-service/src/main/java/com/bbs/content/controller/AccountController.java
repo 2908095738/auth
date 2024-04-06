@@ -8,13 +8,14 @@ import com.bbs.content.dto.GetUserAccountDto;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.service.NewsService;
 import com.bbs.content.service.UserAccountService;
+import com.bbs.content.util.AuthUtil;
+import com.bbs.content.util.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 import static cn.hutool.core.collection.CollUtil.isNotEmpty;
@@ -24,7 +25,7 @@ import static cn.hutool.core.collection.CollUtil.isNotEmpty;
  */
 @RestController
 @RequestMapping("/account")
-public class AccountManageController {
+public class AccountController {
 
     private UserAccountService service;
 
@@ -35,12 +36,13 @@ public class AccountManageController {
 
     /**
      * 创建登录用户账号信息
-     * 头像、昵称、性别、年龄、点赞数、积分数、收藏数、关注数、粉丝数、是否企业认证、是否实名认证
+     * 头像、昵称、性别、年龄、点赞数、积分数、收藏数、关注数、粉丝数
      */
     @PutMapping()
-    public Result<Boolean> createAccount(@NotNull Long userId){
+    public Result<Boolean> createAccount(){
+        AuthUtil.UserAPI.User currentUser = ThreadLocalUtil.getCurrentUser();
         //获取用户账号信息
-        service.create(userId);
+        service.create(currentUser);
         return Result.success();
     }
 
@@ -52,14 +54,14 @@ public class AccountManageController {
      * 发布内容列表  文章or视频1：标题、内容概要、评论数、收藏数、点赞数
      */
     @GetMapping()
-    public Result<GetUserAccountDto> getAccount(boolean flag){
-//TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
+    public Result<GetUserAccountDto> getAccount(Long userId,boolean flag){
         //获取用户账号信息
-        GetUserAccountDto result = service.getByUserId(1L);
+        GetUserAccountDto result = service.getByUserId(userId);
         if(Objects.nonNull(result)){
-            result.setAge(18);//TODO currentUser
+
+
             //获取发布文章列表
-            Page<GetUserNewsDto> newsResult = newsService.getListByUserId(1L,1,10,flag);
+            Page<GetUserNewsDto> newsResult = newsService.getListByUserId(userId,1,10,flag);
             if(isNotEmpty(newsResult.getRecords()))
                 newsResult.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
             result.setNewsResult(newsResult);
@@ -69,7 +71,7 @@ public class AccountManageController {
 
 
     @Autowired
-    public AccountManageController(UserAccountService service, NewsService newsService, ThumbCache thumbCache) {
+    public AccountController(UserAccountService service, NewsService newsService, ThumbCache thumbCache) {
         this.service = service;
         this.newsService = newsService;
         this.thumbCache = thumbCache;
