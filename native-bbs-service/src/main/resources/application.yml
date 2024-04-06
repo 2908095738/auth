@@ -80,3 +80,5 @@ apache:
 tokenName: Authorization
 authServerIP: 192.168.100.6
 authServerPort: 8080
+auth:
+  host: 192.168.100.6:7005

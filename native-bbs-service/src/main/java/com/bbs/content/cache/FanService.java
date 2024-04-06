@@ -1,9 +1,9 @@
-package com.bbs.content.service;
+package com.bbs.content.cache;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.bbs.content.dto.param.CreateFollowParam;
 import com.bbs.content.dto.param.DelFollowParam;
 import com.bbs.content.entity.Fan;
-import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
 

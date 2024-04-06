@@ -1,21 +1,6 @@
 package com.bbs.content.cache.impl;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.TypeReference;
 import com.bbs.content.cache.FanCache;
-import com.bbs.content.dto.param.CreateFollowParam;
-import com.bbs.content.dto.param.DelFollowParam;
-import com.bbs.content.entity.Fan;
-import com.bbs.content.service.FanService;
-import com.bbs.content.util.RedisUtil;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Service;
-
-import javax.annotation.Resource;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 //@Service
 public class FanCacheImpl implements FanCache {

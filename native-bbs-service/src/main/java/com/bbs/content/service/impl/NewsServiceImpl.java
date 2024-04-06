@@ -2,6 +2,7 @@ package com.bbs.content.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.bbs.content.cache.FileCache;
 import com.bbs.content.converter.NewsConverter;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.param.CreateNewParam;
@@ -11,7 +12,6 @@ import com.bbs.content.entity.NewTag;
 import com.bbs.content.entity.News;
 import com.bbs.content.enums.NewCommentStatus;
 import com.bbs.content.mapper.NewsMapper;
-import com.bbs.content.service.FileService;
 import com.bbs.content.service.NewsService;
 import com.bbs.content.util.SensitiveFilter;
 import com.github.yulichang.base.MPJBaseServiceImpl;
@@ -36,7 +36,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
     private SensitiveFilter sensitiveFilter;
 
 
-    private FileService fileService;
+    private FileCache fileCache;
 
 
     @Override
@@ -52,7 +52,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
         updateById(new News().setNewId(newId).setDeleteFlag(1));
         List<String> filePathList = Arrays.asList(news.getImageUrl().split(","));
         filePathList.addAll(Arrays.asList(news.getViewUrl().split(",")));
-        fileService.delFiles(filePathList,newId,userId);
+        fileCache.delFiles(filePathList,newId,userId);
     }
 
 
@@ -198,7 +198,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
 
 
     @Resource
-    public void setFileService(FileService fileService) {
-        this.fileService = fileService;
+    public void setFileService(FileCache fileCache) {
+        this.fileCache = fileCache;
     }
 }

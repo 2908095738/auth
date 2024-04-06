@@ -7,21 +7,21 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Date;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MqFollowDto implements Serializable {
-
+public class MqFavoritesDto implements Serializable {
 
     /**
-     * 关注者账号id
+     * 用户id
      */
     private Long userId;
 
     /**
-     * 被关注者账号id
+     * 内容id
      */
-    private Long followUserId;
+    private Long newId;
 
     /**
      * 创建时间
