@@ -7,12 +7,12 @@ import java.util.Date;
 @Data
 public class CreateChatParam {
     /**
-     * 消息发送用户id
+     * 消息发送用户id;-1表示我发给对方
      */
     private Long sendUid;
 
     /**
-     * 消息接收用户id
+     * 消息接收用户id;-1表示我接收对方的消息
      */
     private Long acceptUid;
 

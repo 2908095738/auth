@@ -8,6 +8,7 @@ import com.bbs.chat.dto.*;
 import com.bbs.chat.dto.param.CreateChatParam;
 import com.bbs.chat.service.ChatService;
 import com.bbs.chat.service.ThumbService;
+import com.bbs.chat.util.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,18 +36,18 @@ public class ChatController {
 
     @PutMapping("/createChat")
     public Result createChat(@RequestBody CreateChatParam param) {
-        chatService.createChat(param);
-        return Result.success();
+        Long userId = ThreadLocalUtil.getCurrentUser().getUserId();
+        return chatService.createChat(param, userId);
     }
 
     /**
      * 获取消息页顶部的点赞/收藏、关注、评论角标
      *
-     * @param userId
      * @return
      */
     @GetMapping("/getTop")
-    public Result<ChatTopDto> getTop(Long userId) {
+    public Result<ChatTopDto> getTop() {
+        Long userId = ThreadLocalUtil.getCurrentUser().getUserId();
         ChatTopDto result = chatService.getChatTop(userId);
         return Result.success(result);
     }
@@ -54,13 +55,13 @@ public class ChatController {
     /**
      * 获取消息页下方消息列表
      *
-     * @param userId
      * @param current 未读消息第几页
      * @param size    未读消息几条
      * @return
      */
     @GetMapping("/getChat")
-    public Result<ChatListDto> getChat(Long userId, Integer current, Integer size) {
+    public Result<ChatListDto> getChat(Integer current, Integer size) {
+        Long userId = ThreadLocalUtil.getCurrentUser().getUserId();
         ChatListDto result = chatService.getChat(userId, current, size);
         return Result.success(result);
     }
@@ -68,16 +69,13 @@ public class ChatController {
     /**
      * 获取聊天记录
      *
-     * @param sendUid   发送方用户id
-     * @param acceptUid 接收方用户id
-     * @param current   第几页
-     * @param size      几条
+     * @param sendUid 发送方用户id
+     * @param current 第几页
+     * @param size    几条
      */
     @GetMapping("/getRecord")
-    public Result<Page<ChatRecordDto>> getRecord(Long sendUid, Long acceptUid, Integer current, Integer size) {
-        if (sendUid.equals(acceptUid))
-            return Result.failed("sendUid don't = acceptUid!");
-
+    public Result<Page<ChatRecordDto>> getRecord(Long sendUid, Integer current, Integer size) {
+        Long acceptUid = ThreadLocalUtil.getCurrentUser().getUserId();
         Page<ChatRecordDto> result = chatService.getRecord(sendUid, acceptUid, current, size);
         return Result.success(result);
     }
@@ -85,13 +83,13 @@ public class ChatController {
     /**
      * 获取点赞、收藏列表
      *
-     * @param userId  用户id
      * @param current 第几页
      * @param size    几条
      * @return
      */
     @GetMapping("/getAgree")
-    public Result<Page<AgreeDto>> getAgree(Long userId, Integer current, Integer size) {
+    public Result<Page<AgreeDto>> getAgree(Integer current, Integer size) {
+        Long userId = ThreadLocalUtil.getCurrentUser().getUserId();
         Page<AgreeDto> result = chatService.getAgree(userId, current, size);
         return Result.success(result);
     }
@@ -99,13 +97,13 @@ public class ChatController {
     /**
      * 获取关注
      *
-     * @param userId  用户id
      * @param current 第几页
      * @param size    几条
      * @return
      */
     @GetMapping("/getFan")
-    public Result<Page<FanDto>> getFan(Long userId, Integer current, Integer size) {
+    public Result<Page<FanDto>> getFan(Integer current, Integer size) {
+        Long userId = ThreadLocalUtil.getCurrentUser().getUserId();
         Page<FanDto> result = chatService.getFan(userId, current, size);
         return Result.success(result);
     }
@@ -113,13 +111,13 @@ public class ChatController {
     /**
      * 获取评论
      *
-     * @param userId  用户id
      * @param current 第几页
      * @param size    几条
      * @return
      */
     @GetMapping("/getComm")
-    public Result<Page<CommDto>> getComm(Long userId, Integer current, Integer size) {
+    public Result<Page<CommDto>> getComm(Integer current, Integer size) {
+        Long userId = ThreadLocalUtil.getCurrentUser().getUserId();
         Page<CommDto> result = chatService.getComm(userId, current, size);
         return Result.success(result);
     }
@@ -127,13 +125,13 @@ public class ChatController {
     /**
      * 获取关注用户昵称
      *
-     * @param userId
      * @param current
      * @param size
      * @return
      */
     @GetMapping("/getNick")
-    public Result<Page<String>> getNick(Long userId, Integer current, Integer size) {
+    public Result<Page<String>> getNick(Integer current, Integer size) {
+        Long userId = ThreadLocalUtil.getCurrentUser().getUserId();
         Page<String> result = chatService.getNick(userId, current, size);
         return Result.success(result);
     }
@@ -142,12 +140,12 @@ public class ChatController {
      * 互相关注
      *
      * @param sendUid   发送方id
-     * @param acceptUid 接收方id
      * @param type      互关标识符：1.互关2.取消互关
      * @return
      */
     @GetMapping("/toFan")
-    public Result toFan(Long sendUid, Long acceptUid, Integer type) {
+    public Result toFan(Long sendUid, Integer type) {
+        Long acceptUid = ThreadLocalUtil.getCurrentUser().getUserId();
         if (sendUid.equals(acceptUid))
             return Result.failed("sendUid don't = acceptUid!");
         return chatService.toFan(sendUid, acceptUid, type);

@@ -58,8 +58,17 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
     }
 
     @Override
-    public void createChat(CreateChatParam param) {
+    public Result createChat(CreateChatParam param, Long userId) {
         Chat chat = converter.toEntity(param);
+
+        //区分消息双方
+        if (chat.getSendUid() == -1) {//我发给对方
+            chat.setSendUid(userId);
+        } else if (chat.getAcceptUid() == -1) {//对方发给我
+            chat.setAcceptUid(userId);
+        }else{
+            return Result.failed("don't confirm who send who");
+        }
 
         //消息内容处理
         String oriContent = chat.getContent();
@@ -103,6 +112,8 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
         }
 
         //TODO 发通知提醒用户查看未读消息
+
+        return Result.success();
     }
 
     @Override
@@ -160,7 +171,6 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
         //我发给别人的消息列表
         MPJLambdaWrapper acceptWrap = new MPJLambdaWrapper<ChatRecordDto>()
                 .select(Chat::getId)
-                .selectAs(Chat::getSendUid, ChatRecordDto::getChatUid)
                 .select(Chat::getContentType, Chat::getContent, Chat::getTime)
 
                 .eq(Chat::getSendUid, sendUid)
@@ -199,6 +209,8 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
         if (!sendList.isEmpty() /*&& isNonNull_2*/) {
             if (page.getRecords().isEmpty()) {
                 page.setRecords(new ArrayList());
+            } else {
+                page.getRecords().forEach(c -> c.setChatUid(-1L));
             }
             page.getRecords().addAll(sendList);
             page.getRecords().sort((l, r) -> {
@@ -285,8 +297,8 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
                 .selectAs(UserAccount::getAvatarPath, FanDto::getAvatarPath)
                 .select(Fan::getType)
                 .selectAs(Fan::getCreateTime, FanDto::getTime)
-                .leftJoin(UserAccount.class, UserAccount::getUserId, Fan::getFollowUserId)
-                .eq(Fan::getUserId, userId)
+                .leftJoin(UserAccount.class, UserAccount::getUserId, Fan::getUserId)
+                .eq(Fan::getFollowUserId, userId)
                 .eq(Fan::getDeleteFlag, 0)
                 .in(Fan::getType, 0, 3)
                 .orderBy(true, false, Fan::getCreateTime);

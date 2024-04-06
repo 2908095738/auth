@@ -16,7 +16,7 @@ public class ChatRecordDto {
     private Long id;
 
     /**
-     * 发送消息的用户id
+     * 发送消息的用户id；-1表示我发给对方
      */
     @TableField(exist = false)
     private Long chatUid;
