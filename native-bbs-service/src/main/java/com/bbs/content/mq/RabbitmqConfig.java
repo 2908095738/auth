@@ -20,6 +20,10 @@ public class RabbitmqConfig {
     public static final String EXCHANGE_TOPICS_BBS_INFORM = "bbs.topic";
     //消息
     public static final String EXCHANGE_TOPICS_CHAT_INFORM = "chat.topic";
+    //注册
+    public static final String EXCHANGE_NAME = "topic-event-user-register-exchange";
+
+
 
     /**
      * 队列
@@ -40,6 +44,8 @@ public class RabbitmqConfig {
     public static final String QUEUE_FOLLOW = "queue_follow";
     //取消关注
     public static final String QUEUE_UNFOLLOW = "queue_unfollow";
+    //注册
+    public static final String USER_REGISTER_EVENT_QUEUE = "event-user-register-topic-queue";
 
     /**
      * ROUTING KEY
@@ -60,6 +66,8 @@ public class RabbitmqConfig {
     public static final String ROUTINGKEY_FOLLOW = "follow";
     //取消关注
     public static final String ROUTINGKEY_UNFOLLOW = "unfollow";
+    //注册
+    public static final String ROUTINGKEY_EVENT_USER_REGISTER = "event.user.register";
 
     /**
      * 声明交换机
@@ -75,6 +83,13 @@ public class RabbitmqConfig {
     public Exchange EXCHANGE_TOPICS_CHAT_INFORM() {
         //durable(true) 持久化，mq重启之后交换机还在
         return ExchangeBuilder.topicExchange(EXCHANGE_TOPICS_CHAT_INFORM).durable(true).build();
+    }
+
+    //用户模块
+    @Bean(EXCHANGE_NAME)
+    public Exchange EXCHANGE_NAME() {
+        //durable(true) 持久化，mq重启之后交换机还在
+        return ExchangeBuilder.topicExchange(EXCHANGE_NAME).durable(true).build();
     }
 
     /**
@@ -122,7 +137,11 @@ public class RabbitmqConfig {
         return new Queue(QUEUE_UNFOLLOW);
     }
 
-
+    //注册
+    @Bean(USER_REGISTER_EVENT_QUEUE)
+    public Queue USER_REGISTER_EVENT_QUEUE() {
+        return new Queue(USER_REGISTER_EVENT_QUEUE);
+    }
 
     /**
      * 队列绑定交换机，指定routingKey
@@ -179,6 +198,13 @@ public class RabbitmqConfig {
     public Binding BINDING_QUEUE_UNFOLLOW(@Qualifier(QUEUE_UNFOLLOW) Queue queue,
                                               @Qualifier(EXCHANGE_TOPICS_CHAT_INFORM) Exchange exchange) {
         return BindingBuilder.bind(queue).to(exchange).with(ROUTINGKEY_UNFOLLOW).noargs();
+    }
+
+    //注册
+    @Bean
+    public Binding BINDING_USER_REGISTER_EVENT_QUEUE(@Qualifier(USER_REGISTER_EVENT_QUEUE) Queue queue,
+                                          @Qualifier(EXCHANGE_NAME) Exchange exchange) {
+        return BindingBuilder.bind(queue).to(exchange).with(ROUTINGKEY_EVENT_USER_REGISTER).noargs();
     }
 
 

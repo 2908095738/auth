@@ -46,6 +46,8 @@ public class UserAccountServiceImpl extends MPJBaseServiceImpl<UserAccountMapper
     public void setThumbCache(ThumbCache thumbCache) {
         this.thumbCache = thumbCache;
     }
+
+
 }
 
 

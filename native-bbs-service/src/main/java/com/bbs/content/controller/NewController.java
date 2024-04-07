@@ -7,7 +7,6 @@ import com.bbs.content.cache.NewsCache;
 import com.bbs.content.cache.ThumbCache;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.param.CreateNewParam;
-import com.bbs.content.dto.param.QueryNewsParam;
 import com.bbs.content.entity.News;
 import com.bbs.content.service.CommentService;
 import com.bbs.content.service.NewContentService;
@@ -97,17 +96,6 @@ public class NewController {
     }
 
 
-    /**
-     * 条件查询内容
-     */
-    @GetMapping("/query")
-    public Result<Page<GetUserNewsDto>> getQueryNews(@Valid QueryNewsParam param){
-        Page<GetUserNewsDto> result = newsService.getListByQuery(param);
-        if(isNotEmpty(result.getRecords()))
-            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
-        return Result.success(result);
-    }
-
 
     /**
      * 删除内容
@@ -120,6 +108,20 @@ public class NewController {
     }
 
 
+    /**
+     * 查询关注页上的内容简要信息
+     * @param current 第几页
+     * @param size    几条
+     * @return Page<GetUserAccountDto.GetUserNewsDto>
+     */
+    @GetMapping("/follower")
+    public Result<Page<GetUserNewsDto>> getFollowerNews(@NotNull(message = "页数不能为空！") Integer current,
+                                                        @NotNull(message = "每页几条不能为空！") Integer size) {
+        Page<GetUserNewsDto> result = newsService.getListByFollower(ThreadLocalUtil.getCurrentUser().getUserId(), current, size);
+        if(isNotEmpty(result.getRecords()))
+            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
+        return Result.success(result);
+    }
 
 
 
@@ -144,36 +146,20 @@ public class NewController {
     }
 
 
+
     /**
      * 查询推荐页上的内容简要信息
-     * @param current 第几页
-     * @param size    几条
      * @return Page<GetUserAccountDto.GetUserNewsDto>
      */
     @GetMapping("/recommend")
-    public Result<Page<GetUserNewsDto>> getRecommendNews(@NotNull(message = "页数不能为空！") Integer current,
-                                                         @NotNull(message = "每页几条不能为空！") Integer size) {
-        Page<GetUserNewsDto> result = newsService.getListByRecommend(current, size);
-        if(isNotEmpty(result.getRecords()))
-            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
+    public Result<List<GetUserNewsDto>> getRecommendNews() {
+        List<GetUserNewsDto> result = newsService.getListByRecommend();
+//        if(isNotEmpty(result))
+//            result.forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
         return Result.success(result);
     }
 
 
-    /**
-     * 查询关注页上的内容简要信息
-     * @param current 第几页
-     * @param size    几条
-     * @return Page<GetUserAccountDto.GetUserNewsDto>
-     */
-    @GetMapping("/follower")
-    public Result<Page<GetUserNewsDto>> getFollowerNews(@NotNull(message = "页数不能为空！") Integer current,
-                                                        @NotNull(message = "每页几条不能为空！") Integer size) {
-        Page<GetUserNewsDto> result = newsService.getListByFollower(ThreadLocalUtil.getCurrentUser().getUserId(), current, size);
-        if(isNotEmpty(result.getRecords()))
-            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
-        return Result.success(result);
-    }
 
     /**
      * 查询热门内容

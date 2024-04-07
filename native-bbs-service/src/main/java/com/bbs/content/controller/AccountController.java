@@ -8,11 +8,8 @@ import com.bbs.content.dto.GetUserAccountDto;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.service.NewsService;
 import com.bbs.content.service.UserAccountService;
-import com.bbs.content.util.AuthUtil;
-import com.bbs.content.util.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -38,13 +35,7 @@ public class AccountController {
      * 创建登录用户账号信息
      * 头像、昵称、性别、年龄、点赞数、积分数、收藏数、关注数、粉丝数
      */
-    @PutMapping()
-    public Result<Boolean> createAccount(){
-        AuthUtil.UserAPI.User currentUser = ThreadLocalUtil.getCurrentUser();
-        //获取用户账号信息
-        service.create(currentUser);
-        return Result.success();
-    }
+
 
 
 
