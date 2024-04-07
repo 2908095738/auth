@@ -32,6 +32,8 @@ public class UserAccountServiceImpl extends MPJBaseServiceImpl<UserAccountMapper
     public GetUserAccountDto getByUserId(Long userId) {
         GetUserAccountDto result = selectJoinOne(GetUserAccountDto.class,new MPJLambdaWrapper<UserAccount>()
                 .selectAll(UserAccount.class)
+//                .selectCount(Fan.class,UserAccount::getFanCount)
+//                .leftJoin(Fan.class,Fan::getUserId,UserAccount::getUserId)
                 .eq(UserAccount::getUserId,userId)
         );
         result.setLikeCount(thumbCache.countBy(null,userId,null,2));//点赞
