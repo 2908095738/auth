@@ -4,7 +4,7 @@ import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.util.RedisUtil;
 import com.bbs.auth.util.ZKUtil;
 import com.bbs.Result;
-import com.bbs.auth.app.login.cache.PhoneCodeCache;
+import com.bbs.auth.cache.code.PhoneCodeCache;
 import com.bbs.auth.cache.TokenCache;
 import com.bbs.auth.entity.User;
 import com.bbs.enums.UserStateEnum;

@@ -17,12 +17,15 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
      * @return 手机号是否注册过
      * 手机号校验方式：nonNull(phone) && phone.toString().length() <= 11, User::getPhone, phone)
      */
-    public boolean userIsExist(User user){
+    public boolean exists(User user){
         return lambdaQuery()
                 .eq(User::getName, user.getName())
                 .or()
                 .eq(User::getEmail, user.getEmail())
                 .exists();
+    }
+    public boolean notExists(User user) {
+        return !exists(user);
     }
 
     /**

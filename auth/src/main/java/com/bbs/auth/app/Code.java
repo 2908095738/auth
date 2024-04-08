@@ -1,4 +1,4 @@
-package com.bbs.auth.app.login;
+package com.bbs.auth.app;
 
 import com.bbs.auth.util.captcha.CaptchaUtil;
 import com.bbs.Result;
@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 
+/**
+ * 短信验证码
+ */
 @Slf4j
 @RestController
 @RequestMapping

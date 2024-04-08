@@ -1,4 +1,4 @@
-package com.bbs.auth.app.login.cache;
+package com.bbs.auth.cache.code;
 
 import com.bbs.auth.util.RedisUtil;
 import com.bbs.auth.util.ZKUtil;
@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 
 import static com.bbs.auth.enums.RedisKeys.USER_PHONE_CODE;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
@@ -26,10 +27,20 @@ public class PhoneCodeCache {
         return zkUtil.getIntForPath(ZookeeperNodePaths.Captcha.CODE_TIMEOUT);
     }
 
+    public Integer getCode(Long phone) { return getCode(String.valueOf(phone)); }
+
     public Integer getCode(String phone) {
-        String key = USER_PHONE_CODE.key(phone);
+        String key = key(phone);
         String codeStr = redisUtil.get(key);
         return nonNull(codeStr) ? Integer.valueOf(codeStr) : null;
+    }
+
+    public Boolean checkCode(Long phone, Integer code) {
+        if(code > 999 && code <= 9999) {
+            Integer serverPhoneCode = getCode(phone);
+            return nonNull(serverPhoneCode) && serverPhoneCode.equals(code);
+        }
+        return false;
     }
 
     /**
@@ -37,7 +48,7 @@ public class PhoneCodeCache {
      * @param phone 手机号
      */
     public void delCode(String phone) {
-        String key = USER_PHONE_CODE.key(phone);
+        String key = key(phone);
         redisUtil.delete(key);
     }
 
@@ -47,7 +58,15 @@ public class PhoneCodeCache {
      * @param code 验证码
      */
     public void setCode(String phone, Integer code) {
-        String key = USER_PHONE_CODE.key(phone);
+        String key = key(phone);
         redisUtil.set(key, String.valueOf(code), timeout(), MINUTES);
+    }
+
+    public boolean notExists(String phone) {
+        return isNull(getCode(phone));
+    }
+
+    private String key(String phone) {
+        return USER_PHONE_CODE.key(phone);
     }
 }

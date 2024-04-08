@@ -13,6 +13,8 @@ import static com.bbs.auth.enums.RedisKeys.*;
 /**
  * 用户缓存配置（Map<UID, UserJSON>）
  */
+@Slf4j
+@Component
 public class UserCacheConf {
 
     @Resource

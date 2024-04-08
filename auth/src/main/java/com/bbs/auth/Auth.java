@@ -12,9 +12,9 @@ import org.springframework.retry.annotation.EnableRetry;
 @MapperScan({"com.bbs.auth.mapper"})
 @EnableRetry    //启用操作重试
 @SpringBootApplication
-public class AuthServer implements ApplicationRunner {
+public class Auth implements ApplicationRunner {
     public static void main(String[] args) {
-        SpringApplication.run(AuthServer.class, args);
+        SpringApplication.run(Auth.class, args);
     }
 
     @Override

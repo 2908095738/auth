@@ -1,28 +1,26 @@
 package com.bbs.auth.util.captcha;
 
-import com.bbs.auth.app.login.cache.PhoneCodeCache;
-import com.bbs.auth.util.RedisUtil;
+import com.bbs.auth.cache.code.PhoneCodeCache;
 import com.bbs.auth.util.ZKUtil;
 import com.bbs.auth.enums.ZookeeperNodePaths;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Resource;
 
-import static com.bbs.auth.enums.RedisKeys.USER_PHONE_CODE;
 import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * 验证码工具
  */
+@Slf4j
 public abstract class CaptchaUtil {
 
     @Resource
     protected ZKUtil zkUtil;
 
     @Resource
-    protected RedisUtil redisUtil;
-
-    @Resource
-    protected PhoneCodeCache phoneCodeCache;
+    protected PhoneCodeCache cache;
 
     /**
      * 发送短信
@@ -40,13 +38,12 @@ public abstract class CaptchaUtil {
     ) throws Exception;
 
     public Boolean send(String phone) throws IllegalArgumentException {
-        checkPhoneFormat(phone);
-        String key = USER_PHONE_CODE.key(phone);
-        Integer code = createCode();
-        checkArgument(redisUtil.notExists(key), "验证码已发送，稍后重试");
         try {
+            checkPhoneFormat(phone);
+            checkArgument(cache.notExists(phone), "验证码已发送，稍后重试");
+            Integer code = createCode();
             send(phone, signName(), templateCode(),  "{code:" + code + "}");
-            phoneCodeCache.setCode(phone, code);
+            cache.setCode(phone, code);
             return true;
         } catch (Exception e) {
             e.printStackTrace();
