@@ -9,11 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RLock;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
-
 import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.List;
@@ -230,12 +226,6 @@ public class RedisUtil {
             function.run();
         }
 
-        @Resource
-        private DataSourceTransactionManager transactionManager;
-
-        @Resource
-        private TransactionDefinition transactionDefinition;
-
         /**
          * 加锁执行代码（回滚，失败/异常执行 elseFun）
          * @param function 业务代码
@@ -245,14 +235,12 @@ public class RedisUtil {
          * @param unit 时间单位
          */
         public <R> R lockExec(Supplier<R> function, RLock lock, int waitTime, int leaseTime, TimeUnit unit) throws IllegalArgumentException {
-            TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
             try {
                 if(lock.tryLock(waitTime, leaseTime, unit)) {
                     log.debug("Redisson: 获取锁 key={}", lock.getName());
                     try {
                         TimeInterval timer = DateUtil.timer();
                         R result = function.get();
-                        transactionManager.commit(transaction);
                         log.debug("Redisson: 分布式锁业务代码执行完成 key={}; 耗时（毫秒）={}", lock.getName(), timer.interval());
                         timer.interval();
                         return result;
@@ -266,8 +254,6 @@ public class RedisUtil {
             } catch (IllegalArgumentException e){
                 throw new IllegalArgumentException(e);  // 避开 lock 对参数检查异常的捕获
             } catch (Exception e) {
-                transactionManager.rollback(transaction);
-                log.error("Redisson: 业务异常，触发回滚！！！");
                 e.printStackTrace();
             }
             if(lock.getHoldCount() > 0) forceUnlock(lock);  //出现异常后，依旧持有锁，则暴力解锁，再执行业务
