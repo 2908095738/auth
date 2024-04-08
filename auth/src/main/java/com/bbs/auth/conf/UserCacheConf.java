@@ -87,7 +87,7 @@ public class UserCacheConf {
 
 
     /**
-     * 手机号与用户 UID 关联的 Map 缓存（Map<Phone, User>）
+     * 手机号与用户 UID 关联的 Map 缓存（Map<Login, User>）
      */
     @Slf4j
     @Component

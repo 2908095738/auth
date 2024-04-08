@@ -1,6 +1,5 @@
 package com.bbs.auth.app.register;
 
-import cn.hutool.crypto.SecureUtil;
 import com.bbs.auth.cache.code.PhoneCodeCache;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.Result;
@@ -8,6 +7,7 @@ import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.dao.UserDao;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.mapper.UserMapper;
+import com.bbs.auth.service.UserService;
 import com.bbs.enums.UserStateEnum;
 import lombok.Data;
 import net.sf.jsqlparser.util.validation.metadata.DatabaseException;
@@ -47,6 +47,8 @@ public class Register extends ServiceImpl<UserMapper, User> {
     private UserDao dao;
     @Resource
     private PhoneCodeCache phoneCodeCache;
+    @Resource
+    private UserService service;
     @Data
     public static class Param {
 
@@ -84,7 +86,7 @@ public class Register extends ServiceImpl<UserMapper, User> {
             checkArgument(dao.notExists(user), FAILED_USER_INFO_DUPLICATION);
 
             user.setSalt(createSalt());
-            user.setPassword(encryptPassword(user));
+            user.setPassword(service.encryptPassword(user));
             user.setState(UserStateEnum.STATUS_NORMAL.getCode());
 
             saveUser(user);
@@ -100,14 +102,6 @@ public class Register extends ServiceImpl<UserMapper, User> {
 
     private Integer createSalt() {
         return (new Random().nextInt(5) + 7) * 9;
-    }
-
-    private String encryptPassword(User user) {
-        return encryptPassword(user.getPassword(), user.getSalt());
-    }
-
-    public String encryptPassword(String pwd, Integer salt) {
-        return SecureUtil.md5(pwd + salt);
     }
 
     private void saveUser(User user) throws DatabaseException {

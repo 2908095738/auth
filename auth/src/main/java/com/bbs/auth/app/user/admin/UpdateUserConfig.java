@@ -4,11 +4,11 @@ import com.bbs.auth.entity.UserGroup;
 import com.bbs.auth.service.UserGroupService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.Result;
-import com.bbs.auth.app.register.Register;
 import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.mapper.UserMapper;
 import com.bbs.auth.service.PermissionService;
+import com.bbs.auth.service.UserService;
 import com.bbs.exception.BusinessException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -40,7 +40,7 @@ public class UpdateUserConfig extends ServiceImpl<UserMapper, User> {
     private PermissionService permissionService;
 
     @Resource
-    private Register register;
+    private UserService service;
 
     @Resource
     private UserGroupService userGroupService;
@@ -125,7 +125,7 @@ public class UpdateUserConfig extends ServiceImpl<UserMapper, User> {
     }
 
     private void update(User user, String email, String password) throws BusinessException, InterruptedException {
-        String newPassword = register.encryptPassword(password, user.getSalt());
+        String newPassword = service.encryptPassword(password, user.getSalt());
         if(isNotBlank(email)) user.setEmail(email);
         if(isNotBlank(password)) user.setPassword(newPassword);
         cache.updateByID(user);

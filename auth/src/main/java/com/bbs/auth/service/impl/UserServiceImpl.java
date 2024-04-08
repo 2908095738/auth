@@ -3,7 +3,10 @@ package com.bbs.auth.service.impl;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Opt;
+import cn.hutool.crypto.SecureUtil;
 import com.bbs.auth.app.verify.VerifyLogin;
+import com.bbs.auth.cache.user.PhoneCache;
+import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.dao.UserDao;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -28,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 
 import static com.bbs.Result.success;
+import static com.bbs.auth.cache.user.UserCache.cacheIsExists;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
@@ -41,7 +45,15 @@ import static java.util.Objects.nonNull;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     @Resource
-    private UserDao dao;
+    private UserDao db;
+
+    @Lazy
+    @Resource
+    private PhoneCache phoneCache;
+
+    @Lazy
+    @Resource
+    private UserCache cache;
 
     @Override
     public Boolean userStateIsNormal(User user) { return UserStateEnum.STATUS_NORMAL.getCode().equals(user.getState()); }
@@ -106,6 +118,36 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setPhone(phone);
         user.setName(phone.toString());
         if(!save(user)) throw new BusinessException("通过手机号注册用户失败");
+        return user;
+    }
+
+    @Override
+    public String encryptPassword(User user) {
+        return encryptPassword(user.getPassword(), user.getSalt());
+    }
+
+    @Override
+    public String encryptPassword(String pwd, Integer salt) {
+        return SecureUtil.md5(pwd + salt);
+    }
+
+    @Override
+    public Boolean updatePasswordByID(String password, Long id) {
+        return lambdaUpdate().set(User::getPassword, password).eq(User::getId, id).update();
+    }
+
+    @Override
+    public User searchByPhone(String phone) {
+        User user;
+        Long uid = phoneCache.get(Long.valueOf(phone));
+        if(cacheIsExists(uid)) {
+            user = cache.get(uid);
+            if(isNull(user)) {
+                user = db.searchByID(uid);
+            }
+        } else {
+            user = db.selectByPhone(phone);
+        }
         return user;
     }
 

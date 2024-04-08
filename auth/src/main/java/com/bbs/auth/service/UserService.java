@@ -72,4 +72,13 @@ public interface UserService extends IService<User> {
      * @throws IllegalArgumentException 手机号已被注册
      */
     User registerByPhoneNoLockAndNoLoadCache(Long phone) throws IllegalArgumentException;
+
+
+    String encryptPassword(User user);
+
+    String encryptPassword(String pwd, Integer salt);
+
+    Boolean updatePasswordByID(String password, Long id);
+
+    User searchByPhone(String phone);
 }

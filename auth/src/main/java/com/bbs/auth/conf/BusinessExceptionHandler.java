@@ -30,4 +30,12 @@ public class BusinessExceptionHandler {
     public void errorHandler(ReLoginException exception) throws IOException {
         response.sendError(exception.getCode(), exception.getMessage());
     }
+
+    @ResponseBody
+    @ExceptionHandler(value = IllegalArgumentException.class)
+    public void errorHandler(IllegalArgumentException exception) throws IOException {
+        String message = exception.getMessage();
+        log.debug("[ExceptionHandler::IllegalArgumentException] message={}", message);
+        response.sendError(400, message);
+    }
 }

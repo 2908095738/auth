@@ -1,6 +1,5 @@
 package com.bbs.auth.app.login;
 
-import com.bbs.auth.app.register.Register;
 import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.entity.User;
@@ -14,7 +13,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,11 +36,6 @@ public class Email {
     private final UserConverter converter;
 
     private final UserService service;
-
-    @Lazy
-    @Resource
-    private Register register;
-
     @Resource
     private ResourceService resourceService;
 
@@ -82,7 +75,7 @@ public class Email {
     }
 
     public Boolean verifyPassword(String inputPassword, User user) {
-        String password = register.encryptPassword(inputPassword, user.getSalt());
+        String password = service.encryptPassword(inputPassword, user.getSalt());
         return user.getPassword().equals(password);
     }
 

@@ -19,9 +19,7 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
      */
     public boolean exists(User user){
         return lambdaQuery()
-                .eq(User::getName, user.getName())
-                .or()
-                .eq(User::getEmail, user.getEmail())
+                .eq(User::getPhone, user.getPhone())
                 .exists();
     }
     public boolean notExists(User user) {

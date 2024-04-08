@@ -2,7 +2,6 @@ package com.bbs.auth.cache.user;
 
 import cn.hutool.core.util.RandomUtil;
 import com.bbs.auth.conf.UserCacheConf;
-import com.bbs.auth.dao.UserDao;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.util.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -12,11 +11,9 @@ import javax.annotation.Resource;
 import java.util.HashMap;
 
 import static cn.hutool.json.JSONUtil.toJsonPrettyStr;
-import static com.bbs.auth.cache.user.UserCache.cacheIsExists;
 import static com.bbs.auth.cache.user.UserCache.uidMapIsExist;
 import static com.bbs.auth.enums.RedisKeys.USER;
 import static com.bbs.auth.enums.RedisKeys.USER_PHONE_AND_ID_MAP;
-import static java.util.Objects.isNull;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 @Slf4j
@@ -31,9 +28,6 @@ public class PhoneCache {
 
     @Resource
     private UserCache cache;
-
-    @Resource
-    private UserDao db;
 
     public Long get(String phone) {
         return get(Long.valueOf(phone));
@@ -69,19 +63,5 @@ public class PhoneCache {
         expire(newPhoneMapKey);
 
         return true;
-    }
-
-    public User search(String phone) {
-        User user;
-        Long uid = get(phone);
-        if(cacheIsExists(uid)) {
-            user = cache.get(uid);
-            if(isNull(user)) {
-                user = db.searchByID(uid);
-            }
-        } else {
-            user = db.selectByPhone(phone);
-        }
-        return user;
     }
 }

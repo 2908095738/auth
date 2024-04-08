@@ -20,7 +20,7 @@ import java.util.List;
 public class UserController {
 
 
-    @GetMapping
+    @GetMapping("/user")
     Result<Page<User>> search(UserParam userParam) {
         return service.search(userParam);
     }
