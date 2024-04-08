@@ -13,6 +13,7 @@ import static com.bbs.auth.enums.RedisKeys.*;
 /**
  * 用户缓存配置（Map<UID, UserJSON>）
  */
+@Component
 public class UserCacheConf {
 
     @Resource
