@@ -1,11 +1,11 @@
 package com.bbs.auth.app.register.vx;
 
+import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.util.RedisUtil;
 import com.bbs.auth.util.ZKUtil;
 import com.bbs.auth.api.vx.GetAppID;
 import com.bbs.auth.api.vx.GetSecret;
 import com.bbs.auth.api.vx.VXLoginAuthAPI;
-import com.bbs.auth.cache.UserCache;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.UserBind;
 import com.bbs.entity.UserVO;

@@ -2,7 +2,8 @@ package com.bbs.auth.app.login;
 
 import com.bbs.auth.api.vx.GetAppID;
 import com.bbs.auth.api.vx.GetSecret;
-import com.bbs.auth.cache.UserCache;
+import com.bbs.auth.cache.user.UserCache;
+import com.bbs.auth.cache.user.WXOpenIDCache;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.api.vx.VXLoginAuthAPI;
 import com.bbs.auth.entity.VXUser;
@@ -30,6 +31,9 @@ import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 public class VXLogin {
 
     private final UserCache cache;
+
+    @Resource
+    private WXOpenIDCache wxOpenIdCache;
 
     private final GetAppID getAppID;
 
@@ -89,7 +93,7 @@ public class VXLogin {
             checkArgument(isNoneBlank(param.code));
             String openid = VXLoginAuthAPI.getInstance(getAppID.get(), getSecret.get()).auth(param.code).getOpenid();
             try {
-                VXUser vxUser = cache.searchByOpenID(openid);
+                VXUser vxUser = wxOpenIdCache.searchByOpenID(openid);
                 String token = tokenService.verifyAndExpireToken(vxUser);
                 return success(new VO(vxUser.getId(), vxUser.getName(), token));
             } catch (IllegalArgumentException e) {

@@ -1,5 +1,6 @@
 package com.bbs.auth.dao;
 
+import com.bbs.auth.app.change.ChangePhone;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.mapper.UserMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -35,5 +36,21 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
 
     public User selectByPhone(Long phone){
         return selectByPhone(phone.toString());
+    }
+
+    public User searchByID(Long uid) throws IllegalArgumentException {
+        return getOptById(uid).orElseThrow(() -> new IllegalArgumentException("对应 ID 用户不存在！"));
+    }
+
+    public User search(String phone) {
+        return lambdaQuery().eq(User::getPhone, phone).one();
+    }
+
+    public void update(ChangePhone.Param param) {
+        lambdaUpdate().set(User::getPhone, param.getPhone()).eq(User::getId, param.getUid()).update();
+    }
+
+    public User search(Long uid) {
+        return getById(uid);
     }
 }

@@ -4,7 +4,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.jwt.JWTUtil;
 import com.bbs.auth.cache.TokenCache;
-import com.bbs.auth.cache.UserCache;
+import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.service.TokenService;
 import com.bbs.enums.CodeEnum;

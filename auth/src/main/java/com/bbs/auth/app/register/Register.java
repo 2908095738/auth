@@ -37,7 +37,7 @@ import static com.bbs.enums.CodeEnum.FAILED_USER_INFO_DUPLICATION;
 
 @RestController
 @RequestMapping
-public class RegisterUser extends ServiceImpl<UserMapper, User> {
+public class Register extends ServiceImpl<UserMapper, User> {
 
     private final DataSourceTransactionManager transactionManager;
     private final TransactionDefinition transactionDefinition;
@@ -51,23 +51,24 @@ public class RegisterUser extends ServiceImpl<UserMapper, User> {
     private ResourceService resourceService;
 
     @Data
-    public static class UserRegisterParam {
+    public static class Param {
 
-        @NotBlank
-        private String name;
+        @NotBlank(message = "用户昵称不能为空")
+        private String userName;
 
-        @NotBlank
         private String clinicName;
 
-        @NotBlank
+        @NotBlank(message = "密码不能为空")
         private String password;
 
+        @NotNull(message = "手机号不能为空")
         private Long phone;
 
-        @NotBlank
+        @NotNull(message = "验证码不能为空")
+        private Integer code;
+
         private String email;
 
-        @NotNull
         private Long group;
     }
 
@@ -78,7 +79,7 @@ public class RegisterUser extends ServiceImpl<UserMapper, User> {
      * @return 注册是否成功
      */
     @PutMapping("/user")
-    public Result<Boolean> register(@Valid @RequestBody UserRegisterParam param){
+    public Result<Boolean> register(@Valid @RequestBody Param param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         User user = converter.toEntity(param);
         try {
@@ -117,17 +118,17 @@ public class RegisterUser extends ServiceImpl<UserMapper, User> {
         if(!save(user)) throw new DatabaseException("保存用户信息失败");
     }
 
-    private void saveUserGroup(User user, UserRegisterParam param) throws DatabaseException {
+    private void saveUserGroup(User user, Param param) throws DatabaseException {
         if(!userGroupService.save(new UserGroup(user.getId(), param.getGroup()))) throw new DatabaseException("保存用户 & 组关联信息失败");
     }
 
-    private void saveUserClinicNameConfig(User user, UserRegisterParam param) throws DbRuntimeException {
+    private void saveUserClinicNameConfig(User user, Param param) throws DbRuntimeException {
         resourceService.saveUserConfig(user.getId(), ResourceNames.UserConfig.CLINIC_NAME.getName(), param.clinicName, "保存用户诊所名称配置信息失败");
     }
 
 
     @Autowired
-    public RegisterUser(DataSourceTransactionManager transactionManager, TransactionDefinition transactionDefinition, UserDao dao, UserGroupService userGroupService) {
+    public Register(DataSourceTransactionManager transactionManager, TransactionDefinition transactionDefinition, UserDao dao, UserGroupService userGroupService) {
         this.transactionManager = transactionManager;
         this.transactionDefinition = transactionDefinition;
         this.dao = dao;

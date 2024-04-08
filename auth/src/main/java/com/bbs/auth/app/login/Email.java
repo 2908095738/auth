@@ -1,7 +1,7 @@
 package com.bbs.auth.app.login;
 
-import com.bbs.auth.app.register.RegisterUser;
-import com.bbs.auth.cache.UserCache;
+import com.bbs.auth.app.register.Register;
+import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.entity.User;
 import com.bbs.entity.UserVO;
@@ -41,7 +41,7 @@ public class Email {
 
     @Lazy
     @Resource
-    private RegisterUser registerUser;
+    private Register register;
 
     @Resource
     private ResourceService resourceService;
@@ -82,7 +82,7 @@ public class Email {
     }
 
     public Boolean verifyPassword(String inputPassword, User user) {
-        String password = registerUser.encryptPassword(inputPassword, user.getSalt());
+        String password = register.encryptPassword(inputPassword, user.getSalt());
         return user.getPassword().equals(password);
     }
 

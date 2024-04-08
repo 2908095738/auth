@@ -3,7 +3,7 @@ package com.bbs.auth.app.verify;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import com.bbs.Result;
-import com.bbs.auth.cache.UserCache;
+import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.service.TokenService;
