@@ -22,6 +22,7 @@ public class BusinessExceptionHandler {
     @ResponseBody
     @ExceptionHandler(value = BusinessException.class)
     public Result<Object> errorHandler(BusinessException exception) {
+        exception.printStackTrace();
         return Result.failed(exception.getCode(), exception.getMessage());
     }
 
@@ -35,7 +36,8 @@ public class BusinessExceptionHandler {
     @ExceptionHandler(value = IllegalArgumentException.class)
     public void errorHandler(IllegalArgumentException exception) throws IOException {
         String message = exception.getMessage();
-        log.debug("[ExceptionHandler::IllegalArgumentException] message={}", message);
+        exception.printStackTrace();
+        log.debug("[ExceptionHandler::IllegalArgumentException] error={}", message);
         response.sendError(400, message);
     }
 }
