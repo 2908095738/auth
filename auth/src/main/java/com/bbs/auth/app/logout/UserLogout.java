@@ -1,4 +1,4 @@
-package com.bbs.auth.app.register.logout;
+package com.bbs.auth.app.logout;
 
 import com.bbs.Result;
 import com.bbs.auth.service.TokenService;
@@ -19,9 +19,10 @@ public class UserLogout {
 
     private final TokenService tokenService;
 
-    @DeleteMapping("/user")
+    @DeleteMapping
     public Result<Boolean> logout(HttpServletRequest request) {
         String token = tokenService.getToken(request);
+        log.debug("[UserLogout::logout] token={}", token);
         if(StringUtils.isNotBlank(token) && tokenService.verifyToken(token)) {
             UserVO userVO = tokenService.parseToken(token);
             tokenService.clearLoginFlag(userVO.getId());

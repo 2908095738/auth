@@ -21,7 +21,7 @@ logging:
   config: classpath:logback-spring.xml
 jwt:
 #  token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9
-  name: token
+  name: Authorization
   token: 123456
   expireTime: 7
 apache:

@@ -11,6 +11,7 @@ import com.bbs.enums.CodeEnum;
 import com.bbs.exception.ReLoginException;
 import com.bbs.entity.UserVO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -91,7 +92,8 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public String getToken(HttpServletRequest request) {
-        return request.getHeader(tokenName);
+        String token = request.getHeader(tokenName);
+        return StringUtils.isNotBlank(token) ? token.split(" ")[1] : null;
     }
 
     @Override

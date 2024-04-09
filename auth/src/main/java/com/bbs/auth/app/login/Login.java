@@ -54,9 +54,6 @@ public class Login {
     private TokenService tokenService;
 
     @Resource
-    private TokenCache tokenCache;
-
-    @Resource
     private RedisUtil.Redisson redissonUtil;
 
     @Resource
@@ -139,8 +136,9 @@ public class Login {
                     checkArgument(user.getPassword().equals(encryptPassword), FAILED_LOGIN_PWD_ERROR);
                 }
                 String token = tokenService.createToken(user);
-                tokenCache.setToken(user.getId(), token);
+                tokenService.setLoginFlag(user.getId());
                 userCache.expireUserAndPhoneMap(user);
+                log.debug("[Login::login] 用户登录 user={}; token={}", JSONUtil.toJsonPrettyStr(user), token);
                 return success(new VO(user.getId(), user.getName(), token));
             },
             () -> failed(500, new VO(), "无法获取登录锁，详情请联系客服"),
