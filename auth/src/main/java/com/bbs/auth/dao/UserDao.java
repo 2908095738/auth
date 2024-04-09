@@ -15,7 +15,7 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
      * 验证手机号是否注册过
      * @param user 验证参数
      * @return 手机号是否注册过
-     * 手机号校验方式：nonNull(phone) && phone.toString().length() <= 11, User::getPhone, phone)
+     * 手机号校验方式：nonNull(phone) && phone.toString().length() <= 11, Info::getPhone, phone)
      */
     public boolean exists(User user){
         return lambdaQuery()
@@ -29,7 +29,7 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
     /**
      * 根据手机号查询加过密的密码
      * @param phone 入参
-     * @return User
+     * @return Info
      */
     public User selectByPhone(String phone){
         return lambdaQuery().eq(nonNull(phone),User::getPhone,phone).one();

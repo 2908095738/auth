@@ -63,7 +63,7 @@ public class UserCacheConf {
 
 
     /**
-     * 微信 OpenID 与用户 UID 关联的 Map 缓存（Map<WXOpenID, User>）
+     * 微信 OpenID 与用户 UID 关联的 Map 缓存（Map<WXOpenID, Info>）
      */
     @Slf4j
     @Component
@@ -87,7 +87,7 @@ public class UserCacheConf {
 
 
     /**
-     * 手机号与用户 UID 关联的 Map 缓存（Map<Login, User>）
+     * 手机号与用户 UID 关联的 Map 缓存（Map<Login, Info>）
      */
     @Slf4j
     @Component

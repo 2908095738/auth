@@ -70,7 +70,7 @@ public class UpdateUserConfig extends ServiceImpl<UserMapper, User> {
 
     /**
      * 修改（由管理员执行）
-     * @param param User ID
+     * @param param Info ID
      * @return 重置结果
      */
     @PostMapping("/user/admin")

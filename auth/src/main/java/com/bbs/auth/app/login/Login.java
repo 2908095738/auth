@@ -48,7 +48,7 @@ public class Login {
     @Resource
     private UserService service;
     @Resource
-    private PhoneCodeCache cache;
+    private PhoneCodeCache phoneCodeCache;
 
     @Resource
     private TokenService tokenService;
@@ -117,9 +117,9 @@ public class Login {
                 if(LoginType.PHONE.getCode().equals(param.type)) {
                     checkPhoneFormat(phone);
                     checkPhoneCodeFormat(param.code);
-                    Integer code = cache.getCode(phone);
+                    Integer code = phoneCodeCache.getCode(phone);
                     checkArgument(nonNull(code) && code.equals(Integer.valueOf(param.code)), FAILED_AUTH_PHONE_CODE_NOT_AVAILABLE);
-                    cache.delCode(phone);
+                    phoneCodeCache.delCode(phone);
                     user = userCache.searchByPhoneNoLockNoLoad(phone);
                     checkArgument(nonNull(user), FAILED_LOGIN_USER_NOT_EXISTS);
                     checkArgument(UserStateEnum.STATUS_NORMAL.getCode().equals(user.getState()), FAILED_LOGIN_USER_STATUS_ERROR);

@@ -118,7 +118,7 @@ public class TokenServiceImpl implements TokenService {
     public UserVO verify(String token) throws ReLoginException {
         if(verifyToken(token)) {
             Long id = parseToken(token).getId();
-            if(nonNull(cache.getToken(id))) {
+            if(nonNull(getLoginFlag(id))) {
                 try {
                     User user = userCache.search(id);
                     return new UserVO(user.getId(), user.getName(), user.getEmail(), user.getPhone().toString());
@@ -144,7 +144,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public Boolean verifyToken(String token) {
         if(isNotBlank(token)) {
-            return JWTUtil.verify(token.split(" ")[1], key.getBytes());
+            return JWTUtil.verify(token, key.getBytes());
         }
         return false;
     }
