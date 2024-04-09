@@ -152,6 +152,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
+    public User search(Long id) {
+        User user = cache.get(id);
+        if(isNull(user)) {
+            user = db.searchByID(id);
+        }
+        return user;
+    }
+
+    @Override
     public Result<Page<User>> search(UserParam param) {
         MPJLambdaWrapper<User> wrapper = new MPJLambdaWrapper<>(User.class);
         if(nonNull(param.getId())) {

@@ -81,4 +81,6 @@ public interface UserService extends IService<User> {
     Boolean updatePasswordByID(String password, Long id);
 
     User searchByPhone(String phone);
+
+    User search(Long id);
 }
