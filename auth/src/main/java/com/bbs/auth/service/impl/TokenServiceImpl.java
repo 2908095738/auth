@@ -144,7 +144,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public Boolean verifyToken(String token) {
         if(isNotBlank(token)) {
-            return JWTUtil.verify(token, key.getBytes());
+            return JWTUtil.verify(token.split(" ")[1], key.getBytes());
         }
         return false;
     }
