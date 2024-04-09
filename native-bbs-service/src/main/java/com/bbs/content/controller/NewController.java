@@ -61,7 +61,7 @@ public class NewController {
     @GetMapping("/id")
     public Result<Long> getNewsId() {
         AuthUtil.UserAPI.User currentUser = ThreadLocalUtil.getCurrentUser();
-        Long id = newsService.createNewsId(currentUser.getUserId(), currentUser.getNickName());
+        Long id = newsService.createNewsId(currentUser.getId(), currentUser.getName());
         return Result.success(id);
     }
 
@@ -103,7 +103,7 @@ public class NewController {
     @DeleteMapping()
     public Result<Boolean> deleteNews(@NotNull(message = "内容id不能为空！") Long newId){
         AuthUtil.UserAPI.User currentUser = ThreadLocalUtil.getCurrentUser();
-        newsService.delete(newId,currentUser.getUserId());
+        newsService.delete(newId,currentUser.getId());
         return Result.success();
     }
 
@@ -117,7 +117,7 @@ public class NewController {
     @GetMapping("/follower")
     public Result<Page<GetUserNewsDto>> getFollowerNews(@NotNull(message = "页数不能为空！") Integer current,
                                                         @NotNull(message = "每页几条不能为空！") Integer size) {
-        Page<GetUserNewsDto> result = newsService.getListByFollower(ThreadLocalUtil.getCurrentUser().getUserId(), current, size);
+        Page<GetUserNewsDto> result = newsService.getListByFollower(ThreadLocalUtil.getCurrentUser().getId(), current, size);
         if(isNotEmpty(result.getRecords()))
             result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
         return Result.success(result);

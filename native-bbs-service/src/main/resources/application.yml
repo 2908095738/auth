@@ -78,4 +78,10 @@ apache:
     # 最大重试间隔时间
     max-sleep: 30000
 auth:
-  host: 192.168.100.6:7005
+  host: 192.168.100.6:9999
+  api:
+    verify:
+      path: /verify
+      token: Authorization
+      timeout: 10000
+

@@ -27,7 +27,7 @@ public class ThreadLocalUtil {
      * 获取当前登录用户方法
      */
     public static Long getCurrentUserId(){
-        return userThreadLocal.get().getUserId();
+        return userThreadLocal.get().getId();
     }
 
 
