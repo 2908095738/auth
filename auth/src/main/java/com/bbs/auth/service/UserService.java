@@ -3,17 +3,17 @@ package com.bbs.auth.service;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.param.UserParam;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.bbs.Result;
 import com.bbs.entity.UserVO;
 import com.bbs.exception.ReLoginException;
+import com.github.yulichang.base.MPJBaseService;
 
 /**
 * @author Lenovo
 * @description 针对表【user】的数据库操作Service
 * @createDate 2023-07-11 14:46:11
 */
-public interface UserService extends IService<User> {
+public interface UserService extends MPJBaseService<User> {
 
     Result<Page<User>> search(UserParam param);
 

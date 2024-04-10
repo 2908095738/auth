@@ -4,12 +4,10 @@ import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Opt;
 import cn.hutool.crypto.SecureUtil;
-import com.bbs.auth.app.verify.VerifyLogin;
 import com.bbs.auth.cache.user.PhoneCache;
 import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.dao.UserDao;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.Result;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.param.UserParam;
@@ -20,6 +18,7 @@ import com.bbs.entity.UserVO;
 import com.bbs.enums.UserStateEnum;
 import com.bbs.exception.BusinessException;
 import com.bbs.exception.ReLoginException;
+import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -42,7 +41,7 @@ import static java.util.Objects.nonNull;
 */
 @Slf4j
 @Service
-public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implements UserService {
 
     @Resource
     private UserDao db;

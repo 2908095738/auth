@@ -99,6 +99,12 @@ public class User implements Serializable {
     @TableField(exist = false)
     private List<UserGroup> userGroupList;
 
+    /**
+     * 关注信息（当前实体用户，关注了当前登录用户）
+     */
+    @TableField(exist = false)
+    private Fan fan;
+
     public User(Long id, String email, String name, String password, Long phone, Integer salt, Integer state, String stateStr, Date expirationTime, Date createTime, Date updateTime, List<UserGroup> userGroupList) {
         this.id = id;
         this.email = email;

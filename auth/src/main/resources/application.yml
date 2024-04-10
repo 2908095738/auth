@@ -10,6 +10,18 @@ spring:
     host: 192.168.0.100
     port: 6379
     password: shenbimaliang
+  rabbitmq:
+    username: admin
+    password: admin
+    addresses: 192.168.100.6:5672
+    virtual-host: /test/host
+    connection-timeout: 15000
+    listener:
+      simple:
+        concurrency: 5 #并发
+        max-concurrency: 10 #最大并发
+        prefetch: 1 #每次发送一条消息
+        acknowledge-mode: manual #手动回复ack
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.log4j2.Log4j2Impl
