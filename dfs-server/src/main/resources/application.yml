@@ -8,15 +8,16 @@ spring:
         instance:
           prefer-ip: true
   redis:
-    host: 192.168.100.6
+    host: 192.168.0.100
     port: 6379
+    password: shenbimaliang
   # 以下配置会影响：日志上报功能
   rabbitmq:
-    addresses: 127.0.0.1:5672
+    addresses: 192.168.0.100
     port: 5672
     username: admin
-    password: admin
-    virtual-host: /test/host
+    password: shenbimaliang
+    virtual-host: bthost
     publisher-returns: true
     publisher-confirm-type: correlated
 server:
@@ -32,18 +33,12 @@ logging:
   file:
     path: logs/dfs/
   config: classpath:logback-spring.xml
-fdfs:
-  so-timeout: 1500 # socket 连接时长
-  connect-timeout: 600 # 连接 tracker 服务器超时时长
-  # 这两个是你服务器的 IP 地址，注意 23000 端口也要打开，阿里云服务器记得配置安全组。tracker 要和 stroage 服务进行交流
-  tracker-list: 192.168.100.6:22122
-  web-server-url: 192.168.100.6:8888
-  pool:
-    jmx-enabled: false
-  # 生成缩略图
-  thumb-image:
-    height: 500
-    width: 500
+#账号 auth/2Bq7LddkUxc4CqTv
+minio:
+  endpoint: http://192.168.0.100:9000 #Minio服务所在地址
+  bucketName: maliang #存储桶名称
+  accessKey: DJXY6R4T7AS8F3AJDLO3 #访问的key
+  secretKey: FFXjJHNiAJ0V+bFMrsFmKbKLRjrLUZWip2jFHz1i #访问的秘钥
 management:
   endpoints:
     web:

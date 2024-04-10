@@ -1,10 +1,10 @@
 package com.bbs.file.controller;
 
 import com.bbs.Result;
-import com.bbs.file.service.FileService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.bbs.enums.dfs.FileType;
+import com.bbs.enums.dfs.ResourceType;
+import com.bbs.file.util.minio.FileOpt;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
@@ -13,19 +13,20 @@ import javax.annotation.Resource;
 @RequestMapping
 public class Upload {
 
-    @Resource
-    private FileService service;
 
-    /**
-     * 文件上传
-     * @param resourceID  资源编号（全局唯一）
-     * @param file 文件
-     * @return 上传结果
-     * @throws IllegalArgumentException 资源 ID不可用
-     */
-    @PostMapping
-    public Result<Boolean> file(String resourceID, MultipartFile file) throws IllegalArgumentException {
-        service.upload(resourceID, file);
-        return Result.success();
+    @Resource
+    private FileOpt fileOpt;
+
+    @PostMapping("/upload")
+    public Result<String> upload(
+            @RequestParam String businessCode,
+            @RequestParam Integer resourceType,
+            @RequestParam Integer fileType,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam String contentType
+    ) throws IllegalArgumentException {
+        String id = fileOpt.resourceID(businessCode, resourceType, fileType);
+        fileOpt.upload(id, file, contentType);
+        return Result.success(fileOpt.preview(id));
     }
 }

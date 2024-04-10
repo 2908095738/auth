@@ -143,6 +143,8 @@ public class RedisUtil {
 
     public Boolean notExists(String key) { return !exists(key); }
 
+    public Long incr(String key) { return redis.opsForValue().increment(key); }
+
     @Slf4j
     @Component
     public static class Redisson {

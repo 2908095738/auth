@@ -10,9 +10,9 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ResourceType {
 
-    DIR(0, "目录"),  //目录
+    DIR(10, "目录"),  //目录
 
-    FILE(1, "文件");    //文件
+    FILE(11, "文件");    //文件
 
     private final Integer code;
 

@@ -7,9 +7,11 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum FileType {
 
-    IMAGE(1, "图片"),
+    NO_FILE(10, "非文件"),
 
-    VIDEO(2, "视频");
+    IMAGE(11, "图片"),
+
+    VIDEO(12, "视频");
 
     private final Integer code;
 
