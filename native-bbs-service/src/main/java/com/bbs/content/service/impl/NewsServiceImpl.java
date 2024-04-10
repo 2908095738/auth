@@ -2,16 +2,17 @@ package com.bbs.content.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.bbs.content.cache.FileCache;
 import com.bbs.content.converter.NewsConverter;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.param.CreateNewParam;
 import com.bbs.content.dto.param.QueryNewsParam;
+import com.bbs.content.entity.Fan;
 import com.bbs.content.entity.NewContent;
 import com.bbs.content.entity.NewTag;
 import com.bbs.content.entity.News;
 import com.bbs.content.enums.NewCommentStatus;
 import com.bbs.content.mapper.NewsMapper;
-import com.bbs.content.service.FileService;
 import com.bbs.content.service.NewsService;
 import com.bbs.content.util.SensitiveFilter;
 import com.github.yulichang.base.MPJBaseServiceImpl;
@@ -21,22 +22,78 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.util.HtmlUtils;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Random;
 
 /**
  *
  */
 @Service
-public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
-    implements NewsService{
+public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implements NewsService {
 
     private NewsConverter converter;
 
     private SensitiveFilter sensitiveFilter;
 
 
-    private FileService fileService;
+    private FileCache fileCache;
+
+    private Map<Integer, GetUserNewsDto> newMap = new HashMap<>();
+    private static Random random = new Random();
+
+    private static Integer current = 1;
+
+    /**
+     * 返回十条用户没看过的内容
+     *
+     * @return List<GetUserNewsDto>
+     */
+    private List<GetUserNewsDto> getRandomNew() {
+        Page<GetUserNewsDto> pageByRecommend = getPageByRecommend(current);
+        List<GetUserNewsDto> result = new ArrayList<>();
+        if (CollUtil.isNotEmpty(pageByRecommend.getRecords())) {
+            for (int i = 0; i < pageByRecommend.getRecords().size(); i++) {
+                newMap.put(i, pageByRecommend.getRecords().get(i));
+            }
+        }
+        if (newMap.isEmpty()) {
+            current++;
+            // 所有文章都已显示过，重置已显示文章集合并重新随机化所有文章
+            Page<GetUserNewsDto> getUserNewsDtoPage = getPageByRecommend(current);
+            if (CollUtil.isNotEmpty(getUserNewsDtoPage.getRecords()))
+                for (int i = 0; i < getUserNewsDtoPage.getRecords().size(); i++) {
+                    newMap.put(i, getUserNewsDtoPage.getRecords().get(i));
+                }
+            return result;
+        }
+        Integer mapSize = newMap.size();
+        // 从剩余文章中随机选择一篇
+        Integer randomIndex = random.nextInt(mapSize);
+        for (int i = 0; i < 10; i++) {
+            randomIndex = addResult(randomIndex, result, mapSize);
+        }
+        return result;
+    }
+
+
+    private Integer addResult(int randomIndex, List<GetUserNewsDto> result, Integer mapSize) {
+        GetUserNewsDto getUserNewsDto = newMap.get(randomIndex);
+        if (Objects.nonNull(getUserNewsDto)) {
+            result.add(getUserNewsDto);
+            newMap.remove(randomIndex);
+            randomIndex = random.nextInt(mapSize);
+            return randomIndex;
+        }
+        {
+            randomIndex = random.nextInt(mapSize);
+            return addResult(randomIndex, result, mapSize);
+        }
+    }
 
 
     @Override
@@ -52,19 +109,20 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
         updateById(new News().setNewId(newId).setDeleteFlag(1));
         List<String> filePathList = Arrays.asList(news.getImageUrl().split(","));
         filePathList.addAll(Arrays.asList(news.getViewUrl().split(",")));
-        fileService.delFiles(filePathList,newId,userId);
+        fileCache.delFiles(filePathList, newId);
     }
 
 
     /**
      * 创建文章或视频
+     *
      * @param param 文章或视频
      * @return Long
      */
     @Override
     public News createNews(CreateNewParam param) {
-       News news = converter.toEntity(param);
-       // 转义 HTML 标记，防止在 HTML 标签中注入攻击语句
+        News news = converter.toEntity(param);
+        // 转义 HTML 标记，防止在 HTML 标签中注入攻击语句
         news.setTitle(HtmlUtils.htmlEscape(news.getTitle()));
         // 过滤敏感词
         news.setTitle(sensitiveFilter.filter(news.getTitle()))
@@ -81,21 +139,22 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
                 .selectAll(News.class)
                 .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
                 .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
-                .selectCollection(NewTag.class,GetUserNewsDto::getTagIds,o->o.result(NewTag::getTagId))
-                .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
-                .like(StringUtils.isNotBlank(param.getTitle()),News::getTitle,param.getTitle())
-                .in(CollUtil.isNotEmpty(param.getTagIds()),NewTag::getTagId,param.getTagIds())
-                .eq(News::getDeleteFlag,0)
-                .orderBy(true,false,News::getCreateTime)
+                .selectCollection(NewTag.class, GetUserNewsDto::getTagIds, o -> o.result(NewTag::getTagId))
+                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
+                .like(StringUtils.isNotBlank(param.getTitle()), News::getTitle, param.getTitle())
+                .in(CollUtil.isNotEmpty(param.getTagIds()), NewTag::getTagId, param.getTagIds())
+                .eq(News::getDeleteFlag, 0)
+                .orderBy(true, false, News::getCreateTime)
         );
     }
 
     /**
      * 查询用户主页上发布内容集合
-     * @param userId 用户id
+     *
+     * @param userId  用户id
      * @param current 第几页
-     * @param size 几条
-     * @param flag 是否是用户自己  true：是
+     * @param size    几条
+     * @param flag    是否是用户自己  true：是
      * @return GetUserAccountDto.GetUserNewsDto
      */
     @Override
@@ -104,33 +163,36 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
                 .selectAll(News.class)
                 .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
                 .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
-                .selectCollection(NewTag.class,GetUserNewsDto::getTagIds,o->o.result(NewTag::getTagId))
-                .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
-                .orderBy(true,false,News::getCreateTime)
-                .eq(News::getCreateId,userId)
-                .eq(News::getDeleteFlag,0)
-                .in(flag,News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode(), NewCommentStatus.WAIT_FOR_REVIEW.getCode())
-                .eq(!flag,News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
+                .selectCollection(NewTag.class, GetUserNewsDto::getTagIds, o -> o.result(NewTag::getTagId))
+                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
+                .orderBy(true, false, News::getCreateTime)
+                .eq(News::getCreateId, userId)
+                .eq(News::getDeleteFlag, 0)
+                .in(flag, News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode(), NewCommentStatus.WAIT_FOR_REVIEW.getCode())
+                .eq(!flag, News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
         );
     }
 
 
     /**
      * 查询推荐页上的内容简要信息
-     * @param current 第几页
-     * @param size 几条
-     * @return GetUserAccountDto.GetUserNewsDto
+     *
+     * @return GetUserNewsDto
      */
     @Override
-    public Page<GetUserNewsDto> getListByRecommend(Integer current, Integer size) {
-        return selectJoinListPage(new Page<>(current, size), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
+    public List<GetUserNewsDto> getListByRecommend() {
+        return getRandomNew();
+    }
+
+    private Page<GetUserNewsDto> getPageByRecommend(Integer current) {
+        return selectJoinListPage(new Page<>(current, 50), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
                 .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
                 .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
-                .selectCollection(NewTag.class,GetUserNewsDto::getTagIds,o->o.result(NewTag::getTagId))
-                .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
+                .selectCollection(NewTag.class, GetUserNewsDto::getTagIds, o -> o.result(NewTag::getTagId))
+                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
                 .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
-                .eq(News::getDeleteFlag,0)
+                .eq(News::getDeleteFlag, 0)
                 .orderBy(true, false, News::getCreateTime)
                 .or()
                 .orderBy(false, true, News::getCreateTime)
@@ -139,35 +201,39 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
                 .or()
                 .orderBy(false, true, News::getLastReplyTime)
                 .or()
-                .orderBy(true, false,News::getUpdateTime)
+                .orderBy(true, false, News::getUpdateTime)
                 .or()
-                .orderBy(false, true,News::getUpdateTime)
+                .orderBy(false, true, News::getUpdateTime)
         );
     }
 
     /**
      * 查询关注页上的内容简要信息
-     * @param userIds 用户id
+     *
+     * @param userId  用户id
      * @param current 第几页
-     * @param size 几条
+     * @param size    几条
      * @return GetUserAccountDto.GetUserNewsDto
      */
     @Override
-    public Page<GetUserNewsDto> getListByFollower(List<Long> userIds, Integer current, Integer size) {
+    public Page<GetUserNewsDto> getListByFollower(Long userId, Integer current, Integer size) {
         return selectJoinListPage(new Page<>(current, size), GetUserNewsDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
                 .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
                 .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
-                .selectCollection(NewTag.class,GetUserNewsDto::getTagIds,o->o.result(NewTag::getTagId))
-                .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
+                .selectCollection(NewTag.class, GetUserNewsDto::getTagIds, o -> o.result(NewTag::getTagId))
+                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
+                .eq(News::getDeleteFlag, 0)
                 .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
-                .eq(News::getDeleteFlag,0)
+                .leftJoin(Fan.class, Fan::getUserId, News::getCreateId)
+                .eq(News::getCreateId, userId)
                 .orderBy(true, false, News::getCreateTime)
-                .in(News::getCreateId, userIds));
+        );
     }
 
     /**
-     *根据主键查全部内容、点赞
+     * 根据主键查全部内容、点赞
+     *
      * @param newId 文章id
      * @return GetUserNewsDto
      */
@@ -175,15 +241,14 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
     public GetUserNewsDto getOneById(Long newId) {
         return selectJoinOne(GetUserNewsDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
-                .selectCollection(NewTag.class,GetUserNewsDto::getTagIds,o->o.result(NewTag::getTagId))
-                .leftJoin(NewTag.class,NewTag::getNewId,News::getNewId)
+                .selectCollection(NewTag.class, GetUserNewsDto::getTagIds, o -> o.result(NewTag::getTagId))
+                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
                 .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
                 .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
                 .eq(News::getNewId, newId)
-                .eq(News::getDeleteFlag,0)
+                .eq(News::getDeleteFlag, 0)
         );
     }
-
 
 
     @Resource
@@ -198,7 +263,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News>
 
 
     @Resource
-    public void setFileService(FileService fileService) {
-        this.fileService = fileService;
+    public void setFileService(FileCache fileCache) {
+        this.fileCache = fileCache;
     }
 }

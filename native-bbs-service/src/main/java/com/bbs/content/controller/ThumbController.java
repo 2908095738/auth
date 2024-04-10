@@ -3,11 +3,11 @@ package com.bbs.content.controller;
 import com.alibaba.fastjson.JSON;
 import com.bbs.Result;
 import com.bbs.content.cache.ThumbCache;
-import com.bbs.content.dto.MqAgreeDto;
 import com.bbs.content.dto.param.CancelThumbParam;
 import com.bbs.content.dto.param.CreateThumbParam;
 import com.bbs.content.mq.RabbitmqConfig;
 import com.bbs.content.mq.RabbitmqSend;
+import com.bbs.content.util.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
-import java.util.Date;
 
 /**
  * 点赞
@@ -45,9 +44,11 @@ public class ThumbController {
     public Result<Boolean> createThumb(@RequestBody @Valid CreateThumbParam param) {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
+            Long createId = ThreadLocalUtil.getCurrentUserId();
+            param.setUserId(createId);
+            //更新用户、内容、评论对应点赞数量:redis
             cache.create(param);
-            rabbitmqSend.send(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM, RabbitmqConfig.ROUTINGKEY_AGREE, JSON.toJSONString(new MqAgreeDto(param.getUserId(), param.getPostUserId(), param.getType(), new Date())));
+            rabbitmqSend.send(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM, RabbitmqConfig.ROUTINGKEY_AGREE, JSON.toJSONString(param));
             transactionManager.commit(transaction);
             return Result.success();
         } catch (RuntimeException e) {
@@ -66,13 +67,12 @@ public class ThumbController {
     public Result<Boolean> cancelThumb(@RequestBody @Valid CancelThumbParam param) {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
-            //删除点赞数据
-    //        param.setUserId(1L);
+            Long createId = ThreadLocalUtil.getCurrentUserId();
+            param.setUserId(createId);
             //更新用户、内容、评论对应点赞数量:redis
             cache.cancel(param);
             //通知对应的用户
-            rabbitmqSend.send(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM, RabbitmqConfig.ROUTINGKEY_DEL_AGREE, JSON.toJSONString(new MqAgreeDto(param.getUserId(),param.getPostUserId(), param.getType(), new Date())));
+            rabbitmqSend.send(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM, RabbitmqConfig.ROUTINGKEY_DEL_AGREE, JSON.toJSONString(param));
             transactionManager.commit(transaction);
             return Result.success();
         } catch (RuntimeException e) {

@@ -14,12 +14,12 @@ public class MqFollowDto implements Serializable {
 
 
     /**
-     * 账号id
+     * 关注者账号id
      */
     private Long userId;
 
     /**
-     * 关注账号id
+     * 被关注者账号id
      */
     private Long followUserId;
 

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.content.entity.OperationLog;
 import com.bbs.content.service.OperationLogService;
+import com.bbs.content.util.ThreadLocalUtil;
 import com.bbs.vo.BaseParam;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -32,7 +33,7 @@ public class LogController {
     @EqualsAndHashCode(callSuper = true)
     public static class SearchOperationLogParam extends BaseParam {
 
-        private Long userId = 1L;//ThreadLocalUtil.getCurrentUser().getId()
+        private Long userId = ThreadLocalUtil.getCurrentUserId();
     }
 
     @GetMapping("/operation")

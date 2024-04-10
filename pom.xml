@@ -23,6 +23,7 @@
         <module>dfs-server</module>
         <module>monitoring-server</module>
         <module>log-server</module>
+        <module>chat</module>
     </modules>
 
     <properties>

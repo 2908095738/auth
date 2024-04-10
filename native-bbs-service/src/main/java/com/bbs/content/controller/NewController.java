@@ -7,13 +7,14 @@ import com.bbs.content.cache.NewsCache;
 import com.bbs.content.cache.ThumbCache;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.param.CreateNewParam;
-import com.bbs.content.dto.param.QueryNewsParam;
 import com.bbs.content.entity.News;
 import com.bbs.content.service.CommentService;
 import com.bbs.content.service.NewContentService;
 import com.bbs.content.service.NewTagService;
 import com.bbs.content.service.NewsService;
 import com.bbs.content.service.TagService;
+import com.bbs.content.util.AuthUtil;
+import com.bbs.content.util.ThreadLocalUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -59,9 +60,8 @@ public class NewController {
      */
     @GetMapping("/id")
     public Result<Long> getNewsId() {
-        //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
-        String userName = "testName";Long createId = 1L;
-        Long id = newsService.createNewsId(createId, userName);
+        AuthUtil.UserAPI.User currentUser = ThreadLocalUtil.getCurrentUser();
+        Long id = newsService.createNewsId(currentUser.getId(), currentUser.getName());
         return Result.success(id);
     }
 
@@ -85,7 +85,7 @@ public class NewController {
             }
             // 计算内容分数
 
-            newsCache.create(news);
+            newsCache.create(news.getNewId(),param);
             transactionManager.commit(transaction);
             return Result.success();
         } catch (RuntimeException e) {
@@ -96,30 +96,32 @@ public class NewController {
     }
 
 
-    /**
-     * 条件查询内容
-     */
-    @GetMapping("/query")
-    public Result<Page<GetUserNewsDto>> getQueryNews(@Valid QueryNewsParam param){
-        Page<GetUserNewsDto> result = newsService.getListByQuery(param);
-        if(isNotEmpty(result.getRecords()))
-            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
-        return Result.success(result);
-    }
-
 
     /**
      * 删除内容
      */
     @DeleteMapping()
     public Result<Boolean> deleteNews(@NotNull(message = "内容id不能为空！") Long newId){
-        //TODO        UserVO currentUser = ThreadLocalUtil.getCurrentUser();
-        Long userId = 1L;
-        newsService.delete(newId,userId);
+        AuthUtil.UserAPI.User currentUser = ThreadLocalUtil.getCurrentUser();
+        newsService.delete(newId,currentUser.getId());
         return Result.success();
     }
 
 
+    /**
+     * 查询关注页上的内容简要信息
+     * @param current 第几页
+     * @param size    几条
+     * @return Page<GetUserAccountDto.GetUserNewsDto>
+     */
+    @GetMapping("/follower")
+    public Result<Page<GetUserNewsDto>> getFollowerNews(@NotNull(message = "页数不能为空！") Integer current,
+                                                        @NotNull(message = "每页几条不能为空！") Integer size) {
+        Page<GetUserNewsDto> result = newsService.getListByFollower(ThreadLocalUtil.getCurrentUser().getId(), current, size);
+        if(isNotEmpty(result.getRecords()))
+            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
+        return Result.success(result);
+    }
 
 
 
@@ -144,40 +146,20 @@ public class NewController {
     }
 
 
+
     /**
      * 查询推荐页上的内容简要信息
-     *
-     * @param current 第几页
-     * @param size    几条
      * @return Page<GetUserAccountDto.GetUserNewsDto>
      */
     @GetMapping("/recommend")
-    public Result<Page<GetUserNewsDto>> getRecommendNews(@NotNull(message = "页数不能为空！") Integer current,
-                                                         @NotNull(message = "每页几条不能为空！") Integer size) {
-        Page<GetUserNewsDto> result = newsService.getListByRecommend(current, size);
-        if(isNotEmpty(result.getRecords()))
-            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
+    public Result<List<GetUserNewsDto>> getRecommendNews() {
+        List<GetUserNewsDto> result = newsService.getListByRecommend();
+//        if(isNotEmpty(result))
+//            result.forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
         return Result.success(result);
     }
 
 
-    /**
-     * 查询关注页上的内容简要信息
-     *
-     * @param userIds 用户id
-     * @param current 第几页
-     * @param size    几条
-     * @return Page<GetUserAccountDto.GetUserNewsDto>
-     */
-    @GetMapping("/follower")
-    public Result<Page<GetUserNewsDto>> getFollowerNews(@NotNull(message = "关注用户id列表不能为空！") List<Long> userIds,
-                                                        @NotNull(message = "页数不能为空！") Integer current,
-                                                        @NotNull(message = "每页几条不能为空！") Integer size) {
-        Page<GetUserNewsDto> result = newsService.getListByFollower(userIds, current, size);
-        if(isNotEmpty(result.getRecords()))
-            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
-        return Result.success(result);
-    }
 
     /**
      * 查询热门内容

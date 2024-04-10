@@ -1,0 +1,70 @@
+server:
+  port: 8482
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    url: jdbc:mysql://192.168.100.8:3306/native_bbs?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 1000MB
+      max-request-size: 1000MB
+      resolve-lazily: false
+  redis:
+    host: 192.168.100.6
+    port: 6379
+  rabbitmq:
+    username: admin
+    password: admin
+    addresses: 192.168.100.6:5672
+    virtual-host: /test/host
+    connection-timeout: 15000
+    listener:
+      simple:
+        concurrency: 5 #并发
+        max-concurrency: 10 #最大并发
+        prefetch: 1 #每次发送一条消息
+        acknowledge-mode: manual #手动回复ack
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.log4j2.Log4j2Impl
+logging:
+  level:
+    com.bbs: debug
+    com.baomidou: debug
+  file:
+    path: logs/
+  config: classpath:logback-spring.xml
+
+news:
+  image:
+    path: E:\ideawork\native-bbs-system\native-bbs-service\src\main\resources\nview\
+    down:
+      prefix: /image
+  file:
+    path: E:\ideawork\native-bbs-system\native-bbs-service\src\main\resources\nfile\
+    down:
+      prefix: /file
+  video:
+    path: E:\ideawork\native-bbs-system\native-bbs-service\src\main\resources\nvideo\
+    down:
+      prefix: /video
+
+jwt:
+  #  token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9
+  name: token
+  token: 123456
+  expireTime: 7
+
+tokenName: Authorization
+authServerIP: 192.168.100.6
+authServerPort: 8080
+auth:
+  host: 192.168.100.6:7005
+

@@ -1,0 +1,61 @@
+package com.bbs.chat.enums;
+
+import cn.hutool.core.util.EnumUtil;
+import lombok.Getter;
+
+import java.util.Map;
+
+/**
+ * Redis 缓存 keys
+ * <a href="https://developer.aliyun.com/article/531067">规范参考：阿里云</a>
+ */
+@Getter
+public enum RedisKeys {
+
+    NEW_THUMB_COMMENT("new_thumb_comment:", "内容id"),
+    NEW_THUMB("new_thumb:", "内容点赞用户"),
+    COMMENT("comment:", "评论用户"),
+    COMMENT_THUMB("comment_thumb:", "评论点赞用户"),
+    USER_NEW("user_new:", "用户发布的内容"),
+
+    USER_THUMB("user_thumb:", "用户点赞数"),
+
+    HOT_NEWS("hot_news:", "热点内容"),
+
+    AUDIT_NEWS_USERID("audit_news_userid:", "用户的待审核图片or视频"),
+
+    ;
+
+    private final String prefix;
+
+    private final String description;
+
+
+    RedisKeys(String prefix, String description) {
+        this.prefix = prefix;
+        this.description = description;
+    }
+
+    private static final String LOCK_SUFFIX = "lock";
+
+    public String key() {
+        return prefix;
+    }
+
+    /**
+     * key
+     * @param mark 业务标识 / 表名 / 主键
+     * @return key
+     */
+    public String key(String mark) {
+        return prefix + ":" + mark;
+    }
+
+    @Override
+    public String toString() {
+        return key();
+    }
+
+
+    public static final Map<String,RedisKeys> map = EnumUtil.getEnumMap(RedisKeys.class);
+}

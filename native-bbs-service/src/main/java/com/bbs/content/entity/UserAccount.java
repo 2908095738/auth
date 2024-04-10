@@ -16,12 +16,23 @@ import java.io.Serializable;
 @Data
 @Accessors(chain = true)
 public class UserAccount implements Serializable {
-
     /**
      * 用户id
      */
     @TableId(value = "user_id")
     private Long userId;
+
+    /**
+     * 呢称
+     */
+    @TableField(value = "nick_name")
+    private String nickName;
+
+    /**
+     * 头像路径
+     */
+    @TableField(value = "avatar_path")
+    private String avatarPath;
 
     /**
      * 等级

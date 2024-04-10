@@ -1,0 +1,22 @@
+package com.bbs.content.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class AuditNewDto {
+
+    private String userId;
+
+    private String newId;
+
+    private String newContent;
+    private List<String> fileLocalPathList;
+
+
+}

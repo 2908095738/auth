@@ -1,14 +1,17 @@
 package com.bbs.content.controller;
 
+import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSON;
 import com.bbs.Result;
+import com.bbs.content.dto.GetFollowOrFanDto;
 import com.bbs.content.dto.MqFollowDto;
 import com.bbs.content.dto.param.CreateFollowParam;
 import com.bbs.content.dto.param.DelFollowParam;
 import com.bbs.content.entity.Fan;
 import com.bbs.content.mq.RabbitmqConfig;
 import com.bbs.content.mq.RabbitmqSend;
-import com.bbs.content.service.FanService;
+import com.bbs.content.cache.FanService;
+import com.bbs.content.util.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -66,9 +69,14 @@ public class FollowController {
      * @return Boolean
      */
     @GetMapping("/follow")
-    public Result<List<Fan>> getFollow(){
-        Long userId = 1L;
-        return Result.success(fanService.getFollow(userId));
+    public Result<List<GetFollowOrFanDto>> getFollow(){
+        Long userId = ThreadLocalUtil.getCurrentUserId();
+        List<Fan> list = fanService.getFollow(userId);
+        if(CollUtil.isNotEmpty(list)){
+//            List<GetFollowOrFanDto> result = list.stream().map(o -> new GetFollowOrFanDto(o.getFollowUserId(), , )).collect(Collectors.toList());
+//            return Result.success(result);
+        }
+        return Result.failedNull();
     }
 
 
@@ -77,9 +85,14 @@ public class FollowController {
      * @return Boolean
      */
     @GetMapping("/fan")
-    public Result<List<Fan>> getFan(){
-        Long userId = 1L;
-        return Result.success(fanService.getFan(userId));
+    public Result<List<GetFollowOrFanDto>> getFan(){
+        Long userId = ThreadLocalUtil.getCurrentUserId();
+        List<Fan> list = fanService.getFollow(userId);
+        if(CollUtil.isNotEmpty(list)){
+//            List<GetFollowOrFanDto> result = list.stream().map(o -> new GetFollowOrFanDto(o.getUserId(), , )).collect(Collectors.toList());
+//            return Result.success(result);
+        }
+        return Result.failedNull();
     }
 
 

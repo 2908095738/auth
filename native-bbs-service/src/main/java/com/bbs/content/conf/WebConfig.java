@@ -40,7 +40,7 @@ public class WebConfig implements WebMvcConfigurer {
         // 本地文件上传路径，映射
         registry
                 .addResourceHandler(fileDownPrefix + "/**", imageDownPrefix + "/**",videoDownPrefix + "/**")
-                .addResourceLocations("file:" + filePath + File.separator, "file:" + imagePath + File.separator,"file:" + videoPath + File.separator)
+                .addResourceLocations("file:"+ File.separator + filePath , "file:"  + File.separator + imagePath,"file:" + File.separator + videoPath)
         ;
     }
 
@@ -50,12 +50,14 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         // 设置允许跨域的路由
-        registry.addMapping(fileDownPrefix  + "/**")
-//        registry.addMapping(  "/**")
+//        registry.addMapping(fileDownPrefix  + "/**")
+        registry.addMapping(  "/**")
                 // 设置允许跨域请求的域名
                 .allowedOrigins("*")
                 // 设置允许的方法
-                .allowedMethods("GET");
+                .allowedMethods("GET")
+                .allowedMethods("POST")
+                ;
     }
 
     @Bean
@@ -67,7 +69,6 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(createLoginInterceptor())
                 .addPathPatterns("/**")
-                .excludePathPatterns("/news/upload")
                 .excludePathPatterns(fileDownPrefix + "/**")
                 .excludePathPatterns(imageDownPrefix + "/**")
                 .excludePathPatterns(videoDownPrefix + "/**");
