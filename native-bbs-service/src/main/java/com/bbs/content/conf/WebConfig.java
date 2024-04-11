@@ -44,20 +44,18 @@ public class WebConfig implements WebMvcConfigurer {
         ;
     }
 
-    /**
-     * 开启跨域
-     */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // 设置允许跨域的路由
-//        registry.addMapping(fileDownPrefix  + "/**")
-        registry.addMapping(  "/**")
-                // 设置允许跨域请求的域名
+        registry.addMapping("/**")
                 .allowedOrigins("*")
-                // 设置允许的方法
-                .allowedMethods("GET")
-                .allowedMethods("POST")
-                ;
+                .allowedMethods("PUT", "DELETE","GET","POST")
+                .allowedHeaders("*")
+                .exposedHeaders("access-control-allow-headers",
+                        "access-control-allow-methods",
+                        "access-control-allow-origin",
+                        "access-control-max-age",
+                        "X-Frame-Options")
+                .allowCredentials(false).maxAge(3600);
     }
 
     @Bean
@@ -69,6 +67,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(createLoginInterceptor())
                 .addPathPatterns("/**")
+                .excludePathPatterns("/admin/content"+ "/**")
                 .excludePathPatterns(fileDownPrefix + "/**")
                 .excludePathPatterns(imageDownPrefix + "/**")
                 .excludePathPatterns(videoDownPrefix + "/**");

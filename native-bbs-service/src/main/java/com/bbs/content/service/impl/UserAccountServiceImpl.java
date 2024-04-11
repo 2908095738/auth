@@ -24,7 +24,7 @@ public class UserAccountServiceImpl extends MPJBaseServiceImpl<UserAccountMapper
 
     @Override
     public Boolean create(AuthUtil.UserAPI.User user) {
-        return save(new UserAccount().setUserId(user.getUserId()).setNickName(user.getNickName()).setAvatarPath(user.getAvatar()));
+        return save(new UserAccount().setUserId(user.getId()).setNickName(user.getName()).setAvatarPath(user.getPhone()));
     }
 
 

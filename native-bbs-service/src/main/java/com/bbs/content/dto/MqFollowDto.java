@@ -1,6 +1,5 @@
 package com.bbs.content.dto;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,6 +28,5 @@ public class MqFollowDto implements Serializable {
     private Date createTime;
 
 
-    @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

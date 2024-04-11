@@ -34,10 +34,7 @@ public class NewsCacheImpl implements NewsCache {
         if(StringUtils.isNotBlank(param.getViewUrl()))size = size + param.getViewUrl().split(",").length;
         //添加到待审核内容列表
         redis.hashSet(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.AUDIT_FILE_SIZE.key()+newId,size+"");
-        redis.hashSet(RedisKeys.AUDIT_USERID_NEWS.key(), newId, currentUserId +"UID"+param.getContent());
-        //审核通过后添加到推荐或热点列表
-//        ZSetOperations.TypedTuple<String> tuple = ZSetOperations.TypedTuple.of(newId.toString(), 0.0);
-//        redis.zSet(RedisKeys.HOT_NEWS.key(), new HashSet<ZSetOperations.TypedTuple<String>>(){{add(tuple);}});
+        redis.hashSet(RedisKeys.AUDIT_USERID_NEWS.key(), newId.toString(), currentUserId.toString());
     }
 
     @Override

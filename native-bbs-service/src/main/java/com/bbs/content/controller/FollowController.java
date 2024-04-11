@@ -49,6 +49,8 @@ public class FollowController {
     public Result<Boolean> createFollow(@RequestBody @Valid CreateFollowParam param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
+            Long userId = ThreadLocalUtil.getCurrentUserId();
+            param.setUserId(userId);
             fanService.create(param);
             //发通知
             rabbitmqSend.send(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM,RabbitmqConfig.ROUTINGKEY_FOLLOW, JSON.toJSONString(new MqFollowDto(

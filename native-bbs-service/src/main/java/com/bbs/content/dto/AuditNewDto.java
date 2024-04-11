@@ -15,7 +15,6 @@ public class AuditNewDto {
 
     private String newId;
 
-    private String newContent;
     private List<String> fileLocalPathList;
 
 

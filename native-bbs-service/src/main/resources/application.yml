@@ -4,15 +4,15 @@ spring:
   main:
     allow-bean-definition-overriding: true
   datasource:
-    url: jdbc:mysql://192.168.100.8:3306/native_bbs?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://47.105.39.255:13306/ml_content?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
   rabbitmq:
     username: admin
-    password: admin
-    addresses: 192.168.100.6:5672
-    virtual-host: /test/host
+    password: shenbimaliang
+    addresses: 192.168.0.100:5672
+    virtual-host: bthost
     connection-timeout: 15000
     listener:
       simple:
@@ -21,8 +21,9 @@ spring:
         prefetch: 1 #每次发送一条消息
         acknowledge-mode: manual #手动回复ack
   redis:
-    host: 192.168.100.6
+    host: 192.168.0.100
     port: 6379
+    password: shenbimaliang
   servlet:
     multipart:
       enabled: true
@@ -60,7 +61,7 @@ jwt:
 apache:
   zookeeper:
     # 服务器连接地址，集群模式则使用逗号分隔如：ip1:host,ip2:host
-    connect-url: 192.168.100.6:2181
+    connect-url: 192.168.0.7:2181
     # 会话超时时间：单位ms
     session-timeout: 10000
     # 连接超时时间：单位ms
@@ -78,10 +79,10 @@ apache:
     # 最大重试间隔时间
     max-sleep: 30000
 auth:
-  host: 192.168.100.6:9999
+  host: 192.168.0.7:9999
   api:
     verify:
       path: /verify
-      token: Authorization
+      token: authorization
       timeout: 10000
 

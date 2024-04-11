@@ -1,5 +1,6 @@
 package com.bbs.content.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.content.dto.param.GetPageParam;
@@ -9,6 +10,7 @@ import com.bbs.content.mapper.TagMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,21 +23,20 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag>
 
     @Override
     public List<Long> addAndUpdateWeight(List<String> tagNames, List<Long> tagIds) {
-        List<Tag> newTagList = tagNames.stream().map(
-                tagName -> new Tag()
-                        .setName(tagName)
-                        .setWeight(1.0)
-        ).collect(Collectors.toList());
-        saveBatch(
-                tagNames.stream().map(
-                        tagName -> new Tag()
-                                .setName(tagName)
-                                .setWeight(1.0)
-                ).collect(Collectors.toList())
-        );
-        List<Tag> tags = listByIds(tagIds);
-        tags.forEach(tag -> tag.setWeight(tag.getWeight() + 1));
-        updateBatchById(tags);
+        List<Tag> newTagList = new ArrayList<>();
+        if(CollUtil.isNotEmpty(tagNames)){
+            newTagList = tagNames.stream().map(
+                    tagName -> new Tag()
+                            .setName(tagName)
+                            .setWeight(1.0)
+            ).collect(Collectors.toList());
+            saveBatch(newTagList);
+        }
+        if(CollUtil.isNotEmpty(tagIds)){
+            List<Tag> tags = listByIds(tagIds);
+            tags.forEach(tag -> tag.setWeight(tag.getWeight() + 1));
+            updateBatchById(tags);
+        }
         return newTagList.stream().map(Tag::getId).collect(Collectors.toList());
     }
 

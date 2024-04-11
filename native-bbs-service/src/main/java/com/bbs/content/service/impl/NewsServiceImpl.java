@@ -56,27 +56,32 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
     private List<GetUserNewsDto> getRandomNew() {
         Page<GetUserNewsDto> pageByRecommend = getPageByRecommend(current);
         List<GetUserNewsDto> result = new ArrayList<>();
-        if (CollUtil.isNotEmpty(pageByRecommend.getRecords())) {
-            for (int i = 0; i < pageByRecommend.getRecords().size(); i++) {
-                newMap.put(i, pageByRecommend.getRecords().get(i));
+        if (CollUtil.isNotEmpty(pageByRecommend.getRecords())&&pageByRecommend.getRecords().size()<10) {
+            return pageByRecommend.getRecords();
+        }{
+            if (CollUtil.isNotEmpty(pageByRecommend.getRecords())) {
+                for (int i = 0; i < pageByRecommend.getRecords().size(); i++) {
+                    newMap.put(i, pageByRecommend.getRecords().get(i));
+                }
+            }
+            if (newMap.isEmpty()) {
+                current++;
+                // 所有文章都已显示过，重置已显示文章集合并重新随机化所有文章
+                Page<GetUserNewsDto> getUserNewsDtoPage = getPageByRecommend(current);
+                if (CollUtil.isNotEmpty(getUserNewsDtoPage.getRecords()))
+                    for (int i = 0; i < getUserNewsDtoPage.getRecords().size(); i++) {
+                        newMap.put(i, getUserNewsDtoPage.getRecords().get(i));
+                    }
+                return result;
+            }
+            Integer mapSize = newMap.size();
+            // 从剩余文章中随机选择一篇
+            Integer randomIndex = random.nextInt(mapSize);
+            for (int i = 0; i < 10; i++) {
+                randomIndex = addResult(randomIndex, result, mapSize);
             }
         }
-        if (newMap.isEmpty()) {
-            current++;
-            // 所有文章都已显示过，重置已显示文章集合并重新随机化所有文章
-            Page<GetUserNewsDto> getUserNewsDtoPage = getPageByRecommend(current);
-            if (CollUtil.isNotEmpty(getUserNewsDtoPage.getRecords()))
-                for (int i = 0; i < getUserNewsDtoPage.getRecords().size(); i++) {
-                    newMap.put(i, getUserNewsDtoPage.getRecords().get(i));
-                }
-            return result;
-        }
-        Integer mapSize = newMap.size();
-        // 从剩余文章中随机选择一篇
-        Integer randomIndex = random.nextInt(mapSize);
-        for (int i = 0; i < 10; i++) {
-            randomIndex = addResult(randomIndex, result, mapSize);
-        }
+
         return result;
     }
 
@@ -110,6 +115,14 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
         List<String> filePathList = Arrays.asList(news.getImageUrl().split(","));
         filePathList.addAll(Arrays.asList(news.getViewUrl().split(",")));
         fileCache.delFiles(filePathList, newId);
+    }
+
+    @Override
+    public void updateStatus(Integer status, Long newId) {
+        News news = new News();
+        news.setNewId(newId);
+        news.setStatus(status);
+        updateById(news);
     }
 
 

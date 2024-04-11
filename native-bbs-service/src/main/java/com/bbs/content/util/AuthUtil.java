@@ -1,6 +1,9 @@
 package com.bbs.content.util;
 
-import cn.hutool.http.*;
+import cn.hutool.http.HttpException;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
+import cn.hutool.http.HttpStatus;
 import cn.hutool.json.JSONUtil;
 import com.bbs.Result;
 import lombok.AllArgsConstructor;
@@ -12,8 +15,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -27,13 +30,13 @@ public class AuthUtil {
     public static class UserAPI {
 
         @Value("${auth.api.verify.path}")
-        private static String verifyApi;
+        private String verifyApi;
 
         @Value("${auth.api.verify.token}")
-        private static String verifyKey;
+        private String verifyKey;
 
         @Value("${auth.api.verify.timeout}")
-        private static Integer verifyTimeout;
+        private Integer verifyTimeout;
 
         @Value("${auth.host}")
         private String host;
@@ -42,7 +45,10 @@ public class AuthUtil {
         private HttpServletRequest request;
 
         public User getLoginUser() {
-            String token = request.getHeader(verifyKey);
+            return getLoginUser(request.getHeader(verifyKey));
+        }
+
+        public User getLoginUser(String token) {
             if(isNotBlank(token)) {
                 String serverHost = host + verifyApi;
                 try {

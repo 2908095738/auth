@@ -44,6 +44,10 @@ public class RabbitmqConfig {
     public static final String QUEUE_FOLLOW = "queue_follow";
     //取消关注
     public static final String QUEUE_UNFOLLOW = "queue_unfollow";
+    //审核通过
+    public static final String QUEUE_PASS_AUDIT = "queue_audit";
+    //审核不通过
+    public static final String QUEUE_NO_PASS_AUDIT = "queue_no_pass_audit";
     //注册
     public static final String USER_REGISTER_EVENT_QUEUE = "event-user-register-topic-queue";
 
@@ -66,6 +70,10 @@ public class RabbitmqConfig {
     public static final String ROUTINGKEY_FOLLOW = "follow";
     //取消关注
     public static final String ROUTINGKEY_UNFOLLOW = "unfollow";
+    //审核通过
+    public static final String ROUTINGKEY_PASS_AUDIT = "pass_audit";
+    //审核不通过
+    public static final String ROUTINGKEY_NO_PASS_AUDIT = "no_pass_audit";
     //注册
     public static final String ROUTINGKEY_EVENT_USER_REGISTER = "event.user.register";
 
@@ -143,6 +151,17 @@ public class RabbitmqConfig {
         return new Queue(USER_REGISTER_EVENT_QUEUE);
     }
 
+    //审核通过
+    @Bean(QUEUE_PASS_AUDIT)
+    public Queue QUEUE_PASS_AUDIT() {
+        return new Queue(QUEUE_PASS_AUDIT);
+    }
+    //审核不通过
+    @Bean(QUEUE_NO_PASS_AUDIT)
+    public Queue QUEUE_NO_PASS_AUDIT() {
+        return new Queue(QUEUE_NO_PASS_AUDIT);
+    }
+
     /**
      * 队列绑定交换机，指定routingKey
      */
@@ -207,6 +226,19 @@ public class RabbitmqConfig {
         return BindingBuilder.bind(queue).to(exchange).with(ROUTINGKEY_EVENT_USER_REGISTER).noargs();
     }
 
+    //审核通过
+    @Bean
+    public Binding BINDING_QUEUE_PASS_AUDIT(@Qualifier(QUEUE_PASS_AUDIT) Queue queue,
+                                          @Qualifier(EXCHANGE_TOPICS_CHAT_INFORM) Exchange exchange) {
+        return BindingBuilder.bind(queue).to(exchange).with(ROUTINGKEY_PASS_AUDIT).noargs();
+    }
+
+    //审核不通过
+    @Bean
+    public Binding BINDING_QUEUE_NO_PASS_AUDIT(@Qualifier(QUEUE_NO_PASS_AUDIT) Queue queue,
+                                                     @Qualifier(EXCHANGE_TOPICS_CHAT_INFORM) Exchange exchange) {
+        return BindingBuilder.bind(queue).to(exchange).with(ROUTINGKEY_NO_PASS_AUDIT).noargs();
+    }
 
 
 
