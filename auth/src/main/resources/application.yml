@@ -57,5 +57,3 @@ apache:
     max-retries: 5
     # 最大重试间隔时间
     max-sleep: 30000
-
-
