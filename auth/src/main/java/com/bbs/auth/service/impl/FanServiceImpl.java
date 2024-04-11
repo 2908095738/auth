@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.auth.entity.Fan;
 import com.bbs.auth.mapper.FanMapper;
 import com.bbs.auth.service.FanService;
+import com.bbs.auth.service.UserService;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionDefinition;
@@ -25,6 +27,10 @@ public class FanServiceImpl extends ServiceImpl<FanMapper, Fan> implements FanSe
     private TransactionDefinition transactionDefinition;
     @Resource
     private DataSourceTransactionManager transactionManager;
+
+    @Lazy
+    @Resource
+    private UserService userService;
 
     @Override
     public Boolean create(Fan fan) {
@@ -58,8 +64,8 @@ public class FanServiceImpl extends ServiceImpl<FanMapper, Fan> implements FanSe
     }
 
     @Override
-    public Boolean delFollow(Long uid, Long followUserID) {
-        return lambdaUpdate().set(Fan::getDeleteFlag,1).eq(Fan::getUserId, uid).eq(Fan::getFollowUserId, followUserID).update();
+    public void delFollow(Long uid, Long followUserID) {
+        lambdaUpdate().set(Fan::getDeleteFlag, 1).eq(Fan::getUserId, uid).eq(Fan::getFollowUserId, followUserID).update();
     }
 
 
@@ -72,6 +78,14 @@ public class FanServiceImpl extends ServiceImpl<FanMapper, Fan> implements FanSe
     @Override
     public List<Fan> getFan(Long userId) {
         return lambdaQuery().eq(Fan::getDeleteFlag,0).eq(Fan::getFollowUserId,userId).list();
+    }
+
+    @Override
+    public Boolean isFollow(Long followUserID) {
+        return lambdaQuery()
+                .eq(Fan::getDeleteFlag,0)
+                .eq(Fan::getUserId, userService.loginUser().getId())
+                .eq(Fan::getFollowUserId, followUserID).exists();
     }
 
     @Override

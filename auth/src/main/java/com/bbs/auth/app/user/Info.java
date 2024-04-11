@@ -32,6 +32,7 @@ public class Info {
     public Result<VO> info(@RequestParam Long id) {
         VO vo = converter.toInfoVO(service.search(id));
         vo.fanNumber = fanService.count(id);
+        vo.setIsFollow(fanService.isFollow(id));
         return Result.success(vo);
     }
 
@@ -58,5 +59,10 @@ public class Info {
          * 粉丝数量（关注人数）
          */
         private Long fanNumber;
+
+        /**
+         * 登录用户是否关注了当前用户
+         */
+        private Boolean isFollow;
     }
 }
