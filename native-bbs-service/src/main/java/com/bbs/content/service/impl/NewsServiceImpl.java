@@ -143,8 +143,8 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
                 .setStatus(NewCommentStatus.WAIT_FOR_REVIEW.getCode())
                 .setUpdateId(news.getCreateId())
                 .setDeleteFlag(0);
-        news.setImageUrl(String.join(",",param.getImageUrl()));
-        news.setViewUrl(String.join(",",param.getViewUrl()));
+        news.setImageUrl(String.join(",",param.getImageUrlList()));
+        news.setViewUrl(String.join(",",param.getViewUrlList()));
         updateById(news);
         return news;
     }
@@ -153,10 +153,6 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
     public Page<GetContentDto> getListByQuery(QueryNewsParam param) {
         return selectJoinListPage(new Page<>(param.getCurrent(), param.getSize()), GetContentDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
-                .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
-                .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
-                .selectCollection(NewTag.class, GetUserNewsDto::getTagIds, o -> o.result(NewTag::getTagId))
-                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
                 .like(StringUtils.isNotBlank(param.getTitle()), News::getTitle, param.getTitle())
                 .in(CollUtil.isNotEmpty(param.getTagIds()), NewTag::getTagId, param.getTagIds())
                 .eq(News::getDeleteFlag, 0)
@@ -177,10 +173,10 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
     public Page<GetContentDto> getListByUserId(Long userId, Integer current, Integer size, boolean flag) {
         return selectJoinListPage(new Page<>(current, size), GetContentDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
-                .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
-                .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
-                .selectCollection(NewTag.class, GetUserNewsDto::getTagIds, o -> o.result(NewTag::getTagId))
-                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
+//                .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
+//                .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
+//                .selectCollection(NewTag.class, GetUserNewsDto::getTagIds, o -> o.result(NewTag::getTagId))
+//                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
                 .orderBy(true, false, News::getCreateTime)
                 .eq(News::getCreateId, userId)
                 .eq(News::getDeleteFlag, 0)
@@ -203,10 +199,10 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
     private Page<GetContentDto> getPageByRecommend(Integer current) {
         return selectJoinListPage(new Page<>(current, 50), GetContentDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
-                .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
-                .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
-                .selectCollection(NewTag.class, GetUserNewsDto::getTagIds, o -> o.result(NewTag::getTagId))
-                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
+//                .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
+//                .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
+//                .selectCollection(NewTag.class, GetUserNewsDto::getTagIds, o -> o.result(NewTag::getTagId))
+//                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
                 .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
                 .eq(News::getDeleteFlag, 0)
                 .orderBy(true, false, News::getCreateTime)
@@ -235,10 +231,10 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
     public Page<GetContentDto> getListByFollower(Long userId, Integer current, Integer size) {
         return selectJoinListPage(new Page<>(current, size), GetContentDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
-                .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
-                .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
-                .selectCollection(NewTag.class, GetUserNewsDto::getTagIds, o -> o.result(NewTag::getTagId))
-                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
+//                .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
+//                .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
+//                .selectCollection(NewTag.class, GetUserNewsDto::getTagIds, o -> o.result(NewTag::getTagId))
+//                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
                 .eq(News::getDeleteFlag, 0)
                 .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
                 .leftJoin(Fan.class, Fan::getUserId, News::getCreateId)

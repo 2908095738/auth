@@ -30,8 +30,8 @@ public class NewsCacheImpl implements NewsCache {
     public void create(Long newId, CreateNewParam param) {
         Long currentUserId = ThreadLocalUtil.getCurrentUserId();
         int size = 0;
-        if(CollUtil.isNotEmpty(param.getImageUrl()))size = size + param.getImageUrl().size();
-        if(CollUtil.isNotEmpty(param.getViewUrl()))size = size + param.getViewUrl().size();
+        if(CollUtil.isNotEmpty(param.getImageUrlList()))size = size + param.getImageUrlList().size();
+        if(CollUtil.isNotEmpty(param.getViewUrlList()))size = size + param.getViewUrlList().size();
         //添加到待审核内容列表
         redis.hashSet(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.AUDIT_FILE_SIZE.key()+newId,size+"");
         redis.hashSet(RedisKeys.AUDIT_USERID_NEWS.key(), newId.toString(), currentUserId.toString());

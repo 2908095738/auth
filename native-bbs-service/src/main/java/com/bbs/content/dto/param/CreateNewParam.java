@@ -56,12 +56,12 @@ public class CreateNewParam {
     /**
      * 图片
      */
-    private List<String> imageUrl;
+    private List<String> imageUrlList;
 
     /**
      * 视频
      */
-    private List<String> viewUrl;
+    private List<String> viewUrlList;
 
 
 
