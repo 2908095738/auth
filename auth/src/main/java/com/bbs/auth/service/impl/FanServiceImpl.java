@@ -1,7 +1,6 @@
 package com.bbs.auth.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.bbs.auth.app.follow.DelFollow;
 import com.bbs.auth.entity.Fan;
 import com.bbs.auth.mapper.FanMapper;
 import com.bbs.auth.service.FanService;
@@ -73,6 +72,11 @@ public class FanServiceImpl extends ServiceImpl<FanMapper, Fan> implements FanSe
     @Override
     public List<Fan> getFan(Long userId) {
         return lambdaQuery().eq(Fan::getDeleteFlag,0).eq(Fan::getFollowUserId,userId).list();
+    }
+
+    @Override
+    public Long count(Long userId) {
+        return lambdaQuery().eq(Fan::getDeleteFlag,0).eq(Fan::getFollowUserId,userId).count();
     }
 }
 

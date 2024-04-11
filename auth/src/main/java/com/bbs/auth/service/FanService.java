@@ -1,7 +1,6 @@
 package com.bbs.auth.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.bbs.auth.app.follow.DelFollow;
 import com.bbs.auth.entity.Fan;
 
 import java.util.List;
@@ -23,4 +22,6 @@ public interface FanService extends IService<Fan> {
      * @return 关注了 userID 的用户
      */
     List<Fan> getFan(Long userId);
+
+    Long count(Long userId);
 }
