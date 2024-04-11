@@ -84,7 +84,6 @@ public class FileCacheImpl implements FileCache {
     @Override
     public void delAuditFiles(List<String> fileLocalPathList, Long newId) {
         //删除redis
-        redisUtil.delHash(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.NEW.key()+newId);
         redisUtil.delHash(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.AUDIT_FILE_SIZE.key()+newId);
     }
 

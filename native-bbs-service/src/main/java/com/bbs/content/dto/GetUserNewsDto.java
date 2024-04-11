@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.bbs.content.util.AuthUtil;
 import lombok.Data;
 
 import java.util.Date;
@@ -110,6 +111,8 @@ public class GetUserNewsDto {
     @TableField(exist = false)
     private Page<CommentByNewIdDto> commentByNewIdDtoList;
 
+    @TableField(exist = false)
+    private AuthUtil.UserAPI.User user;
 
     /**
      * 评论列表实体

@@ -88,8 +88,6 @@ public class ContentController {
                 param.getTagIds().addAll(newIds);
                 newTagService.createByNew(param.getNewId(), param.getTagIds());
             }
-            // 计算内容分数
-
             newsCache.create(news.getNewId(),param);
             transactionManager.commit(transaction);
             return Result.success();
@@ -196,10 +194,12 @@ public class ContentController {
      */
     @GetMapping
     public Result<GetUserNewsDto> getOneById(@NotNull(message = "内容id不能为空！") Long newId,
-                                             @NotNull(message = "页数不能为空！") Integer current,
-                                             @NotNull(message = "每页几条不能为空！") Integer size) {
+                                             @NotNull(message = "评论页数不能为空！") Integer current,
+                                             @NotNull(message = "评论每页几条不能为空！") Integer size) {
         GetUserNewsDto result = newsService.getOneById(newId);
         if (Objects.nonNull(result)) {
+            AuthUtil.UserAPI.User currentUser = ThreadLocalUtil.getCurrentUser();
+            result.setUser(currentUser);
             result.setLikeCount(thumbCache.countBy(result.getNewId(), null, null, 1));
             Page<GetUserNewsDto.CommentByNewIdDto> list = commentService.getPageByNewId(newId, current, size);
             result.setCommentByNewIdDtoList(list);
