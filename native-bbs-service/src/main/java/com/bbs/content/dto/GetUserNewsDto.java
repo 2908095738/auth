@@ -48,6 +48,13 @@ public class GetUserNewsDto {
     @TableField(value = "ip")
     private String ip;
 
+
+    /**
+     * 地址
+     */
+    @TableField(value = "addr")
+    private String addr;
+
     /**
      * 评论数
      */

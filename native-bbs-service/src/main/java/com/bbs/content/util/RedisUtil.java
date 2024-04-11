@@ -128,4 +128,7 @@ public class RedisUtil {
         protoStuffTemplate.opsForHash().delete(key, hashKey);
     }
 
+    public void hashIntr(String key, String hashKey, Integer v) {
+        protoStuffTemplate.opsForHash().increment(key,hashKey,v);
+    }
 }

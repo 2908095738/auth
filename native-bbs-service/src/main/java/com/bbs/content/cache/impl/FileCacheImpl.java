@@ -66,10 +66,34 @@ public class FileCacheImpl implements FileCache {
     }
 
     @Override
-    public void delFiles(List<String> fileLocalPathList, Long newId) {
+    public void delAllFiles(List<String> filePathList, Long newId) {
         String json = (String)redisUtil.hashGet(RedisKeys.AUDIT_NEW_FIlE.key(), RedisKeys.NEW.key()+newId.toString());
         Map<String,String> map = StringUtils.isBlank(json)? new HashMap<>(): JSONUtil.toBean(json, HashMap.class);
-        fileLocalPathList.forEach(localPath->{
+        filePathList.forEach(localPath->{
+            String orDefault = map.getOrDefault(localPath, null);
+            if(StringUtils.isNotEmpty(orDefault)){
+                //删除本地文件
+                FileUtils.delteFile(orDefault);
+            }
+        });
+        //刷新redis
+        redisUtil.delHash(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.NEW.key()+newId);
+        redisUtil.delHash(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.AUDIT_FILE_SIZE.key()+newId);
+    }
+
+    @Override
+    public void delAuditFiles(List<String> fileLocalPathList, Long newId) {
+        //删除redis
+        redisUtil.delHash(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.NEW.key()+newId);
+        redisUtil.delHash(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.AUDIT_FILE_SIZE.key()+newId);
+    }
+
+
+    @Override
+    public void delFiles(List<String> filePathList, Long newId) {
+        String json = (String)redisUtil.hashGet(RedisKeys.AUDIT_NEW_FIlE.key(), RedisKeys.NEW.key()+newId.toString());
+        Map<String,String> map = StringUtils.isBlank(json)? new HashMap<>(): JSONUtil.toBean(json, HashMap.class);
+        filePathList.forEach(localPath->{
             String orDefault = map.getOrDefault(localPath, null);
             if(StringUtils.isNotEmpty(orDefault)){
                 //删除本地文件
@@ -80,9 +104,8 @@ public class FileCacheImpl implements FileCache {
         });
         //刷新redis
         redisUtil.hashSet(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.NEW.key()+newId, JSON.toJSONString(map));
+        redisUtil.hashIntr(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.AUDIT_FILE_SIZE.key()+newId,-1);
     }
-
-
 
     @Override
     public List<AuditNewDto> getAuditFile() {
@@ -116,6 +139,7 @@ public class FileCacheImpl implements FileCache {
         }
         return result;
     }
+
 
     @Resource
     public void setRedisUtil(RedisUtil redisUtil) {

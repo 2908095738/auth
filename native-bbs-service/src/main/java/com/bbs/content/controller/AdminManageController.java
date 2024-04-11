@@ -59,7 +59,7 @@ public class AdminManageController {
     @PostMapping("/content")
     public Result<Boolean> putAuditStatus(@RequestBody PutAuditStatusParam param){
         //删除文件
-        fileCache.delFiles(param.getFileLocalPathList(),param.getNewId());
+        fileCache.delAuditFiles(param.getFileLocalPathList(),param.getNewId());
         //修改状态
         newsService.updateStatus(param.getStatus(),param.getNewId());
         //发通知

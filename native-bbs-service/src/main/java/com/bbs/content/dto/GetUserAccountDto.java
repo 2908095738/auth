@@ -133,7 +133,7 @@ public class GetUserAccountDto {
      * 文章列表
      */
     @TableField(exist = false)
-    private Page<GetUserNewsDto> newsResult;
+    private Page<GetContentDto> newsResult;
 
 
 }

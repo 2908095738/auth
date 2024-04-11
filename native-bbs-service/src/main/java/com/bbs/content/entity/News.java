@@ -11,14 +11,13 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 文章内容
+ * 内容表
  * @TableName news
  */
 @TableName(value ="news")
 @Data
 @Accessors(chain = true)
 public class News implements Serializable {
-
     /**
      * 主键
      */
@@ -60,6 +59,12 @@ public class News implements Serializable {
      */
     @TableField(value = "ip")
     private String ip;
+
+    /**
+     * 地址
+     */
+    @TableField(value = "addr")
+    private String addr;
 
     /**
      * 评论数

@@ -10,7 +10,7 @@ import com.bbs.content.dto.param.DelFollowParam;
 import com.bbs.content.entity.Fan;
 import com.bbs.content.mq.RabbitmqConfig;
 import com.bbs.content.mq.RabbitmqSend;
-import com.bbs.content.cache.FanService;
+import com.bbs.content.service.FanService;
 import com.bbs.content.util.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;

@@ -2,6 +2,7 @@ package com.bbs.content.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.bbs.content.dto.GetContentDto;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.param.CreateNewParam;
 import com.bbs.content.dto.param.QueryNewsParam;
@@ -18,15 +19,15 @@ public interface NewsService extends IService<News> {
     News createNews(CreateNewParam param);
 
 
-    Page<GetUserNewsDto> getListByQuery(QueryNewsParam param);
+    Page<GetContentDto> getListByQuery(QueryNewsParam param);
 
-    Page<GetUserNewsDto> getListByUserId(Long userId, Integer current, Integer size, boolean flag);
+    Page<GetContentDto> getListByUserId(Long userId, Integer current, Integer size, boolean flag);
 
     GetUserNewsDto getOneById(Long newId);
 
-    List<GetUserNewsDto> getListByRecommend();
+    List<GetContentDto> getListByRecommend();
 
-    Page<GetUserNewsDto> getListByFollower(Long userIds, Integer current, Integer size);
+    Page<GetContentDto> getListByFollower(Long userIds, Integer current, Integer size);
 
     Long createNewsId(Long createId, String userName);
 

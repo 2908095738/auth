@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.content.cache.NewsCache;
 import com.bbs.content.cache.ThumbCache;
+import com.bbs.content.dto.GetContentDto;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.param.CreateNewParam;
+import com.bbs.content.dto.param.QueryNewsParam;
 import com.bbs.content.entity.News;
 import com.bbs.content.service.CommentService;
 import com.bbs.content.service.NewContentService;
@@ -99,6 +101,17 @@ public class ContentController {
     }
 
 
+    /**
+     * 条件查询内容
+     */
+    @GetMapping("/query")
+    public Result<Page<GetContentDto>> getQueryNews(@Valid QueryNewsParam param){
+        Page<GetContentDto> result = newsService.getListByQuery(param);
+        if(isNotEmpty(result.getRecords()))
+            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
+        return Result.success(result);
+    }
+
 
     /**
      * 删除内容
@@ -118,9 +131,9 @@ public class ContentController {
      * @return Page<GetUserAccountDto.GetUserNewsDto>
      */
     @GetMapping("/follower")
-    public Result<Page<GetUserNewsDto>> getFollowerNews(@NotNull(message = "页数不能为空！") Integer current,
+    public Result<Page<GetContentDto>> getFollowerNews(@NotNull(message = "页数不能为空！") Integer current,
                                                         @NotNull(message = "每页几条不能为空！") Integer size) {
-        Page<GetUserNewsDto> result = newsService.getListByFollower(ThreadLocalUtil.getCurrentUser().getId(), current, size);
+        Page<GetContentDto> result = newsService.getListByFollower(ThreadLocalUtil.getCurrentUser().getId(), current, size);
         if(isNotEmpty(result.getRecords()))
             result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
         return Result.success(result);
@@ -138,11 +151,11 @@ public class ContentController {
      * @return Page<GetUserAccountDto.GetUserNewsDto>
      */
     @GetMapping("/user")
-    public Result<Page<GetUserNewsDto>> getAccountNews(@NotNull(message = "用户id不能为空！") Long userId,
+    public Result<Page<GetContentDto>> getAccountNews(@NotNull(message = "用户id不能为空！") Long userId,
                                                        @NotNull(message = "页数不能为空！") Integer current,
                                                        @NotNull(message = "每页几条不能为空！") Integer size,
                                                        @NotNull(message = "是否为此用户属性值不能为空！") Boolean flag) {
-        Page<GetUserNewsDto> newsResult = newsService.getListByUserId(userId, current, size, flag);
+        Page<GetContentDto> newsResult = newsService.getListByUserId(userId, current, size, flag);
         if(isNotEmpty(newsResult.getRecords()))
             newsResult.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
         return Result.success(newsResult);
@@ -155,10 +168,10 @@ public class ContentController {
      * @return Page<GetUserAccountDto.GetUserNewsDto>
      */
     @GetMapping("/recommend")
-    public Result<List<GetUserNewsDto>> getRecommendNews() {
-        List<GetUserNewsDto> result = newsService.getListByRecommend();
-//        if(isNotEmpty(result))
-//            result.forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
+    public Result<List<GetContentDto>> getRecommendNews() {
+        List<GetContentDto> result = newsService.getListByRecommend();
+        if(isNotEmpty(result))
+            result.forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
         return Result.success(result);
     }
 
@@ -168,9 +181,9 @@ public class ContentController {
      * 查询热门内容
      */
     @GetMapping("/hot")
-    public Result<List<GetUserNewsDto>> getHotNews() {
+    public Result<List<GetContentDto>> getHotNews() {
         //TODO
-        List<GetUserNewsDto> newsResult = newsCache.getHot();
+        List<GetContentDto> newsResult = newsCache.getHot();
         return Result.success(newsResult);
     }
 
