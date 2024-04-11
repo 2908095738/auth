@@ -10,7 +10,9 @@ import com.bbs.content.enums.NewCommentStatus;
 import com.bbs.content.mq.RabbitmqConfig;
 import com.bbs.content.mq.RabbitmqSend;
 import com.bbs.content.service.NewsService;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,7 +43,9 @@ public class AdminManageController {
     }
 
     @Data
-    private class PutAuditStatusParam{
+    @AllArgsConstructor
+    @NoArgsConstructor
+    private static class PutAuditStatusParam{
         private Integer status;
         private List<String> fileLocalPathList;
         private Long newId;
