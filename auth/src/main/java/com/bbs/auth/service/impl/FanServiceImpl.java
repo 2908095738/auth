@@ -2,15 +2,19 @@ package com.bbs.auth.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.auth.app.follow.DelFollow;
-import com.bbs.auth.app.follow.Follow;
-import com.bbs.auth.converter.FanConverter;
 import com.bbs.auth.entity.Fan;
 import com.bbs.auth.mapper.FanMapper;
 import com.bbs.auth.service.FanService;
+import org.apache.commons.lang3.math.NumberUtils;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionException;
+import org.springframework.transaction.TransactionStatus;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -18,16 +22,45 @@ import java.util.List;
 @Service
 public class FanServiceImpl extends ServiceImpl<FanMapper, Fan> implements FanService {
 
-    private FanConverter fanConverter;
+    @Resource
+    private TransactionDefinition transactionDefinition;
+    @Resource
+    private DataSourceTransactionManager transactionManager;
 
     @Override
-        public Boolean create(Follow.Param param) {
-            return save(fanConverter.toEntity(param));
+    public Boolean create(Fan fan) {
+        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
+        try {
+            List<Fan> list = lambdaQuery().eq(Fan::getUserId, fan.getUserId()).eq(Fan::getFollowUserId, fan.getFollowUserId()).list();
+            if(list == null || list.size() == 0) {
+                return save(fan);
+            } else {
+                if(list.size() == 1) {
+                    Long id = list.get(NumberUtils.INTEGER_ZERO).getId();
+                    return lambdaUpdate().set(Fan::getDeleteFlag, NumberUtils.INTEGER_ZERO).eq(Fan::getId, id).update();
+                } else {
+                    // 删除存量数据
+                    List<Long> needRemoveIds = list.subList(NumberUtils.INTEGER_ZERO, list.size() - 1)
+                            .stream().map(Fan::getId).collect(Collectors.toList());
+                    Fan last = list.get(list.size() - NumberUtils.INTEGER_ONE);
+                    if(removeByIds(needRemoveIds) && lambdaUpdate().set(Fan::getDeleteFlag, NumberUtils.INTEGER_ZERO).eq(Fan::getId, last.getId()).update()) {
+                        transactionManager.commit(transaction);
+                        return true;
+                    } else {
+                        transactionManager.rollback(transaction);
+                        return false;
+                    }
+                }
+            }
+        } catch (TransactionException e) {
+            transactionManager.rollback(transaction);
+            throw new RuntimeException(e);
         }
+    }
 
     @Override
-    public Boolean delFollow(DelFollow.Param param) {
-        return lambdaUpdate().set(Fan::getDeleteFlag,1).eq(Fan::getUserId,param.getUserId()).eq(Fan::getFollowUserId,param.getFollowUserId()).update();
+    public Boolean delFollow(Long uid, Long followUserID) {
+        return lambdaUpdate().set(Fan::getDeleteFlag,1).eq(Fan::getUserId, uid).eq(Fan::getFollowUserId, followUserID).update();
     }
 
 
@@ -40,12 +73,6 @@ public class FanServiceImpl extends ServiceImpl<FanMapper, Fan> implements FanSe
     @Override
     public List<Fan> getFan(Long userId) {
         return lambdaQuery().eq(Fan::getDeleteFlag,0).eq(Fan::getFollowUserId,userId).list();
-    }
-
-
-    @Resource
-    public void setFanConverter(FanConverter fanConverter) {
-        this.fanConverter = fanConverter;
     }
 }
 

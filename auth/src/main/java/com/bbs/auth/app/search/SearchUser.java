@@ -1,5 +1,6 @@
 package com.bbs.auth.app.search;
 
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.auth.app.login.util.Util;
@@ -86,8 +87,8 @@ public class SearchUser {
                 .selectAssociation(Fan.class, User::getFan)
                 .leftJoin(Fan.class, on -> on
                         .eq(Fan::getDeleteFlag, NumberUtils.INTEGER_ZERO)
-                        .eq(Fan::getUserId, User::getId)
-                        .eq(Fan::getFollowUserId, loginUser.getId())
+                        .eq(Fan::getUserId, loginUser.getId())
+                        .eq(Fan::getFollowUserId, User::getId)
                 )
                 .like(!Util.isNumber(val), User::getName, val)
                 .eq(nonNull(numVal), User::getPhone, numVal)
@@ -100,7 +101,7 @@ public class SearchUser {
             vo.setIsFollow(nonNull(user.getFan()));
             return vo;
         }).collect(Collectors.toList());
-        log.debug("[SearchUser::search] loginUser={}; page={}; vos={}", loginUser, page, vos);
+        log.debug("[SearchUser::search] loginUser={}; page={}; vos={}", loginUser, JSONUtil.toJsonStr(page), vos);
         return success(new Page<VO>(page.getCurrent(), page.getSize(), page.getTotal()).setRecords(vos));
     }
 }

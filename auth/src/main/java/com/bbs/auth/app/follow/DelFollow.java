@@ -3,7 +3,10 @@ package com.bbs.auth.app.follow;
 import com.alibaba.fastjson.JSON;
 import com.bbs.Result;
 import com.bbs.auth.conf.RabbitmqConfig;
+import com.bbs.auth.converter.FanConverter;
+import com.bbs.auth.entity.Fan;
 import com.bbs.auth.service.FanService;
+import com.bbs.auth.service.UserService;
 import com.bbs.auth.util.MQUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -30,24 +33,17 @@ public class DelFollow {
     @Resource
     private DataSourceTransactionManager transactionManager;
 
+    @Resource
+    private FanConverter fanConverter;
+    @Resource
+    private UserService userService;
+
     @Data
     public static class Param {
-
-        /**
-         * 账号id
-         */
-        private Long userId;
-
         /**
          * 关注账号id
          */
         private Long followUserId;
-
-        /**
-         * 删除状态：0未删除  1已删除
-         */
-        private Integer deleteFlag = 1;
-
     }
 
     /**
@@ -55,14 +51,15 @@ public class DelFollow {
      */
     @DeleteMapping("/follow")
     public Result<Boolean> del(@RequestBody @Valid Param param){
+        Long loginUID = userService.loginUser().getId();
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            fanService.delFollow(param);
+            fanService.delFollow(loginUID, param.followUserId);
             //发通知
             mq.send(
                     RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM,
                     RabbitmqConfig.ROUTINGKEY_UNFOLLOW,
-                    JSON.toJSONString(new com.bbs.auth.event.mq.Follow(param))
+                    JSON.toJSONString(fanConverter.toMQ(new Fan(loginUID, param.followUserId)))
             );
             transactionManager.commit(transaction);
             return Result.success();

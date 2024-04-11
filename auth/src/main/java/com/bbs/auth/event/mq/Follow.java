@@ -27,17 +27,4 @@ public class Follow implements Serializable {
      * 创建时间
      */
     private Date createTime;
-
-
-    public Follow(com.bbs.auth.app.follow.Follow.Param param) {
-        this.userId = param.getUserId();
-        this.followUserId = param.getFollowUserId();
-        this.createTime = new Date();
-    }
-
-    public Follow(DelFollow.Param param) {
-        this.userId = param.getUserId();
-        this.followUserId = param.getFollowUserId();
-        this.createTime = new Date();
-    }
 }

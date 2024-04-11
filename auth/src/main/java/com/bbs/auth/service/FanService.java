@@ -2,7 +2,6 @@ package com.bbs.auth.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.bbs.auth.app.follow.DelFollow;
-import com.bbs.auth.app.follow.Follow;
 import com.bbs.auth.entity.Fan;
 
 import java.util.List;
@@ -12,9 +11,9 @@ import java.util.List;
  */
 public interface FanService extends IService<Fan> {
 
-    Boolean create(Follow.Param param);
+    Boolean create(Fan fan);
 
-    Boolean delFollow(DelFollow.Param param);
+    Boolean delFollow(Long uid, Long followUserID);
 
     List<Fan> getFollow(Long userId);
 

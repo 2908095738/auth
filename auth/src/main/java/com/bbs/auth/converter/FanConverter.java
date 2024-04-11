@@ -9,4 +9,6 @@ import org.mapstruct.Mapper;
 public interface FanConverter {
     Fan toEntity(Follow.Param param);
     Fan toEntity(DelFollow.Param param);
+
+    com.bbs.auth.event.mq.Follow toMQ(Fan fan);
 }
