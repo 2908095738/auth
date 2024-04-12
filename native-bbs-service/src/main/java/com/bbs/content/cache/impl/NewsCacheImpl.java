@@ -19,10 +19,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class NewsCacheImpl implements NewsCache {
-
+    @Resource
     private NewsService newsService;
 
     @Resource
@@ -81,9 +83,29 @@ public class NewsCacheImpl implements NewsCache {
         return null;
     }
 
-
-    @Resource
-    public void setNewsService(NewsService newsService) {
-        this.newsService = newsService;
+    @Override
+    public Integer intrVisit(Long newId) {
+        return redis.incr(RedisKeys.CONTENT_VISIT_NUN_INCR.key() + newId, 1);
     }
+
+    @Override
+    public Map<Long,Integer> getVisit(List<Long> newIds) {
+        Map<Long, Integer> result = new HashMap<>();
+        List<String> redisKeys = newIds.stream().map(o -> RedisKeys.CONTENT_VISIT_NUN_INCR.key() + o).collect(Collectors.toList());
+
+        List<String> visitList = redis.mget(redisKeys);
+        List<Integer> visit = CollUtil.isEmpty(visitList) ? new ArrayList<Integer>() : visitList.stream().map(o->{
+            if(Objects.nonNull(o)){
+                return Integer.parseInt(o);
+            }
+            return null;
+        }).collect(Collectors.toList());
+
+        for (int i = 0; i < visit.size(); i++) {
+            result.put(newIds.get(i),visit.get(i));
+        }
+        return result;
+    }
+
+
 }

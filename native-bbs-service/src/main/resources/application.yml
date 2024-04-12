@@ -85,4 +85,6 @@ auth:
       path: /verify
       token: authorization
       timeout: 10000
-
+    search:
+      id: /server/
+      list: /server/list

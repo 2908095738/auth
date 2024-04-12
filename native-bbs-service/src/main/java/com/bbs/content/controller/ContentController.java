@@ -33,7 +33,9 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static cn.hutool.core.collection.CollUtil.isNotEmpty;
 
@@ -56,6 +58,7 @@ public class ContentController {
     private TagService tagService;
     private TransactionDefinition transactionDefinition;
     private DataSourceTransactionManager transactionManager;
+    private AuthUtil.UserAPI api;
 
 
     /**
@@ -105,8 +108,13 @@ public class ContentController {
     @GetMapping("/query")
     public Result<Page<GetContentDto>> getQueryNews(@Valid QueryNewsParam param){
         Page<GetContentDto> result = newsService.getListByQuery(param);
-        if(isNotEmpty(result.getRecords()))
-            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
+        if(isNotEmpty(result.getRecords())) {
+            Map<Long, AuthUtil.UserAPI.VO> collect = api.getUserList(result.getRecords().stream().map(GetContentDto::getCreateId).collect(Collectors.toList())).stream().collect(Collectors.toMap(o1 -> o1.getId(), o2 -> o2));
+            result.getRecords().forEach(o ->{
+                o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1));
+                o.setUser(collect.get(o.getCreateId()));
+            });
+        }
         return Result.success(result);
     }
 
@@ -132,8 +140,13 @@ public class ContentController {
     public Result<Page<GetContentDto>> getFollowerNews(@NotNull(message = "页数不能为空！") Integer current,
                                                         @NotNull(message = "每页几条不能为空！") Integer size) {
         Page<GetContentDto> result = newsService.getListByFollower(ThreadLocalUtil.getCurrentUser().getId(), current, size);
-        if(isNotEmpty(result.getRecords()))
-            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
+        if(isNotEmpty(result.getRecords())){
+            Map<Long, AuthUtil.UserAPI.VO> collect = api.getUserList(result.getRecords().stream().map(GetContentDto::getCreateId).collect(Collectors.toList())).stream().collect(Collectors.toMap(o1 -> o1.getId(), o2 -> o2));
+            result.getRecords().forEach(o ->{
+                o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1));
+                o.setUser(collect.get(o.getCreateId()));
+            });
+        }
         return Result.success(result);
     }
 
@@ -154,7 +167,13 @@ public class ContentController {
                                                        @NotNull(message = "每页几条不能为空！") Integer size,
                                                        @NotNull(message = "是否为此用户属性值不能为空！") Boolean flag) {
         Page<GetContentDto> newsResult = newsService.getListByUserId(userId, current, size, flag);
-        if(isNotEmpty(newsResult.getRecords()))
+        if(isNotEmpty(newsResult.getRecords())){
+            Map<Long, AuthUtil.UserAPI.VO> collect = api.getUserList(newsResult.getRecords().stream().map(GetContentDto::getCreateId).collect(Collectors.toList())).stream().collect(Collectors.toMap(o1 -> o1.getId(), o2 -> o2));
+            newsResult.getRecords().forEach(o ->{
+                o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1));
+                o.setUser(collect.get(o.getCreateId()));
+            });
+        }
             newsResult.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
         return Result.success(newsResult);
     }
@@ -168,8 +187,15 @@ public class ContentController {
     @GetMapping("/recommend")
     public Result<List<GetContentDto>> getRecommendNews() {
         List<GetContentDto> result = newsService.getListByRecommend();
-        if(isNotEmpty(result))
-            result.forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
+        if(isNotEmpty(result)) {
+            Map<Long, AuthUtil.UserAPI.VO> collect = api.getUserList(result.stream().map(GetContentDto::getCreateId).collect(Collectors.toList())).stream().collect(Collectors.toMap(o1 -> o1.getId(), o2 -> o2));
+            Map<Long, Integer> visitMap = newsCache.getVisit(result.stream().map(GetContentDto::getNewId).collect(Collectors.toList()));
+            result.forEach(o -> {
+                o.setUser(collect.get(o.getCreateId()));
+                o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1));
+                o.setVisitNum(visitMap.getOrDefault(o.getNewId(), 0));
+            });
+        }
         return Result.success(result);
     }
 
@@ -198,18 +224,21 @@ public class ContentController {
                                              @NotNull(message = "评论每页几条不能为空！") Integer size) {
         GetUserNewsDto result = newsService.getOneById(newId);
         if (Objects.nonNull(result)) {
-            AuthUtil.UserAPI.User currentUser = ThreadLocalUtil.getCurrentUser();
-            result.setUser(currentUser);
+            AuthUtil.UserAPI.VO userByid = api.getUserByid(result.getCreateId());
+            result.setUser(userByid);
             result.setLikeCount(thumbCache.countBy(result.getNewId(), null, null, 1));
             Page<GetUserNewsDto.CommentByNewIdDto> list = commentService.getPageByNewId(newId, current, size);
             result.setCommentByNewIdDtoList(list);
+            //访问量加1
+            Integer visitNum = newsCache.intrVisit(newId);
+            result.setVisitNum(visitNum);
         }
         return Result.success(result);
     }
 
 
     @Autowired
-    public ContentController(NewsService newsService, NewsCache newsCache, ThumbCache thumbCache, CommentService commentService, NewContentService newContentService, NewTagService newTagService, TagService tagService, TransactionDefinition transactionDefinition, DataSourceTransactionManager transactionManager) {
+    public ContentController(NewsService newsService, NewsCache newsCache, ThumbCache thumbCache, CommentService commentService, NewContentService newContentService, NewTagService newTagService, TagService tagService, TransactionDefinition transactionDefinition, DataSourceTransactionManager transactionManager, AuthUtil.UserAPI api) {
         this.newsService = newsService;
         this.newsCache = newsCache;
         this.thumbCache = thumbCache;
@@ -219,5 +248,6 @@ public class ContentController {
         this.tagService = tagService;
         this.transactionDefinition = transactionDefinition;
         this.transactionManager = transactionManager;
+        this.api = api;
     }
 }

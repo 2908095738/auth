@@ -3,6 +3,7 @@ package com.bbs.content.dto;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.bbs.content.util.AuthUtil;
 import lombok.Data;
 
 import java.util.Date;
@@ -61,6 +62,12 @@ public class GetContentDto {
     private Integer likeCount;
 
     /**
+     * 浏览数
+     */
+    @TableField(exist = false)
+    private Integer visitNum;
+
+    /**
      * 创建id
      */
     @TableField(value = "create_id")
@@ -78,7 +85,8 @@ public class GetContentDto {
     @TableField(value = "update_time")
     private Date updateTime;
 
-
+    @TableField(exist = false)
+    private AuthUtil.UserAPI.VO user;
 
 
 

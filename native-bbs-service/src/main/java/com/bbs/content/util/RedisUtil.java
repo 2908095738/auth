@@ -72,8 +72,18 @@ public class RedisUtil {
         return protoStuffTemplate.opsForValue().get(key);
     }
 
-    public void incr(String key, Integer v){
-        protoStuffTemplate.opsForValue().increment(key, v);
+    public List<String> mget(List<String> keys) {
+        return protoStuffTemplate.opsForValue().multiGet(keys);
+    }
+
+    public Integer incr(String key, Integer v){
+        Long increment = protoStuffTemplate.opsForValue().increment(key, v);
+        return increment.intValue();
+    }
+
+    public Integer decr(String key, Integer v){
+        Long increment = protoStuffTemplate.opsForValue().decrement(key, v);
+        return increment.intValue();
     }
 
     /**
@@ -112,7 +122,7 @@ public class RedisUtil {
         return protoStuffTemplate.opsForHash().entries(key);
     }
 
-    public List<Object> hashGet(String key, Collection<Object> hashKeys) {
+    public List<Object> mhashGet(String key, Collection<Object> hashKeys) {
         return protoStuffTemplate.opsForHash().multiGet(key, hashKeys);
     }
 

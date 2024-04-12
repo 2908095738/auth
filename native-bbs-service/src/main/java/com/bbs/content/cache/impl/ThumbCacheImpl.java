@@ -94,7 +94,7 @@ public class ThumbCacheImpl implements ThumbCache {
             delThumb(RedisKeys.NEW_THUMB_COMMENT.key() + param.getNewId(),RedisKeys.COMMENT_THUMB.key()+param.getCommentId(),param.getUserId());
         }
         //用户总点赞数-1
-        redis.incr(RedisKeys.USER_THUMB.key() + param.getPostUserId(),-1);
+        redis.decr(RedisKeys.USER_THUMB.key() + param.getPostUserId(),1);
     }
 
     /**

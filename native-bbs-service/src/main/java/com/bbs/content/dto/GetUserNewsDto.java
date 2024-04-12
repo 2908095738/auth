@@ -5,12 +5,16 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.content.util.AuthUtil;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 import java.util.List;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class GetUserNewsDto {
 
     /**
@@ -75,6 +79,12 @@ public class GetUserNewsDto {
     private Integer likeCount;
 
     /**
+     * 浏览数
+     */
+    @TableField(exist = false)
+    private Integer visitNum;
+
+    /**
      * 创建id
      */
     @TableField(value = "create_id")
@@ -112,13 +122,15 @@ public class GetUserNewsDto {
     private Page<CommentByNewIdDto> commentByNewIdDtoList;
 
     @TableField(exist = false)
-    private AuthUtil.UserAPI.User user;
+    private AuthUtil.UserAPI.VO user;
 
     /**
      * 评论列表实体
      */
     @Data
-    public class CommentByNewIdDto{
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class CommentByNewIdDto{
 
         /**
          *

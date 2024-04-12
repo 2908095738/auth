@@ -115,6 +115,12 @@ public class News implements Serializable {
     private Date updateTime;
 
     /**
+     * 浏览数
+     */
+    @TableField(value = "visit_num")
+    private Integer visitNum;
+
+    /**
      * 排序
      */
     @TableField(value = "sort")

@@ -25,6 +25,8 @@ public enum RedisKeys {
     AUDIT_NEW_FIlE("audit_new_file:", "用户的待审核图片or视频"),
     NEW("NEW_id_", "内容id"),
     AUDIT_FILE_SIZE("audit_file_size:", "待审核内容中的文件数量"),
+    CONTENT_VISIT_NUN_INCR("content_visit_nun:incr:", "发布内容访问量"),
+
     ;
 
     private final String prefix;
