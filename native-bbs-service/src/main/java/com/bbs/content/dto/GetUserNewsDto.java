@@ -121,7 +121,7 @@ public class GetUserNewsDto {
     public class CommentByNewIdDto{
 
         /**
-         *
+         * 评论ID
          */
         @TableId(value = "id", type = IdType.AUTO)
         private Long id;
@@ -139,7 +139,17 @@ public class GetUserNewsDto {
         private Integer likeCount;
 
         /**
-         * 评论内容
+         * 自己（当前登录用户）是否点赞了
+         */
+        private Boolean hasLike;
+
+        /**
+         * 能不能删除该评论（创建人是当前用户 or 当前用户为管理员）
+         */
+        private Boolean owner;
+
+        /**
+         * 内容
          */
         @TableField(value = "content")
         private String content;
@@ -157,17 +167,26 @@ public class GetUserNewsDto {
         private String ip;
 
         /**
-         * 评论人id
+         * 评论者id
          */
         @TableField(value = "create_id")
         private Long createId;
+
+        /**
+         * 评论者昵称
+         */
+        private String nickName;
+
+        /**
+         * 评论者头像地址
+         */
+        private String avatarUrl;
 
         /**
          * 创建时间
          */
         @TableField(value = "create_time")
         private Date createTime;
-
     }
 
 }
