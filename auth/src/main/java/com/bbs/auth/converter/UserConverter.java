@@ -8,6 +8,8 @@ import com.bbs.auth.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface UserConverter {
 
@@ -18,6 +20,8 @@ public interface UserConverter {
     UserVO toVO(User entity);
 
     SearchUser.VO toSearchUserVO(User entity);
+
+    List<SearchUser.VO> toSearchUserVO(List<User> userList);
 
     Info.VO toInfoVO(User entity);
 }

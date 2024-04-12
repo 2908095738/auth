@@ -27,7 +27,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Date;
+import java.util.*;
 
 import static com.bbs.Result.success;
 import static com.bbs.auth.cache.user.UserCache.cacheIsExists;
@@ -154,6 +154,25 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
             user = db.searchByID(id);
         }
         return user;
+    }
+
+    @Override
+    public List<User> search(List<Long> ids) {
+        List<User> users = cache.get(ids);
+        List<Long> cacheIsEmptyUserIds = new ArrayList<>(ids.size());
+        List<Integer> cacheIsEmptyUserIndexList = new ArrayList<>(ids.size());
+        for (int index = 0; index < users.size(); index++) {
+            User user = users.get(index);
+            if(isNull(user)) {
+                cacheIsEmptyUserIds.add(ids.get(index));
+                cacheIsEmptyUserIndexList.add(index);
+            }
+        }
+        List<User> cacheIsEmptyUser = listByIds(cacheIsEmptyUserIds);
+        for (int index = 0; index < cacheIsEmptyUser.size(); index++) {
+            users.set(cacheIsEmptyUserIndexList.get(index), cacheIsEmptyUser.get(index));
+        }
+        return users;
     }
 
     @Override

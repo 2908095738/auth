@@ -34,10 +34,6 @@ public class RedisUtil {
         return redis.hasKey(key);
     }
 
-    public Boolean notExists(String key) {
-        return !exists(key);
-    }
-
     /**
      * 通过键删除一个值
      *
@@ -107,6 +103,9 @@ public class RedisUtil {
 
     public void multiSet(Map<String, String> map) {
         redis.opsForValue().multiSet(map);
+    }
+    public List<String> multiGet(List<String> keys) {
+        return redis.opsForValue().multiGet(keys);
     }
 
     /**

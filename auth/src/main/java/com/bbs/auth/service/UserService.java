@@ -8,6 +8,8 @@ import com.bbs.entity.UserVO;
 import com.bbs.exception.ReLoginException;
 import com.github.yulichang.base.MPJBaseService;
 
+import java.util.List;
+
 /**
 * @author Lenovo
 * @description 针对表【user】的数据库操作Service
@@ -83,4 +85,11 @@ public interface UserService extends MPJBaseService<User> {
     User searchByPhone(String phone);
 
     User search(Long id);
+
+    /**
+     * 批量查询
+     * @param ids ID
+     * @return 存在，则占位为 null
+     */
+    List<User> search(List<Long> ids);
 }

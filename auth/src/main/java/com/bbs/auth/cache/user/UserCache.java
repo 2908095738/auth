@@ -1,6 +1,7 @@
 package com.bbs.auth.cache.user;
 
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.json.JSONUtil;
 import com.bbs.auth.conf.UserCacheConf;
 import com.bbs.auth.dao.UserDao;
 import com.bbs.auth.entity.User;
@@ -20,7 +21,9 @@ import org.springframework.web.client.RestClientException;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static cn.hutool.json.JSONUtil.toJsonPrettyStr;
 import static com.bbs.auth.enums.RedisKeys.*;
@@ -79,6 +82,13 @@ public class UserCache {
 
     public User get(Long uid) {
         return redis.get(USER.key(uid), User.class);
+    }
+
+    public List<User> get(List<Long> ids) {
+        List<String> idStrList = ids.stream().map(USER::key).collect(Collectors.toList());
+        return redis.multiGet(idStrList)
+                .stream().map(str -> nonNull(str) ? JSONUtil.toBean(str, User.class) : null)
+                .collect(Collectors.toList());
     }
 
     @Retryable(value = RestClientException.class, backoff = @Backoff(delay = 5000L, multiplier = 2))

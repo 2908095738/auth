@@ -17,14 +17,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -73,9 +68,9 @@ public class SearchUser {
 
     @GetMapping("/list")
     public Result<Page<VO>> search(
-            @NotEmpty @RequestParam("val") String val,
-            @NotNull @RequestParam("current") Integer current,
-            @NotNull @RequestParam("size") Integer size
+            @RequestParam("val") String val,
+            @RequestParam("current") Integer current,
+            @RequestParam("size") Integer size
     ) throws ReLoginException {
         Long numVal = null;
         if(Util.isNumber(val)) {
@@ -103,5 +98,18 @@ public class SearchUser {
         }).collect(Collectors.toList());
         log.debug("[SearchUser::search] loginUser={}; page={}; vos={}", loginUser, JSONUtil.toJsonStr(page), vos);
         return success(new Page<VO>(page.getCurrent(), page.getSize(), page.getTotal()).setRecords(vos));
+    }
+
+    @GetMapping("/server/list")
+    public Result<List<VO>> search(
+            @RequestParam("ids") List<Long> ids
+    ) {
+        return success(converter.toSearchUserVO(service.search(ids)));
+    }
+
+
+    @GetMapping("/server/{id}")
+    public Result<VO> search(@PathVariable(value="id") Long id) {
+        return success(converter.toSearchUserVO(service.search(id)));
     }
 }
