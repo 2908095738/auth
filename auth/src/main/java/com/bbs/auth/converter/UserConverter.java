@@ -3,6 +3,7 @@ package com.bbs.auth.converter;
 import com.bbs.auth.app.register.Register;
 import com.bbs.auth.app.search.SearchUser;
 import com.bbs.auth.app.user.Info;
+import com.bbs.auth.app.user.Me;
 import com.bbs.entity.UserVO;
 import com.bbs.auth.entity.User;
 import org.mapstruct.Mapper;
@@ -24,4 +25,6 @@ public interface UserConverter {
     List<SearchUser.VO> toSearchUserVO(List<User> userList);
 
     Info.VO toInfoVO(User entity);
+
+    Me.VO toMeVO(User entity);
 }

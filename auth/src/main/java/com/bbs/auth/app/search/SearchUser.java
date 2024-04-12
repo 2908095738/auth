@@ -8,6 +8,7 @@ import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.entity.Fan;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.mapper.UserMapper;
+import com.bbs.auth.service.FanService;
 import com.bbs.auth.service.UserService;
 import com.bbs.entity.UserVO;
 import com.bbs.exception.ReLoginException;
@@ -40,6 +41,9 @@ public class SearchUser {
     @Resource
     private UserMapper mapper;
 
+    @Resource
+    private FanService fanService;
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -61,7 +65,7 @@ public class SearchUser {
         private String avatar;
 
         /**
-         * 是否关注了当前登录用户
+         * 当前用户是否关注了该 vo 用户
          */
         private Boolean isFollow;
     }
@@ -104,7 +108,9 @@ public class SearchUser {
     public Result<List<VO>> search(
             @RequestParam("ids") List<Long> ids
     ) {
-        return success(converter.toSearchUserVO(service.search(ids)));
+        List<VO> vos = converter.toSearchUserVO(service.search(ids));
+        fanService.fillFollowStatus(ids, vos);
+        return success(vos);
     }
 
 

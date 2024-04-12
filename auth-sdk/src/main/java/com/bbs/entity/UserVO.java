@@ -23,6 +23,11 @@ public class UserVO {
 
     private Long failureTokenTime;
 
+    /**
+     * 图片 URL 地址
+     */
+    private String avatar;
+
     public UserVO(Long id, String name, String email, String phone) {
         this.id = id;
         this.name = name;

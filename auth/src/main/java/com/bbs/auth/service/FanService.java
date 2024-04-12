@@ -1,6 +1,7 @@
 package com.bbs.auth.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.bbs.auth.app.search.SearchUser;
 import com.bbs.auth.entity.Fan;
 
 import java.util.List;
@@ -31,4 +32,6 @@ public interface FanService extends IService<Fan> {
      * @return 是否关注了目标用户
      */
     Boolean isFollow(Long followUserID);
+
+    void fillFollowStatus(List<Long> ids, List<SearchUser.VO> fillObjs);
 }

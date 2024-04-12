@@ -6,6 +6,9 @@ import com.bbs.auth.service.TokenService;
 import com.bbs.auth.service.UserService;
 import com.bbs.entity.UserVO;
 import com.bbs.exception.ReLoginException;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -16,7 +19,6 @@ import static com.bbs.Result.success;
 @RestController
 @RequestMapping
 public class Me {
-
 
     @Resource
     private TokenService tokenService;
@@ -31,9 +33,33 @@ public class Me {
      * 当前用户个人信息
      */
     @GetMapping
-    public Result<UserVO> me(HttpServletRequest request) throws ReLoginException {
+    public Result<VO> me(HttpServletRequest request) throws ReLoginException {
         String token = tokenService.getToken(request);
         UserVO vo = tokenService.verify(token);
-        return success(converter.toVO(service.search(vo.getId())));
+        return success(converter.toMeVO(service.search(vo.getId())));
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class VO {
+
+        private Long id;
+
+        private String name;
+
+        private String email;
+
+        private String phone;
+
+        /**
+         * 账号状态
+         */
+        private Integer state;
+
+        /**
+         * 图片 URL 地址
+         */
+        private String avatar;
     }
 }

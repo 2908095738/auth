@@ -16,6 +16,7 @@ public interface TokenService {
 
     UserVO parseToken(String token);
 
+
     String createToken(User user);
     /**
      * 设置登录标识
