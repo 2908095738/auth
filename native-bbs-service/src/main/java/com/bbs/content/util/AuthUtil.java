@@ -151,6 +151,10 @@ public class AuthUtil {
         public static class User {
 
             private Long id;
+            /**
+             * 头像 URL 地址
+             */
+            private String avatar;
 
             private String name;
 
@@ -161,6 +165,8 @@ public class AuthUtil {
             private String token;
 
             private Long failureTokenTime;
+
+
         }
 
 

@@ -124,6 +124,8 @@ public class GetUserNewsDto {
     @TableField(exist = false)
     private AuthUtil.UserAPI.VO user;
 
+    @TableField(exist = false)
+    private boolean thisUser = false;
     /**
      * 评论列表实体
      */

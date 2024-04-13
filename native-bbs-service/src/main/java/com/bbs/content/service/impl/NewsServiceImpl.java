@@ -186,6 +186,11 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
     }
 
 
+    public List<GetContentDto> getHot(){
+        return null;
+    }
+
+
     /**
      * 查询推荐页上的内容简要信息
      *

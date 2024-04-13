@@ -222,6 +222,7 @@ public class ContentController {
     public Result<GetUserNewsDto> getOneById(@NotNull(message = "内容id不能为空！") Long newId,
                                              @NotNull(message = "评论页数不能为空！") Integer current,
                                              @NotNull(message = "评论每页几条不能为空！") Integer size) {
+        Long currentUserId = ThreadLocalUtil.getCurrentUserId();
         GetUserNewsDto result = newsService.getOneById(newId);
         if (Objects.nonNull(result)) {
             AuthUtil.UserAPI.VO userByid = api.getUserByid(result.getCreateId());
@@ -229,6 +230,7 @@ public class ContentController {
             result.setLikeCount(thumbCache.countBy(result.getNewId(), null, null, 1));
             Page<GetUserNewsDto.CommentByNewIdDto> list = commentService.getPageByNewId(newId, current, size);
             result.setCommentByNewIdDtoList(list);
+            result.setThisUser(Objects.equals(currentUserId, result.getCreateId()));
             //访问量加1
             Integer visitNum = newsCache.intrVisit(newId);
             result.setVisitNum(visitNum);
