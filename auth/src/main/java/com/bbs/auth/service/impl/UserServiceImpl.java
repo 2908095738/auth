@@ -3,31 +3,34 @@ package com.bbs.auth.service.impl;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Opt;
-import com.bbs.auth.app.verify.VerifyLogin;
+import cn.hutool.crypto.SecureUtil;
+import com.bbs.auth.cache.user.PhoneCache;
+import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.dao.UserDao;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.Result;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.param.UserParam;
 import com.bbs.auth.mapper.UserMapper;
+import com.bbs.auth.service.TokenService;
 import com.bbs.auth.service.UserService;
 import com.bbs.entity.UserVO;
 import com.bbs.enums.UserStateEnum;
 import com.bbs.exception.BusinessException;
 import com.bbs.exception.ReLoginException;
+import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Date;
+import java.util.*;
 
 import static com.bbs.Result.success;
+import static com.bbs.auth.cache.user.UserCache.cacheIsExists;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
@@ -38,10 +41,18 @@ import static java.util.Objects.nonNull;
 */
 @Slf4j
 @Service
-public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implements UserService {
 
     @Resource
-    private UserDao dao;
+    private UserDao db;
+
+    @Lazy
+    @Resource
+    private PhoneCache phoneCache;
+
+    @Lazy
+    @Resource
+    private UserCache cache;
 
     @Override
     public Boolean userStateIsNormal(User user) { return UserStateEnum.STATUS_NORMAL.getCode().equals(user.getState()); }
@@ -70,20 +81,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Resource
     @Lazy
-    private VerifyLogin verifyLogin;
+    private TokenService tokenService;
 
-    @Value("${jwt.name}")
-    private String tokenName;
 
     @Override
     public UserVO loginUser() throws ReLoginException {
-        String token = request.getHeader(tokenName);
+
+        String token = tokenService.getToken(request);
         if(StringUtils.isNotBlank(token)) {
             try {
-                Result<UserVO> result = verifyLogin.verify(new VerifyLogin.UserTokenVerifyParam(token));
-                if(nonNull(result.getData()))
-                    return verifyLogin.verify(new VerifyLogin.UserTokenVerifyParam(token)).getData();
-            } catch (InterruptedException e) {
+                return tokenService.parseToken(token);
+            } catch (Exception e) {
                 throw new ReLoginException();
             }
         }
@@ -107,6 +115,64 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setName(phone.toString());
         if(!save(user)) throw new BusinessException("通过手机号注册用户失败");
         return user;
+    }
+
+    @Override
+    public String encryptPassword(User user) {
+        return encryptPassword(user.getPassword(), user.getSalt());
+    }
+
+    @Override
+    public String encryptPassword(String pwd, Integer salt) {
+        return SecureUtil.md5(pwd + salt);
+    }
+
+    @Override
+    public Boolean updatePasswordByID(String password, Long id) {
+        return lambdaUpdate().set(User::getPassword, password).eq(User::getId, id).update();
+    }
+
+    @Override
+    public User searchByPhone(String phone) {
+        User user;
+        Long uid = phoneCache.get(Long.valueOf(phone));
+        if(cacheIsExists(uid)) {
+            user = cache.get(uid);
+            if(isNull(user)) {
+                user = db.searchByID(uid);
+            }
+        } else {
+            user = db.selectByPhone(phone);
+        }
+        return user;
+    }
+
+    @Override
+    public User search(Long id) {
+        User user = cache.get(id);
+        if(isNull(user)) {
+            user = db.searchByID(id);
+        }
+        return user;
+    }
+
+    @Override
+    public List<User> search(List<Long> ids) {
+        List<User> users = cache.get(ids);
+        List<Long> cacheIsEmptyUserIds = new ArrayList<>(ids.size());
+        List<Integer> cacheIsEmptyUserIndexList = new ArrayList<>(ids.size());
+        for (int index = 0; index < users.size(); index++) {
+            User user = users.get(index);
+            if(isNull(user)) {
+                cacheIsEmptyUserIds.add(ids.get(index));
+                cacheIsEmptyUserIndexList.add(index);
+            }
+        }
+        List<User> cacheIsEmptyUser = listByIds(cacheIsEmptyUserIds);
+        for (int index = 0; index < cacheIsEmptyUser.size(); index++) {
+            users.set(cacheIsEmptyUserIndexList.get(index), cacheIsEmptyUser.get(index));
+        }
+        return users;
     }
 
     @Override

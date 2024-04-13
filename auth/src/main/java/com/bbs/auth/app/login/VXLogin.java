@@ -1,12 +1,11 @@
 package com.bbs.auth.app.login;
 
-import com.bbs.auth.vx.GetAppID;
-import com.bbs.auth.vx.GetSecret;
-import com.bbs.auth.cache.TokenCache;
-import com.bbs.auth.cache.UserCache;
+import com.bbs.auth.api.vx.GetAppID;
+import com.bbs.auth.api.vx.GetSecret;
+import com.bbs.auth.cache.user.UserCache;
+import com.bbs.auth.cache.user.WXOpenIDCache;
 import com.bbs.auth.entity.User;
-import com.bbs.auth.vx.VXLoginAuthAPI;
-import com.bbs.entity.UserVO;
+import com.bbs.auth.api.vx.VXLoginAuthAPI;
 import com.bbs.auth.entity.VXUser;
 import com.bbs.auth.service.TokenService;
 import com.bbs.Result;
@@ -20,11 +19,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Resource;
+
 import static com.bbs.Result.failed;
 import static com.bbs.Result.success;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
-import static org.apache.logging.log4j.util.Strings.isNotBlank;
 
 @RestController
 @RequestMapping
@@ -32,13 +32,15 @@ public class VXLogin {
 
     private final UserCache cache;
 
+    @Resource
+    private WXOpenIDCache wxOpenIdCache;
+
     private final GetAppID getAppID;
 
     private final GetSecret getSecret;
 
-    private final TokenService tokenService;
-
-    private final TokenCache tokenCache;
+    @Resource
+    private TokenService tokenService;
 
     @Data
     @NoArgsConstructor
@@ -84,15 +86,15 @@ public class VXLogin {
         if(LoginType.PHONE.getCode().equals(param.type)) {
             checkArgument(isNoneBlank(param.phone) && param.phone.length() == 11);
             User user = cache.searchOrRegisterByPhone(param.phone);
-            String token = verifyAndExpireToken(user);
+            String token = tokenService.verifyAndExpireToken(user);
             return success(new VO(user.getId(), user.getName(), token));
 
         } else if (LoginType.WX.getCode().equals(param.type)){
             checkArgument(isNoneBlank(param.code));
             String openid = VXLoginAuthAPI.getInstance(getAppID.get(), getSecret.get()).auth(param.code).getOpenid();
             try {
-                VXUser vxUser = cache.searchByOpenID(openid);
-                String token = verifyAndExpireToken(vxUser);
+                VXUser vxUser = wxOpenIdCache.searchByOpenID(openid);
+                String token = tokenService.verifyAndExpireToken(vxUser);
                 return success(new VO(vxUser.getId(), vxUser.getName(), token));
             } catch (IllegalArgumentException e) {
                 return success(401, "微信未绑定账号，请绑定账号后重试");
@@ -101,24 +103,10 @@ public class VXLogin {
         return failed("登陆失败，请检查登录类型是否正确");
     }
 
-    private String verifyAndExpireToken(User user) {
-        String token = tokenCache.getToken(user.getId());
-        if(isNotBlank(token)) {
-            UserVO vo = tokenService.verify(token);
-            tokenCache.expireToken(vo.getId());
-        } else {
-            token = tokenService.createToken(user);
-            tokenCache.setToken(user.getId(), token);
-        }
-        return token;
-    }
-
     @Autowired
-    public VXLogin(UserCache cache, GetAppID getAppID, GetSecret getSecret, TokenService tokenService, TokenCache tokenCache) {
+    public VXLogin(UserCache cache, GetAppID getAppID, GetSecret getSecret) {
         this.cache = cache;
         this.getAppID = getAppID;
         this.getSecret = getSecret;
-        this.tokenService = tokenService;
-        this.tokenCache = tokenCache;
     }
 }

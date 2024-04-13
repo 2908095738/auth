@@ -10,7 +10,8 @@ import static java.util.Objects.nonNull;
 public enum LoginType {
 
     PHONE(0, "手机号"),
-    WX(1, "微信");
+    PASSWORD(1, "密码"),
+    WX(2, "微信");
 
     private final Integer code;
 
@@ -22,6 +23,6 @@ public enum LoginType {
      * @return 格式是否正确
      */
     public static Boolean checkFormat(Integer type) {
-        return nonNull(type) && type >= 0 && type <= 1;
+        return nonNull(type) && type >= 0 && type <= 2;
     }
 }

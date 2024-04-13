@@ -30,6 +30,10 @@ public class RedisUtil {
     @Resource(name = "protoStuffTemplate")
     private RedisTemplate<String, String> redis;
 
+    public Boolean exists(String key) {
+        return redis.hasKey(key);
+    }
+
     /**
      * 通过键删除一个值
      *
@@ -99,6 +103,9 @@ public class RedisUtil {
 
     public void multiSet(Map<String, String> map) {
         redis.opsForValue().multiSet(map);
+    }
+    public List<String> multiGet(List<String> keys) {
+        return redis.opsForValue().multiGet(keys);
     }
 
     /**
@@ -180,7 +187,9 @@ public class RedisUtil {
                 log.error("Redisson: 分布式锁，中断异常！！！key={}", lock.getName());
                 e.printStackTrace();
             }
-            if(lock.getHoldCount() > 0) forceUnlock(lock);  //出现异常后，依旧持有锁，则暴力解锁
+            if(lock.getHoldCount() > 0) {
+                forceUnlock(lock);  //出现异常后，依旧持有锁，则暴力解锁
+            }
             return function.get();  //再执行业务
         }
 
@@ -215,7 +224,9 @@ public class RedisUtil {
                 log.error("Redisson: 分布式锁，中断异常！！！key={}", lock.getName());
                 e.printStackTrace();
             }
-            if(lock.getHoldCount() > 0) forceUnlock(lock);
+            if(lock.getHoldCount() > 0) {
+                forceUnlock(lock);
+            }
             function.run();
         }
 
@@ -233,7 +244,46 @@ public class RedisUtil {
          * @param leaseTime 自动解锁时间
          * @param unit 时间单位
          */
-        public <R> R lockExec(Supplier<R> function, RLock lock, int waitTime, int leaseTime, TimeUnit unit) throws IllegalArgumentException {
+        public <R> R lockExec(Supplier<R> function, Supplier<R> errorExec, RLock lock, int waitTime, int leaseTime, TimeUnit unit) throws IllegalArgumentException, InterruptedException {
+            TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
+            try {
+                if(lock.tryLock(waitTime, leaseTime, unit)) {
+                    log.debug("Redisson: 获取锁 key={}", lock.getName());
+                    try {
+                        TimeInterval timer = DateUtil.timer();
+                        R result = function.get();
+                        transactionManager.commit(transaction);
+                        log.debug("Redisson: 分布式锁业务代码执行完成 key={}; 耗时（毫秒）={}", lock.getName(), timer.interval());
+                        timer.interval();
+                        return result;
+                    } finally {
+                        if(lock.isLocked()) {   //判断是否持有锁，并释放
+                            lock.unlock();
+                            log.debug("Redisson: 释放锁 key={}", lock.getName());
+                        }
+                    }
+                }
+            } catch (IllegalArgumentException | InterruptedException e){
+                throw e;  // 避开 lock 对参数检查异常的捕获
+            } catch (Exception e) {
+                transactionManager.rollback(transaction);
+                log.error("Redisson: 业务异常，触发回滚！！！");
+                e.printStackTrace();
+            }
+            if(lock.getHoldCount() > 0) {
+                forceUnlock(lock);  //依旧持有锁，则暴力解锁，再执行业务
+            }
+            try {
+                log.info("Redisson: 重试后无法获取锁，执行【异常后执行的方法】");
+                return errorExec.get();
+            } catch (Exception e) {
+                transactionManager.rollback(transaction);
+                log.error("Redisson: 异常后执行的方法，执行失败！");
+                throw new RuntimeException(e);
+            }
+        }
+
+        public <R> R lockAlwaysExec(Supplier<R> function, RLock lock, int waitTime, int leaseTime, TimeUnit unit) throws IllegalArgumentException {
             TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
             try {
                 if(lock.tryLock(waitTime, leaseTime, unit)) {
@@ -259,8 +309,17 @@ public class RedisUtil {
                 log.error("Redisson: 业务异常，触发回滚！！！");
                 e.printStackTrace();
             }
-            if(lock.getHoldCount() > 0) forceUnlock(lock);  //出现异常后，依旧持有锁，则暴力解锁，再执行业务
-            return function.get();
+            if(lock.getHoldCount() > 0) {
+                forceUnlock(lock);  //依旧持有锁，则暴力解锁，再执行业务
+            }
+            try {
+                log.info("Redisson: 重试后无法获取锁，直接执行...");
+                return function.get();
+            } catch (Exception e) {
+                transactionManager.rollback(transaction);
+                log.error("Redisson: 重试后无法获取锁，直接执行，执行异常！");
+                throw new RuntimeException(e);
+            }
         }
     }
 }

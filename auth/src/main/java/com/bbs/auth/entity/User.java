@@ -87,9 +87,36 @@ public class User implements Serializable {
     @TableField(value = "update_time")
     private Date updateTime;
 
+    /**
+     * 图片 URL 地址
+     */
+    @TableField(value = "avatar")
+    private String avatar;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
     @TableField(exist = false)
     private List<UserGroup> userGroupList;
+
+    /**
+     * 关注信息（当前实体用户，关注了当前登录用户）
+     */
+    @TableField(exist = false)
+    private Fan fan;
+
+    public User(Long id, String email, String name, String password, Long phone, Integer salt, Integer state, String stateStr, Date expirationTime, Date createTime, Date updateTime, List<UserGroup> userGroupList) {
+        this.id = id;
+        this.email = email;
+        this.name = name;
+        this.password = password;
+        this.phone = phone;
+        this.salt = salt;
+        this.state = state;
+        this.stateStr = stateStr;
+        this.expirationTime = expirationTime;
+        this.createTime = createTime;
+        this.updateTime = updateTime;
+        this.userGroupList = userGroupList;
+    }
 }
