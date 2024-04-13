@@ -4,12 +4,17 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.bbs.content.util.AuthUtil;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 import java.util.List;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class GetUserNewsDto {
 
     /**
@@ -48,6 +53,13 @@ public class GetUserNewsDto {
     @TableField(value = "ip")
     private String ip;
 
+
+    /**
+     * 地址
+     */
+    @TableField(value = "addr")
+    private String addr;
+
     /**
      * 评论数
      */
@@ -65,6 +77,12 @@ public class GetUserNewsDto {
      */
     @TableField(exist = false)
     private Integer likeCount;
+
+    /**
+     * 浏览数
+     */
+    @TableField(exist = false)
+    private Integer visitNum;
 
     /**
      * 创建id
@@ -103,15 +121,21 @@ public class GetUserNewsDto {
     @TableField(exist = false)
     private Page<CommentByNewIdDto> commentByNewIdDtoList;
 
+    @TableField(exist = false)
+    private AuthUtil.UserAPI.VO user;
 
+    @TableField(exist = false)
+    private boolean thisUser = false;
     /**
      * 评论列表实体
      */
     @Data
-    public class CommentByNewIdDto{
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class CommentByNewIdDto{
 
         /**
-         *
+         * 评论ID
          */
         @TableId(value = "id", type = IdType.AUTO)
         private Long id;
@@ -129,7 +153,17 @@ public class GetUserNewsDto {
         private Integer likeCount;
 
         /**
-         * 评论内容
+         * 自己（当前登录用户）是否点赞了
+         */
+        private Boolean hasLike;
+
+        /**
+         * 能不能删除该评论（创建人是当前用户 or 当前用户为管理员）
+         */
+        private Boolean owner;
+
+        /**
+         * 内容
          */
         @TableField(value = "content")
         private String content;
@@ -147,17 +181,26 @@ public class GetUserNewsDto {
         private String ip;
 
         /**
-         * 评论人id
+         * 评论者id
          */
         @TableField(value = "create_id")
         private Long createId;
+
+        /**
+         * 评论者昵称
+         */
+        private String nickName;
+
+        /**
+         * 评论者头像地址
+         */
+        private String avatarUrl;
 
         /**
          * 创建时间
          */
         @TableField(value = "create_time")
         private Date createTime;
-
     }
 
 }

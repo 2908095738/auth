@@ -49,24 +49,20 @@ public class CreateNewParam {
     private String ip;
 
     /**
+     * 地址
+     */
+    private String addr;
+
+    /**
      * 图片
      */
-    private String imageUrl;
+    private List<String> imageUrlList;
 
     /**
      * 视频
      */
-    private String viewUrl;
+    private List<String> viewUrlList;
 
-    /**
-     * 排序
-     */
-    private Integer sort;
-
-    /**
-     * 精华
-     */
-    private Integer essence;
 
 
 }

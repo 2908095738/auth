@@ -1,4 +1,4 @@
-package com.bbs.content.cache;
+package com.bbs.content.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.bbs.content.dto.param.CreateFollowParam;

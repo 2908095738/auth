@@ -2,14 +2,15 @@ package com.bbs.content.cache.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileTypeUtil;
+import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.TypeReference;
 import com.bbs.content.cache.FileCache;
 import com.bbs.content.dto.AuditNewDto;
 import com.bbs.content.dto.FileDto;
 import com.bbs.content.enums.RedisKeys;
 import com.bbs.content.util.FileUtils;
 import com.bbs.content.util.RedisUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.bbs.content.util.FileUtils.fileType;
-
+@Slf4j
 @Service
 public class FileCacheImpl implements FileCache {
 
@@ -59,16 +60,39 @@ public class FileCacheImpl implements FileCache {
     public void putAuditRedis(List<FileDto> auditFileList) {
         Long newId = auditFileList.get(0).getNewId();
         String json = (String)redisUtil.hashGet(RedisKeys.AUDIT_NEW_FIlE.key(), RedisKeys.NEW.key()+newId.toString());
-        Map<String,String> map = StringUtils.isBlank(json)? new HashMap<>(): JSON.parseObject(json, new TypeReference<Map<String,String>>(){});
+        Map<String,String> map = StringUtils.isBlank(json)? new HashMap<>(): JSONUtil.toBean(json, HashMap.class);
         map.putAll(auditFileList.stream().collect(Collectors.toMap(FileDto::getFileLocalPath, FileDto::getFilePath)));
         redisUtil.hashSet(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.NEW.key()+newId, JSON.toJSONString(map));
     }
 
     @Override
-    public void delFiles(List<String> fileLocalPathList, Long newId) {
+    public void delAllFiles(List<String> filePathList, Long newId) {
         String json = (String)redisUtil.hashGet(RedisKeys.AUDIT_NEW_FIlE.key(), RedisKeys.NEW.key()+newId.toString());
-        Map<String,String> map = StringUtils.isBlank(json)? new HashMap<>(): JSON.parseObject(json, new TypeReference<Map<String,String>>(){});
-        fileLocalPathList.forEach(localPath->{
+        Map<String,String> map = StringUtils.isBlank(json)? new HashMap<>(): JSONUtil.toBean(json, HashMap.class);
+        filePathList.forEach(localPath->{
+            String orDefault = map.getOrDefault(localPath, null);
+            if(StringUtils.isNotEmpty(orDefault)){
+                //删除本地文件
+                FileUtils.delteFile(orDefault);
+            }
+        });
+        //刷新redis
+        redisUtil.delHash(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.NEW.key()+newId);
+        redisUtil.delHash(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.AUDIT_FILE_SIZE.key()+newId);
+    }
+
+    @Override
+    public void delAuditFiles(List<String> fileLocalPathList, Long newId) {
+        //删除redis
+        redisUtil.delHash(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.AUDIT_FILE_SIZE.key()+newId);
+    }
+
+
+    @Override
+    public void delFiles(List<String> filePathList, Long newId) {
+        String json = (String)redisUtil.hashGet(RedisKeys.AUDIT_NEW_FIlE.key(), RedisKeys.NEW.key()+newId.toString());
+        Map<String,String> map = StringUtils.isBlank(json)? new HashMap<>(): JSONUtil.toBean(json, HashMap.class);
+        filePathList.forEach(localPath->{
             String orDefault = map.getOrDefault(localPath, null);
             if(StringUtils.isNotEmpty(orDefault)){
                 //删除本地文件
@@ -79,9 +103,8 @@ public class FileCacheImpl implements FileCache {
         });
         //刷新redis
         redisUtil.hashSet(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.NEW.key()+newId, JSON.toJSONString(map));
+        redisUtil.hashIntr(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.AUDIT_FILE_SIZE.key()+newId,-1);
     }
-
-
 
     @Override
     public List<AuditNewDto> getAuditFile() {
@@ -95,24 +118,27 @@ public class FileCacheImpl implements FileCache {
                 //例如：“audit_file_size:12”包含“audit_file_size:”
                 if(redisKey.toString().contains(RedisKeys.AUDIT_FILE_SIZE.key())){
                     //截取内容id
-                    String newId = redisKey.toString().split(":")[0];
+                    String newId = redisKey.toString().split(":")[1];
                     //获取数量
-                    Integer fileSize = (Integer) json.get(redisKey);
+                    int fileSize = Integer.parseInt((String) json.get(redisKey));
+
                     //拼接对应文件的key:
                     String filePathResult = (String) json.get(RedisKeys.NEW.key() + newId);
-                    Map<String,String> filePathMap = StringUtils.isBlank(filePathResult)? new HashMap<>(): JSON.parseObject(filePathResult, new TypeReference<Map<String,String>>(){});
+                    log.debug("filePathResult:"+filePathResult);
+                    Map<String,String> filePathMap = StringUtils.isBlank(filePathResult)? new HashMap<>(): JSONUtil.toBean(filePathResult, HashMap.class);
                     //判断文件数量是否一致
+                    log.debug("fileSize:"+fileSize);
                     if(fileSize == filePathMap.size()&&fileSize!=0){
-                        String userIdContent = (String) newContentMap.get(newId);
-                        //userIdContent格式：idUIDcontent
-                        String[] userIdContentArray = userIdContent.split("UID");
-                        result.add(new AuditNewDto(userIdContentArray[0],newId,userIdContentArray[1],new ArrayList<>(filePathMap.keySet())));
+                        String userId = (String) newContentMap.get(newId);
+                        //userId格式：idUID
+                        result.add(new AuditNewDto(userId,newId,new ArrayList<>(filePathMap.keySet())));
                     }
                 }
             });
         }
         return result;
     }
+
 
     @Resource
     public void setRedisUtil(RedisUtil redisUtil) {

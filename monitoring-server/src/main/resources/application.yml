@@ -2,22 +2,22 @@ spring:
   application:
     name: monitoring
   rabbitmq:
-    host: 127.0.0.1
-    port: 5672
-    virtual-host: /
     username: admin
-    password: admin
-    # 发送者开启 return 确认机制
-    publisher-returns: true
-    # 发送者开启 confirm 确认机制
-    publisher-confirm-type: correlated
+    password: shenbimaliang
+    addresses: 192.168.0.100:5672
+    virtual-host: bthost
+    connection-timeout: 15000
+    listener:
+      simple:
+        concurrency: 5 #并发
+        max-concurrency: 10 #最大并发
+        prefetch: 1 #每次发送一条消息
+        acknowledge-mode: manual #手动回复ack
 server:
   port: 7003
 logging:
   level:
     com.bbs.monitoring: debug
   file:
-    path: logs/
+    path: l ogs/monitor
   config: classpath:logback-spring.xml
-auth:
-  host: 192.168.100.6:7005

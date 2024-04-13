@@ -10,7 +10,7 @@ import com.bbs.content.dto.param.DelFollowParam;
 import com.bbs.content.entity.Fan;
 import com.bbs.content.mq.RabbitmqConfig;
 import com.bbs.content.mq.RabbitmqSend;
-import com.bbs.content.cache.FanService;
+import com.bbs.content.service.FanService;
 import com.bbs.content.util.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -49,6 +49,8 @@ public class FollowController {
     public Result<Boolean> createFollow(@RequestBody @Valid CreateFollowParam param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
+            Long userId = ThreadLocalUtil.getCurrentUserId();
+            param.setUserId(userId);
             fanService.create(param);
             //发通知
             rabbitmqSend.send(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM,RabbitmqConfig.ROUTINGKEY_FOLLOW, JSON.toJSONString(new MqFollowDto(

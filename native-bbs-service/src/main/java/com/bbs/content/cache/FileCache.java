@@ -11,7 +11,11 @@ public interface FileCache {
 
     void putAuditRedis(List<FileDto> auditFileList);
 
-    void delFiles(List<String> filePathList, Long newId);
+    void delAllFiles(List<String> filePathList, Long newId);
 
     List<AuditNewDto> getAuditFile();
+
+    void delFiles(List<String> filePathList, Long newId);
+
+    void delAuditFiles(List<String> fileLocalPathList, Long newId);
 }

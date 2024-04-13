@@ -6,7 +6,7 @@ import com.bbs.content.dto.param.CreateFollowParam;
 import com.bbs.content.dto.param.DelFollowParam;
 import com.bbs.content.entity.Fan;
 import com.bbs.content.mapper.FanMapper;
-import com.bbs.content.cache.FanService;
+import com.bbs.content.service.FanService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

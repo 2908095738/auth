@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.content.cache.NewsCache;
 import com.bbs.content.cache.ThumbCache;
+import com.bbs.content.dto.GetContentDto;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.param.CreateNewParam;
+import com.bbs.content.dto.param.QueryNewsParam;
 import com.bbs.content.entity.News;
 import com.bbs.content.service.CommentService;
 import com.bbs.content.service.NewContentService;
@@ -20,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -30,16 +33,20 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static cn.hutool.core.collection.CollUtil.isNotEmpty;
 
 /**
  * 文章/视频
  */
+
+@CrossOrigin(origins = "*")
 @RestController
-@RequestMapping("/news")
-public class NewController {
+@RequestMapping("/content")
+public class ContentController {
 
     private NewsService newsService;
     private NewsCache newsCache;
@@ -51,6 +58,7 @@ public class NewController {
     private TagService tagService;
     private TransactionDefinition transactionDefinition;
     private DataSourceTransactionManager transactionManager;
+    private AuthUtil.UserAPI api;
 
 
     /**
@@ -83,8 +91,6 @@ public class NewController {
                 param.getTagIds().addAll(newIds);
                 newTagService.createByNew(param.getNewId(), param.getTagIds());
             }
-            // 计算内容分数
-
             newsCache.create(news.getNewId(),param);
             transactionManager.commit(transaction);
             return Result.success();
@@ -95,6 +101,22 @@ public class NewController {
         return Result.failedNull();
     }
 
+
+    /**
+     * 条件查询内容
+     */
+    @GetMapping("/query")
+    public Result<Page<GetContentDto>> getQueryNews(@Valid QueryNewsParam param){
+        Page<GetContentDto> result = newsService.getListByQuery(param);
+        if(isNotEmpty(result.getRecords())) {
+            Map<Long, AuthUtil.UserAPI.VO> collect = api.getUserList(result.getRecords().stream().map(GetContentDto::getCreateId).collect(Collectors.toList())).stream().collect(Collectors.toMap(o1 -> o1.getId(), o2 -> o2));
+            result.getRecords().forEach(o ->{
+                o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1));
+                o.setUser(collect.get(o.getCreateId()));
+            });
+        }
+        return Result.success(result);
+    }
 
 
     /**
@@ -115,11 +137,16 @@ public class NewController {
      * @return Page<GetUserAccountDto.GetUserNewsDto>
      */
     @GetMapping("/follower")
-    public Result<Page<GetUserNewsDto>> getFollowerNews(@NotNull(message = "页数不能为空！") Integer current,
+    public Result<Page<GetContentDto>> getFollowerNews(@NotNull(message = "页数不能为空！") Integer current,
                                                         @NotNull(message = "每页几条不能为空！") Integer size) {
-        Page<GetUserNewsDto> result = newsService.getListByFollower(ThreadLocalUtil.getCurrentUser().getId(), current, size);
-        if(isNotEmpty(result.getRecords()))
-            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
+        Page<GetContentDto> result = newsService.getListByFollower(ThreadLocalUtil.getCurrentUser().getId(), current, size);
+        if(isNotEmpty(result.getRecords())){
+            Map<Long, AuthUtil.UserAPI.VO> collect = api.getUserList(result.getRecords().stream().map(GetContentDto::getCreateId).collect(Collectors.toList())).stream().collect(Collectors.toMap(o1 -> o1.getId(), o2 -> o2));
+            result.getRecords().forEach(o ->{
+                o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1));
+                o.setUser(collect.get(o.getCreateId()));
+            });
+        }
         return Result.success(result);
     }
 
@@ -135,12 +162,18 @@ public class NewController {
      * @return Page<GetUserAccountDto.GetUserNewsDto>
      */
     @GetMapping("/user")
-    public Result<Page<GetUserNewsDto>> getAccountNews(@NotNull(message = "用户id不能为空！") Long userId,
+    public Result<Page<GetContentDto>> getAccountNews(@NotNull(message = "用户id不能为空！") Long userId,
                                                        @NotNull(message = "页数不能为空！") Integer current,
                                                        @NotNull(message = "每页几条不能为空！") Integer size,
                                                        @NotNull(message = "是否为此用户属性值不能为空！") Boolean flag) {
-        Page<GetUserNewsDto> newsResult = newsService.getListByUserId(userId, current, size, flag);
-        if(isNotEmpty(newsResult.getRecords()))
+        Page<GetContentDto> newsResult = newsService.getListByUserId(userId, current, size, flag);
+        if(isNotEmpty(newsResult.getRecords())){
+            Map<Long, AuthUtil.UserAPI.VO> collect = api.getUserList(newsResult.getRecords().stream().map(GetContentDto::getCreateId).collect(Collectors.toList())).stream().collect(Collectors.toMap(o1 -> o1.getId(), o2 -> o2));
+            newsResult.getRecords().forEach(o ->{
+                o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1));
+                o.setUser(collect.get(o.getCreateId()));
+            });
+        }
             newsResult.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
         return Result.success(newsResult);
     }
@@ -152,10 +185,17 @@ public class NewController {
      * @return Page<GetUserAccountDto.GetUserNewsDto>
      */
     @GetMapping("/recommend")
-    public Result<List<GetUserNewsDto>> getRecommendNews() {
-        List<GetUserNewsDto> result = newsService.getListByRecommend();
-//        if(isNotEmpty(result))
-//            result.forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
+    public Result<List<GetContentDto>> getRecommendNews() {
+        List<GetContentDto> result = newsService.getListByRecommend();
+        if(isNotEmpty(result)) {
+            Map<Long, AuthUtil.UserAPI.VO> collect = api.getUserList(result.stream().map(GetContentDto::getCreateId).collect(Collectors.toList())).stream().collect(Collectors.toMap(o1 -> o1.getId(), o2 -> o2));
+            Map<Long, Integer> visitMap = newsCache.getVisit(result.stream().map(GetContentDto::getNewId).collect(Collectors.toList()));
+            result.forEach(o -> {
+                o.setUser(collect.get(o.getCreateId()));
+                o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1));
+                o.setVisitNum(visitMap.getOrDefault(o.getNewId(), 0));
+            });
+        }
         return Result.success(result);
     }
 
@@ -165,9 +205,9 @@ public class NewController {
      * 查询热门内容
      */
     @GetMapping("/hot")
-    public Result<List<GetUserNewsDto>> getHotNews() {
+    public Result<List<GetContentDto>> getHotNews() {
         //TODO
-        List<GetUserNewsDto> newsResult = newsCache.getHot();
+        List<GetContentDto> newsResult = newsCache.getHot();
         return Result.success(newsResult);
     }
 
@@ -180,20 +220,27 @@ public class NewController {
      */
     @GetMapping
     public Result<GetUserNewsDto> getOneById(@NotNull(message = "内容id不能为空！") Long newId,
-                                             @NotNull(message = "页数不能为空！") Integer current,
-                                             @NotNull(message = "每页几条不能为空！") Integer size) {
+                                             @NotNull(message = "评论页数不能为空！") Integer current,
+                                             @NotNull(message = "评论每页几条不能为空！") Integer size) {
+        Long currentUserId = ThreadLocalUtil.getCurrentUserId();
         GetUserNewsDto result = newsService.getOneById(newId);
         if (Objects.nonNull(result)) {
+            AuthUtil.UserAPI.VO userByid = api.getUserByid(result.getCreateId());
+            result.setUser(userByid);
             result.setLikeCount(thumbCache.countBy(result.getNewId(), null, null, 1));
             Page<GetUserNewsDto.CommentByNewIdDto> list = commentService.getPageByNewId(newId, current, size);
             result.setCommentByNewIdDtoList(list);
+            result.setThisUser(Objects.equals(currentUserId, result.getCreateId()));
+            //访问量加1
+            Integer visitNum = newsCache.intrVisit(newId);
+            result.setVisitNum(visitNum);
         }
         return Result.success(result);
     }
 
 
     @Autowired
-    public NewController(NewsService newsService, NewsCache newsCache, ThumbCache thumbCache, CommentService commentService, NewContentService newContentService, NewTagService newTagService, TagService tagService, TransactionDefinition transactionDefinition, DataSourceTransactionManager transactionManager) {
+    public ContentController(NewsService newsService, NewsCache newsCache, ThumbCache thumbCache, CommentService commentService, NewContentService newContentService, NewTagService newTagService, TagService tagService, TransactionDefinition transactionDefinition, DataSourceTransactionManager transactionManager, AuthUtil.UserAPI api) {
         this.newsService = newsService;
         this.newsCache = newsCache;
         this.thumbCache = thumbCache;
@@ -203,5 +250,6 @@ public class NewController {
         this.tagService = tagService;
         this.transactionDefinition = transactionDefinition;
         this.transactionManager = transactionManager;
+        this.api = api;
     }
 }

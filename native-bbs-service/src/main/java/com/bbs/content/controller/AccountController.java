@@ -4,8 +4,8 @@ package com.bbs.content.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.content.cache.ThumbCache;
+import com.bbs.content.dto.GetContentDto;
 import com.bbs.content.dto.GetUserAccountDto;
-import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.service.NewsService;
 import com.bbs.content.service.UserAccountService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +52,7 @@ public class AccountController {
 
 
             //获取发布文章列表
-            Page<GetUserNewsDto> newsResult = newsService.getListByUserId(userId,1,10,flag);
+            Page<GetContentDto> newsResult = newsService.getListByUserId(userId,1,10,flag);
             if(isNotEmpty(newsResult.getRecords()))
                 newsResult.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
             result.setNewsResult(newsResult);
