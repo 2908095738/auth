@@ -12,12 +12,8 @@ public class FileDto {
 
     private Long newId;
     private MultipartFile file;
+    private String fileLocalPath;
     private String filePath;
 
-    private Long createId;
 
-    public FileDto(MultipartFile file, String filePath) {
-        this.file = file;
-        this.filePath = filePath;
-    }
 }

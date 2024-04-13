@@ -22,8 +22,10 @@ public enum RedisKeys {
 
     HOT_NEWS("hot_news:", "热点内容"),
 
-    AUDIT_NEWS_USERID("audit_news_userid:", "用户的待审核图片or视频"),
-
+    AUDIT_USERID_NEWS("audit_userid_news:", "用户的待审核内容"),
+    AUDIT_NEW_FIlE("audit_new_file:", "用户的待审核图片or视频"),
+    NEW("NEW_id_", "内容id"),
+    AUDIT_FILE_SIZE("audit_file_size:", "待审核内容中的文件数量"),
     ;
 
     private final String prefix;

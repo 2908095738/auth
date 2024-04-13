@@ -55,7 +55,7 @@ public class ChatLast implements Serializable {
     /**
      * 最新消息时间
      */
-    @TableField(value = "time_last", fill = FieldFill.INSERT_UPDATE)
+    @TableField(value = "time_last")
     private Date timeLast;
 
     @TableField(exist = false)

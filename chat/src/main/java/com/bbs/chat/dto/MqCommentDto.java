@@ -37,4 +37,9 @@ public class MqCommentDto implements Serializable {
      * 评论人id
      */
     private Long createId;
+
+    /**
+     * 时间
+     */
+    private Date time;
 }

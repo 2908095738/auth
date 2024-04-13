@@ -26,9 +26,8 @@ public class ChatListDto {
      *      ChatDto暂时不用，未来搭配实现ChatController.getChat()的已读列表逻辑
      */
     @Data
-    public class ChatLastDto {
+    public static class ChatLastDto {
 
-        @TableId(value = "id", type = IdType.AUTO)
         private Long id;
 
         /**
@@ -50,7 +49,6 @@ public class ChatListDto {
          * 未读消息数量
          * 0：已读最新消息 >0：未读数条最新消息
          */
-        @TableField(value = "count")
         private Integer count;
 
         /**
@@ -74,7 +72,7 @@ public class ChatListDto {
     }
 
     @Data
-    public class ChatDto {
+    public static class ChatDto {
         /**
          * 发送方用户id
          */

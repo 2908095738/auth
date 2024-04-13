@@ -15,18 +15,19 @@ public class AgreeDto {
      * 点赞、收藏id
      * (用户点击查看被点赞、收藏内容)
      */
-    private Integer agreeId;
+    private Long agreeId;
 
     /**
      * 点赞、收藏用户id
      */
-    private Integer agreeUid;
+    private Long agreeUid;
 
     /**
      * 点赞、收藏用户呢称
      */
-    private String nickName;
+    private String name;
 
+    //TODO impl ing
     /**
      * 点赞、收藏用户头像路径
      */

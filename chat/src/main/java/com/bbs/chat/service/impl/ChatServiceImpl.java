@@ -1,10 +1,15 @@
 package com.bbs.chat.service.impl;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
+import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
+import com.bbs.chat.bo.UserBO;
+import com.bbs.chat.bo.UserChatBO;
 import com.bbs.chat.converter.ChatConverter;
 import com.bbs.chat.dto.*;
 import com.bbs.chat.entity.*;
+import com.bbs.chat.enums.DBType;
 import com.bbs.chat.mapper.*;
 import com.bbs.chat.service.ChatService;
 import com.bbs.chat.dto.param.CreateChatParam;
@@ -43,6 +48,9 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
     @Autowired
     private ChatTopMapper topMapper;
 
+    @Autowired
+    private UserMapper userMapper;
+
     private ChatConverter converter;
 
     private SensitiveFilter sensitiveFilter;
@@ -57,18 +65,12 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
         this.sensitiveFilter = sensitiveFilter;
     }
 
+    @DS("chat")
     @Override
     public Result createChat(CreateChatParam param, Long userId) {
         Chat chat = converter.toEntity(param);
-
-        //区分消息双方
-        if (chat.getSendUid() == -1) {//我发给对方
-            chat.setSendUid(userId);
-        } else if (chat.getAcceptUid() == -1) {//对方发给我
-            chat.setAcceptUid(userId);
-        }else{
-            return Result.failed("don't confirm who send who");
-        }
+        chat.setSendUid(userId);
+        chat.setTime(new Date());
 
         //消息内容处理
         String oriContent = chat.getContent();
@@ -78,7 +80,7 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
 
         save(chat);
 
-        //获取我和对方的最新消息
+        //对方更新消息
         MPJLambdaWrapper<ChatLast> lastWrap = new MPJLambdaWrapper(ChatLast.class);
         ChatLast last = lastWrap.selectAll(ChatLast.class)
                 .eq(ChatLast::getSendUid, chat.getSendUid())
@@ -111,11 +113,43 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
             lastMapper.insert(last);
         }
 
+        //我更新消息
+        MPJLambdaWrapper<ChatLast> lastMeWrap = new MPJLambdaWrapper(ChatLast.class);
+        ChatLast lastMe = lastMeWrap.selectAll(ChatLast.class)
+                .eq(ChatLast::getSendUid, chat.getAcceptUid())
+                .eq(ChatLast::getAcceptUid, chat.getSendUid())
+                .one();
+
+        boolean isLastMe = Objects.nonNull(lastMe);
+        if (!isLastMe) {//无数据
+            lastMe = new ChatLast();
+            lastMe.setSendUid(chat.getAcceptUid());
+            lastMe.setAcceptUid(chat.getSendUid());
+            lastMe.setCount(0);
+        }
+        lastMe.setContentType(chat.getContentType());
+
+        //最新消息过长裁剪
+        if (lastMe.getContentType() == 1) {
+            String tmpContent = chat.getContent();
+            tmpContent = StringUtil.abbreviate(tmpContent, 16);
+            lastMe.setContentLast(tmpContent);
+        }
+
+        lastMe.setTimeLast(chat.getTime());
+
+        if (isLastMe) {
+            lastMapper.updateById(lastMe);
+        } else {
+            lastMapper.insert(lastMe);
+        }
+
         //TODO 发通知提醒用户查看未读消息
 
         return Result.success();
     }
 
+    @DS("chat")
     @Override
     public ChatTopDto getChatTop(Long userId) {
         MPJLambdaWrapper wrapper = new MPJLambdaWrapper<ChatTopDto>()
@@ -126,7 +160,7 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
     }
 
     @Override
-    public ChatListDto getChat(Long userId, Integer current, Integer size) {
+    public Result<ChatListDto> getChat(Long userId, Integer current, Integer size) {
 
         /**
          * TODO 前几个消息(头牌消息)需要存入redis，优先保证企业用户看到。
@@ -139,27 +173,58 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
          *      未读消息日期修正，例如一月内修正成多少天前的消息等
          */
 
-        MPJLambdaWrapper wrapper = new MPJLambdaWrapper<ChatListDto.ChatLastDto>()
+        DynamicDataSourceContextHolder.push(DBType.CHAT.getDbName());
+        MPJLambdaWrapper<ChatLast> wrap = new MPJLambdaWrapper(ChatLast.class);
+        wrap.select(ChatLast::getSendUid)
+                .eq(ChatLast::getAcceptUid, userId);
+
+        List<Long> userIds = lastMapper.selectJoinList(Long.class, wrap);
+        DynamicDataSourceContextHolder.poll();
+
+        if (Objects.isNull(userIds) || userIds.isEmpty()) {
+            return Result.success(null);
+        }
+
+        DynamicDataSourceContextHolder.push(DBType.AUTH.getDbName());
+
+        MPJLambdaWrapper<User> chatWrap = new MPJLambdaWrapper(User.class);
+        chatWrap
+                .select(User::getName, User::getId)
+                .in(User::getId, userIds);
+        Map<Long, List<UserChatBO>> tmpMap = userMapper.selectJoinList(UserChatBO.class, chatWrap)
+                .stream()
+                .collect(Collectors.groupingBy(UserChatBO::getId));
+
+        DynamicDataSourceContextHolder.poll();
+        DynamicDataSourceContextHolder.push(DBType.CHAT.getDbName());
+
+        MPJLambdaWrapper<ChatListDto.ChatLastDto> wrapper = new MPJLambdaWrapper(ChatLast.class);
+        Page<ChatListDto.ChatLastDto> page = wrapper
                 .select(ChatLast::getId)
                 .selectAs(ChatLast::getSendUid, ChatListDto.ChatLastDto::getSendUid)
-                .selectAs(UserAccount::getNickName, ChatListDto.ChatLastDto::getSendName)
-                .selectAs(UserAccount::getAvatarPath, ChatListDto.ChatLastDto::getAvatarPath)
                 .select(ChatLast::getCount)
                 .selectAs(ChatLast::getContentType, ChatListDto.ChatLastDto::getContentType)
                 .selectAs(ChatLast::getContentLast, ChatListDto.ChatLastDto::getContentLast)
                 .selectAs(ChatLast::getTimeLast, ChatListDto.ChatLastDto::getTimeLast)
 
-                .leftJoin(UserAccount.class, UserAccount::getUserId, ChatLast::getSendUid)
                 .eq(ChatLast::getAcceptUid, userId)
-                .orderBy(true, false, ChatLast::getTimeLast);
+                .orderByDesc(ChatLast::getTimeLast)
+                .page(new Page(current, size), ChatListDto.ChatLastDto.class);
 
-        Page page = lastMapper.selectJoinMapsPage(new Page(current, size), wrapper);
+        DynamicDataSourceContextHolder.poll();
+
+        page.getRecords().forEach(l -> {
+            UserChatBO chatBO = tmpMap.get(l.getSendUid()).get(0);
+            l.setSendName(chatBO.getName());
+            l.setAvatarPath("impl ing no head.jpg");
+        });
 
         ChatListDto result = new ChatListDto();
         result.setLastList(page);
-        return result;
+        return Result.success(result);
     }
 
+    @DS("chat")
     @Override
     public Page<ChatRecordDto> getRecord(Long sendUid, Long acceptUid, Integer current, Integer size) {
         /**
@@ -171,6 +236,7 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
         //我发给别人的消息列表
         MPJLambdaWrapper acceptWrap = new MPJLambdaWrapper<ChatRecordDto>()
                 .select(Chat::getId)
+                .selectAs(Chat::getSendUid, ChatRecordDto::getChatUid)
                 .select(Chat::getContentType, Chat::getContent, Chat::getTime)
 
                 .eq(Chat::getSendUid, sendUid)
@@ -194,7 +260,6 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
         //别人发给我的消息列表
         MPJLambdaWrapper sendWrap = new MPJLambdaWrapper<ChatRecordDto>()
                 .select(Chat::getId)
-                .selectAs(Chat::getSendUid, ChatRecordDto::getChatUid)
                 .select(Chat::getContentType, Chat::getContent, Chat::getTime)
 
                 .eq(Chat::getSendUid, acceptUid)
@@ -210,7 +275,7 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
             if (page.getRecords().isEmpty()) {
                 page.setRecords(new ArrayList());
             } else {
-                page.getRecords().forEach(c -> c.setChatUid(-1L));
+                sendList.forEach(c -> c.setChatUid(-1L));
             }
             page.getRecords().addAll(sendList);
             page.getRecords().sort((l, r) -> {
@@ -230,39 +295,93 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
 
         //TODO 因为是多张表，所以唯一标识符会冲突，但暂时复杂SQL不会，故将算力交给终端设备解决
 
+        //获取点赞用户id列表
+        DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
+        MPJLambdaWrapper<Thumb> userIdWrap = new MPJLambdaWrapper<Thumb>()
+                .select(Thumb::getUserId)
+                .ne(Thumb::getPostUserId, Thumb::getUserId)
+                .eq(Thumb::getPostUserId, userId);
+
+        List<Long> userIds = thumbMapper.selectJoinList(Long.class, userIdWrap);
+        DynamicDataSourceContextHolder.poll();
+
+        //获取点赞用户信息列表
+        DynamicDataSourceContextHolder.push(DBType.AUTH.getDbName());
+        MPJLambdaWrapper<User> userWrap = new MPJLambdaWrapper<User>()
+                .select(User::getId, User::getName)
+                .in(User::getId, userIds);
+
+        Map<Long, List<UserBO>> userMap = userMapper.selectJoinList(UserBO.class, userWrap)
+                .stream()
+                .collect(Collectors.groupingBy(UserBO::getId));
+        DynamicDataSourceContextHolder.poll();
+
         //查询点赞列表
+        DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
         MPJLambdaWrapper thumbWrap = new MPJLambdaWrapper<AgreeDto>()
                 .selectAs(Thumb::getTcId, AgreeDto::getAgreeId)
-                .selectAs(UserAccount::getUserId, AgreeDto::getAgreeUid)
-                .selectAs(UserAccount::getNickName, AgreeDto::getNickName)
-                .selectAs(UserAccount::getAvatarPath, AgreeDto::getAvatarPath)
+                .selectAs(Thumb::getUserId, AgreeDto::getAgreeUid)
                 .selectAs(Thumb::getType, AgreeDto::getType)
                 .selectAs(Thumb::getCreateTime, AgreeDto::getTime)
 
-                .rightJoin(UserAccount.class, UserAccount::getUserId, Thumb::getUserId)
                 .ne(Thumb::getPostUserId, Thumb::getUserId)
                 .eq(Thumb::getPostUserId, userId)
                 .orderBy(true, false, Thumb::getUpdateTime);
 
         Page<AgreeDto> page = thumbMapper.selectJoinPage(new Page(current, size / 2), AgreeDto.class, thumbWrap);
 
-        //查询收藏列表
+        //点赞列表补值
+        page.getRecords().forEach(t -> {
+            List<UserBO> bos = userMap.get(t.getAgreeUid());
+            UserBO tmpUser = bos.get(0);
+            t.setName(tmpUser.getName());
+        });
+
+        //获取收藏待查询条数
         long total = page.getTotal();
         long little = size - total;
 
+        //获取收藏用户id列表
+        MPJLambdaWrapper userIdByFavo = new MPJLambdaWrapper<News>()
+                .select(Favorites::getUserId)
+                .leftJoin(Favorites.class, Favorites::getNewId, News::getNewId)
+                .ne(Favorites::getUserId, userId)
+                .eq(News::getCreateId, userId);
+
+        List<Long> userIdsByFavo = newsMapper.selectJoinList(Long.class, userIdByFavo);
+        DynamicDataSourceContextHolder.poll();
+
+        //获取收藏用户信息列表
+        DynamicDataSourceContextHolder.push(DBType.AUTH.getDbName());
+        MPJLambdaWrapper<User> userWrapByFavo = new MPJLambdaWrapper<User>()
+                .select(User::getId, User::getName)
+                .in(User::getId, userIdsByFavo);
+
+        Map<Long, List<UserBO>> userByFavoMap = userMapper.selectJoinList(UserBO.class, userWrapByFavo)
+                .stream()
+                .collect(Collectors.groupingBy(UserBO::getId));
+        DynamicDataSourceContextHolder.poll();
+
+        //查询收藏列表
+        DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
         MPJLambdaWrapper facWrap = new MPJLambdaWrapper<AgreeDto>()
                 .selectAs(Favorites::getNewId, AgreeDto::getAgreeId)
-                .selectAs(UserAccount::getUserId, AgreeDto::getAgreeUid)
-                .selectAs(UserAccount::getNickName, AgreeDto::getNickName)
-                .selectAs(UserAccount::getAvatarPath, AgreeDto::getAvatarPath)
+                .selectAs(Favorites::getUserId, AgreeDto::getAgreeUid)
                 .selectAs(Favorites::getCreateTime, AgreeDto::getTime)
 
-                .leftJoin(Favorites.class, Favorites::getNewId, News::getNewId)
-                .leftJoin(UserAccount.class, UserAccount::getUserId, Favorites::getUserId)
+                .rightJoin(Favorites.class, Favorites::getNewId, News::getNewId)
+                .ne(Favorites::getUserId, userId)
                 .eq(News::getCreateId, userId)
                 .orderBy(true, false, Thumb::getUpdateTime);
 
         List<AgreeDto> tmp = newsMapper.selectJoinPage(new Page(current, little), AgreeDto.class, facWrap).getRecords();
+        DynamicDataSourceContextHolder.poll();
+
+        //收藏列表补值
+        tmp.forEach(t -> {
+            UserBO tmpUser = userByFavoMap.get(t.getAgreeUid()).get(0);
+            t.setName(tmpUser.getName());
+        });
 
         //两张表查出来的数据合并
 //        boolean isNonNull_2 = Objects.nonNull(tmp.get(0));//查不出来数据，但List却有一个元素，但该元素又是空
@@ -281,84 +400,189 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
         }
         page.setTotal(page.getRecords().size());
 
+        DynamicDataSourceContextHolder.push(DBType.CHAT.getDbName());
+
         //清除点赞、收藏未读角标
         ChatTop top = topMapper.selectById(userId);
         top.setAgreeCount(0);
         topMapper.updateById(top);
+
+        DynamicDataSourceContextHolder.poll();
 
         return page;
     }
 
     @Override
     public Page<FanDto> getFan(Long userId, Integer current, Integer size) {
+        //获取新增关注用户id
+        DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
+        MPJLambdaWrapper userIdWrap = new MPJLambdaWrapper<Fan>()
+                .select(Fan::getUserId)
+                .eq(Fan::getFollowUserId, userId)
+                .in(Fan::getType, 0, 3);
+
+        List<Long> userIds = fanMapper.selectJoinList(Long.class, userIdWrap);
+        DynamicDataSourceContextHolder.poll();
+
+        if (Objects.isNull(userIds) || userIds.isEmpty()) {
+            return new Page();
+        }
+
+        //获取新增关注用户信息列表
+        DynamicDataSourceContextHolder.push(DBType.AUTH.getDbName());
+        MPJLambdaWrapper<User> userWrapByFavo = new MPJLambdaWrapper<User>()
+                .select(User::getId, User::getName)
+                .in(User::getId, userIds);
+
+        Map<Long, List<UserBO>> userByFanMap = userMapper.selectJoinList(UserBO.class, userWrapByFavo)
+                .stream()
+                .collect(Collectors.groupingBy(UserBO::getId));
+        DynamicDataSourceContextHolder.poll();
+
+        //获取新增关注列表
+        DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
         MPJLambdaWrapper wrapper = new MPJLambdaWrapper<FanDto>()
-                .selectAs(UserAccount::getUserId, FanDto::getFanUid)
-                .selectAs(UserAccount::getNickName, FanDto::getNickName)
-                .selectAs(UserAccount::getAvatarPath, FanDto::getAvatarPath)
                 .select(Fan::getType)
                 .selectAs(Fan::getCreateTime, FanDto::getTime)
-                .leftJoin(UserAccount.class, UserAccount::getUserId, Fan::getUserId)
+                .selectAs(Fan::getUserId, FanDto::getFanUid)
                 .eq(Fan::getFollowUserId, userId)
-                .eq(Fan::getDeleteFlag, 0)
                 .in(Fan::getType, 0, 3)
                 .orderBy(true, false, Fan::getCreateTime);
 
-        Page page = fanMapper.selectJoinMapsPage(new Page<>(current, size), wrapper);
+        Page<FanDto> page = fanMapper.selectJoinPage(new Page(current, size), FanDto.class, wrapper);
+        DynamicDataSourceContextHolder.poll();
+
+        //新增关注列表补值
+        page.getRecords().forEach(t -> {
+            UserBO tmpUser = userByFanMap.get(t.getFanUid()).get(0);
+            t.setName(tmpUser.getName());
+        });
+
+        //清除新增关注未读角标
+        DynamicDataSourceContextHolder.push(DBType.CHAT.getDbName());
+        ChatTop top = topMapper.selectById(userId);
+        top.setFanCount(0);
+        topMapper.updateById(top);
+        DynamicDataSourceContextHolder.poll();
         return page;
     }
 
     @Override
     public Page<CommDto> getComm(Long userId, Integer current, Integer size) {
-        //评论文章
+        //获取评论文章用户id列表
+        DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
+        MPJLambdaWrapper userIdWrap = new MPJLambdaWrapper<News>()
+                .select(Comment::getCreateId)
+                .leftJoin(Comment.class, Comment::getNewId, News::getNewId)
+                .isNull("parent_id")
+                .eq(News::getCreateId, userId)
+                .eq(Comment::getStatus, 20);
+
+        List<Long> userIds = newsMapper.selectJoinList(Long.class, userIdWrap);
+        DynamicDataSourceContextHolder.poll();
+
+        //获取评论文章用户信息列表
+        DynamicDataSourceContextHolder.push(DBType.AUTH.getDbName());
+        MPJLambdaWrapper<User> userWrapByNew = new MPJLambdaWrapper<User>()
+                .select(User::getId, User::getName)
+                .in(User::getId, userIds);
+
+        Map<Long, List<UserBO>> userByNewMap = userMapper.selectJoinList(UserBO.class, userWrapByNew)
+                .stream()
+                .collect(Collectors.groupingBy(UserBO::getId));
+        DynamicDataSourceContextHolder.poll();
+
+        //获取评论文章信息分页
+        DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
         MPJLambdaWrapper newWrap = new MPJLambdaWrapper<CommDto>()
                 .selectAs(Comment::getCreateId, CommDto::getCommUid)
-                .selectAs(UserAccount::getNickName, CommDto::getNickName)
-                .selectAs(UserAccount::getAvatarPath, CommDto::getAvatarPath)
                 .selectAs(Comment::getId, CommDto::getCommId)
                 .selectAs(Comment::getUpdateTime, CommDto::getTime)
 
                 .leftJoin(Comment.class, Comment::getNewId, News::getNewId)
-                .leftJoin(UserAccount.class, UserAccount::getUserId, Comment::getCreateId)
-                .isNull("parent_id")
+                .ne(Comment::getCreateId, userId)
+                .isNull(Comment::getParentId)
                 .eq(News::getCreateId, userId)
                 .eq(Comment::getStatus, 20)
                 .orderBy(true, false, Comment::getUpdateTime);
 
         Page<CommDto> page = newsMapper.selectJoinPage(new Page(current, size / 2), CommDto.class, newWrap);
-        page.getRecords().forEach(d -> d.setType(1));//TODO 没找到MyBatisPlus赋默认值的方法
+        page.getRecords().forEach(d -> {
+            d.setType(1);
+
+            UserBO tmpUser = userByNewMap.get(d.getCommUid()).get(0);
+            d.setName(tmpUser.getName());
+        });
 
         //正常情况下评论、回复各生成一半，评论数量不足其余全由回复补上
         long total = page.getTotal();
         long little = size - total;
 
-        //回复评论
+        //获取回复评论id列表
         MPJLambdaWrapper<Comment> pidWrap = new MPJLambdaWrapper<Comment>()//被回复评论id
                 .select(Comment::getId)
+                .eq(Comment::getDeleteFlag, 0)
                 .eq(Comment::getCreateId, userId)
                 .eq(Comment::getStatus, 20);
 
         List<Long> ids = commentMapper.selectList(pidWrap)
                 .stream().map(c -> c.getId()).collect(Collectors.toList());
 
+        //获取回复评论用户id列表
+        MPJLambdaWrapper<Comment> userIdWrapByComm = new MPJLambdaWrapper<Comment>()
+                .select(Comment::getCreateId)
+                .in(Comment::getParentId, ids)
+                .eq(Comment::getStatus, 20);
+
+        List<Long> userIdsByComm = commentMapper.selectJoinList(Long.class, userIdWrapByComm);
+        DynamicDataSourceContextHolder.poll();
+
+        if (Objects.isNull(userIdsByComm) || userIdsByComm.isEmpty()) {
+            //清除评论未读角标
+            DynamicDataSourceContextHolder.push(DBType.CHAT.getDbName());
+            ChatTop top = topMapper.selectById(userId);
+            top.setCommentCount(0);
+            topMapper.updateById(top);
+            DynamicDataSourceContextHolder.poll();
+
+            return page;//TODO 没人回复我的评论，暂时直接返回，没有考虑补足数量
+        }
+
+        //获取回复评论用户列表
+        DynamicDataSourceContextHolder.push(DBType.AUTH.getDbName());
+        MPJLambdaWrapper<User> wrapByComm = new MPJLambdaWrapper<User>()
+                .select(User::getId, User::getName)
+                .in(User::getId, userIdsByComm);
+
+        Map<Long, List<UserBO>> userMapByComm = userMapper.selectJoinList(UserBO.class, wrapByComm)
+                .stream()
+                .collect(Collectors.groupingBy(UserBO::getId));
+        DynamicDataSourceContextHolder.poll();
+
+        //获取回复评论列表
+        DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
         if (!ids.isEmpty()) {
             MPJLambdaWrapper commWrap = new MPJLambdaWrapper<CommDto>()
                     .selectAs(Comment::getCreateId, CommDto::getCommUid)
-                    .selectAs(UserAccount::getNickName, CommDto::getNickName)
-                    .selectAs(UserAccount::getAvatarPath, CommDto::getAvatarPath)
                     .selectAs(Comment::getId, CommDto::getCommId)
                     .selectAs(Comment::getUpdateTime, CommDto::getTime)
 
-                    .leftJoin(UserAccount.class, UserAccount::getUserId, Comment::getCreateId)
-                    .in(true, "parent_id", ids)
+                    .in(Comment::getParentId, ids)
                     .eq(Comment::getStatus, 20)
                     .orderBy(true, false, Comment::getUpdateTime);
 
             List<CommDto> tmp = commentMapper.selectJoinPage(new Page(current, little), CommDto.class, commWrap).getRecords();
+            DynamicDataSourceContextHolder.poll();
 
             //两张表查出来的数据合并
             //boolean isNonNull_2 = Objects.nonNull(tmp.get(0));//查不出来数据，但List却有一个元素，但该元素又是空
             if (!tmp.isEmpty() /*&& isNonNull_2*/) {
-                tmp.forEach(dto -> dto.setType(2));
+                tmp.forEach(dto -> {
+                    dto.setType(2);
+                    UserBO tmpUser = userMapByComm.get(dto.getCommUid()).get(0);
+                    dto.setName(tmpUser.getName());
+                });
+
                 if (page.getRecords().isEmpty()) {
                     page.setRecords(new ArrayList());
                 }
@@ -373,20 +597,45 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
             page.setTotal(page.getRecords().size());
         }
 
+        //清除评论未读角标
+        DynamicDataSourceContextHolder.push(DBType.CHAT.getDbName());
+        ChatTop top = topMapper.selectById(userId);
+        top.setCommentCount(0);
+        topMapper.updateById(top);
+        DynamicDataSourceContextHolder.poll();
+
         return page;
     }
 
     @Override
     public Page<String> getNick(Long userId, Integer current, Integer size) {
-        MPJLambdaWrapper wrapper = new MPJLambdaWrapper<String>()
-                .select(UserAccount::getNickName)
-                .leftJoin(UserAccount.class, UserAccount::getUserId, Fan::getFollowUserId)
-                .eq(Fan::getUserId, userId)
+        //获取关注用户id
+        DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
+        MPJLambdaWrapper<Fan> userIdWrap = new MPJLambdaWrapper<Fan>()
+                .select(Fan::getUserId)
+                .eq(Fan::getFollowUserId, userId)
                 .eq(Fan::getDeleteFlag, 0);
 
-        return fanMapper.selectJoinPage(new Page(current, size), String.class, wrapper);
+        List<Long> userIds = fanMapper.selectJoinList(Long.class, userIdWrap);
+        DynamicDataSourceContextHolder.poll();
+
+        if (Objects.isNull(userIds)) {
+            return new Page();
+        }
+
+        //获取关注用户列表
+        DynamicDataSourceContextHolder.push(DBType.AUTH.getDbName());
+        MPJLambdaWrapper<User> userWrapByFavo = new MPJLambdaWrapper<User>()
+                .select(User::getName)
+                .in(User::getId, userIds);
+
+        Page<String> page = userMapper.selectJoinPage(new Page(current, size), String.class, userWrapByFavo);
+        DynamicDataSourceContextHolder.poll();
+
+        return page;
     }
 
+    @DS("content")
     @Override
     public Result toFan(Long sendUid, Long acceptUid, Integer type) {
         switch (type) {
@@ -442,6 +691,7 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
         return Result.success();
     }
 
+    @DS("chat")
     @Override
     public void delChat(List<Long> chatIds, Integer type) {
         switch (type) {

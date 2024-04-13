@@ -36,7 +36,7 @@ public class ChatController {
 
     @PutMapping("/createChat")
     public Result createChat(@RequestBody CreateChatParam param) {
-        Long userId = ThreadLocalUtil.getCurrentUser().getUserId();
+        Long userId = ThreadLocalUtil.getCurrentUserId();
         return chatService.createChat(param, userId);
     }
 
@@ -47,7 +47,7 @@ public class ChatController {
      */
     @GetMapping("/getTop")
     public Result<ChatTopDto> getTop() {
-        Long userId = ThreadLocalUtil.getCurrentUser().getUserId();
+        Long userId = ThreadLocalUtil.getCurrentUserId();
         ChatTopDto result = chatService.getChatTop(userId);
         return Result.success(result);
     }
@@ -61,9 +61,8 @@ public class ChatController {
      */
     @GetMapping("/getChat")
     public Result<ChatListDto> getChat(Integer current, Integer size) {
-        Long userId = ThreadLocalUtil.getCurrentUser().getUserId();
-        ChatListDto result = chatService.getChat(userId, current, size);
-        return Result.success(result);
+        Long userId = ThreadLocalUtil.getCurrentUserId();
+        return chatService.getChat(userId, current, size);
     }
 
     /**
@@ -75,7 +74,7 @@ public class ChatController {
      */
     @GetMapping("/getRecord")
     public Result<Page<ChatRecordDto>> getRecord(Long sendUid, Integer current, Integer size) {
-        Long acceptUid = ThreadLocalUtil.getCurrentUser().getUserId();
+        Long acceptUid = ThreadLocalUtil.getCurrentUserId();
         Page<ChatRecordDto> result = chatService.getRecord(sendUid, acceptUid, current, size);
         return Result.success(result);
     }
@@ -89,7 +88,7 @@ public class ChatController {
      */
     @GetMapping("/getAgree")
     public Result<Page<AgreeDto>> getAgree(Integer current, Integer size) {
-        Long userId = ThreadLocalUtil.getCurrentUser().getUserId();
+        Long userId = ThreadLocalUtil.getCurrentUserId();
         Page<AgreeDto> result = chatService.getAgree(userId, current, size);
         return Result.success(result);
     }
@@ -103,7 +102,7 @@ public class ChatController {
      */
     @GetMapping("/getFan")
     public Result<Page<FanDto>> getFan(Integer current, Integer size) {
-        Long userId = ThreadLocalUtil.getCurrentUser().getUserId();
+        Long userId = ThreadLocalUtil.getCurrentUserId();
         Page<FanDto> result = chatService.getFan(userId, current, size);
         return Result.success(result);
     }
@@ -117,7 +116,7 @@ public class ChatController {
      */
     @GetMapping("/getComm")
     public Result<Page<CommDto>> getComm(Integer current, Integer size) {
-        Long userId = ThreadLocalUtil.getCurrentUser().getUserId();
+        Long userId = ThreadLocalUtil.getCurrentUserId();
         Page<CommDto> result = chatService.getComm(userId, current, size);
         return Result.success(result);
     }
@@ -131,7 +130,7 @@ public class ChatController {
      */
     @GetMapping("/getNick")
     public Result<Page<String>> getNick(Integer current, Integer size) {
-        Long userId = ThreadLocalUtil.getCurrentUser().getUserId();
+        Long userId = ThreadLocalUtil.getCurrentUserId();
         Page<String> result = chatService.getNick(userId, current, size);
         return Result.success(result);
     }
@@ -139,13 +138,13 @@ public class ChatController {
     /**
      * 互相关注
      *
-     * @param sendUid   发送方id
-     * @param type      互关标识符：1.互关2.取消互关
+     * @param sendUid 发送方id
+     * @param type    互关标识符：1.互关2.取消互关
      * @return
      */
     @GetMapping("/toFan")
     public Result toFan(Long sendUid, Integer type) {
-        Long acceptUid = ThreadLocalUtil.getCurrentUser().getUserId();
+        Long acceptUid = ThreadLocalUtil.getCurrentUserId();
         if (sendUid.equals(acceptUid))
             return Result.failed("sendUid don't = acceptUid!");
         return chatService.toFan(sendUid, acceptUid, type);

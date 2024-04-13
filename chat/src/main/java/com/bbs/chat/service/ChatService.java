@@ -28,7 +28,7 @@ public interface ChatService extends IService<Chat> {
      * @param size    未读消息几条
      * @return
      */
-    ChatListDto getChat(Long userId, Integer current, Integer size);
+    Result<ChatListDto> getChat(Long userId, Integer current, Integer size);
 
     /**
      * 获取聊天记录

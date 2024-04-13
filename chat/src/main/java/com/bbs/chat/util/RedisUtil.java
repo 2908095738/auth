@@ -103,8 +103,13 @@ public class RedisUtil {
         protoStuffTemplate.opsForHash().putAll(key, values);
     }
 
+
     public Object hashGet(String key, String hashKey) {
         return protoStuffTemplate.opsForHash().get(key, hashKey);
+    }
+
+    public Map<Object, Object> hashGet(String key){
+        return protoStuffTemplate.opsForHash().entries(key);
     }
 
     public List<Object> hashGet(String key, Collection<Object> hashKeys) {
@@ -115,8 +120,15 @@ public class RedisUtil {
         protoStuffTemplate.opsForHash().put(key, hashKey, value);
     }
 
+    public void hashPutAll(String key, Map map) {
+        protoStuffTemplate.opsForHash().putAll(key,map);
+    }
+
     public void delHash(String key, Object hashKey) {
         protoStuffTemplate.opsForHash().delete(key, hashKey);
     }
 
+    public void hashIntr(String key, String hashKey, Integer v) {
+        protoStuffTemplate.opsForHash().increment(key,hashKey,v);
+    }
 }

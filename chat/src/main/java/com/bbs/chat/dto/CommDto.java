@@ -12,12 +12,12 @@ public class CommDto {
     /**
      * 评论用户id
      */
-    private Integer commUid;
+    private Long commUid;
 
     /**
      * 评论用户呢称
      */
-    private String nickName;
+    private String name;
 
     /**
      * 评论头像路径

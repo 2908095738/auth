@@ -3,7 +3,6 @@ package com.bbs.content.controller;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
-import com.bbs.content.cache.ThumbCache;
 import com.bbs.content.converter.CommentConverter;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.MqCommentDto;
@@ -12,8 +11,6 @@ import com.bbs.content.entity.Comment;
 import com.bbs.content.mq.RabbitmqConfig;
 import com.bbs.content.mq.RabbitmqSend;
 import com.bbs.content.service.CommentService;
-import com.bbs.content.util.AuthUtil;
-import com.bbs.content.util.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,11 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import static cn.hutool.core.collection.CollUtil.isNotEmpty;
+import java.util.Date;
 
 /**
  * 评论
@@ -40,7 +33,6 @@ public class CommentController {
     private CommentService service;
     private CommentConverter converter;
     private RabbitmqSend rabbitmqSend;
-    private ThumbCache thumbCache;
 
     /**
      * 添加评论
@@ -49,12 +41,16 @@ public class CommentController {
      */
     @PutMapping
     public Result<Boolean> createComment(@RequestBody @Valid CreateCommentParam param){
-        Long currentUserId = ThreadLocalUtil.getCurrentUserId();
         Comment comment = converter.toEntity(param);
-        comment.setCreateId(currentUserId);
+
+        Date now = new Date();
+        comment.setCreateTime(now);
+        comment.setUpdateTime(now);
+
         service.save(comment);
         //通知对应的用户
         MqCommentDto mqCommentDto = converter.toMqDto(param);
+        mqCommentDto.setTime(now);
         rabbitmqSend.send(RabbitmqConfig.EXCHANGE_TOPICS_CHAT_INFORM, RabbitmqConfig.ROUTINGKEY_COMMENT, JSON.toJSONString(mqCommentDto));
         return Result.success(true);
     }
@@ -83,23 +79,7 @@ public class CommentController {
     public Result<Page<GetUserNewsDto.CommentByNewIdDto>> getPageByNewId(@NotNull(message = "内容id不能为空！") Long newId,
                                                                          @NotNull(message = "页数不能为空！") Integer current,
                                                                          @NotNull(message = "每页几条不能为空！") Integer size){
-        AuthUtil.UserAPI.User currentUser = ThreadLocalUtil.getCurrentUser();
-
-        Page<GetUserNewsDto.CommentByNewIdDto> result = service.getPageByNewId(newId, current, size);
-        if(isNotEmpty(result.getRecords())) {
-            List<Long> commentIds = result.getRecords().stream().map(GetUserNewsDto.CommentByNewIdDto::getId).collect(Collectors.toList());
-
-            Integer count = thumbCache.countBy(null, null, commentIds, 3);
-            result.getRecords().forEach(o -> {
-                o.setAvatarUrl(currentUser.getAvatar());
-                o.setNickName(currentUser.getName());
-                o.setHasLike(Objects.equals(o.getCreateId(), currentUser.getId()));
-                //当前用户是否可以删除此评论（自己评论或管理员）
-                o.setOwner(Objects.equals(o.getCreateId(), currentUser.getId()));
-                o.setLikeCount(count);
-            });
-        }
-        return Result.success(result);
+        return Result.success(service.getPageByNewId(newId, current, size));
     }
 
 

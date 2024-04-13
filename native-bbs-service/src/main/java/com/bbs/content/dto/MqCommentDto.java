@@ -41,7 +41,7 @@ public class MqCommentDto  implements Serializable {
     /**
      * 时间
      */
-    private Date time = new Date();
+    private Date time;
 
 
 }
