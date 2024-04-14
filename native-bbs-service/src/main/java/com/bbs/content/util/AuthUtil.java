@@ -68,12 +68,11 @@ public class AuthUtil {
                     if(response.isOk()) {
                         String body = response.body();
                         Result result = JSONUtil.toBean(body, Result.class);
-                        System.out.println(JSONUtil.toJsonPrettyStr(result));
+                        log.debug(JSONUtil.toJsonPrettyStr(result));
                         if(HttpStatus.HTTP_OK == result.getCode()) {
                             Object data = result.getData();
                             if(nonNull(data)) {
                                 User user = JSONUtil.parseObj(data).toBean(User.class);
-                                System.out.println(data);
                                 return user;
                             }
                         }
@@ -96,12 +95,11 @@ public class AuthUtil {
                     if(response.isOk()) {
                         String body = response.body();
                         Result result = JSONUtil.toBean(body, Result.class);
-                        System.out.println(JSONUtil.toJsonPrettyStr(result));
+                        log.debug(JSONUtil.toJsonPrettyStr(result));
                         if(HttpStatus.HTTP_OK == result.getCode()) {
                             Object data = result.getData();
                             if(nonNull(data)) {
                                 VO vo = JSONUtil.parseObj(data).toBean(VO.class);
-                                System.out.println(data);
                                 return vo;
                             }
                         }
@@ -125,12 +123,11 @@ public class AuthUtil {
                     if(response.isOk()) {
                         String body = response.body();
                         Result result = JSONUtil.toBean(body, Result.class);
-                        System.out.println(JSONUtil.toJsonPrettyStr(result));
+                        log.debug(JSONUtil.toJsonPrettyStr(result));
                         if(HttpStatus.HTTP_OK == result.getCode()) {
                             Object data = result.getData();
                             if(nonNull(data)) {
                                 List<VO> voList = JSONUtil.toList(data.toString(),VO.class);
-                                System.out.println(data);
                                 return voList;
                             }
                         }
