@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -11,6 +12,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 @Data
+@ApiModel("品牌实体")
 @TableName(value = "brand")
 public class Brand implements Serializable {
     @ApiModelProperty(value = "唯一标识符")
@@ -18,38 +20,38 @@ public class Brand implements Serializable {
     private Long id;
 
     @ApiModelProperty(value = "品牌首字母")
-    @TableField(value = "brand_first")
-    private String brandFirst;
+    @TableField(value = "first")
+    private String first;
 
     @ApiModelProperty(value = "品牌名称")
-    @TableField(value = "brand_name")
-    private String brandName;
+    @TableField(value = "name")
+    private String name;
 
     @ApiModelProperty(value = "品牌logo")
-    @TableField(value = "brand_logo")
-    private String brandLogo;
+    @TableField(value = "logo")
+    private String logo;
 
     @ApiModelProperty(value = "专区大图")
     @TableField(value = "big_pic")
     private String bigPic;
 
     @ApiModelProperty(value = "品牌故事")
-    @TableField(value = "brand_story")
-    private String brandStory;
+    @TableField(value = "story")
+    private String story;
 
     @ApiModelProperty(value = "简要描述")
     @TableField(value = "brief")
     private String brief;
 
     @ApiModelProperty(value = "产品数量")
-    @TableField(value = "product_count")
-    private Integer productCount;
+    @TableField(value = "prod_num")
+    private Integer prodNum;
 
     @ApiModelProperty(value = "排序")
     @TableField(value = "sort")
     private Integer sort;
 
-    @ApiModelProperty(value = "品牌状态：1.活跃；2.禁用")
+    @ApiModelProperty(value = "品牌状态：0.正常;1.待审核;2.审核中;3.禁用")
     @TableField(value = "status")
     private Integer status;
 

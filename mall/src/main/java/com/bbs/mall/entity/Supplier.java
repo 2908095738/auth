@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -11,6 +12,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 @Data
+@ApiModel("供应商实体")
 @TableName(value = "supplier")
 public class Supplier implements Serializable {
     @ApiModelProperty(value = "唯一标识符")
@@ -18,26 +20,26 @@ public class Supplier implements Serializable {
     private Long id;
 
     @ApiModelProperty(value = "供应商名称")
-    @TableField(value = "supplier_name")
-    private String supplierName;
+    @TableField(value = "name")
+    private String name;
 
     @ApiModelProperty(value = "供应商联系方式")
     @TableField(value = "contact_details")
     private String contactDetails;
 
     @ApiModelProperty(value = "供应商评级")
-    @TableField(value = "supplier_rating")
-    private String supplierRating;
+    @TableField(value = "rating")
+    private String rating;
 
     @ApiModelProperty(value = "认证和合规性")
     @TableField(value = "certifications")
     private String certifications;
 
     @ApiModelProperty(value = "税务")
-    @TableField(value = "supplier_tax")
-    private String supplierTax;
+    @TableField(value = "tax")
+    private String tax;
 
-    @ApiModelProperty(value = "供应商状态：1.活跃；2.禁用；3.注销")
+    @ApiModelProperty(value = "供应商状态：0.正常;1.待审核;2.审核中;3.禁用")
     @TableField(value = "status")
     private Integer status;
 
