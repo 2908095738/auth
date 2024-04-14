@@ -22,6 +22,7 @@ import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -168,9 +169,11 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
                 cacheIsEmptyUserIndexList.add(index);
             }
         }
-        List<User> cacheIsEmptyUser = listByIds(cacheIsEmptyUserIds);
-        for (int index = 0; index < cacheIsEmptyUser.size(); index++) {
-            users.set(cacheIsEmptyUserIndexList.get(index), cacheIsEmptyUser.get(index));
+        if(cacheIsEmptyUserIds.size() >= NumberUtils.INTEGER_ONE) {
+            List<User> cacheIsEmptyUser = listByIds(cacheIsEmptyUserIds);
+            for (int index = 0; index < cacheIsEmptyUser.size(); index++) {
+                users.set(cacheIsEmptyUserIndexList.get(index), cacheIsEmptyUser.get(index));
+            }
         }
         return users;
     }
