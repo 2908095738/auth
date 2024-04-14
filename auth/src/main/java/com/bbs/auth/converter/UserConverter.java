@@ -1,7 +1,7 @@
 package com.bbs.auth.converter;
 
 import com.bbs.auth.app.register.Register;
-import com.bbs.auth.app.search.SearchUser;
+import com.bbs.auth.app.user.Search;
 import com.bbs.auth.app.user.Info;
 import com.bbs.auth.app.user.Me;
 import com.bbs.entity.UserVO;
@@ -20,9 +20,9 @@ public interface UserConverter {
     @Mapping(target = "failureTokenTime", ignore = true)
     UserVO toVO(User entity);
 
-    SearchUser.VO toSearchUserVO(User entity);
+    Search.VO toSearchUserVO(User entity);
 
-    List<SearchUser.VO> toSearchUserVO(List<User> userList);
+    List<Search.VO> toSearchUserVO(List<User> userList);
 
     Info.VO toInfoVO(User entity);
 

@@ -1,4 +1,4 @@
-package com.bbs.auth.app.search;
+package com.bbs.auth.app.user;
 
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -30,7 +30,7 @@ import static java.util.Objects.nonNull;
 @Slf4j
 @RestController
 @RequestMapping
-public class SearchUser {
+public class Search {
 
     @Resource
     private UserService service;
@@ -100,7 +100,7 @@ public class SearchUser {
             vo.setIsFollow(nonNull(user.getFan()));
             return vo;
         }).collect(Collectors.toList());
-        log.debug("[SearchUser::search] loginUser={}; page={}; vos={}", loginUser, JSONUtil.toJsonStr(page), vos);
+        log.debug("[Search::search] loginUser={}; page={}; vos={}", loginUser, JSONUtil.toJsonStr(page), vos);
         return success(new Page<VO>(page.getCurrent(), page.getSize(), page.getTotal()).setRecords(vos));
     }
 

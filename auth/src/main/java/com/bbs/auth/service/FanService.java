@@ -1,7 +1,7 @@
 package com.bbs.auth.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.bbs.auth.app.search.SearchUser;
+import com.bbs.auth.app.user.Search;
 import com.bbs.auth.entity.Fan;
 
 import java.util.List;
@@ -33,5 +33,5 @@ public interface FanService extends IService<Fan> {
      */
     Boolean isFollow(Long followUserID);
 
-    void fillFollowStatus(List<Long> ids, List<SearchUser.VO> fillObjs);
+    void fillFollowStatus(List<Long> ids, List<Search.VO> fillObjs);
 }
