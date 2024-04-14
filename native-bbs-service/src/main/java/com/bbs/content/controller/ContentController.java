@@ -32,9 +32,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static cn.hutool.core.collection.CollUtil.isNotEmpty;
@@ -188,10 +191,19 @@ public class ContentController {
     public Result<List<GetContentDto>> getRecommendNews() {
         List<GetContentDto> result = newsService.getListByRecommend();
         if(isNotEmpty(result)) {
-            Map<Long, AuthUtil.UserAPI.VO> collect = api.getUserList(result.stream().map(GetContentDto::getCreateId).collect(Collectors.toList())).stream().collect(Collectors.toMap(o1 -> o1.getId(), o2 -> o2));
+            Set<Long> userIds = result.stream().map(GetContentDto::getCreateId).collect(Collectors.toSet());
+
+            Map<Long, AuthUtil.UserAPI.VO> userIdMap = new HashMap<>();
+            if(CollUtil.isNotEmpty(userIds)&&userIds.size()>1){
+                userIdMap = api.getUserList(new ArrayList<>(userIds)).stream().collect(Collectors.toMap(AuthUtil.UserAPI.VO::getId, o2 -> o2));
+            }{
+                AuthUtil.UserAPI.VO userByid = api.getUserByid(new ArrayList<>(userIds).get(0));
+                userIdMap.put(userByid.getId(),userByid);
+            }
             Map<Long, Integer> visitMap = newsCache.getVisit(result.stream().map(GetContentDto::getNewId).collect(Collectors.toList()));
+            Map<Long, AuthUtil.UserAPI.VO> finalUserIdMap = userIdMap;
             result.forEach(o -> {
-                o.setUser(collect.get(o.getCreateId()));
+                o.setUser(finalUserIdMap.get(o.getCreateId()));
                 o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1));
                 o.setVisitNum(visitMap.getOrDefault(o.getNewId(), 0));
             });

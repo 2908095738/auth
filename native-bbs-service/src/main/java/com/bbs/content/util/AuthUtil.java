@@ -120,7 +120,7 @@ public class AuthUtil {
                 try {
                     Map<String, Object> param = new HashMap<>();
                     param.put("ids", ids);
-                    HttpResponse response = HttpRequest.get(serverHost).body(JSONUtil.toJsonPrettyStr(param))
+                    HttpResponse response = HttpRequest.get(serverHost).form(param)
                             .timeout(verifyTimeout).execute();
                     if(response.isOk()) {
                         String body = response.body();
