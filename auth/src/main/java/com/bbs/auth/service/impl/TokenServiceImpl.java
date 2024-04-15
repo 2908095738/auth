@@ -91,9 +91,10 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public String getToken(HttpServletRequest request) {
+    public String getToken(HttpServletRequest request) throws ReLoginException {
         String token = request.getHeader(tokenName);
-        return StringUtils.isNotBlank(token) ? token.split(" ")[1] : null;
+        if(StringUtils.isBlank(token)) throw new ReLoginException();
+        return token.split(" ")[1];
     }
 
     @Override
@@ -142,11 +143,17 @@ public class TokenServiceImpl implements TokenService {
      * @return Token 能否解析成功
      */
     @Override
-    public Boolean verifyToken(String token) {
+    public Boolean verifyToken(String token) throws ReLoginException {
         if(isNotBlank(token)) {
-            return JWTUtil.verify(token, key.getBytes());
+            try {
+                return JWTUtil.verify(token, key.getBytes());
+            } catch (Exception e) {
+                log.info("[TokenService::verifyToken] Verify Error!!! message={}", e.getMessage());
+                e.printStackTrace();
+                throw new ReLoginException();
+            }
         }
-        return false;
+        throw new ReLoginException();
     }
 
 

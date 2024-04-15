@@ -12,7 +12,7 @@ public interface TokenService {
 
     UserVO verify(String token) throws ReLoginException;
 
-    Boolean verifyToken(String token);
+    Boolean verifyToken(String token) throws ReLoginException;
 
     UserVO parseToken(String token);
 
@@ -32,7 +32,7 @@ public interface TokenService {
      */
     void clearLoginFlag(Long uid);
 
-    String getToken(HttpServletRequest request);
+    String getToken(HttpServletRequest request) throws ReLoginException;
 
     String verifyAndExpireToken(User user);
 }

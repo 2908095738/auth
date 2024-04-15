@@ -1,7 +1,7 @@
 package com.bbs.auth.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.bbs.auth.app.search.SearchUser;
+import com.bbs.auth.app.user.Search;
 import com.bbs.auth.entity.Fan;
 import com.bbs.auth.mapper.FanMapper;
 import com.bbs.auth.service.FanService;
@@ -93,14 +93,14 @@ public class FanServiceImpl extends ServiceImpl<FanMapper, Fan> implements FanSe
     }
 
     @Override
-    public void fillFollowStatus(List<Long> ids, List<SearchUser.VO> fillObjs) {
+    public void fillFollowStatus(List<Long> ids, List<Search.VO> fillObjs) {
         List<Fan> fans = lambdaQuery()
                 .eq(Fan::getDeleteFlag, 0)
                 .eq(Fan::getUserId, userService.loginUser().getId())
                 .in(Fan::getFollowUserId, ids)
                 .list();
         Map<Long, Fan> idAndFanMap = fans.stream().collect(Collectors.toMap(Fan::getUserId, fan -> fan));
-        for (SearchUser.VO vo: fillObjs) {
+        for (Search.VO vo: fillObjs) {
             Fan fan = idAndFanMap.get(vo.getId());
             vo.setIsFollow(nonNull(fan));
         }
