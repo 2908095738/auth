@@ -1,4 +1,4 @@
-package com.bbs.auth.app.login.util;
+package com.bbs.auth.util;
 
 import java.util.regex.Pattern;
 
@@ -6,7 +6,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-public class Util {
+public class PhoneUtil {
 
     /**
      * 手机号长度

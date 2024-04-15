@@ -1,6 +1,6 @@
 package com.bbs.auth.app.change;
 
-import com.bbs.auth.app.login.util.Util;
+import com.bbs.auth.util.PhoneUtil;
 import com.bbs.auth.cache.code.PhoneCodeCache;
 import com.bbs.auth.cache.user.PhoneCache;
 import com.bbs.auth.cache.user.UserCache;
@@ -124,8 +124,8 @@ public class ChangePhone {
     public Result<Boolean> changePassword(@Valid @RequestBody ChangePasswordParam param) throws InterruptedException {
         return redissonUtil.lockExec(
                 () -> {
-                    Util.checkPhoneFormat(param.phone);
-                    Util.checkPhoneCodeFormat(String.valueOf(param.code));
+                    PhoneUtil.checkPhoneFormat(param.phone);
+                    PhoneUtil.checkPhoneCodeFormat(String.valueOf(param.code));
                     Integer code = codeCache.getCode(param.phone);
                     if(nonNull(code) && code.equals(param.code)) {
                         User user = service.searchByPhone(param.phone);
