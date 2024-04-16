@@ -1,10 +1,14 @@
 package com.bbs.mall.service.impl;
 
-import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.mall.bo.LowProductBO;
 import com.bbs.mall.dto.ProdDetailDto;
+import com.bbs.mall.dto.ProdDetallDto;
+import com.bbs.mall.dto.ProdDto;
 import com.bbs.mall.dto.ProductDto;
 import com.bbs.mall.entity.*;
+import com.bbs.mall.mapper.ProdAttrValueMapper;
+import com.bbs.mall.mapper.ProdPicMapper;
 import com.bbs.mall.mapper.ProductMapper;
 import com.bbs.mall.service.ProductService;
 import com.github.yulichang.base.MPJBaseServiceImpl;
@@ -19,105 +23,134 @@ import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl extends MPJBaseServiceImpl<ProductMapper, Product> implements ProductService {
+
     @Autowired
-    private ProductMapper productMapper;
+    private ProdAttrValueMapper valueMapper;
+
+    @Autowired
+    private ProdPicMapper picMapper;
 
     @Override
-    public ProductDto getProduct(Long productId) {
-        return new MPJLambdaWrapper<ProductDto>()
-                .select(Product::getId, Product::getProductName, Product::getSubTitle)
-                .select(Product::getPic, Product::getPrice, Product::getStock)
-
-                .selectAs(ProdAttr::getName, ProductDto::getPAtrrName)
-                .selectAs(ProdAttr::getId, ProductDto::getProdAtrrId)
-
-                .selectAs(Sku::getPic, ProductDto::getSkuPic)
-                .selectAs(Sku::getPrice, ProductDto::getSkuPrice)
-                .selectAs(Sku::getStock, ProductDto::getSkuStock)
-                .selectAs(Sku::getSkuCode, ProductDto::getSkuCode)
-                .selectAs(Sku::getId, ProductDto::getSkuId)
-
-                .select(ProdAttr::getProdAttrCateId)
-
-                .leftJoin(ProdAttr.class, ProdAttr::getProdId, Product::getId)
-                .leftJoin(Sku.class, Sku::getProductId, Product::getId)
-                .eq(Product::getId, productId)
-                .eq(ProdAttr::getType, 0)
-                .orderByDesc(ProdAttr::getSort)
-                .one();
+    public Page<ProdDto> list(Integer current, Integer size) {
+        return new MPJLambdaWrapper<ProdDto>()
+                .selectAs(Product::getMainPic, ProdDto::getProdPic)
+                .selectAs(Product::getName, ProdDto::getProdName)
+                .select(Product::getId, Product::getPrice, Product::getBrandLogo)
+                .select(Product::getBrandName, Product::getBrandId)
+                .page(new Page(current, size));
     }
 
     @Override
-    public ProdDetailDto getDetail(Long prodId) {
+    public ProdDetallDto getDetail(Long prodId) {
+        //获取商品详情DTO
+        ProdDetallDto dto = new MPJLambdaWrapper<ProdDetallDto>()
+                .select(Product::getBrandLogo, Product::getBrandName, Product::getPrice)
+                .select(Product::getDescription)
+
+                .eq(Product::getId, prodId)
+                .one();
+        if (Objects.isNull(dto)) {
+            return null;
+        }
+
+        //DTO赋值
+        dto.setId(prodId);
+
+        //获取商品属性列表
+        MPJLambdaWrapper valueWrap = new MPJLambdaWrapper<ProdDetallDto.AttrValueDto>()
+                .select(ProdAttr::getName)
+                .select(ProdAttrValue::getValue)
+                .leftJoin(ProdAttr.class, ProdAttr::getId, ProdAttrValue::getProdAttrId)
+                .eq(ProdAttrValue::getProdId, prodId);
+        List<ProdDetallDto.AttrValueDto> values = valueMapper.selectJoinList(ProdDetallDto.AttrValueDto.class, valueWrap);
+        if (Objects.nonNull(values) && !values.isEmpty()) {
+            dto.setValues(values);
+        }
+
+        //获取商品图片列表
+        MPJLambdaWrapper picWrap = new MPJLambdaWrapper<String>()
+                .select(ProdPic::getThePic)
+                .eq(ProdPic::getProdId, prodId)
+                .orderByAsc(ProdPic::getSort);
+        List<String> pics = picMapper.selectJoinList(String.class, picWrap);
+        if (Objects.nonNull(pics) && !pics.isEmpty()) {
+            dto.setPics(pics);
+        }
+
+        return dto;
+    }
+
+    //TODO 原始版本获取详情
+    private ProdDetailDto oriGetDetail(Long prodId) {
         ProdDetailDto dto = new ProdDetailDto();
 
         //TODO 用mybatis把简易多次查询串成一个
 
-        //商品信息赋值
-        Product prod = getOptById(prodId).orElse(null);
-        if (Objects.nonNull(prod)) {
-            dto.setProduct(prod);
-        } else {
-            return null;
-        }
-
-        //商品品牌赋值
-        Brand brand = new MPJLambdaWrapper<Brand>(Brand.class)
-                .selectAll(Brand.class)
-                .eq(Brand::getId, prod.getBrandId())
-                .one();
-        if (Objects.nonNull(brand)) {
-            dto.setBrand(brand);
-        } else {
-            return null;
-        }
-
-        //商品属性信息(key)赋值
-        List<ProdAttr> attrs = new MPJLambdaWrapper<ProdAttr>(ProdAttr.class)
-                .selectAll(ProdAttr.class)
-                .eq(ProdAttr::getProdId, prodId)
-                .list();
-        dto.setAttrs(attrs);
-
-        //商品属性值(value)赋值
-        List<Long> attrIds = attrs.stream().map(ProdAttr::getId).collect(Collectors.toList());
-        List<ProdAttrValue> attrValues = new MPJLambdaWrapper<ProdAttrValue>(ProdAttrValue.class)
-                .selectAll(ProdAttrValue.class)
-                .eq(ProdAttrValue::getProdId, prodId)
-                .in(ProdAttrValue::getProdAttrId, attrIds)
-                .list();
-        dto.setAttrValues(attrValues);
-
-        //商品SKU库存赋值
-        List<Sku> skus = new MPJLambdaWrapper<Sku>(Sku.class)
-                .selectAll(Sku.class)
-                .eq(Sku::getProductId, prodId)
-                .list();
-        dto.setSkus(skus);
-
-        //商品促销规则赋值
-        List<String> jsons = new ArrayList();
-        switch (prod.getLowType()) {
-            case 3:
-                jsons = new MPJLambdaWrapper<ProdLadder>(ProdLadder.class)
-                        .selectAll(ProdLadder.class)
-                        .eq(ProdLadder::getProdId, prodId)
-                        .list()
-                        .stream()
-                        .map(l -> JSON.toJSONString(l))
-                        .collect(Collectors.toList());
-                break;
-            case 4:
-                jsons = new MPJLambdaWrapper<ProdFullReduce>(ProdFullReduce.class)
-                        .selectAll(ProdFullReduce.class)
-                        .eq(ProdFullReduce::getProdId, prodId)
-                        .list()
-                        .stream()
-                        .map(r -> JSON.toJSONString(r))
-                        .collect(Collectors.toList());
-                break;
-        }
-        dto.setLowRuleJson(jsons);
+//        //商品信息赋值
+//        Product prod = getOptById(prodId).orElse(null);
+//        if (Objects.nonNull(prod)) {
+//            dto.setProduct(prod);
+//        } else {
+//            return null;
+//        }
+//
+//        //商品品牌赋值
+//        Brand brand = new MPJLambdaWrapper<Brand>(Brand.class)
+//                .selectAll(Brand.class)
+//                .eq(Brand::getId, prod.getBrandId())
+//                .one();
+//        if (Objects.nonNull(brand)) {
+//            dto.setBrand(brand);
+//        } else {
+//            return null;
+//        }
+//
+//        //商品属性信息(key)赋值
+//        List<ProdAttr> attrs = new MPJLambdaWrapper<ProdAttr>(ProdAttr.class)
+//                .selectAll(ProdAttr.class)
+////                .eq(ProdAttr::getProdId, prodId)
+//                .list();
+//        dto.setAttrs(attrs);
+//
+//        //商品属性值(value)赋值
+//        List<Long> attrIds = attrs.stream().map(ProdAttr::getId).collect(Collectors.toList());
+//        List<ProdAttrValue> attrValues = new MPJLambdaWrapper<ProdAttrValue>(ProdAttrValue.class)
+//                .selectAll(ProdAttrValue.class)
+//                .eq(ProdAttrValue::getProdId, prodId)
+//                .in(ProdAttrValue::getProdAttrId, attrIds)
+//                .list();
+//        dto.setAttrValues(attrValues);
+//
+//        //商品SKU库存赋值
+//        List<Sku> skus = new MPJLambdaWrapper<Sku>(Sku.class)
+//                .selectAll(Sku.class)
+//                .eq(Sku::getProductId, prodId)
+//                .list();
+//        dto.setSkus(skus);
+//
+//        //商品促销规则赋值
+//        List<String> jsons = new ArrayList();
+//        switch (prod.getLowType()) {
+//            case 3:
+//                jsons = new MPJLambdaWrapper<ProdLadder>(ProdLadder.class)
+//                        .selectAll(ProdLadder.class)
+//                        .eq(ProdLadder::getProdId, prodId)
+//                        .list()
+//                        .stream()
+//                        .map(l -> JSON.toJSONString(l))
+//                        .collect(Collectors.toList());
+//                break;
+//            case 4:
+//                jsons = new MPJLambdaWrapper<ProdFullReduce>(ProdFullReduce.class)
+//                        .selectAll(ProdFullReduce.class)
+//                        .eq(ProdFullReduce::getProdId, prodId)
+//                        .list()
+//                        .stream()
+//                        .map(r -> JSON.toJSONString(r))
+//                        .collect(Collectors.toList());
+//                break;
+//        }
+//        dto.setLowRuleJson(jsons);
 
         //TODO 商品详情页优惠券
         return dto;
@@ -140,13 +173,14 @@ public class ProductServiceImpl extends MPJBaseServiceImpl<ProductMapper, Produc
         for (Long nowId : prodIds) {
             //BO本体赋值
             LowProductBO theBO = new LowProductBO();
-            Integer nowType = new MPJLambdaWrapper<LowProductBO>()
-                    .select(Product::getLowType)
-                    .eq(Product::getId, nowId)
-                    .one(Integer.class);
-
-            theBO.setId(nowId);
-            theBO.setLowType(nowType);
+            //TODO 字段被移除，防报错故删掉
+//            Integer nowType = new MPJLambdaWrapper<LowProductBO>()
+//                    .select(Product::getLowType)
+//                    .eq(Product::getId, nowId)
+//                    .one(Integer.class);
+//
+//            theBO.setId(nowId);
+//            theBO.setLowType(nowType);
 
             //促销SKU赋值
             List<LowProductBO.LowSkuBO> skus = new MPJLambdaWrapper<LowProductBO.LowSkuBO>()
