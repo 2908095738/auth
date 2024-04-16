@@ -26,7 +26,7 @@ public class ChatController {
     }
 
     @PutMapping("/createChat")
-    public Result createChat(@RequestBody CreateChatParam param) {
+    public Result<ChatRecordDto> createChat(@RequestBody CreateChatParam param) {
         Long userId = ThreadLocalUtil.getCurrentUserId();
         return chatService.createChat(param, userId);
     }

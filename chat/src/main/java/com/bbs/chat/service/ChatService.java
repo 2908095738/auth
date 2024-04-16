@@ -10,7 +10,7 @@ import com.bbs.chat.entity.Chat;
 import java.util.List;
 
 public interface ChatService extends IService<Chat> {
-    Result createChat(CreateChatParam param, Long userId);
+    Result<ChatRecordDto> createChat(CreateChatParam param, Long userId);
 
     /**
      * 获取消息页顶部的点赞/收藏、关注、评论角标

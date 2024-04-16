@@ -74,7 +74,7 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
 
     @DS("chat")
     @Override
-    public Result<Boolean> createChat(CreateChatParam param, Long userId) {
+    public Result<ChatRecordDto> createChat(CreateChatParam param, Long userId) {
         Chat chat = converter.toEntity(param);
         chat.setSendUid(userId);
         chat.setTime(new Date());
@@ -153,7 +153,12 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
 
         //TODO 发通知提醒用户查看未读消息
 
-        return Result.success();
+        Auth.UserAPI.User loginUser = api.getLoginUser();
+        ChatRecordDto dto = converter.toDTO(chat);
+        dto.setChatUid(loginUser.getId());
+        dto.setAvatar(loginUser.getAvatar());
+        dto.setType(NumberUtils.INTEGER_ONE);
+        return Result.success(dto);
     }
 
     @DS("chat")
