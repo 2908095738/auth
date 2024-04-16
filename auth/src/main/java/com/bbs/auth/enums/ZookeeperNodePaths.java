@@ -36,21 +36,6 @@ public class ZookeeperNodePaths {
             public static final String TIMEOUT_MIN = "/conf/cache/user/timeout/min";
 
             /**
-             * 用户信息缓存布隆过滤器配置：过滤器 redis key
-             */
-            public static final String FILTER_KEY = "/conf/cache/user/filter/key";
-
-            /**
-             * 用户信息缓存布隆过滤器配置：过滤器容量
-             */
-            public static final String FILTER_EXPECTED_INSERTIONS = "/conf/cache/user/filter/expectedInsertions";
-
-            /**
-             * 用户信息缓存布隆过滤器配置：过滤器期望误差
-             */
-            public static final String FILTER_FALSE_PROBABILITY = "/conf/cache/user/filter/falseProbability";
-
-            /**
              * UID 与其他用户【类唯一】字段映射：过期时间随机上限
              */
             public static final String UID_MAP_TIMEOUT_MAX = "/conf/cache/user/map/timeout/max";
@@ -95,6 +80,11 @@ public class ZookeeperNodePaths {
          * 验证码过期时间（单位：分钟）
          */
         public static final String CODE_TIMEOUT = "/conf/captcha/timeout";
+
+        /**
+         * 验证码发送间隔（单位：秒）
+         */
+        public static final String CODE_SEND_INTERVAL = "/conf/captcha/send/interval";
 
         public static class Alibaba {
 

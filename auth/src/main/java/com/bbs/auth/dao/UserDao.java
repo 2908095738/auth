@@ -1,6 +1,6 @@
 package com.bbs.auth.dao;
 
-import com.bbs.auth.app.change.ChangePhone;
+import com.bbs.auth.app.reset.ChangePhone;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.mapper.UserMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;

@@ -30,10 +30,6 @@ public class RedisUtil {
     @Resource(name = "protoStuffTemplate")
     private RedisTemplate<String, String> redis;
 
-    public Boolean exists(String key) {
-        return redis.hasKey(key);
-    }
-
     /**
      * 通过键删除一个值
      *

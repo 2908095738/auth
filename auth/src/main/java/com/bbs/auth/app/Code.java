@@ -1,6 +1,5 @@
 package com.bbs.auth.app;
 
-import com.bbs.auth.cache.code.PhoneCodeCache;
 import com.bbs.auth.util.captcha.CaptchaUtil;
 import com.bbs.Result;
 import lombok.extern.slf4j.Slf4j;
