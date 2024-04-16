@@ -28,8 +28,8 @@ import javax.validation.constraints.NotBlank;
 
 import static com.bbs.Result.failed;
 import static com.bbs.Result.success;
-import static com.bbs.auth.app.login.util.Util.checkPhoneCodeFormat;
-import static com.bbs.auth.app.login.util.Util.checkPhoneFormat;
+import static com.bbs.auth.util.PhoneUtil.checkPhoneCodeFormat;
+import static com.bbs.auth.util.PhoneUtil.checkPhoneFormat;
 import static com.bbs.auth.enums.RedisKeys.USER_LOGIN_PHONE;
 import static com.bbs.enums.CodeEnum.*;
 import static com.google.common.base.Preconditions.checkArgument;
