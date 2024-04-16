@@ -1,8 +1,6 @@
 package com.bbs.chat.dto;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.Data;
 
@@ -69,6 +67,8 @@ public class ChatListDto {
          * 最新消息时间
          */
         private Date timeLast;
+
+        private String timeLastStr;
     }
 
     @Data

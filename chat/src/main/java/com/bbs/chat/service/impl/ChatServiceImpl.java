@@ -1,11 +1,12 @@
 package com.bbs.chat.service.impl;
 
+import cn.hutool.core.date.DateUtil;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
+import com.bbs.api.Auth;
 import com.bbs.chat.bo.UserBO;
-import com.bbs.chat.bo.UserChatBO;
 import com.bbs.chat.converter.ChatConverter;
 import com.bbs.chat.dto.*;
 import com.bbs.chat.entity.*;
@@ -19,6 +20,7 @@ import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.toolkit.JoinWrappers;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import com.github.yulichang.wrapper.UpdateJoinWrapper;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.HtmlUtils;
@@ -27,33 +29,38 @@ import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.nonNull;
+
 @Service
 public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implements ChatService {
 
-    @Autowired
+    @Resource
     private ChatLastMapper lastMapper;
 
-    @Autowired
+    @Resource
     private ThumbMapper thumbMapper;
 
-    @Autowired
+    @Resource
     private FanMapper fanMapper;
 
-    @Autowired
+    @Resource
     private CommentMapper commentMapper;
 
-    @Autowired
+    @Resource
     private NewsMapper newsMapper;
 
-    @Autowired
+    @Resource
     private ChatTopMapper topMapper;
 
-    @Autowired
+    @Resource
     private UserMapper userMapper;
 
     private ChatConverter converter;
 
     private SensitiveFilter sensitiveFilter;
+
+    @Resource
+    private Auth.UserAPI api;
 
     @Resource
     public void setConverter(ChatConverter converter) {
@@ -67,7 +74,7 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
 
     @DS("chat")
     @Override
-    public Result createChat(CreateChatParam param, Long userId) {
+    public Result<Boolean> createChat(CreateChatParam param, Long userId) {
         Chat chat = converter.toEntity(param);
         chat.setSendUid(userId);
         chat.setTime(new Date());
@@ -81,13 +88,13 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
         save(chat);
 
         //对方更新消息
-        MPJLambdaWrapper<ChatLast> lastWrap = new MPJLambdaWrapper(ChatLast.class);
+        MPJLambdaWrapper<ChatLast> lastWrap = new MPJLambdaWrapper<>(ChatLast.class);
         ChatLast last = lastWrap.selectAll(ChatLast.class)
                 .eq(ChatLast::getSendUid, chat.getSendUid())
                 .eq(ChatLast::getAcceptUid, chat.getAcceptUid())
                 .one();
 
-        boolean isLast = Objects.nonNull(last);
+        boolean isLast = nonNull(last);
         if (isLast) {//有数据
             last.setCount(last.getCount() + 1);
         } else {//无数据
@@ -114,13 +121,13 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
         }
 
         //我更新消息
-        MPJLambdaWrapper<ChatLast> lastMeWrap = new MPJLambdaWrapper(ChatLast.class);
+        MPJLambdaWrapper<ChatLast> lastMeWrap = new MPJLambdaWrapper<>(ChatLast.class);
         ChatLast lastMe = lastMeWrap.selectAll(ChatLast.class)
                 .eq(ChatLast::getSendUid, chat.getAcceptUid())
                 .eq(ChatLast::getAcceptUid, chat.getSendUid())
                 .one();
 
-        boolean isLastMe = Objects.nonNull(lastMe);
+        boolean isLastMe = nonNull(lastMe);
         if (!isLastMe) {//无数据
             lastMe = new ChatLast();
             lastMe.setSendUid(chat.getAcceptUid());
@@ -174,29 +181,17 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
          */
 
         DynamicDataSourceContextHolder.push(DBType.CHAT.getDbName());
-        MPJLambdaWrapper<ChatLast> wrap = new MPJLambdaWrapper(ChatLast.class);
+        MPJLambdaWrapper<ChatLast> wrap = new MPJLambdaWrapper<>(ChatLast.class);
         wrap.select(ChatLast::getSendUid)
                 .eq(ChatLast::getAcceptUid, userId);
 
         List<Long> userIds = lastMapper.selectJoinList(Long.class, wrap);
-        DynamicDataSourceContextHolder.poll();
-
         if (Objects.isNull(userIds) || userIds.isEmpty()) {
             return Result.success(null);
         }
 
-        DynamicDataSourceContextHolder.push(DBType.AUTH.getDbName());
-
-        MPJLambdaWrapper<User> chatWrap = new MPJLambdaWrapper(User.class);
-        chatWrap
-                .select(User::getName, User::getId)
-                .in(User::getId, userIds);
-        Map<Long, List<UserChatBO>> tmpMap = userMapper.selectJoinList(UserChatBO.class, chatWrap)
-                .stream()
-                .collect(Collectors.groupingBy(UserChatBO::getId));
-
-        DynamicDataSourceContextHolder.poll();
-        DynamicDataSourceContextHolder.push(DBType.CHAT.getDbName());
+        // 查询用户信息
+        Map<Long, Auth.UserAPI.User> tmpMap = api.getUserList(userIds).stream().collect(Collectors.toMap(Auth.UserAPI.User::getId, item -> item));
 
         MPJLambdaWrapper<ChatListDto.ChatLastDto> wrapper = new MPJLambdaWrapper(ChatLast.class);
         Page<ChatListDto.ChatLastDto> page = wrapper
@@ -212,11 +207,11 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
                 .page(new Page(current, size), ChatListDto.ChatLastDto.class);
 
         DynamicDataSourceContextHolder.poll();
-
         page.getRecords().forEach(l -> {
-            UserChatBO chatBO = tmpMap.get(l.getSendUid()).get(0);
-            l.setSendName(chatBO.getName());
-            l.setAvatarPath("impl ing no head.jpg");
+            Auth.UserAPI.User user = tmpMap.get(l.getSendUid());
+            l.setSendName(user.getName());
+            l.setAvatarPath(user.getAvatar());
+            l.setTimeLastStr(DateUtil.format(l.getTimeLast(), "yyyy-MM-dd"));
         });
 
         ChatListDto result = new ChatListDto();
@@ -269,13 +264,16 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
 
         List<ChatRecordDto> sendList = selectJoinListPage(new Page(current, little), ChatRecordDto.class, sendWrap).getRecords();
 
+        Auth.UserAPI.User loginUser = api.getLoginUser();
         //两张表查出来的数据合并
         // boolean isNonNull_2 = Objects.nonNull(sendList.get(0));//查不出来数据，但List却有一个元素，但该元素又是空
         if (!sendList.isEmpty() /*&& isNonNull_2*/) {
             if (page.getRecords().isEmpty()) {
-                page.setRecords(new ArrayList());
+                page.setRecords(new ArrayList<>());
             } else {
-                sendList.forEach(c -> c.setChatUid(-1L));
+                sendList.forEach(c -> {
+                    c.setAvatar(loginUser.getAvatar());
+                });
             }
             page.getRecords().addAll(sendList);
             page.getRecords().sort((l, r) -> {
@@ -287,6 +285,29 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
         }
         page.setTotal(page.getRecords().size());
 
+        List<ChatRecordDto> records = page.getRecords();
+        if(records.size() > NumberUtils.INTEGER_ZERO) {
+            Set<Long> needFillAvatarIDs = new HashSet<>();
+            List<ChatRecordDto> needFillAvatarDTOList = new ArrayList<>();
+            for (int index = NumberUtils.INTEGER_ZERO; index < records.size(); index++) {
+                ChatRecordDto record = records.get(index);
+                if(!record.getChatUid().equals(loginUser.getId())) {
+                    needFillAvatarIDs.add(record.getChatUid());
+                    needFillAvatarDTOList.add(record);
+                }
+            }
+            if(needFillAvatarIDs.size() > NumberUtils.INTEGER_ZERO) {
+                List<Auth.UserAPI.User> userList = api.getUserList(new ArrayList<>(needFillAvatarIDs));
+                if(nonNull(userList) && userList.size() > NumberUtils.INTEGER_ZERO) {
+                    Map<Long, Auth.UserAPI.User> idAndUserMap = userList.stream().collect(Collectors.toMap(Auth.UserAPI.User::getId, user -> user));
+                    for (int index = NumberUtils.INTEGER_ZERO; index < needFillAvatarDTOList.size(); index++) {
+                        ChatRecordDto dto = needFillAvatarDTOList.get(index);
+                        Auth.UserAPI.User user = idAndUserMap.get(dto.getChatUid());
+                        if(nonNull(user)) dto.setAvatar(user.getAvatar());
+                    }
+                }
+            }
+        }
         return page;
     }
 

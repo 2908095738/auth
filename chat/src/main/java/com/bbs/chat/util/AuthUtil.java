@@ -30,13 +30,13 @@ public class AuthUtil {
     public static class UserAPI {
 
         @Value("${auth.api.verify.path}")
-        private static String verifyApi;
+        private String verifyApi;
 
         @Value("${auth.api.verify.token}")
-        private static String verifyKey;
+        private String verifyKey;
 
         @Value("${auth.api.verify.timeout}")
-        private static Integer verifyTimeout;
+        private Integer verifyTimeout;
 
         @Value("${auth.host}")
         private String host;

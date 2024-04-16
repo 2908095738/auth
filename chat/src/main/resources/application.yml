@@ -82,5 +82,13 @@ tokenName: Authorization
 authServerIP: 192.168.100.6
 authServerPort: 8080
 auth:
-  host: 192.168.100.6:7005
+  host: 192.168.0.7:9999
+  api:
+    verify:
+      path: /verify
+      token: authorization
+      timeout: 10000
+    search:
+      id: /server/
+      list: /server/list
 
