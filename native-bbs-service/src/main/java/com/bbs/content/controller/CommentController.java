@@ -1,8 +1,10 @@
 package com.bbs.content.controller;
 
+import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
+import com.bbs.content.cache.ThumbCache;
 import com.bbs.content.converter.CommentConverter;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.MqCommentDto;
@@ -11,7 +13,11 @@ import com.bbs.content.entity.Comment;
 import com.bbs.content.mq.RabbitmqConfig;
 import com.bbs.content.mq.RabbitmqSend;
 import com.bbs.content.service.CommentService;
+import com.bbs.content.util.AuthUtil;
+import com.bbs.content.util.ThreadLocalUtil;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -21,7 +27,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static cn.hutool.core.collection.CollUtil.isNotEmpty;
 
 /**
  * 评论
@@ -33,6 +48,9 @@ public class CommentController {
     private CommentService service;
     private CommentConverter converter;
     private RabbitmqSend rabbitmqSend;
+    private ThumbCache thumbCache;
+
+    private AuthUtil.UserAPI api;
 
     /**
      * 添加评论
@@ -46,7 +64,10 @@ public class CommentController {
         Date now = new Date();
         comment.setCreateTime(now);
         comment.setUpdateTime(now);
-
+        comment.setCreateId(ThreadLocalUtil.getCurrentUserId());
+        if(Objects.isNull(param.getParentId())){
+            comment.setParentId(0L);
+        }
         service.save(comment);
         //通知对应的用户
         MqCommentDto mqCommentDto = converter.toMqDto(param);
@@ -55,14 +76,18 @@ public class CommentController {
         return Result.success(true);
     }
 
-
+    @Data
+    private static class DeleteComment{
+        private Long commentId;
+    }
 
     /**
      * 删除评论
      */
+    @Transactional
     @DeleteMapping
-    public Result<Boolean> deleteComment(@RequestBody Long commentId){
-        return Result.success(service.delById(commentId));
+    public Result<Boolean> deleteComment(@RequestBody DeleteComment param){
+        return Result.success(service.delById(param.getCommentId()));
     }
 
 
@@ -79,7 +104,33 @@ public class CommentController {
     public Result<Page<GetUserNewsDto.CommentByNewIdDto>> getPageByNewId(@NotNull(message = "内容id不能为空！") Long newId,
                                                                          @NotNull(message = "页数不能为空！") Integer current,
                                                                          @NotNull(message = "每页几条不能为空！") Integer size){
-        return Result.success(service.getPageByNewId(newId, current, size));
+        Long currentUserId = ThreadLocalUtil.getCurrentUserId();
+
+        Page<GetUserNewsDto.CommentByNewIdDto> result = service.getPageByNewId(newId, current, size);
+        if(isNotEmpty(result.getRecords())) {
+            List<Long> commentIds = result.getRecords().stream().map(GetUserNewsDto.CommentByNewIdDto::getId).collect(Collectors.toList());
+            Set<Long> userIds = result.getRecords().stream().map(GetUserNewsDto.CommentByNewIdDto::getCreateId).collect(Collectors.toSet());
+            Map<Long, AuthUtil.UserAPI.VO> userIdMap = new HashMap<>();
+            if(CollUtil.isNotEmpty(userIds)&&userIds.size()>1){
+                userIdMap = api.getUserList(new ArrayList<>(userIds)).stream().collect(Collectors.toMap(AuthUtil.UserAPI.VO::getId, o2 -> o2));
+            }{
+                AuthUtil.UserAPI.VO userByid = api.getUserByid(new ArrayList<>(userIds).get(0));
+                userIdMap.put(userByid.getId(),userByid);
+            }
+            Map<Long, Set<Long>> commentThumbUsersMap = (Map<Long, Set<Long>>) thumbCache.countBy(newId, null, commentIds, 3);
+            Map<Long, AuthUtil.UserAPI.VO> finalUserIdMap = userIdMap;
+            result.getRecords().forEach(o -> {
+                AuthUtil.UserAPI.VO vo = finalUserIdMap.get(o.getCreateId());
+                Set<Long> thumbUserIds = commentThumbUsersMap.get(o.getId());
+                o.setAvatarUrl(vo.getAvatar());
+                o.setNickName(vo.getName());
+                o.setHasLike(thumbUserIds.contains(currentUserId));//是否点赞
+                //当前用户是否可以删除此评论（自己评论或管理员）
+                o.setOwner(Objects.equals(o.getCreateId(), currentUserId));
+                o.setLikeNum(thumbUserIds.size());
+            });
+        }
+        return Result.success(result);
     }
 
 
@@ -89,10 +140,12 @@ public class CommentController {
 
 
     @Autowired
-    public CommentController(CommentService service, CommentConverter converter, RabbitmqSend rabbitmqSend) {
+    public CommentController(CommentService service, CommentConverter converter, RabbitmqSend rabbitmqSend, ThumbCache thumbCache, AuthUtil.UserAPI api) {
         this.service = service;
         this.converter = converter;
         this.rabbitmqSend = rabbitmqSend;
+        this.thumbCache = thumbCache;
+        this.api = api;
     }
 
 }

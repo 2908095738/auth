@@ -112,9 +112,9 @@ public class ContentController {
     public Result<Page<GetContentDto>> getQueryNews(@Valid QueryNewsParam param){
         Page<GetContentDto> result = newsService.getListByQuery(param);
         if(isNotEmpty(result.getRecords())) {
-            Map<Long, AuthUtil.UserAPI.VO> collect = api.getUserList(result.getRecords().stream().map(GetContentDto::getCreateId).collect(Collectors.toList())).stream().collect(Collectors.toMap(o1 -> o1.getId(), o2 -> o2));
+            Map<Long, AuthUtil.UserAPI.VO> collect = api.getUserList(result.getRecords().stream().map(GetContentDto::getCreateId).collect(Collectors.toList())).stream().collect(Collectors.toMap(AuthUtil.UserAPI.VO::getId, o2 -> o2));
             result.getRecords().forEach(o ->{
-                o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1));
+                o.setLikeCount((Integer) thumbCache.countBy(o.getNewId(), null, null, 1));
                 o.setUser(collect.get(o.getCreateId()));
             });
         }
@@ -146,7 +146,7 @@ public class ContentController {
         if(isNotEmpty(result.getRecords())){
             Map<Long, AuthUtil.UserAPI.VO> collect = api.getUserList(result.getRecords().stream().map(GetContentDto::getCreateId).collect(Collectors.toList())).stream().collect(Collectors.toMap(o1 -> o1.getId(), o2 -> o2));
             result.getRecords().forEach(o ->{
-                o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1));
+                o.setLikeCount((Integer) thumbCache.countBy(o.getNewId(), null, null, 1));
                 o.setUser(collect.get(o.getCreateId()));
             });
         }
@@ -173,11 +173,11 @@ public class ContentController {
         if(isNotEmpty(newsResult.getRecords())){
             Map<Long, AuthUtil.UserAPI.VO> collect = api.getUserList(newsResult.getRecords().stream().map(GetContentDto::getCreateId).collect(Collectors.toList())).stream().collect(Collectors.toMap(o1 -> o1.getId(), o2 -> o2));
             newsResult.getRecords().forEach(o ->{
-                o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1));
+                o.setLikeCount((Integer) thumbCache.countBy(o.getNewId(), null, null, 1));
                 o.setUser(collect.get(o.getCreateId()));
             });
         }
-            newsResult.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
+            newsResult.getRecords().forEach(o -> o.setLikeCount((Integer) thumbCache.countBy(o.getNewId(), null, null, 1)));
         return Result.success(newsResult);
     }
 
@@ -204,7 +204,7 @@ public class ContentController {
             Map<Long, AuthUtil.UserAPI.VO> finalUserIdMap = userIdMap;
             result.forEach(o -> {
                 o.setUser(finalUserIdMap.get(o.getCreateId()));
-                o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1));
+                o.setLikeCount((Integer) thumbCache.countBy(o.getNewId(), null, null, 1));
                 o.setVisitNum(visitMap.getOrDefault(o.getNewId(), 0));
             });
         }
@@ -239,8 +239,31 @@ public class ContentController {
         if (Objects.nonNull(result)) {
             AuthUtil.UserAPI.VO userByid = api.getUserByid(result.getCreateId());
             result.setUser(userByid);
-            result.setLikeCount(thumbCache.countBy(result.getNewId(), null, null, 1));
+            result.setLikeCount((Integer) thumbCache.countBy(result.getNewId(), null, null, 1));
             Page<GetUserNewsDto.CommentByNewIdDto> list = commentService.getPageByNewId(newId, current, size);
+            if(isNotEmpty(list.getRecords())) {
+                List<Long> commentIds = list.getRecords().stream().map(GetUserNewsDto.CommentByNewIdDto::getId).collect(Collectors.toList());
+                Set<Long> userIds = list.getRecords().stream().map(GetUserNewsDto.CommentByNewIdDto::getCreateId).collect(Collectors.toSet());
+                Map<Long, AuthUtil.UserAPI.VO> userIdMap = new HashMap<>();
+                if(CollUtil.isNotEmpty(userIds)&&userIds.size()>1){
+                    userIdMap = api.getUserList(new ArrayList<>(userIds)).stream().collect(Collectors.toMap(AuthUtil.UserAPI.VO::getId, o2 -> o2));
+                }{
+                    AuthUtil.UserAPI.VO commentUser = api.getUserByid(new ArrayList<>(userIds).get(0));
+                    userIdMap.put(commentUser.getId(),commentUser);
+                }
+                Map<Long, Set<Long>> commentThumbUsersMap = (Map<Long, Set<Long>>) thumbCache.countBy(newId, null, commentIds, 3);
+                Map<Long, AuthUtil.UserAPI.VO> finalUserIdMap = userIdMap;
+                list.getRecords().forEach(o -> {
+                    AuthUtil.UserAPI.VO vo = finalUserIdMap.get(o.getCreateId());
+                    Set<Long> thumbUserIds = commentThumbUsersMap.get(o.getId());
+                    o.setAvatarUrl(vo.getAvatar());
+                    o.setNickName(vo.getName());
+                    o.setHasLike(thumbUserIds.contains(currentUserId));//是否点赞
+                    //当前用户是否可以删除此评论（自己评论或管理员）
+                    o.setOwner(Objects.equals(o.getCreateId(), currentUserId));
+                    o.setLikeNum(thumbUserIds.size());
+                });
+            }
             result.setCommentByNewIdDtoList(list);
             result.setThisUser(Objects.equals(currentUserId, result.getCreateId()));
             //访问量加1

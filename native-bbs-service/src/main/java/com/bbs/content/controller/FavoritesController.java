@@ -100,7 +100,7 @@ public class FavoritesController {
     public Result<Page<GetFavoritesDto>> getFavorites(GetFavoritesParam param){
         Page<GetFavoritesDto> result = favoritesService.getFavorites(param);
         if(isNotEmpty(result.getRecords()))
-            result.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
+            result.getRecords().forEach(o -> o.setLikeCount((Integer) thumbCache.countBy(o.getNewId(), null, null, 1)));
         return Result.success(result);
     }
 

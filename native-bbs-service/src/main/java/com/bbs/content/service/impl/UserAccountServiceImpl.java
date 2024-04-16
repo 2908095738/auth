@@ -36,7 +36,7 @@ public class UserAccountServiceImpl extends MPJBaseServiceImpl<UserAccountMapper
 //                .leftJoin(Fan.class,Fan::getUserId,UserAccount::getUserId)
                 .eq(UserAccount::getUserId,userId)
         );
-        result.setLikeCount(thumbCache.countBy(null,userId,null,2));//点赞
+        result.setLikeCount((Integer) thumbCache.countBy(null,userId,null,2));//点赞
         //粉丝result.setFanCount();
         //收藏result.setFavoriteCount();
         //关注result.setFollowerCount();

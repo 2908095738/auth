@@ -34,7 +34,6 @@ public class CreateThumbParam {
     /**
      * 点赞用户id
      */
-    @NotNull(message = "点赞用户id不能为空！")
     private Long userId;
 
     /**

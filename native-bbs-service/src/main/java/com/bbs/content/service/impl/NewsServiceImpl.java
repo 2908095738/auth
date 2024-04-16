@@ -12,6 +12,7 @@ import com.bbs.content.entity.Fan;
 import com.bbs.content.entity.NewContent;
 import com.bbs.content.entity.NewTag;
 import com.bbs.content.entity.News;
+import com.bbs.content.entity.Tag;
 import com.bbs.content.enums.NewCommentStatus;
 import com.bbs.content.mapper.NewsMapper;
 import com.bbs.content.service.NewsService;
@@ -258,8 +259,9 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
     public GetUserNewsDto getOneById(Long newId) {
         return selectJoinOne(GetUserNewsDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
-                .selectCollection(NewTag.class, GetUserNewsDto::getTagIds, o -> o.result(NewTag::getTagId))
+                .selectCollection(Tag.class, GetUserNewsDto::getTags)
                 .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
+                .leftJoin(Tag.class, Tag::getId,NewTag::getTagId)
                 .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
                 .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
                 .eq(News::getNewId, newId)
