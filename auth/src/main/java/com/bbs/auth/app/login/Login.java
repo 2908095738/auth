@@ -86,7 +86,7 @@ public class Login {
         /**
          * 登录类型
          */
-        private Integer type;
+        private Integer loginType;
     }
 
     @Data
@@ -112,8 +112,8 @@ public class Login {
             () -> {
                 log.debug("[Login::login] param={}", JSONUtil.toJsonPrettyStr(param));
                 User user;
-                checkArgument(LoginType.checkFormat(param.type), FAILED_LOGIN_TYPE_NOT_AVAILABLE);
-                if(LoginType.PHONE.getCode().equals(param.type)) {
+                checkArgument(LoginType.checkFormat(param.loginType), FAILED_LOGIN_TYPE_NOT_AVAILABLE);
+                if(LoginType.PHONE.getCode().equals(param.loginType)) {
                     checkPhoneFormat(phone);
                     checkPhoneCodeFormat(param.code);
                     Integer code = phoneCodeCache.getCode(phone);
@@ -122,7 +122,7 @@ public class Login {
                     user = userCache.searchByPhoneNoLockNoLoad(phone);
                     checkArgument(nonNull(user), FAILED_LOGIN_USER_NOT_EXISTS);
                     checkArgument(UserStateEnum.STATUS_NORMAL.getCode().equals(user.getState()), FAILED_LOGIN_USER_STATUS_ERROR);
-                } else if (LoginType.WX.getCode().equals(param.type)) {
+                } else if (LoginType.WX.getCode().equals(param.loginType)) {
                     throw new IllegalArgumentException("微信登录未开通");
                 } else {
                     checkPhoneFormat(phone);
