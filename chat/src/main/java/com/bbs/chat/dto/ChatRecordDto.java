@@ -45,10 +45,9 @@ public class ChatRecordDto {
      * 消息发送方
      * 1.我发给对方
      * 2.对方发给我
-     * TODO 方便前端区分是谁发送的消息，但因为其不是表中的字段,涉及暂不会的子查询故使用[chatUid]代替
      */
-//    @TableField(exist = false)
-//    private Integer type;
+    @TableField(exist = false)
+    private Integer type;
 
     @TableField(value = "time")
     private Date time;

@@ -33,12 +33,11 @@ public interface ChatService extends IService<Chat> {
     /**
      * 获取聊天记录
      *
-     * @param sendUid   发送方用户id
-     * @param acceptUid 接收方用户id
+     * @param targetUID   聊天对方 UID
      * @param current   第几页
      * @param size      几条
      */
-    Page<ChatRecordDto> getRecord(Long sendUid, Long acceptUid, Integer current, Integer size);
+    Page<ChatRecordDto> getRecord(Long targetUID, Integer current, Integer size);
 
     /**
      * 获取点赞、收藏列表

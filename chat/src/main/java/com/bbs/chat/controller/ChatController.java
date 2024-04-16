@@ -2,12 +2,9 @@ package com.bbs.chat.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
-import com.bbs.chat.converter.CommentConverter;
-import com.bbs.chat.converter.ThumbConverter;
 import com.bbs.chat.dto.*;
 import com.bbs.chat.dto.param.CreateChatParam;
 import com.bbs.chat.service.ChatService;
-import com.bbs.chat.service.ThumbService;
 import com.bbs.chat.util.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -21,17 +18,11 @@ import java.util.List;
 @RequestMapping("/chat")
 public class ChatController {
 
-    private ChatService chatService;
-
-    private CommentConverter converter;
-
-    private ThumbConverter thumbConverter;
+    private final ChatService chatService;
 
     @Autowired
-    public ChatController(ChatService service, ThumbService thumbService, CommentConverter converter, ThumbConverter thumbConverter) {
+    public ChatController(ChatService service) {
         this.chatService = service;
-        this.converter = converter;
-        this.thumbConverter = thumbConverter;
     }
 
     @PutMapping("/createChat")
@@ -42,8 +33,6 @@ public class ChatController {
 
     /**
      * 获取消息页顶部的点赞/收藏、关注、评论角标
-     *
-     * @return
      */
     @GetMapping("/getTop")
     public Result<ChatTopDto> getTop() {
@@ -57,7 +46,6 @@ public class ChatController {
      *
      * @param current 未读消息第几页
      * @param size    未读消息几条
-     * @return
      */
     @GetMapping("/getChat")
     public Result<ChatListDto> getChat(Integer current, Integer size) {
@@ -74,8 +62,7 @@ public class ChatController {
      */
     @GetMapping("/getRecord")
     public Result<Page<ChatRecordDto>> getRecord(Long sendUid, Integer current, Integer size) {
-        Long acceptUid = ThreadLocalUtil.getCurrentUserId();
-        Page<ChatRecordDto> result = chatService.getRecord(sendUid, acceptUid, current, size);
+        Page<ChatRecordDto> result = chatService.getRecord(sendUid, current, size);
         return Result.success(result);
     }
 
@@ -123,10 +110,6 @@ public class ChatController {
 
     /**
      * 获取关注用户昵称
-     *
-     * @param current
-     * @param size
-     * @return
      */
     @GetMapping("/getNick")
     public Result<Page<String>> getNick(Integer current, Integer size) {
@@ -140,7 +123,6 @@ public class ChatController {
      *
      * @param sendUid 发送方id
      * @param type    互关标识符：1.互关2.取消互关
-     * @return
      */
     @GetMapping("/toFan")
     public Result toFan(Long sendUid, Integer type) {

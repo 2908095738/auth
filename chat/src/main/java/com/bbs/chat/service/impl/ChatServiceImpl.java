@@ -221,94 +221,56 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
 
     @DS("chat")
     @Override
-    public Page<ChatRecordDto> getRecord(Long sendUid, Long acceptUid, Integer current, Integer size) {
-        /**
-         * TODO 仿照微信聊天记录有相应时间段,聊天记录存放用户本地
-         *  -
-         *      复杂SQL难搞暂时用着(getComm方法同理)
-         */
-
-        //我发给别人的消息列表
-        MPJLambdaWrapper acceptWrap = new MPJLambdaWrapper<ChatRecordDto>()
-                .select(Chat::getId)
-                .selectAs(Chat::getSendUid, ChatRecordDto::getChatUid)
-                .select(Chat::getContentType, Chat::getContent, Chat::getTime)
-
-                .eq(Chat::getSendUid, sendUid)
-                .eq(Chat::getAcceptUid, acceptUid)
-                .eq(Chat::getStatus, 0)
-                .orderBy(true, false, Chat::getTime);
-
-        Page<ChatRecordDto> page = selectJoinListPage(new Page(current, size / 2), ChatRecordDto.class, acceptWrap);
-
-        //清除消息页对应消息角标
-        UpdateJoinWrapper<ChatLast> updWrap = JoinWrappers.update(ChatLast.class)
-                .set(ChatLast::getCount, 0)
-                .eq(ChatLast::getSendUid, sendUid)
-                .eq(ChatLast::getAcceptUid, acceptUid);
-        lastMapper.update(updWrap);
-
-        //正常情况下评论、回复各生成一半，评论数量不足其余全由回复补上
-        long total = page.getTotal();
-        long little = size - total;
-
-        //别人发给我的消息列表
-        MPJLambdaWrapper sendWrap = new MPJLambdaWrapper<ChatRecordDto>()
-                .select(Chat::getId)
-                .select(Chat::getContentType, Chat::getContent, Chat::getTime)
-
-                .eq(Chat::getSendUid, acceptUid)
-                .eq(Chat::getAcceptUid, sendUid)
-                .eq(Chat::getStatus, 0)
-                .orderBy(true, false, Chat::getTime);
-
-        List<ChatRecordDto> sendList = selectJoinListPage(new Page(current, little), ChatRecordDto.class, sendWrap).getRecords();
-
+    public Page<ChatRecordDto> getRecord(Long targetUID, Integer current, Integer size) {
         Auth.UserAPI.User loginUser = api.getLoginUser();
-        //两张表查出来的数据合并
-        // boolean isNonNull_2 = Objects.nonNull(sendList.get(0));//查不出来数据，但List却有一个元素，但该元素又是空
-        if (!sendList.isEmpty() /*&& isNonNull_2*/) {
-            if (page.getRecords().isEmpty()) {
-                page.setRecords(new ArrayList<>());
+        Long loginUserId = loginUser.getId();
+        Page<Chat> chats = lambdaQuery()
+                .eq(Chat::getStatus, NumberUtils.INTEGER_ZERO)
+                .nested(wrapper -> wrapper
+                        .eq(Chat::getSendUid, loginUserId)
+                        .eq(Chat::getAcceptUid, targetUID)
+                )
+                .or(wrapper -> wrapper
+                        .eq(Chat::getSendUid, targetUID)
+                        .eq(Chat::getAcceptUid, loginUserId)
+                )
+                .page(new Page<>(current, size));
+
+        List<Chat> records = chats.getRecords();
+        int chatNumber = records.size();
+        List<ChatRecordDto> dtoList = new ArrayList<>(chatNumber);
+        List<ChatRecordDto> needFillAvatarDTOList = new ArrayList<>();
+        Set<Long> needFillAvatarChatUIDs = new HashSet<>();
+        for (Chat chat : records) {
+            ChatRecordDto dto = converter.toDTO(chat);
+            if (chat.getSendUid().equals(loginUserId)) {
+                // 发给别人的消息
+                dto.setType(NumberUtils.INTEGER_ONE);
+                dto.setAvatar(loginUser.getAvatar());
+                dto.setChatUid(loginUserId);
             } else {
-                sendList.forEach(c -> {
-                    c.setAvatar(loginUser.getAvatar());
-                });
+                // 收到的消息
+                dto.setType(NumberUtils.INTEGER_ZERO);
+                dto.setChatUid(chat.getSendUid());
+                needFillAvatarChatUIDs.add(dto.getChatUid());
+                needFillAvatarDTOList.add(dto);
             }
-            page.getRecords().addAll(sendList);
-            page.getRecords().sort((l, r) -> {
-                Date lTime = l.getTime();
-                Date rTime = r.getTime();
-
-                return rTime.compareTo(lTime);
-            });
+            dtoList.add(dto);
         }
-        page.setTotal(page.getRecords().size());
-
-        List<ChatRecordDto> records = page.getRecords();
-        if(records.size() > NumberUtils.INTEGER_ZERO) {
-            Set<Long> needFillAvatarIDs = new HashSet<>();
-            List<ChatRecordDto> needFillAvatarDTOList = new ArrayList<>();
-            for (int index = NumberUtils.INTEGER_ZERO; index < records.size(); index++) {
-                ChatRecordDto record = records.get(index);
-                if(!record.getChatUid().equals(loginUser.getId())) {
-                    needFillAvatarIDs.add(record.getChatUid());
-                    needFillAvatarDTOList.add(record);
-                }
-            }
-            if(needFillAvatarIDs.size() > NumberUtils.INTEGER_ZERO) {
-                List<Auth.UserAPI.User> userList = api.getUserList(new ArrayList<>(needFillAvatarIDs));
-                if(nonNull(userList) && userList.size() > NumberUtils.INTEGER_ZERO) {
-                    Map<Long, Auth.UserAPI.User> idAndUserMap = userList.stream().collect(Collectors.toMap(Auth.UserAPI.User::getId, user -> user));
-                    for (int index = NumberUtils.INTEGER_ZERO; index < needFillAvatarDTOList.size(); index++) {
-                        ChatRecordDto dto = needFillAvatarDTOList.get(index);
-                        Auth.UserAPI.User user = idAndUserMap.get(dto.getChatUid());
-                        if(nonNull(user)) dto.setAvatar(user.getAvatar());
-                    }
+        if(needFillAvatarDTOList.size() > NumberUtils.INTEGER_ZERO) {
+            List<Auth.UserAPI.User> userList = api.getUserList(new ArrayList<>(needFillAvatarChatUIDs));
+            if(nonNull(userList) && userList.size() > NumberUtils.INTEGER_ZERO) {
+                Map<Long, Auth.UserAPI.User> idAndUserMap = userList.stream().collect(Collectors.toMap(Auth.UserAPI.User::getId, user -> user));
+                for (int index = NumberUtils.INTEGER_ZERO; index < needFillAvatarDTOList.size(); index++) {
+                    ChatRecordDto dto = needFillAvatarDTOList.get(index);
+                    Auth.UserAPI.User user = idAndUserMap.get(dto.getChatUid());
+                    if(nonNull(user)) dto.setAvatar(user.getAvatar());
                 }
             }
         }
-        return page;
+        Page<ChatRecordDto> result = new Page<>(chats.getCurrent(), chats.getSize(), chats.getTotal());
+        result.setRecords(dtoList);
+        return result;
     }
 
     @Override
