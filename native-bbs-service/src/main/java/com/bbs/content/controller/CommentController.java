@@ -30,6 +30,7 @@ import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -108,8 +109,20 @@ public class CommentController {
 
         Page<GetUserNewsDto.CommentByNewIdDto> result = service.getPageByNewId(newId, current, size);
         if(isNotEmpty(result.getRecords())) {
-            List<Long> commentIds = result.getRecords().stream().map(GetUserNewsDto.CommentByNewIdDto::getId).collect(Collectors.toList());
-            Set<Long> userIds = result.getRecords().stream().map(GetUserNewsDto.CommentByNewIdDto::getCreateId).collect(Collectors.toSet());
+            List<Long> commentIds = new ArrayList<>();
+            Set<Long> userIds = new HashSet<>();
+            result.getRecords().forEach(comment->{
+                userIds.add(comment.getCreateId());
+                commentIds.add(comment.getId());
+                if(CollUtil.isNotEmpty(comment.getChildren())){
+                    comment.getChildren().forEach(children->{
+                        userIds.add(children.getCreateId());
+                        commentIds.add(children.getId());
+                    });
+                }
+            });
+
+
             Map<Long, AuthUtil.UserAPI.VO> userIdMap = new HashMap<>();
             if(CollUtil.isNotEmpty(userIds)&&userIds.size()>1){
                 userIdMap = api.getUserList(new ArrayList<>(userIds)).stream().collect(Collectors.toMap(AuthUtil.UserAPI.VO::getId, o2 -> o2));
@@ -118,17 +131,28 @@ public class CommentController {
                 userIdMap.put(userByid.getId(),userByid);
             }
             Map<Long, Set<Long>> commentThumbUsersMap = (Map<Long, Set<Long>>) thumbCache.countBy(newId, null, commentIds, 3);
-            Map<Long, AuthUtil.UserAPI.VO> finalUserIdMap = userIdMap;
-            result.getRecords().forEach(o -> {
-                AuthUtil.UserAPI.VO vo = finalUserIdMap.get(o.getCreateId());
-                Set<Long> thumbUserIds = commentThumbUsersMap.get(o.getId());
-                o.setAvatarUrl(vo.getAvatar());
-                o.setNickName(vo.getName());
-                o.setHasLike(thumbUserIds.contains(currentUserId));//是否点赞
-                //当前用户是否可以删除此评论（自己评论或管理员）
-                o.setOwner(Objects.equals(o.getCreateId(), currentUserId));
-                o.setLikeNum(thumbUserIds.size());
-            });
+
+
+            for(GetUserNewsDto.CommentByNewIdDto comment:result.getRecords()){
+                AuthUtil.UserAPI.VO vo = userIdMap.get(comment.getCreateId());
+                Set<Long> thumbUserIds = commentThumbUsersMap.get(comment.getId());
+                comment.setAvatarUrl(vo.getAvatar());//头像
+                comment.setNickName(vo.getName());//名字
+                comment.setHasLike(thumbUserIds.contains(currentUserId));//是否点赞
+                comment.setOwner(Objects.equals(comment.getCreateId(), currentUserId));//是否可以删除此评论（自己评论或管理员）
+                comment.setLikeNum(thumbUserIds.size());//点赞数
+                if(CollUtil.isNotEmpty(comment.getChildren())){
+                    for (GetUserNewsDto.CommentByNewIdDto children : comment.getChildren()) {
+                        AuthUtil.UserAPI.VO childrenVo = userIdMap.get(children.getCreateId());
+                        Set<Long> childrenThumbUserIds = commentThumbUsersMap.get(children.getId());
+                        children.setAvatarUrl(childrenVo.getAvatar());//头像
+                        children.setNickName(childrenVo.getName());//名字
+                        children.setHasLike(childrenThumbUserIds.contains(currentUserId));//是否点赞
+                        children.setOwner(Objects.equals(children.getCreateId(), currentUserId));//是否可以删除此评论（自己评论或管理员）
+                        children.setLikeNum(childrenThumbUserIds.size());//点赞数
+                    }
+                }
+            }
         }
         return Result.success(result);
     }
