@@ -3,7 +3,7 @@ package com.bbs.auth.app.user;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
-import com.bbs.auth.app.login.util.Util;
+import com.bbs.auth.util.PhoneUtil;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.entity.Fan;
 import com.bbs.auth.entity.User;
@@ -77,7 +77,7 @@ public class Search {
             @RequestParam("size") Integer size
     ) throws ReLoginException {
         Long numVal = null;
-        if(Util.isNumber(val)) {
+        if(PhoneUtil.isNumber(val)) {
             numVal = Long.parseLong(val);
         }
         UserVO loginUser = service.loginUser();
@@ -89,7 +89,7 @@ public class Search {
                         .eq(Fan::getUserId, loginUser.getId())
                         .eq(Fan::getFollowUserId, User::getId)
                 )
-                .like(!Util.isNumber(val), User::getName, val)
+                .like(!PhoneUtil.isNumber(val), User::getName, val)
                 .eq(nonNull(numVal), User::getPhone, numVal)
                 .or(nonNull(numVal))
                 .eq(nonNull(numVal), User::getId, numVal)
