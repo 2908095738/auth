@@ -30,12 +30,17 @@ public class CommentServiceImpl extends MPJBaseServiceImpl<CommentMapper, Commen
         Page<GetUserNewsDto.CommentByNewIdDto> result = selectJoinListPage(new Page<>(current, size),GetUserNewsDto.CommentByNewIdDto.class,new MPJLambdaWrapper<Comment>()
                 .selectAll(Comment.class)
                 .eq(Comment::getNewId, newId)
+                .eq(Comment::getParentId,0)
+                .eq(Comment::getDeleteFlag,0)
+                .selectCollection(Comment.class,GetUserNewsDto.CommentByNewIdDto::getChildren)
+                .leftJoin(Comment.class,Comment::getParentId,Comment::getId)
         );
         return result;
     }
 
     @Override
     public Boolean delById(Long commentId) {
+        lambdaUpdate().set(Comment::getDeleteFlag,1).eq(Comment::getParentId,commentId).update();
         return updateById(new Comment().setId(commentId).setDeleteFlag(1));
     }
 

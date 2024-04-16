@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.content.util.AuthUtil;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -45,7 +46,7 @@ public class GetUserNewsDto {
      * 标签ids
      */
     @TableField(exist = false)
-    private List<Long> tagIds;
+    private List<NewTagDto> tags;
 
     /**
      * IP
@@ -150,7 +151,7 @@ public class GetUserNewsDto {
          * 点赞数(或直接取值，或统计数据库点赞数量)
          */
         @TableField(exist = false)
-        private Integer likeCount;
+        private Integer likeNum;
 
         /**
          * 自己（当前登录用户）是否点赞了
@@ -200,7 +201,24 @@ public class GetUserNewsDto {
          * 创建时间
          */
         @TableField(value = "create_time")
+        @JsonFormat(pattern = "YYYY-MM-DD HH:mm:ss")
         private Date createTime;
+
+        @TableField(exist = false)
+        private List<CommentByNewIdDto> children;
+    }
+
+
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class NewTagDto{
+
+        private Long id;
+        private String name;
+
+
     }
 
 }

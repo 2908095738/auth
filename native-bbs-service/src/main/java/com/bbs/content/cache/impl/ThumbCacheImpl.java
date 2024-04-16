@@ -4,19 +4,21 @@ import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.bbs.content.cache.ThumbCache;
-import com.bbs.content.dto.param.CreateThumbParam;
-import com.bbs.content.util.RedisUtil;
 import com.bbs.content.dto.param.CancelThumbParam;
+import com.bbs.content.dto.param.CreateThumbParam;
 import com.bbs.content.enums.RedisKeys;
+import com.bbs.content.util.RedisUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ThumbCacheImpl implements ThumbCache {
@@ -68,7 +70,7 @@ public class ThumbCacheImpl implements ThumbCache {
      * @return Integer
      */
     @Override
-    public Integer countBy(Long newId, Long userId, List<Long> commentIds, int type) {
+    public Object countBy(Long newId, Long userId, List<Long> commentIds, int type) {
         switch (type){
             case 1:
                 return countNewThumb(newId);
@@ -78,7 +80,7 @@ public class ThumbCacheImpl implements ThumbCache {
             case 3:
                 return countCommentThumb(newId,commentIds);
         }
-        return 0;
+        return null;
     }
 
 
@@ -121,10 +123,16 @@ public class ThumbCacheImpl implements ThumbCache {
     }
 
     //评论点赞数
-    private Integer countCommentThumb(Long newId, List<Long> commentIds) {
-        String json = (String) redis.hashGet(RedisKeys.NEW_THUMB_COMMENT.key() + newId, RedisKeys.COMMENT_THUMB.key()+commentIds);
-        List<Set<Integer>> userIds = StringUtils.isBlank(json)? new ArrayList<>(): JSON.parseObject(json, new TypeReference<List<Set<Integer>>>(){});
-        return Math.toIntExact(userIds.stream().map(Set::size).count());
+    private Map<Long, Set<Long>> countCommentThumb(Long newId, List<Long> commentIds) {
+        List<Object> redisKeys = commentIds.stream().map(o-> RedisKeys.COMMENT_THUMB.key()+o).collect(Collectors.toList());
+        Map<Long, Set<Long>> result = new HashMap<>();
+        List<Object> json = redis.mhashGet(RedisKeys.NEW_THUMB_COMMENT.key() + newId, redisKeys);
+        for (int i = 0; i < commentIds.size(); i++) {
+            Object userIdsObject = json.get(i);
+            Set<Long> userIds = Objects.isNull(userIdsObject)? new HashSet<>(): JSON.parseObject(userIdsObject.toString(),new TypeReference<Set<Long>>(){});
+            result.put(commentIds.get(i),userIds);
+        }
+        return result;
     }
 
 

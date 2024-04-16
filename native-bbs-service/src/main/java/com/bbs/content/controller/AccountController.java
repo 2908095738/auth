@@ -54,7 +54,7 @@ public class AccountController {
             //获取发布文章列表
             Page<GetContentDto> newsResult = newsService.getListByUserId(userId,1,10,flag);
             if(isNotEmpty(newsResult.getRecords()))
-                newsResult.getRecords().forEach(o -> o.setLikeCount(thumbCache.countBy(o.getNewId(), null, null, 1)));
+                newsResult.getRecords().forEach(o -> o.setLikeCount((Integer) thumbCache.countBy(o.getNewId(), null, null, 1)));
             result.setNewsResult(newsResult);
         }
         return Result.success(result);

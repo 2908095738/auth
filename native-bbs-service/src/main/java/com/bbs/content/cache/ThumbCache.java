@@ -9,7 +9,7 @@ public interface ThumbCache {
 
     void create(CreateThumbParam param);
 
-    Integer countBy(Long newId, Long userId, List<Long> commentIds, int type);
+    Object countBy(Long newId, Long userId, List<Long> commentIds, int type);
 
     void cancel(CancelThumbParam param);
 }

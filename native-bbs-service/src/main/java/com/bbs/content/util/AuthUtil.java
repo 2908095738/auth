@@ -116,9 +116,10 @@ public class AuthUtil {
             if(CollUtil.isNotEmpty(ids)) {
                 String serverHost = host + searchListPath;
                 try {
+                    String header = request.getHeader(verifyKey);
                     Map<String, Object> param = new HashMap<>();
                     param.put("ids", ids);
-                    HttpResponse response = HttpRequest.get(serverHost).form(param)
+                    HttpResponse response = HttpRequest.get(serverHost).header(verifyKey, header).form(param)
                             .timeout(verifyTimeout).execute();
                     if(response.isOk()) {
                         String body = response.body();
