@@ -95,14 +95,18 @@ public class FanServiceImpl extends ServiceImpl<FanMapper, Fan> implements FanSe
     @Override
     public void fillFollowStatus(List<Long> ids, List<Search.VO> fillObjs) {
         List<Fan> fans = lambdaQuery()
-                .eq(Fan::getDeleteFlag, 0)
+                .eq(Fan::getDeleteFlag, NumberUtils.INTEGER_ZERO)
                 .eq(Fan::getUserId, userService.loginUser().getId())
                 .in(Fan::getFollowUserId, ids)
                 .list();
-        Map<Long, Fan> idAndFanMap = fans.stream().collect(Collectors.toMap(Fan::getUserId, fan -> fan));
-        for (Search.VO vo: fillObjs) {
-            Fan fan = idAndFanMap.get(vo.getId());
-            vo.setIsFollow(nonNull(fan));
+        if(nonNull(fans) && fans.size() > NumberUtils.INTEGER_ZERO && nonNull(fillObjs) && fillObjs.size() > NumberUtils.INTEGER_ZERO) {
+            Map<Long, Fan> idAndFanMap = fans.stream().collect(Collectors.toMap(Fan::getUserId, fan -> fan));
+            for (Search.VO vo: fillObjs) {
+                if(nonNull(vo)) {
+                    Fan fan = idAndFanMap.get(vo.getId());
+                    vo.setIsFollow(nonNull(fan));
+                }
+            }
         }
     }
 
