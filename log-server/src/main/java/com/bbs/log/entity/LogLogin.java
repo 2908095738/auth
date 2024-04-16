@@ -56,8 +56,8 @@ public class LogLogin implements Serializable {
     /**
      * 失败原因
      */
-    @TableField(value = "errorMsg")
-    private String errormsg;
+    @TableField(value = "error——msg")
+    private String errorMsg;
 
     /**
      * 登录时间
