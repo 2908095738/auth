@@ -1,6 +1,7 @@
 package com.bbs.chat.dto;
 
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.util.Date;
@@ -47,6 +48,7 @@ public class AgreeDto {
     /**
      * 点赞、收藏时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     @TableField(value = "time")
     private Date time;
 }
