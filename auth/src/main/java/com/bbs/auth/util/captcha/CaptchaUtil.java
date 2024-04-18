@@ -38,10 +38,10 @@ public abstract class CaptchaUtil {
     ) throws Exception;
 
     public Boolean send(String phone) throws IllegalArgumentException {
+        checkPhoneFormat(phone);
+        cache.checkIsCanSendCode(phone);
+        Integer code = createCode();
         try {
-            checkPhoneFormat(phone);
-            checkArgument(cache.notExists(phone), "验证码已发送，稍后重试");
-            Integer code = createCode();
             send(phone, signName(), templateCode(),  "{code:" + code + "}");
             cache.setCode(phone, code);
             return true;
