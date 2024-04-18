@@ -68,6 +68,11 @@ public class CommentController {
         comment.setCreateId(ThreadLocalUtil.getCurrentUserId());
         if(Objects.isNull(param.getParentId())){
             comment.setParentId(0L);
+            comment.setCommentNum(0);
+        }{
+            Comment parent = service.getById(param.getParentId());
+            parent.setCommentNum(parent.getCommentNum()+1);
+            service.updateById(parent);
         }
         service.save(comment);
         //通知对应的用户
@@ -103,25 +108,19 @@ public class CommentController {
      */
     @GetMapping
     public Result<Page<GetUserNewsDto.CommentByNewIdDto>> getPageByNewId(@NotNull(message = "内容id不能为空！") Long newId,
+                                                                         Long parentId,
                                                                          @NotNull(message = "页数不能为空！") Integer current,
                                                                          @NotNull(message = "每页几条不能为空！") Integer size){
         Long currentUserId = ThreadLocalUtil.getCurrentUserId();
 
-        Page<GetUserNewsDto.CommentByNewIdDto> result = service.getPageByNewId(newId, current, size);
+        Page<GetUserNewsDto.CommentByNewIdDto> result = service.getPageByNewId(newId, parentId, current, size);
         if(isNotEmpty(result.getRecords())) {
             List<Long> commentIds = new ArrayList<>();
             Set<Long> userIds = new HashSet<>();
             result.getRecords().forEach(comment->{
                 userIds.add(comment.getCreateId());
                 commentIds.add(comment.getId());
-                if(CollUtil.isNotEmpty(comment.getChildren())){
-                    comment.getChildren().forEach(children->{
-                        userIds.add(children.getCreateId());
-                        commentIds.add(children.getId());
-                    });
-                }
             });
-
 
             Map<Long, AuthUtil.UserAPI.VO> userIdMap = new HashMap<>();
             if(CollUtil.isNotEmpty(userIds)&&userIds.size()>1){
@@ -132,26 +131,14 @@ public class CommentController {
             }
             Map<Long, Set<Long>> commentThumbUsersMap = (Map<Long, Set<Long>>) thumbCache.countBy(newId, null, commentIds, 3);
 
-
             for(GetUserNewsDto.CommentByNewIdDto comment:result.getRecords()){
                 AuthUtil.UserAPI.VO vo = userIdMap.get(comment.getCreateId());
                 Set<Long> thumbUserIds = commentThumbUsersMap.get(comment.getId());
-                comment.setAvatarUrl(vo.getAvatar());//头像
+                comment.setAvatar(vo.getAvatar());//头像
                 comment.setNickName(vo.getName());//名字
                 comment.setHasLike(thumbUserIds.contains(currentUserId));//是否点赞
-                comment.setOwner(Objects.equals(comment.getCreateId(), currentUserId));//是否可以删除此评论（自己评论或管理员）
+                comment.setAllowDelete(Objects.equals(comment.getCreateId(), currentUserId));//是否可以删除此评论（自己评论或管理员）
                 comment.setLikeNum(thumbUserIds.size());//点赞数
-                if(CollUtil.isNotEmpty(comment.getChildren())){
-                    for (GetUserNewsDto.CommentByNewIdDto children : comment.getChildren()) {
-                        AuthUtil.UserAPI.VO childrenVo = userIdMap.get(children.getCreateId());
-                        Set<Long> childrenThumbUserIds = commentThumbUsersMap.get(children.getId());
-                        children.setAvatarUrl(childrenVo.getAvatar());//头像
-                        children.setNickName(childrenVo.getName());//名字
-                        children.setHasLike(childrenThumbUserIds.contains(currentUserId));//是否点赞
-                        children.setOwner(Objects.equals(children.getCreateId(), currentUserId));//是否可以删除此评论（自己评论或管理员）
-                        children.setLikeNum(childrenThumbUserIds.size());//点赞数
-                    }
-                }
             }
         }
         return Result.success(result);

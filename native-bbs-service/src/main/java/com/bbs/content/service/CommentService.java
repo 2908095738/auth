@@ -10,7 +10,7 @@ import com.bbs.content.entity.Comment;
  */
 public interface CommentService extends IService<Comment> {
 
-    Page<GetUserNewsDto.CommentByNewIdDto> getPageByNewId(Long newId, Integer current, Integer size);
+    Page<GetUserNewsDto.CommentByNewIdDto> getPageByNewId(Long newId,Long parentId, Integer current, Integer size);
 
     Boolean delById(Long commentId);
 

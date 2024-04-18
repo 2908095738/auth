@@ -9,6 +9,8 @@ import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 /**
  *
  */
@@ -26,22 +28,31 @@ public class CommentServiceImpl extends MPJBaseServiceImpl<CommentMapper, Commen
      * @return GetUserNewsDto.CommentByNewIdDto
      */
     @Override
-    public Page<GetUserNewsDto.CommentByNewIdDto> getPageByNewId(Long newId, Integer current, Integer size) {
+    public Page<GetUserNewsDto.CommentByNewIdDto> getPageByNewId(Long newId,Long parentId, Integer current, Integer size) {
         Page<GetUserNewsDto.CommentByNewIdDto> result = selectJoinListPage(new Page<>(current, size),GetUserNewsDto.CommentByNewIdDto.class,new MPJLambdaWrapper<Comment>()
                 .selectAll(Comment.class)
                 .eq(Comment::getNewId, newId)
-                .eq(Comment::getParentId,0)
+                .eq(Objects.isNull(parentId),Comment::getParentId,0)
                 .eq(Comment::getDeleteFlag,0)
-                .selectCollection(Comment.class,GetUserNewsDto.CommentByNewIdDto::getChildren)
-                .leftJoin(Comment.class,Comment::getParentId,Comment::getId)
+                .eq(Objects.nonNull(parentId),Comment::getParentId,parentId)
         );
         return result;
     }
 
     @Override
     public Boolean delById(Long commentId) {
-        lambdaUpdate().set(Comment::getDeleteFlag,1).eq(Comment::getParentId,commentId).update();
-        return updateById(new Comment().setId(commentId).setDeleteFlag(1));
+        Comment one = lambdaQuery().eq(Comment::getId, commentId).one();
+        if (Objects.nonNull(one)) {
+            Comment parent = lambdaQuery().eq(Comment::getId, one.getParentId()).one();
+            if (Objects.nonNull(parent)) {
+                lambdaUpdate().set(Comment::getCommentNum,parent.getCommentNum()-1).eq(Comment::getId,parent.getId()).update();
+                return updateById(new Comment().setId(commentId).setDeleteFlag(1));
+            }{
+                lambdaUpdate().set(Comment::getDeleteFlag,1).eq(Comment::getParentId,commentId).update();
+                return updateById(new Comment().setId(commentId).setDeleteFlag(1));
+            }
+        }
+        return false;
     }
 
 

@@ -35,4 +35,8 @@ public class CreateCommentParam {
      */
     private Long createId;
 
+    /**
+     * 子评论数量
+     */
+    private Integer commentNum = 0;
 }
