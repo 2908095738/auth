@@ -14,10 +14,12 @@ import com.bbs.chat.enums.DBType;
 import com.bbs.chat.mapper.*;
 import com.bbs.chat.service.ChatService;
 import com.bbs.chat.dto.param.CreateChatParam;
+import com.bbs.chat.util.LambdaUtil;
 import com.bbs.chat.util.SensitiveFilter;
 import com.bbs.chat.util.StringUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.toolkit.JoinWrappers;
+import com.github.yulichang.toolkit.LambdaUtils;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import com.github.yulichang.wrapper.UpdateJoinWrapper;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -293,42 +295,54 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
         DynamicDataSourceContextHolder.poll();
 
         //获取点赞用户信息列表
+        Page<AgreeDto> page = null;
         DynamicDataSourceContextHolder.push(DBType.AUTH.getDbName());
         MPJLambdaWrapper<User> userWrap = new MPJLambdaWrapper<User>()
                 .select(User::getId, User::getName)
                 .in(User::getId, userIds);
 
-        Map<Long, List<UserBO>> userMap = userMapper.selectJoinList(UserBO.class, userWrap)
-                .stream()
-                .collect(Collectors.groupingBy(UserBO::getId));
-        DynamicDataSourceContextHolder.poll();
+        boolean isThumbUserIds = Objects.nonNull(userIds) && !userIds.isEmpty();
+        if (isThumbUserIds) {
+            Map<Long, List<UserBO>> userMap = userMapper.selectJoinList(UserBO.class, userWrap)
+                    .stream()
+                    .collect(Collectors.groupingBy(UserBO::getId));
+            DynamicDataSourceContextHolder.poll();
 
-        //查询点赞列表
-        DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
-        MPJLambdaWrapper thumbWrap = new MPJLambdaWrapper<AgreeDto>()
-                .selectAs(Thumb::getTcId, AgreeDto::getAgreeId)
-                .selectAs(Thumb::getUserId, AgreeDto::getAgreeUid)
-                .selectAs(Thumb::getType, AgreeDto::getType)
-                .selectAs(Thumb::getCreateTime, AgreeDto::getTime)
+            //查询点赞列表
+            DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
+            MPJLambdaWrapper thumbWrap = new MPJLambdaWrapper<AgreeDto>()
+                    .selectAs(Thumb::getTcId, AgreeDto::getAgreeId)
+                    .selectAs(Thumb::getUserId, AgreeDto::getAgreeUid)
+                    .selectAs(Thumb::getType, AgreeDto::getType)
+                    .selectAs(Thumb::getCreateTime, AgreeDto::getTime)
 
-                .ne(Thumb::getPostUserId, Thumb::getUserId)
-                .eq(Thumb::getPostUserId, userId)
-                .orderBy(true, false, Thumb::getUpdateTime);
+                    .ne(Thumb::getPostUserId, Thumb::getUserId)
+                    .eq(Thumb::getPostUserId, userId)
+                    .orderBy(true, false, Thumb::getUpdateTime);
 
-        Page<AgreeDto> page = thumbMapper.selectJoinPage(new Page(current, size / 2), AgreeDto.class, thumbWrap);
+            page = thumbMapper.selectJoinPage(new Page(current, size / 2), AgreeDto.class, thumbWrap);
+            DynamicDataSourceContextHolder.poll();
 
-        //点赞列表补值
-        page.getRecords().forEach(t -> {
-            List<UserBO> bos = userMap.get(t.getAgreeUid());
-            UserBO tmpUser = bos.get(0);
-            t.setName(tmpUser.getName());
-        });
+            //点赞列表补值
+            page.getRecords().forEach(t -> {
+                List<UserBO> bos = userMap.get(t.getAgreeUid());
+                UserBO tmpUser = bos.get(0);
+                t.setName(tmpUser.getName());
+            });
+        }
 
         //获取收藏待查询条数
-        long total = page.getTotal();
-        long little = size - total;
+        long little;
+        if (Objects.nonNull(page)) {
+            long total = page.getSize();
+            little = size - total;
+        } else {
+            little = size;
+        }
+
 
         //获取收藏用户id列表
+        DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
         MPJLambdaWrapper userIdByFavo = new MPJLambdaWrapper<News>()
                 .select(Favorites::getUserId)
                 .leftJoin(Favorites.class, Favorites::getNewId, News::getNewId)
@@ -337,6 +351,11 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
 
         List<Long> userIdsByFavo = newsMapper.selectJoinList(Long.class, userIdByFavo);
         DynamicDataSourceContextHolder.poll();
+
+        boolean isFavoUserIds = Objects.nonNull(userIdsByFavo) && !userIdsByFavo.isEmpty();
+        if (!isThumbUserIds && !isFavoUserIds) {
+            return new Page();
+        }
 
         //获取收藏用户信息列表
         DynamicDataSourceContextHolder.push(DBType.AUTH.getDbName());
@@ -395,6 +414,30 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
         topMapper.updateById(top);
 
         DynamicDataSourceContextHolder.poll();
+
+        //获取用户头像
+        List<Long> userIdTMP = new ArrayList();
+        if (Objects.nonNull(userIds) && !userIds.isEmpty()) {
+            userIdTMP.addAll(userIds);
+        }
+
+        if (Objects.nonNull(userIdsByFavo) && userIdsByFavo.isEmpty()) {
+            userIdTMP.addAll(userIdsByFavo);
+        }
+
+        if (!userIdTMP.isEmpty()) {
+            Map<Long, String> avatarMap = api.getUserList(userIdTMP)
+                    .stream()
+                    .filter(Objects::nonNull)
+                    .filter(LambdaUtil.distinct(Auth.UserAPI.User::getId))
+                    .collect(
+                            Collectors.toMap(Auth.UserAPI.User::getId, u -> u.getAvatar()));
+
+            page.getRecords().forEach(dto -> {
+                String avatar = avatarMap.get(dto.getAgreeUid());
+                dto.setAvatarPath(avatar);
+            });
+        }
 
         return page;
     }
@@ -469,43 +512,54 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
         DynamicDataSourceContextHolder.poll();
 
         //获取评论文章用户信息列表
+        Page<CommDto> page = null;
         DynamicDataSourceContextHolder.push(DBType.AUTH.getDbName());
         MPJLambdaWrapper<User> userWrapByNew = new MPJLambdaWrapper<User>()
                 .select(User::getId, User::getName)
                 .in(User::getId, userIds);
 
-        Map<Long, List<UserBO>> userByNewMap = userMapper.selectJoinList(UserBO.class, userWrapByNew)
-                .stream()
-                .collect(Collectors.groupingBy(UserBO::getId));
-        DynamicDataSourceContextHolder.poll();
+        boolean isNewUserIds = Objects.nonNull(userIds) && !userIds.isEmpty();
+        if (isNewUserIds) {
+            Map<Long, List<UserBO>> userByNewMap = userMapper.selectJoinList(UserBO.class, userWrapByNew)
+                    .stream()
+                    .collect(Collectors.groupingBy(UserBO::getId));
+            DynamicDataSourceContextHolder.poll();
 
-        //获取评论文章信息分页
-        DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
-        MPJLambdaWrapper newWrap = new MPJLambdaWrapper<CommDto>()
-                .selectAs(Comment::getCreateId, CommDto::getCommUid)
-                .selectAs(Comment::getId, CommDto::getCommId)
-                .selectAs(Comment::getUpdateTime, CommDto::getTime)
+            //获取评论文章信息分页
+            DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
+            MPJLambdaWrapper newWrap = new MPJLambdaWrapper<CommDto>()
+                    .selectAs(Comment::getCreateId, CommDto::getCommUid)
+                    .selectAs(Comment::getId, CommDto::getCommId)
+                    .selectAs(Comment::getUpdateTime, CommDto::getTime)
 
-                .leftJoin(Comment.class, Comment::getNewId, News::getNewId)
-                .ne(Comment::getCreateId, userId)
-                .isNull(Comment::getParentId)
-                .eq(News::getCreateId, userId)
-                .eq(Comment::getStatus, 20)
-                .orderBy(true, false, Comment::getUpdateTime);
+                    .leftJoin(Comment.class, Comment::getNewId, News::getNewId)
+                    .ne(Comment::getCreateId, userId)
+                    .isNull(Comment::getParentId)
+                    .eq(News::getCreateId, userId)
+                    .eq(Comment::getStatus, 20)
+                    .orderBy(true, false, Comment::getUpdateTime);
 
-        Page<CommDto> page = newsMapper.selectJoinPage(new Page(current, size / 2), CommDto.class, newWrap);
-        page.getRecords().forEach(d -> {
-            d.setType(1);
+            page = newsMapper.selectJoinPage(new Page(current, size / 2), CommDto.class, newWrap);
+            DynamicDataSourceContextHolder.poll();
+            page.getRecords().forEach(d -> {
+                d.setType(1);
 
-            UserBO tmpUser = userByNewMap.get(d.getCommUid()).get(0);
-            d.setName(tmpUser.getName());
-        });
+                UserBO tmpUser = userByNewMap.get(d.getCommUid()).get(0);
+                d.setName(tmpUser.getName());
+            });
+        }
 
         //正常情况下评论、回复各生成一半，评论数量不足其余全由回复补上
-        long total = page.getTotal();
-        long little = size - total;
+        long little;
+        if (Objects.nonNull(page)) {
+            long total = page.getTotal();
+            little = size - total;
+        } else {
+            little = size;
+        }
 
         //获取回复评论id列表
+        DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
         MPJLambdaWrapper<Comment> pidWrap = new MPJLambdaWrapper<Comment>()//被回复评论id
                 .select(Comment::getId)
                 .eq(Comment::getDeleteFlag, 0)
@@ -514,6 +568,11 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
 
         List<Long> ids = commentMapper.selectList(pidWrap)
                 .stream().map(c -> c.getId()).collect(Collectors.toList());
+
+        boolean isCommUserIds = Objects.nonNull(ids) && !ids.isEmpty();
+        if (!isNewUserIds && !isCommUserIds) {
+            return new Page();
+        }
 
         //获取回复评论用户id列表
         MPJLambdaWrapper<Comment> userIdWrapByComm = new MPJLambdaWrapper<Comment>()
@@ -590,6 +649,31 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
         top.setCommentCount(0);
         topMapper.updateById(top);
         DynamicDataSourceContextHolder.poll();
+
+        //获取用户头像
+        List<Long> userIdTMP = new ArrayList();
+        if (Objects.nonNull(userIds) && !userIds.isEmpty()) {
+            userIdTMP.addAll(userIds);
+        }
+
+        if (Objects.nonNull(ids) && ids.isEmpty()) {
+            userIdTMP.addAll(ids);
+        }
+
+        if (!userIdTMP.isEmpty()) {
+            List<Auth.UserAPI.User> userList = api.getUserList(userIdTMP);
+            Map<Long, String> avatarMap = userList
+                    .stream()
+                    .filter(Objects::nonNull)
+                    .filter(LambdaUtil.distinct(Auth.UserAPI.User::getId))
+                    .collect(
+                            Collectors.toMap(Auth.UserAPI.User::getId, u -> u.getAvatar()));
+
+            page.getRecords().forEach(dto -> {
+                String avatar = avatarMap.get(dto.getCommUid());
+                dto.setAvatarPath(avatar);
+            });
+        }
 
         return page;
     }

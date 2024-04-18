@@ -1,4 +1,4 @@
-package com.bbs.auth.app.change;
+package com.bbs.auth.app.reset;
 
 import com.bbs.auth.util.PhoneUtil;
 import com.bbs.auth.cache.code.PhoneCodeCache;
@@ -12,6 +12,7 @@ import com.bbs.auth.entity.User;
 import com.bbs.auth.enums.ZookeeperNodePaths;
 import com.bbs.Result;
 import com.bbs.exception.BusinessException;
+import com.google.common.base.Preconditions;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -121,20 +122,21 @@ public class ChangePhone {
         private Integer code;
     }
     @PostMapping("/pwd")
-    public Result<Boolean> changePassword(@Valid @RequestBody ChangePasswordParam param) throws InterruptedException {
+    public Result<Boolean> changePassword(@Valid @RequestBody ChangePasswordParam param) throws InterruptedException, IllegalArgumentException {
+        PhoneUtil.checkPhoneFormat(param.phone);
+        PhoneUtil.checkPhoneCodeFormat(String.valueOf(param.code));
+        Integer code = codeCache.getCode(param.phone);
+        codeCache.checkIsCanSendCode(code);
+        Preconditions.checkArgument(code.equals(param.code), "验证码不可用，请重新发送");
+        codeCache.delCode(param.phone);
         return redissonUtil.lockExec(
                 () -> {
-                    PhoneUtil.checkPhoneFormat(param.phone);
-                    PhoneUtil.checkPhoneCodeFormat(String.valueOf(param.code));
-                    Integer code = codeCache.getCode(param.phone);
-                    if(nonNull(code) && code.equals(param.code)) {
-                        User user = service.searchByPhone(param.phone);
-                        if(nonNull(user)) {
-                            String password = service.encryptPassword(param.getPassword(), user.getSalt());
-                            if(service.updatePasswordByID(password, user.getId())) {
-                                userCache.load(user, 7, DAYS);
-                                return success();
-                            }
+                    User user = service.searchByPhone(param.phone);
+                    if(nonNull(user)) {
+                        String password = service.encryptPassword(param.getPassword(), user.getSalt());
+                        if(service.updatePasswordByID(password, user.getId())) {
+                            userCache.load(user, 7, DAYS);
+                            return success();
                         }
                     }
                     return failed();

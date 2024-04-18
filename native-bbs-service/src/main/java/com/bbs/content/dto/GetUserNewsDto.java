@@ -78,6 +78,10 @@ public class GetUserNewsDto {
      */
     @TableField(exist = false)
     private Integer likeCount;
+    /**
+     * 自己（当前登录用户）是否点赞了
+     */
+    private Boolean hasLike;
 
     /**
      * 浏览数
@@ -85,6 +89,10 @@ public class GetUserNewsDto {
     @TableField(exist = false)
     private Integer visitNum;
 
+    /**
+     * 能不能删除该内容（创建人是当前用户 or 当前用户为管理员）
+     */
+    private Boolean allowDelete;
     /**
      * 创建id
      */
@@ -103,17 +111,6 @@ public class GetUserNewsDto {
     @TableField(value = "update_time")
     private Date updateTime;
 
-    /**
-     * 排序
-     */
-    @TableField(value = "sort")
-    private Integer sort;
-
-    /**
-     * 精华
-     */
-    @TableField(value = "essence")
-    private Integer essence;
 
 
     /**
@@ -161,7 +158,7 @@ public class GetUserNewsDto {
         /**
          * 能不能删除该评论（创建人是当前用户 or 当前用户为管理员）
          */
-        private Boolean owner;
+        private Boolean allowDelete;
 
         /**
          * 内容
@@ -195,7 +192,7 @@ public class GetUserNewsDto {
         /**
          * 评论者头像地址
          */
-        private String avatarUrl;
+        private String avatar;
 
         /**
          * 创建时间
@@ -204,8 +201,11 @@ public class GetUserNewsDto {
         @JsonFormat(pattern = "YYYY-MM-DD HH:mm:ss")
         private Date createTime;
 
-        @TableField(exist = false)
-        private List<CommentByNewIdDto> children;
+        /**
+         * 子评论数量
+         */
+        @TableField(value = "comment_num")
+        private Integer commentNum;
     }
 
 

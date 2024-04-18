@@ -238,26 +238,16 @@ public class ContentController {
         Long currentUserId = ThreadLocalUtil.getCurrentUserId();
         GetUserNewsDto result = newsService.getOneById(newId);
         if (Objects.nonNull(result)) {
-            Map<Long, AuthUtil.UserAPI.VO> userIdMap = new HashMap<>();
-
-            Page<GetUserNewsDto.CommentByNewIdDto> commentPage = commentService.getPageByNewId(newId, current, size);
-
+            Page<GetUserNewsDto.CommentByNewIdDto> commentPage = commentService.getPageByNewId(newId,null, current, size);
             if(isNotEmpty(commentPage.getRecords())) {
                 List<Long> commentIds = new ArrayList<>();
                 Set<Long> userIds = new HashSet<>();
-                userIds.add(result.getCreateId());
                 commentPage.getRecords().forEach(comment->{
                     userIds.add(comment.getCreateId());
                     commentIds.add(comment.getId());
-                    if(CollUtil.isNotEmpty(comment.getChildren())){
-                        comment.getChildren().forEach(children->{
-                            userIds.add(children.getCreateId());
-                            commentIds.add(children.getId());
-                        });
-                    }
                 });
 
-
+                Map<Long, AuthUtil.UserAPI.VO> userIdMap = new HashMap<>();
                 if(CollUtil.isNotEmpty(userIds)&&userIds.size()>1){
                     userIdMap = api.getUserList(new ArrayList<>(userIds)).stream().collect(Collectors.toMap(AuthUtil.UserAPI.VO::getId, o2 -> o2));
                 }{
@@ -267,26 +257,14 @@ public class ContentController {
                 Map<Long, Set<Long>> commentThumbUsersMap = (Map<Long, Set<Long>>) thumbCache.countBy(newId, null, commentIds, 3);
 
 
-
                 for(GetUserNewsDto.CommentByNewIdDto comment : commentPage.getRecords()){
                     AuthUtil.UserAPI.VO vo = userIdMap.get(comment.getCreateId());
                     Set<Long> thumbUserIds = commentThumbUsersMap.get(comment.getId());
-                    comment.setAvatarUrl(vo.getAvatar());//头像
+                    comment.setAvatar(vo.getAvatar());//头像
                     comment.setNickName(vo.getName());//名字
                     comment.setHasLike(thumbUserIds.contains(currentUserId));//是否点赞
-                    comment.setOwner(Objects.equals(comment.getCreateId(), currentUserId));//是否可以删除此评论（自己评论或管理员）
+                    comment.setAllowDelete(Objects.equals(comment.getCreateId(), currentUserId));//是否可以删除此评论（自己评论或管理员）
                     comment.setLikeNum(thumbUserIds.size());//点赞数
-                    if(CollUtil.isNotEmpty(comment.getChildren())){
-                        for (GetUserNewsDto.CommentByNewIdDto children : comment.getChildren()) {
-                            AuthUtil.UserAPI.VO childrenVo = userIdMap.get(children.getCreateId());
-                            Set<Long> childrenThumbUserIds = commentThumbUsersMap.get(children.getId());
-                            children.setAvatarUrl(childrenVo.getAvatar());//头像
-                            children.setNickName(childrenVo.getName());//名字
-                            children.setHasLike(childrenThumbUserIds.contains(currentUserId));//是否点赞
-                            children.setOwner(Objects.equals(children.getCreateId(), currentUserId));//是否可以删除此评论（自己评论或管理员）
-                            children.setLikeNum(childrenThumbUserIds.size());//点赞数
-                        }
-                    }
                 }
             }
 
@@ -295,7 +273,7 @@ public class ContentController {
             result.setLikeCount((Integer) thumbCache.countBy(result.getNewId(), null, null, 1));
 
             result.setCommentByNewIdDtoList(commentPage);
-            result.setThisUser(Objects.equals(currentUserId, result.getCreateId()));
+            result.setThisUser(Objects.equals(currentUserId, result.getCreateId()));//是否是当前用户
             //访问量加1
             Integer visitNum = newsCache.intrVisit(newId);
             result.setVisitNum(visitNum);

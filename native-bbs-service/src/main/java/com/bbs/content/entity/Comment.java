@@ -90,6 +90,12 @@ public class Comment implements Serializable {
     @TableField(value = "delete_flag")
     private Integer deleteFlag;
 
+    /**
+     * 子评论数量
+     */
+    @TableField(value = "comment_num")
+    private Integer commentNum;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

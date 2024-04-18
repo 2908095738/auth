@@ -1,5 +1,6 @@
 package com.bbs.auth.app.login;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
 import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.dao.UserDao;
@@ -18,7 +19,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.hibernate.validator.constraints.Length;
+import org.redisson.api.RDeque;
 import org.redisson.api.RedissonClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -86,7 +89,7 @@ public class Login {
         /**
          * 登录类型
          */
-        private Integer type;
+        private Integer loginType;
     }
 
     @Data
@@ -107,38 +110,49 @@ public class Login {
 
     @PostMapping("/login")
     public Result<VO> login(@Valid @RequestBody Param param) throws InterruptedException, IllegalArgumentException {
+        String loginTime = DateUtil.now();
         String phone = param.getPhone();
         return redissonUtil.lockExec(
             () -> {
-                log.debug("[Login::login] param={}", JSONUtil.toJsonPrettyStr(param));
-                User user;
-                checkArgument(LoginType.checkFormat(param.type), FAILED_LOGIN_TYPE_NOT_AVAILABLE);
-                if(LoginType.PHONE.getCode().equals(param.type)) {
-                    checkPhoneFormat(phone);
-                    checkPhoneCodeFormat(param.code);
-                    Integer code = phoneCodeCache.getCode(phone);
-                    checkArgument(nonNull(code) && code.equals(Integer.valueOf(param.code)), FAILED_AUTH_PHONE_CODE_NOT_AVAILABLE);
-                    phoneCodeCache.delCode(phone);
-                    user = userCache.searchByPhoneNoLockNoLoad(phone);
-                    checkArgument(nonNull(user), FAILED_LOGIN_USER_NOT_EXISTS);
-                    checkArgument(UserStateEnum.STATUS_NORMAL.getCode().equals(user.getState()), FAILED_LOGIN_USER_STATUS_ERROR);
-                } else if (LoginType.WX.getCode().equals(param.type)) {
-                    throw new IllegalArgumentException("微信登录未开通");
-                } else {
-                    checkPhoneFormat(phone);
-                    checkArgument(StringUtils.isNoneBlank(param.password));
-                    user = userCache.searchByPhoneNoLockNoLoad(phone);
-                    if(isNull(user)) user = db.selectByPhone(param.getPhone());
-                    checkArgument(nonNull(user), FAILED_LOGIN_USER_NOT_EXISTS);
-                    checkArgument(UserStateEnum.STATUS_NORMAL.getCode().equals(user.getState()), FAILED_LOGIN_USER_STATUS_ERROR);
-                    String encryptPassword = service.encryptPassword(param.password, user.getSalt());
-                    checkArgument(user.getPassword().equals(encryptPassword), FAILED_LOGIN_PWD_ERROR);
+                try {
+                    log.debug("[Login::login] param={}", JSONUtil.toJsonPrettyStr(param));
+                    User user;
+                    Integer code;
+                    checkArgument(LoginType.checkFormat(param.loginType), FAILED_LOGIN_TYPE_NOT_AVAILABLE);
+                    if(LoginType.PHONE.getCode().equals(param.loginType)) {
+                        checkPhoneFormat(phone);
+                        checkPhoneCodeFormat(param.code);
+                        code = phoneCodeCache.getCode(phone);
+                        checkArgument(nonNull(code) && code.equals(Integer.valueOf(param.code)), FAILED_AUTH_PHONE_CODE_NOT_AVAILABLE);
+                        phoneCodeCache.delCode(phone);
+                        user = userCache.searchByPhoneNoLockNoLoad(phone);
+
+                        checkArgument(nonNull(user), FAILED_LOGIN_USER_NOT_EXISTS);
+                        checkArgument(UserStateEnum.STATUS_NORMAL.getCode().equals(user.getState()), FAILED_LOGIN_USER_STATUS_ERROR);
+
+                    } else if (LoginType.WX.getCode().equals(param.loginType)) {
+                        throw new IllegalArgumentException("微信登录未开通");
+
+                    } else {
+                        checkPhoneFormat(phone);
+                        checkArgument(StringUtils.isNoneBlank(param.password));
+                        user = userCache.searchByPhoneNoLockNoLoad(phone);
+                        if(isNull(user)) user = db.selectByPhone(param.getPhone());
+                        checkArgument(nonNull(user), FAILED_LOGIN_USER_NOT_EXISTS);
+                        checkArgument(UserStateEnum.STATUS_NORMAL.getCode().equals(user.getState()), FAILED_LOGIN_USER_STATUS_ERROR);
+                        String encryptPassword = service.encryptPassword(param.password, user.getSalt());
+                        checkArgument(user.getPassword().equals(encryptPassword), FAILED_LOGIN_PWD_ERROR);
+                    }
+                    String token = tokenService.createToken(user);
+                    tokenService.setLoginFlag(user.getId());
+                    userCache.expireUserAndPhoneMap(user);
+                    log.debug("[Login::login] 用户登录 user={}; token={}", JSONUtil.toJsonPrettyStr(user), token);
+                    recordLoginSuccessLog(param, token, loginTime);
+                    return success(new VO(user.getId(), user.getName(), token));
+                } catch (IllegalArgumentException e) {
+                    recordLoginFailLog(param, e.getMessage(), loginTime);
+                    throw e;
                 }
-                String token = tokenService.createToken(user);
-                tokenService.setLoginFlag(user.getId());
-                userCache.expireUserAndPhoneMap(user);
-                log.debug("[Login::login] 用户登录 user={}; token={}", JSONUtil.toJsonPrettyStr(user), token);
-                return success(new VO(user.getId(), user.getName(), token));
             },
             () -> failed(500, new VO(), "无法获取登录锁，详情请联系客服"),
                 redisson.getSpinLock(USER_LOGIN_PHONE.LOCK.key(param.phone)),
@@ -146,5 +160,77 @@ public class Login {
                 zkUtil.getIntForPath(ZookeeperNodePaths.LockConf.UserCache.LEASE),
                 MILLISECONDS
         );
+    }
+
+    private static final String LOG_DEQUE_KEY = "LOG:LOGIN";
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class LoginLog {
+
+        /**
+         * 登录结果（0正常/1失败）
+         */
+        private Integer result;
+
+        /**
+         * 手机号
+         */
+        private String phone;
+
+        /**
+         * 输入验证码
+         */
+        private String code;
+
+        /**
+         * 登录类型
+         */
+        private Integer loginType;
+
+        /**
+         * 服务端保存的手机验证码
+         */
+        private Integer serverSavePhoneCode;
+
+        /**
+         * 登录成功生成的 Token
+         */
+        private String newToken;
+
+        /**
+         * 失败原因
+         */
+        private String errorMsg;
+
+        /**
+         * 登录时间
+         */
+        private String loginTime;
+
+        public LoginLog(Integer result, Param param, String loginTime) {
+            this.result = result;
+            this.phone = param.phone;
+            this.code = param.code;
+            this.loginType = param.loginType;
+            this.loginTime = loginTime;
+        }
+    }
+
+    private RDeque<String> deque() {
+        return redisson.getDeque(LOG_DEQUE_KEY);
+    }
+
+    public void recordLoginSuccessLog(Param param, String newToken, String loginTime) {
+        LoginLog log = new LoginLog(NumberUtils.INTEGER_ZERO, param, loginTime);
+        log.setNewToken(newToken);
+        deque().addFirst(JSONUtil.toJsonPrettyStr(log));
+    }
+
+    public void recordLoginFailLog(Param param, String errorMsg, String loginTime) {
+        LoginLog log = new LoginLog(NumberUtils.INTEGER_ZERO, param, loginTime);
+        log.setErrorMsg(errorMsg);
+        deque().addFirst(JSONUtil.toJsonPrettyStr(log));
     }
 }
