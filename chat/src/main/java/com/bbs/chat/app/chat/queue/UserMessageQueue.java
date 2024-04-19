@@ -13,10 +13,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.nonNull;
 
@@ -36,9 +33,19 @@ public class UserMessageQueue {
     public static class Message {
 
         /**
-         * 发送用户 ID
+         * 来源用户 ID
          */
         private Long sourceUID;
+
+        /**
+         * 来源用户 Token
+         */
+        private String token;
+
+        /**
+         * 目标用户 ID
+         */
+        private Long targetUID;
 
         /**
          * 消息类型（默认文本）
@@ -48,12 +55,20 @@ public class UserMessageQueue {
         /**
          * 消息内容
          */
-        private String content;
+        private Object content;
 
         /**
          * 消息发送时间
          */
-        private Date time;
+        private String time;
+
+        public Message(Long sourceUID, Long targetUID, Integer type, Object content, String time) {
+            this.sourceUID = sourceUID;
+            this.targetUID = targetUID;
+            this.type = type;
+            this.content = content;
+            this.time = time;
+        }
     }
 
     public static String queueName(Long sourceUID) {
@@ -62,23 +77,20 @@ public class UserMessageQueue {
 
     /**
      * 发送消息
-     * @param sourceUID 发送人的 ID
-     * @param type 消息类型
-     * @param content 消息内容
-     * @param time 发送时间
+     * @param targetUID 目标用户 ID
      * @throws BusinessException 消息发送失败
      */
-    public void sendMessageThrow(Long sourceUID, Integer type, String content, Date time) throws BusinessException {
-        if(!sendMessage(sourceUID, new Message(sourceUID, type, content, time))) {
+    public void sendMessageThrow(Long targetUID, Message message) throws BusinessException {
+        if(!sendMessage(targetUID, message)) {
             log.error("[UserMessageQueue::sendMessage] 发送消息到【用户持久化队列】失败！！！");
             throw new BusinessException();
         }
     }
 
 
-    public Boolean sendMessage(Long sourceUID, Message message) {
-        RQueue<String> queue = redisson.getQueue(queueName(sourceUID));
-        log.debug("[UserMessageQueue::sendMessage] 发送消息到【用户持久化队列】sourceUID={}; message={};", sourceUID, message);
+    public Boolean sendMessage(Long targetUID, Message message) {
+        RQueue<String> queue = redisson.getQueue(queueName(targetUID));
+        log.debug("[UserMessageQueue::sendMessage] 发送消息到【用户持久化队列】targetUID={}; message={};", targetUID, message);
         return queue.add(JSONUtil.toJsonPrettyStr(message));
     }
 
@@ -95,19 +107,8 @@ public class UserMessageQueue {
         return new ArrayList<>();
     }
 
-    /**
-     * 获取所有未读消息
-     * @return Map<UID, 未读消息>
-     */
-    public Map<Long, List<Message>> getAllGroupUnreadMessage(Long sourceUID) {
-        return getAllUnreadMessage(sourceUID)
-                .stream().map(str -> JSONUtil.toBean(str, Message.class))
-                .collect(Collectors.groupingBy(Message::getSourceUID));
-
-    }
-
-    public Integer getAllUnreadMessageSize(Long userID) {
-        RQueue<String> queue = redisson.getQueue(queueName(userID));
-        return queue.size();
+    public String getUnreadMessage(Long sourceUID) {
+        RQueue<String> queue = redisson.getQueue(queueName(sourceUID));
+        return queue.poll();
     }
 }

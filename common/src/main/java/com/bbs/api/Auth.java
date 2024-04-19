@@ -68,7 +68,6 @@ public class Auth {
                     if(response.isOk()) {
                         String body = response.body();
                         Result result = JSONUtil.toBean(body, Result.class);
-                        log.debug(JSONUtil.toJsonPrettyStr(result));
                         if(HttpStatus.HTTP_OK == result.getCode()) {
                             Object data = result.getData();
                             if(nonNull(data)) {
@@ -123,9 +122,35 @@ public class Auth {
                             .timeout(verifyTimeout).execute();
                     if(response.isOk()) {
                         String body = response.body();
-                        log.debug("[Auth::getUserList] response body={}", body);
                         Result result = JSONUtil.toBean(body, Result.class);
-                        log.debug(JSONUtil.toJsonPrettyStr(result));
+                        if(HttpStatus.HTTP_OK == result.getCode()) {
+                            Object data = result.getData();
+                            if(nonNull(data)) {
+                                return JSONUtil.toList(data.toString(),User.class);
+                            }
+                        }
+                    }
+                    return null;
+                } catch (HttpException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            return null;
+        }
+
+        public List<User> getUserList(String token, List<Long> ids) {
+            if(CollUtil.isNotEmpty(ids)) {
+                String serverHost = host + searchListPath;
+                try {
+                    Map<String, Object> param = new HashMap<>();
+                    param.put("ids", ids);
+                    HttpResponse response = HttpRequest.get(serverHost)
+                            .header(verifyKey, token)
+                            .form(param)
+                            .timeout(verifyTimeout).execute();
+                    if(response.isOk()) {
+                        String body = response.body();
+                        Result result = JSONUtil.toBean(body, Result.class);
                         if(HttpStatus.HTTP_OK == result.getCode()) {
                             Object data = result.getData();
                             if(nonNull(data)) {

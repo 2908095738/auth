@@ -61,7 +61,7 @@ public class ChatMQListener {
     @Autowired
     private FavoritesConverter favoritesConverter;
 
-    @RabbitListener(queues = RabbitmqConfig.QUEUE_INFORM_AGREE)
+//    @RabbitListener(queues = RabbitmqConfig.QUEUE_INFORM_AGREE)
     public void receiveThumb(Message message, @Headers Map<String, Object> header, Channel channel) {
         log.error("message"+message.getPayload());
         CreateThumbParam createThumbParam = JSON.parseObject((String) message.getPayload()).to(CreateThumbParam.class);
@@ -84,7 +84,7 @@ public class ChatMQListener {
         }
     }
 
-    @RabbitListener(queues = RabbitmqConfig.QUEUE_INFORM_DEL_AGREE)
+//    @RabbitListener(queues = RabbitmqConfig.QUEUE_INFORM_DEL_AGREE)
     public void receiveThumbCancel(Message message, @Headers Map<String, Object> header, Channel channel) {
         CancelThumbParam cancelThumbParam = JSON.parseObject((String) message.getPayload()).to(CancelThumbParam.class);
         Result result = thumbService.cancelThumb(cancelThumbParam);
@@ -106,7 +106,7 @@ public class ChatMQListener {
         }
     }
 
-    @RabbitListener(queues = RabbitmqConfig.QUEUE_COMMENT)
+//    @RabbitListener(queues = RabbitmqConfig.QUEUE_COMMENT)
     public void receiveComm(Message message, @Headers Map<String, Object> header, Channel channel) {
         //日期防报错特殊处理
         JSONObject tmpJSON = JSON.parseObject((String) message.getPayload());
@@ -140,7 +140,7 @@ public class ChatMQListener {
     }
 
     //TODO Cloud 队列-路由键错误
-    @RabbitListener(queues = RabbitmqConfig.QUEUE_FOLLOW)
+//    @RabbitListener(queues = RabbitmqConfig.QUEUE_FOLLOW)
     public void receiveFollow(Message message, @Headers Map<String, Object> header, Channel channel) {
         //日期防报错特殊处理
         JSONObject tmpJSON = JSON.parseObject((String) message.getPayload());
@@ -170,7 +170,7 @@ public class ChatMQListener {
         }
     }
 
-    @RabbitListener(queues = RabbitmqConfig.QUEUE_UNFOLLOW)
+//    @RabbitListener(queues = RabbitmqConfig.QUEUE_UNFOLLOW)
     public void receiveUNFollow(Message message, @Headers Map<String, Object> header, Channel channel) {
         //日期防报错特殊处理
         JSONObject tmpJSON = JSON.parseObject((String) message.getPayload());
@@ -200,7 +200,7 @@ public class ChatMQListener {
         }
     }
 
-    @RabbitListener(queues = RabbitmqConfig.QUEUE_FAVORITE)
+//    @RabbitListener(queues = RabbitmqConfig.QUEUE_FAVORITE)
     public void receiveFavo(Message message, @Headers Map<String, Object> header, Channel channel) {
         //防报错
         JSONObject tmpJSON = JSON.parseObject((String) message.getPayload());
@@ -226,7 +226,7 @@ public class ChatMQListener {
         }
     }
 
-    @RabbitListener(queues = RabbitmqConfig.QUEUE_UNFAVORITE)
+//    @RabbitListener(queues = RabbitmqConfig.QUEUE_UNFAVORITE)
     public void receiveUNFavo(Message message, @Headers Map<String, Object> header, Channel channel) {
         JSONObject tmpJSON = JSON.parseObject((String) message.getPayload());
         MqFavoritesDto tmpDto = tmpJSON.to(MqFavoritesDto.class);

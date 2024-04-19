@@ -52,8 +52,11 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.log4j2.Log4j2Impl
 logging:
   level:
-    com.bbs: debug
-    com.baomidou: debug
+    com:
+      baomidou: debug
+      bbs:
+        chat: debug
+        api: info
   file:
     path: logs/
   config: classpath:logback-spring.xml

@@ -28,6 +28,8 @@ public class Interceptor implements HandshakeInterceptor {
 
     public static String SOCKET_ATTR_UID = "uid";
 
+    public static String SOCKET_ATTR_TOKEN = "token";
+
 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, @NotNull ServerHttpResponse response, @NotNull WebSocketHandler wsHandler, @NotNull Map<String, Object> attributes) {
@@ -40,6 +42,7 @@ public class Interceptor implements HandshakeInterceptor {
                 // 放入属性域
                 Long id = loginUser.getId();
                 attributes.put(SOCKET_ATTR_UID, loginUser.getId());
+                attributes.put(SOCKET_ATTR_TOKEN, token);
                 log.debug("用户 {} 握手成功！", id);
                 return true;
             }
