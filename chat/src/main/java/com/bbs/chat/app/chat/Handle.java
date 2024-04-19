@@ -1,6 +1,7 @@
 package com.bbs.chat.app.chat;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.json.JSONUtil;
 import com.bbs.api.Auth;
 import com.bbs.chat.app.chat.api.OnlineCount;
@@ -28,8 +29,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.bbs.chat.app.chat.ClientSocketCode.UNREAD_MESSAGE;
-import static com.bbs.chat.app.chat.ClientSocketCode.UNREAD_MESSAGES;
+import static com.bbs.chat.app.chat.ClientSocketCode.*;
 import static com.bbs.chat.app.chat.Interceptor.SOCKET_ATTR_TOKEN;
 import static com.bbs.chat.app.chat.Interceptor.SOCKET_ATTR_UID;
 import static com.bbs.chat.enums.MessageType.TEXT;
@@ -106,13 +106,15 @@ public class Handle extends TextWebSocketHandler implements MessageListener {
     @Override
     public void handleTextMessage(@NotNull WebSocketSession session, TextMessage param) {
         // 获得客户端传来的消息
-        String sendTime = DateUtil.now();
+        Date sendDate = new Date();
+        String sendTime = DateUtil.format(sendDate, "yyyy-MM-dd HH:mm:ss");
         UserMessageQueue.Message message = JSONUtil.toBean(param.getPayload(), UserMessageQueue.Message.class);
         Auth.UserAPI.User loginUser = api.getLoginUser(message.getToken());
         Long currentUID = loginUser.getId();
         Long targetUID = message.getTargetUID();
         message.setSourceUID(currentUID);
         message.setTime(sendTime);
+        message.setNo(currentUID + DateUtil.format(sendDate, "yyyyMMddHHmmss") + IdUtil.simpleUUID());
         try {
             WebSocketSession targetSession = SessionManage.search(targetUID);
             // 目标用户是否连接到当前服务
@@ -124,6 +126,7 @@ public class Handle extends TextWebSocketHandler implements MessageListener {
                 broadcastEvent(currentUID, targetUID, sendTime); //2. 广播：有人发消息了
             }
             chatListCache.newChat(currentUID, targetUID, message);   //双方聊天列表，新增对象，且目标用户增加未读消息
+            dirSend(session, SEND_CALLBACK, message);
         } catch (IOException | EncodeException e) {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
@@ -168,8 +171,11 @@ public class Handle extends TextWebSocketHandler implements MessageListener {
      * @throws IOException 消息发送异常
      */
     private void dirSend(WebSocketSession session, UserMessageQueue.Message message) throws EncodeException, IOException {
+        dirSend(session, UNREAD_MESSAGE, message);
+    }
+    private void dirSend(WebSocketSession session, String code, UserMessageQueue.Message message) throws EncodeException, IOException {
         session.sendMessage(new TextMessage(JSONUtil.toJsonPrettyStr(
-                new Message(UNREAD_MESSAGES, JSONUtil.toJsonPrettyStr(message), NumberUtils.INTEGER_ONE)
+                new Message(code, JSONUtil.toJsonPrettyStr(message), NumberUtils.INTEGER_ONE)
         )));
     }
 

@@ -33,6 +33,11 @@ public class UserMessageQueue {
     public static class Message {
 
         /**
+         * 全局唯一标识
+         */
+        private String no;
+
+        /**
          * 来源用户 ID
          */
         private Long sourceUID;
@@ -61,14 +66,6 @@ public class UserMessageQueue {
          * 消息发送时间
          */
         private String time;
-
-        public Message(Long sourceUID, Long targetUID, Integer type, Object content, String time) {
-            this.sourceUID = sourceUID;
-            this.targetUID = targetUID;
-            this.type = type;
-            this.content = content;
-            this.time = time;
-        }
     }
 
     public static String queueName(Long sourceUID) {
