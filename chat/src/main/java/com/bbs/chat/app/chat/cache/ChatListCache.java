@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.math.NumberUtils;
+import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -33,8 +32,6 @@ public class ChatListCache {
     private static final String KEY_PREFIX = "chat:list:";
 
     private static final String LAST_MESSAGE_KEY_PREFIX = "chat:message:last";
-
-    private static final String split = ":";
 
     @Resource(name = "protoStuffTemplate")
     private RedisTemplate<String, String> redisTemplate;
@@ -71,14 +68,26 @@ public class ChatListCache {
         private UserMessageQueue.Message lastMessage;
     }
 
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class VO {
+
+        private Integer unreadTotalNumber;
+
+        private List<ChatListCache.Chat> chats;
+    }
+
     /**
      * 获取用户聊天对象列表
      * @param uid 用户 ID
      * @return Map<聊天对象ID, 未读信息数量>
      */
-    public List<Chat> getChatList(Long uid) {
+    public VO getChatList(Long uid) {
         List<Chat> result = new ArrayList<>();
         Set<ZSetOperations.TypedTuple<String>> all = redisTemplate.opsForZSet().rangeWithScores(key(uid), INTEGER_ZERO, -INTEGER_ONE);
+        int unreadTotalNumber = INTEGER_ZERO;
+        Set<ZSetOperations.TypedTuple<String>> cleanScore =  new HashSet<>();
         if(nonNull(all)) {
             Map<Long, Chat> chatTargetIDAndChatMap = new HashMap<>();
             Set<Long> chatTargetIDs = new HashSet<>();
@@ -88,13 +97,16 @@ public class ChatListCache {
                 if(isNull(lastMessageObj)) throw new BusinessException("用户最后聊天丢失"); //TODO 查询数据库中最后一次聊天
                 UserMessageQueue.Message lastMessage = JSONUtil.toBean(lastMessageObj.toString(), UserMessageQueue.Message.class);
                 chatTargetIDs.add(targetUID);
+                int unreadMSGNumber = Objects.requireNonNull(item.getScore()).intValue();
+                unreadTotalNumber += unreadMSGNumber;
                 Chat chat = new Chat(
                         new Auth.UserAPI.User(),
-                        Objects.requireNonNull(item.getScore()).intValue(),
+                        unreadMSGNumber,
                         lastMessage
                 );
                 result.add(chat);
                 chatTargetIDAndChatMap.put(targetUID, chat);
+                cleanScore.add(new DefaultTypedTuple<>(item.getValue(), DOUBLE_ZERO));
             }
 
             if(chatTargetIDs.size() > INTEGER_ZERO) {
@@ -102,17 +114,8 @@ public class ChatListCache {
                 chatTargets.forEach(user -> chatTargetIDAndChatMap.get(user.getId()).setUser(user));
             }
         }
-
-        return result;
-    }
-
-    public Integer getUnreadMessageSize(Long uid) {
-        String key = key(uid);
-        Set<ZSetOperations.TypedTuple<String>> chats = redisTemplate.opsForZSet().rangeWithScores(key, INTEGER_ZERO, -INTEGER_ONE);
-        if(nonNull(chats)) {
-            return chats.stream().map(ZSetOperations.TypedTuple::getScore).filter(Objects::nonNull).mapToInt(Double::intValue).sum();
-        }
-        return INTEGER_ZERO;
+        if(cleanScore.size() != INTEGER_ZERO) redisTemplate.opsForZSet().add(key(uid), cleanScore);
+        return new VO(unreadTotalNumber, result);
     }
 
     public void cleanUnreadMessageFlag(Long currentUID, Long targetUID) {

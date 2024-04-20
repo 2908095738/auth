@@ -45,14 +45,12 @@ public class AccountController {
      * 发布内容列表  文章or视频1：标题、内容概要、评论数、收藏数、点赞数
      */
     @GetMapping()
-    public Result<GetUserAccountDto> getAccount(Long userId,boolean flag){
+    public Result<GetUserAccountDto> getAccount(Long userId, boolean flag){
         //获取用户账号信息
         GetUserAccountDto result = service.getByUserId(userId);
         if(Objects.nonNull(result)){
-
-
             //获取发布文章列表
-            Page<GetContentDto> newsResult = newsService.getListByUserId(userId,1,10,flag);
+            Page<GetContentDto> newsResult = newsService.getListByUserId(1,10,userId,flag,null);
             if(isNotEmpty(newsResult.getRecords()))
                 newsResult.getRecords().forEach(o -> o.setLikeCount((Integer) thumbCache.countBy(o.getNewId(), null, null, 1)));
             result.setNewsResult(newsResult);
