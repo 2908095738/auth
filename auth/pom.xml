@@ -292,7 +292,7 @@
                 </executions>
                 <configuration>
                     <includeSystemScope>true</includeSystemScope>
-                    <mainClass>com.bbs.auth.AuthServer</mainClass>
+                    <mainClass>com.bbs.auth.Auth</mainClass>
                 </configuration>
             </plugin>
         </plugins>
