@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.bbs.content.dto.GetContentDto;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.param.CreateNewParam;
-import com.bbs.content.dto.param.QueryNewsParam;
 import com.bbs.content.entity.News;
 
 import java.util.List;
@@ -15,23 +14,20 @@ import java.util.List;
  */
 public interface NewsService extends IService<News> {
 
-
+    Long createNewsId(Long createId, String userName);
     News createNews(CreateNewParam param);
 
+    Page<GetContentDto> getListByRecommend(Integer current, Integer size);
+    Page<GetContentDto> getListByFollower(Integer current, Integer size, List<Long> userIds, String title);
+    Page<GetContentDto> getListByNative(Integer current, Integer size, String city, String title);
+    Page<GetContentDto> getListByUserId(Integer current, Integer size, Long userId, boolean flag, String title);
 
-    Page<GetContentDto> getListByQuery(QueryNewsParam param);
-
-    Page<GetContentDto> getListByUserId(Long userId, Integer current, Integer size, boolean flag);
 
     GetUserNewsDto getOneById(Long newId);
-
-    List<GetContentDto> getListByRecommend();
-
-    Page<GetContentDto> getListByFollower(Long userIds, Integer current, Integer size);
-
-    Long createNewsId(Long createId, String userName);
 
     void delete(Long newId, Long userId);
 
     void updateStatus(Integer status, Long newId);
+
+
 }

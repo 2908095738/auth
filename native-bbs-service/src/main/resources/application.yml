@@ -88,3 +88,9 @@ auth:
     search:
       id: /server/
       list: /server/list
+tianditu:
+  host: http://api.tianditu.gov.cn
+  tk: ab3e7b4366baee49f295a3e58185a557
+  api:
+    search: /geocoder
+    timeout: 10000

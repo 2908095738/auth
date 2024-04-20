@@ -7,8 +7,6 @@ import com.bbs.content.converter.NewsConverter;
 import com.bbs.content.dto.GetContentDto;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.param.CreateNewParam;
-import com.bbs.content.dto.param.QueryNewsParam;
-import com.bbs.content.entity.Fan;
 import com.bbs.content.entity.NewContent;
 import com.bbs.content.entity.NewTag;
 import com.bbs.content.entity.News;
@@ -42,51 +40,80 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
 
     private SensitiveFilter sensitiveFilter;
 
-
     private FileCache fileCache;
 
     private Map<Integer, GetContentDto> newMap = new HashMap<>();
-    private static Random random = new Random();
 
-    private static Integer current = 1;
+    private Random random = new Random();
 
-    /**
-     * 返回十条用户没看过的内容
-     *
-     * @return List<GetUserNewsDto>
-     */
-    private List<GetContentDto> getRandomNew() {
-        Page<GetContentDto> pageByRecommend = getPageByRecommend(current);
-        List<GetContentDto> result = new ArrayList<>();
-        if (CollUtil.isNotEmpty(pageByRecommend.getRecords())&&pageByRecommend.getRecords().size()<10) {
-            return pageByRecommend.getRecords();
-        }{
+    private Integer dCurrent = 1;
+    private Integer dSize = 50;
+
+
+    public Map<Integer, GetContentDto> getNewMap() {
+        if (newMap.isEmpty()) {
+            Page<GetContentDto> pageByRecommend = getPageByRecommend();
+            if (CollUtil.isNotEmpty(pageByRecommend.getRecords())) {
+                dCurrent++;
+            }{
+                dCurrent--;
+                //如果当前页没有数据，获取上一页数据
+                pageByRecommend = getPageByRecommend();
+            }
             if (CollUtil.isNotEmpty(pageByRecommend.getRecords())) {
                 for (int i = 0; i < pageByRecommend.getRecords().size(); i++) {
                     newMap.put(i, pageByRecommend.getRecords().get(i));
                 }
             }
-            if (newMap.isEmpty()) {
-                current++;
-                // 所有文章都已显示过，重置已显示文章集合并重新随机化所有文章
-                Page<GetContentDto> getUserNewsDtoPage = getPageByRecommend(current);
-                if (CollUtil.isNotEmpty(getUserNewsDtoPage.getRecords()))
-                    for (int i = 0; i < getUserNewsDtoPage.getRecords().size(); i++) {
-                        newMap.put(i, getUserNewsDtoPage.getRecords().get(i));
-                    }
-                return result;
-            }
-            Integer mapSize = newMap.size();
-            // 从剩余文章中随机选择一篇
-            Integer randomIndex = random.nextInt(mapSize);
-            for (int i = 0; i < 10; i++) {
-                randomIndex = addResult(randomIndex, result, mapSize);
-            }
         }
-
-        return result;
+        return newMap;
     }
 
+    private Page<GetContentDto> getPageByRecommend() {
+        return selectJoinListPage(new Page<>(dCurrent, dSize), GetContentDto.class, new MPJLambdaWrapper<News>()
+                .selectAll(News.class)
+                .selectCollection(Tag.class, GetContentDto::getTags)
+                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
+                .leftJoin(Tag.class, Tag::getId,NewTag::getTagId)
+                .eq(News::getDeleteFlag, 0)
+                .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
+                .orderBy(true, false, News::getCreateTime)
+        );
+    }
+
+
+
+    /**
+     * 查询推荐页上的内容简要信息
+     * @param current 第几页
+     * @param size    几条
+     * @return GetUserNewsDto
+     */
+    @Override
+    public Page<GetContentDto> getListByRecommend(Integer current, Integer size) {
+        Map<Integer, GetContentDto> map = getNewMap();
+        if(CollUtil.isNotEmpty(map)){
+            return getRandomNew(map,current,size);
+        }
+        return new Page<>(current, size);
+    }
+
+    /**
+     * 返回size条用户没看过的内容
+     * @param map map
+     * @param size 几条
+     * @return Page<GetContentDto>
+     */
+    private Page<GetContentDto> getRandomNew(Map<Integer, GetContentDto> map, Integer current, Integer size) {
+        List<GetContentDto> result = new ArrayList<>();
+        Integer mapSize = map.size();
+        // 从剩余文章中随机选择一篇
+        Integer randomIndex = random.nextInt(mapSize);
+        for (int i = 0; i < size; i++) {
+            randomIndex = addResult(randomIndex,result, mapSize);
+        }
+        return new Page<GetContentDto>(current, size).setRecords(result);
+    }
 
     private Integer addResult(int randomIndex, List<GetContentDto> result, Integer mapSize) {
         GetContentDto getUserNewsDto = newMap.get(randomIndex);
@@ -103,8 +130,94 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
     }
 
 
+
+    /**
+     * 查询关注页上的内容简要信息
+     * @param userIds  关注用户ids
+     * @param current 第几页
+     * @param size    几条
+     * @param title 标题
+     * @return GetUserAccountDto.GetUserNewsDto
+     */
+    @Override
+    public Page<GetContentDto> getListByFollower(Integer current, Integer size, List<Long> userIds, String title) {
+        return selectJoinListPage(new Page<>(current, size), GetContentDto.class, new MPJLambdaWrapper<News>()
+                .selectAll(News.class)
+                .selectCollection(Tag.class, GetContentDto::getTags)
+                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
+                .leftJoin(Tag.class, Tag::getId,NewTag::getTagId)
+                .eq(News::getDeleteFlag, 0)
+                .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
+                .orderBy(true, false, News::getCreateTime)
+
+                .like(StringUtils.isNotBlank(title), News::getTitle, title)
+        );
+    }
+
+    /**
+     * 查询本地页上的内容简要信息
+     * @param current 第几页
+     * @param size    几条
+     * @param city 城市信息
+     * @param title 标题
+     * @return GetUserAccountDto.GetUserNewsDto
+     */
+    @Override
+    public Page<GetContentDto> getListByNative(Integer current, Integer size, String city, String title) {
+        return selectJoinListPage(new Page<>(current, size), GetContentDto.class, new MPJLambdaWrapper<News>()
+                        .selectAll(News.class)
+                        .selectCollection(Tag.class, GetContentDto::getTags)
+                        .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
+                        .leftJoin(Tag.class, Tag::getId,NewTag::getTagId)
+                        .eq(News::getDeleteFlag, 0)
+                        .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
+                        .orderBy(true, false, News::getCreateTime)
+
+                        .like(News::getAddr, city)
+
+                        .like(StringUtils.isNotBlank(title), News::getTitle, title)
+//                .in(CollUtil.isNotEmpty(param.getTagIds()), NewTag::getTagId, param.getTagIds())
+
+        );
+    }
+
+
+
+    /**
+     * 查询用户主页上发布内容集合
+     * @param userId  用户id
+     * @param current 第几页
+     * @param size    几条
+     * @param flag    是否是用户自己  true：是
+     * @param title 标题
+     * @return GetUserAccountDto.GetUserNewsDto
+     */
+    @Override
+    public Page<GetContentDto> getListByUserId(Integer current, Integer size, Long userId, boolean flag, String title) {
+        return selectJoinListPage(new Page<>(current, size), GetContentDto.class, new MPJLambdaWrapper<News>()
+                .selectAll(News.class)
+                .selectCollection(Tag.class, GetContentDto::getTags)
+                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
+                .leftJoin(Tag.class, Tag::getId,NewTag::getTagId)
+                .eq(News::getDeleteFlag, 0)
+                .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
+                .orderBy(true, false, News::getCreateTime)
+
+                .in(flag, News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode(), NewCommentStatus.WAIT_FOR_REVIEW.getCode())
+                .eq(!flag, News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
+
+                .like(StringUtils.isNotBlank(title), News::getTitle, title)
+                //.in(CollUtil.isNotEmpty(param.getTagIds()), NewTag::getTagId, param.getTagIds())
+
+        );
+    }
+
+
     @Override
     public Long createNewsId(Long createId, String userName) {
+
+
+
         News news = new News().setCreateId(createId).setUpdateId(createId).setUserName(userName).setDeleteFlag(1);
         save(news);
         return news.getNewId();
@@ -150,104 +263,13 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
         return news;
     }
 
-    @Override
-    public Page<GetContentDto> getListByQuery(QueryNewsParam param) {
-        return selectJoinListPage(new Page<>(param.getCurrent(), param.getSize()), GetContentDto.class, new MPJLambdaWrapper<News>()
-                .selectAll(News.class)
-                .like(StringUtils.isNotBlank(param.getTitle()), News::getTitle, param.getTitle())
-                .in(CollUtil.isNotEmpty(param.getTagIds()), NewTag::getTagId, param.getTagIds())
-                .eq(News::getDeleteFlag, 0)
-                .orderBy(true, false, News::getCreateTime)
-        );
-    }
-
-    /**
-     * 查询用户主页上发布内容集合
-     *
-     * @param userId  用户id
-     * @param current 第几页
-     * @param size    几条
-     * @param flag    是否是用户自己  true：是
-     * @return GetUserAccountDto.GetUserNewsDto
-     */
-    @Override
-    public Page<GetContentDto> getListByUserId(Long userId, Integer current, Integer size, boolean flag) {
-        return selectJoinListPage(new Page<>(current, size), GetContentDto.class, new MPJLambdaWrapper<News>()
-                .selectAll(News.class)
-//                .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
-//                .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
-//                .selectCollection(NewTag.class, GetUserNewsDto::getTagIds, o -> o.result(NewTag::getTagId))
-//                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
-                .orderBy(true, false, News::getCreateTime)
-                .eq(News::getCreateId, userId)
-                .eq(News::getDeleteFlag, 0)
-                .in(flag, News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode(), NewCommentStatus.WAIT_FOR_REVIEW.getCode())
-                .eq(!flag, News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
-        );
-    }
-
 
     public List<GetContentDto> getHot(){
         return null;
     }
 
 
-    /**
-     * 查询推荐页上的内容简要信息
-     *
-     * @return GetUserNewsDto
-     */
-    @Override
-    public List<GetContentDto> getListByRecommend() {
-        return getRandomNew();
-    }
 
-    private Page<GetContentDto> getPageByRecommend(Integer current) {
-        return selectJoinListPage(new Page<>(current, 50), GetContentDto.class, new MPJLambdaWrapper<News>()
-                .selectAll(News.class)
-//                .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
-//                .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
-//                .selectCollection(NewTag.class, GetUserNewsDto::getTagIds, o -> o.result(NewTag::getTagId))
-//                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
-                .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
-                .eq(News::getDeleteFlag, 0)
-                .orderBy(true, false, News::getCreateTime)
-                .or()
-                .orderBy(false, true, News::getCreateTime)
-                .or()
-                .orderBy(true, false, News::getLastReplyTime)
-                .or()
-                .orderBy(false, true, News::getLastReplyTime)
-                .or()
-                .orderBy(true, false, News::getUpdateTime)
-                .or()
-                .orderBy(false, true, News::getUpdateTime)
-        );
-    }
-
-    /**
-     * 查询关注页上的内容简要信息
-     *
-     * @param userId  用户id
-     * @param current 第几页
-     * @param size    几条
-     * @return GetUserAccountDto.GetUserNewsDto
-     */
-    @Override
-    public Page<GetContentDto> getListByFollower(Long userId, Integer current, Integer size) {
-        return selectJoinListPage(new Page<>(current, size), GetContentDto.class, new MPJLambdaWrapper<News>()
-                .selectAll(News.class)
-//                .selectAssociation(NewContent.class, GetUserNewsDto::getContent, o -> o.result(NewContent::getContent))
-//                .leftJoin(NewContent.class, NewContent::getNewId, News::getNewId)
-//                .selectCollection(NewTag.class, GetUserNewsDto::getTagIds, o -> o.result(NewTag::getTagId))
-//                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
-                .eq(News::getDeleteFlag, 0)
-                .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
-                .leftJoin(Fan.class, Fan::getUserId, News::getCreateId)
-                .eq(News::getCreateId, userId)
-                .orderBy(true, false, News::getCreateTime)
-        );
-    }
 
     /**
      * 根据主键查全部内容、点赞
@@ -280,9 +302,9 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
         this.sensitiveFilter = sensitiveFilter;
     }
 
-
     @Resource
     public void setFileService(FileCache fileCache) {
         this.fileCache = fileCache;
     }
+
 }

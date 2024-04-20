@@ -8,7 +8,6 @@ import com.bbs.content.cache.ThumbCache;
 import com.bbs.content.dto.GetContentDto;
 import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.param.CreateNewParam;
-import com.bbs.content.dto.param.QueryNewsParam;
 import com.bbs.content.entity.News;
 import com.bbs.content.service.CommentService;
 import com.bbs.content.service.NewContentService;
@@ -17,12 +16,15 @@ import com.bbs.content.service.NewsService;
 import com.bbs.content.service.TagService;
 import com.bbs.content.util.AuthUtil;
 import com.bbs.content.util.ThreadLocalUtil;
+import com.bbs.content.util.TianDiTuUtil;
+import com.bbs.vo.BaseParam;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -47,7 +49,6 @@ import static cn.hutool.core.collection.CollUtil.isNotEmpty;
  * 文章/视频
  */
 
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/content")
 public class ContentController {
@@ -63,6 +64,7 @@ public class ContentController {
     private TransactionDefinition transactionDefinition;
     private DataSourceTransactionManager transactionManager;
     private AuthUtil.UserAPI api;
+    private TianDiTuUtil tianDiTu;
 
 
     /**
@@ -106,94 +108,81 @@ public class ContentController {
     }
 
 
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    public static class QueryNewsParam extends BaseParam {
+        /**
+         * 查询类型
+         */
+        @NotNull
+        private Integer queryType;
+
+        /**
+         *标题
+         */
+        private String title;
+
+        /**
+         * 标签ids
+         */
+        private List<Long> tagIds;
+
+        /**
+         * 定位所在城市
+         */
+        private String city;
+        /**
+         * 用户id
+         */
+        private Long userId;
+        /**
+         * 是否要查当前用户下发布的内容
+         */
+        private boolean userFlag = false;
+
+        /**
+         * 经度
+         */
+        private Double log;
+        /**
+         *维度
+         */
+        private Double lat;
+
+    }
+
+
     /**
      * 条件查询内容
+     * @param param  查询条件
      */
     @GetMapping("/query")
     public Result<Page<GetContentDto>> getQueryNews(@Valid QueryNewsParam param){
-        Page<GetContentDto> result = newsService.getListByQuery(param);
+        Page<GetContentDto> result = new Page<>();
+        switch (param.getQueryType()) {
+            case 1:
+                //关注页：
+                //TODO 根据用户id查询当前用户关注的列表 ThreadLocalUtil.getCurrentUserId()
+                List<Long> userIds = new ArrayList<>();
+                result = newsService.getListByFollower(param.getCurrent(),param.getSize(),userIds,param.title);
+                break;
+            case 2:
+                //推荐页：
+                result = newsService.getListByRecommend(param.getCurrent(),param.getSize());
+                break;
+            case 3:
+                //本地页：
+                String city = tianDiTu.getCityBy(param.getLog(),param.getLat());
+                result = newsService.getListByNative(param.getCurrent(),param.getSize(),city, param.title);
+                break;
+            case 4:
+                //用户(自己或他人)主页：
+                result = newsService.getListByUserId(param.getCurrent(),param.getSize(),param.userId,param.userFlag,param.title);
+                break;
+        }
         if(isNotEmpty(result.getRecords())) {
-            Map<Long, AuthUtil.UserAPI.VO> collect = api.getUserList(result.getRecords().stream().map(GetContentDto::getCreateId).collect(Collectors.toList())).stream().collect(Collectors.toMap(AuthUtil.UserAPI.VO::getId, o2 -> o2));
-            result.getRecords().forEach(o ->{
-                o.setLikeCount((Integer) thumbCache.countBy(o.getNewId(), null, null, 1));
-                o.setUser(collect.get(o.getCreateId()));
-            });
-        }
-        return Result.success(result);
-    }
-
-
-    /**
-     * 删除内容
-     */
-    @DeleteMapping()
-    public Result<Boolean> deleteNews(@NotNull(message = "内容id不能为空！") Long newId){
-        AuthUtil.UserAPI.User currentUser = ThreadLocalUtil.getCurrentUser();
-        newsService.delete(newId,currentUser.getId());
-        return Result.success();
-    }
-
-
-    /**
-     * 查询关注页上的内容简要信息
-     * @param current 第几页
-     * @param size    几条
-     * @return Page<GetUserAccountDto.GetUserNewsDto>
-     */
-    @GetMapping("/follower")
-    public Result<Page<GetContentDto>> getFollowerNews(@NotNull(message = "页数不能为空！") Integer current,
-                                                        @NotNull(message = "每页几条不能为空！") Integer size) {
-        Page<GetContentDto> result = newsService.getListByFollower(ThreadLocalUtil.getCurrentUser().getId(), current, size);
-        if(isNotEmpty(result.getRecords())){
-            Map<Long, AuthUtil.UserAPI.VO> collect = api.getUserList(result.getRecords().stream().map(GetContentDto::getCreateId).collect(Collectors.toList())).stream().collect(Collectors.toMap(o1 -> o1.getId(), o2 -> o2));
-            result.getRecords().forEach(o ->{
-                o.setLikeCount((Integer) thumbCache.countBy(o.getNewId(), null, null, 1));
-                o.setUser(collect.get(o.getCreateId()));
-            });
-        }
-        return Result.success(result);
-    }
-
-
-
-    /**
-     * 查询用户(自己或他人)主页上的内容简要信息
-     *
-     * @param userId  用户id
-     * @param current 第几页
-     * @param size    几条
-     * @param flag    是否是用户自己  true：是
-     * @return Page<GetUserAccountDto.GetUserNewsDto>
-     */
-    @GetMapping("/user")
-    public Result<Page<GetContentDto>> getAccountNews(@NotNull(message = "用户id不能为空！") Long userId,
-                                                       @NotNull(message = "页数不能为空！") Integer current,
-                                                       @NotNull(message = "每页几条不能为空！") Integer size,
-                                                       @NotNull(message = "是否为此用户属性值不能为空！") Boolean flag) {
-        Page<GetContentDto> newsResult = newsService.getListByUserId(userId, current, size, flag);
-        if(isNotEmpty(newsResult.getRecords())){
-            Map<Long, AuthUtil.UserAPI.VO> collect = api.getUserList(newsResult.getRecords().stream().map(GetContentDto::getCreateId).collect(Collectors.toList())).stream().collect(Collectors.toMap(o1 -> o1.getId(), o2 -> o2));
-            newsResult.getRecords().forEach(o ->{
-                o.setLikeCount((Integer) thumbCache.countBy(o.getNewId(), null, null, 1));
-                o.setUser(collect.get(o.getCreateId()));
-            });
-        }
-            newsResult.getRecords().forEach(o -> o.setLikeCount((Integer) thumbCache.countBy(o.getNewId(), null, null, 1)));
-        return Result.success(newsResult);
-    }
-
-
-
-    /**
-     * 查询推荐页上的内容简要信息
-     * @return Page<GetUserAccountDto.GetUserNewsDto>
-     */
-    @GetMapping("/recommend")
-    public Result<List<GetContentDto>> getRecommendNews() {
-        List<GetContentDto> result = newsService.getListByRecommend();
-        if(isNotEmpty(result)) {
-            Set<Long> userIds = result.stream().map(GetContentDto::getCreateId).collect(Collectors.toSet());
-
+            List<GetContentDto> list = result.getRecords();
+            Set<Long> userIds = list.stream().map(GetContentDto::getCreateId).collect(Collectors.toSet());
             Map<Long, AuthUtil.UserAPI.VO> userIdMap = new HashMap<>();
             if(CollUtil.isNotEmpty(userIds)&&userIds.size()>1){
                 userIdMap = api.getUserList(new ArrayList<>(userIds)).stream().collect(Collectors.toMap(AuthUtil.UserAPI.VO::getId, o2 -> o2));
@@ -201,13 +190,12 @@ public class ContentController {
                 AuthUtil.UserAPI.VO userByid = api.getUserByid(new ArrayList<>(userIds).get(0));
                 userIdMap.put(userByid.getId(),userByid);
             }
-            Map<Long, Integer> visitMap = newsCache.getVisit(result.stream().map(GetContentDto::getNewId).collect(Collectors.toList()));
-            Map<Long, AuthUtil.UserAPI.VO> finalUserIdMap = userIdMap;
-            result.forEach(o -> {
-                o.setUser(finalUserIdMap.get(o.getCreateId()));
-                o.setLikeCount((Integer) thumbCache.countBy(o.getNewId(), null, null, 1));
-                o.setVisitNum(visitMap.getOrDefault(o.getNewId(), 0));
-            });
+            Map<Long, Integer> visitMap = newsCache.getVisit(list.stream().map(GetContentDto::getNewId).collect(Collectors.toList()));
+            for (GetContentDto getContentDto : result.getRecords()) {
+                getContentDto.setUser(userIdMap.get(getContentDto.getCreateId()));
+                getContentDto.setLikeCount((Integer) thumbCache.countBy(getContentDto.getNewId(), null, null, 1));
+                getContentDto.setVisitNum(visitMap.getOrDefault(getContentDto.getNewId(), 0));
+            }
         }
         return Result.success(result);
     }
@@ -223,6 +211,19 @@ public class ContentController {
         List<GetContentDto> newsResult = newsCache.getHot();
         return Result.success(newsResult);
     }
+
+
+
+    /**
+     * 删除内容
+     */
+    @DeleteMapping()
+    public Result<Boolean> deleteNews(@NotNull(message = "内容id不能为空！") Long newId){
+        AuthUtil.UserAPI.User currentUser = ThreadLocalUtil.getCurrentUser();
+        newsService.delete(newId,currentUser.getId());
+        return Result.success();
+    }
+
 
 
     /**
@@ -282,8 +283,9 @@ public class ContentController {
     }
 
 
+
     @Autowired
-    public ContentController(NewsService newsService, NewsCache newsCache, ThumbCache thumbCache, CommentService commentService, NewContentService newContentService, NewTagService newTagService, TagService tagService, TransactionDefinition transactionDefinition, DataSourceTransactionManager transactionManager, AuthUtil.UserAPI api) {
+    public ContentController(NewsService newsService, NewsCache newsCache, ThumbCache thumbCache, CommentService commentService, NewContentService newContentService, NewTagService newTagService, TagService tagService, TransactionDefinition transactionDefinition, DataSourceTransactionManager transactionManager, AuthUtil.UserAPI api, TianDiTuUtil tianDiTu) {
         this.newsService = newsService;
         this.newsCache = newsCache;
         this.thumbCache = thumbCache;
@@ -294,5 +296,6 @@ public class ContentController {
         this.transactionDefinition = transactionDefinition;
         this.transactionManager = transactionManager;
         this.api = api;
+        this.tianDiTu = tianDiTu;
     }
 }
