@@ -217,12 +217,13 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
 
     @Override
     public Long createNewsId(Long createId, String userName) {
-
-
-
-        News news = new News().setCreateId(createId).setUpdateId(createId).setUserName(userName).setDeleteFlag(1);
-        save(news);
-        return news.getNewId();
+        //查询当前用户下是否有审核状态为0，删除状态为一的数据，不存在在添加
+        News one = lambdaQuery().eq(News::getCreateId, createId).eq(News::getStatus, 0).eq(News::getDeleteFlag, 1).one();
+        if (Objects.isNull(one)) {
+            one = new News().setCreateId(createId).setUpdateId(createId).setUserName(userName).setDeleteFlag(1);
+            save(one);
+        }
+        return one.getNewId();
     }
 
     @Override

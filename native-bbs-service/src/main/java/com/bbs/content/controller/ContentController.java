@@ -14,6 +14,7 @@ import com.bbs.content.service.NewContentService;
 import com.bbs.content.service.NewTagService;
 import com.bbs.content.service.NewsService;
 import com.bbs.content.service.TagService;
+import com.bbs.content.service.VisitPageService;
 import com.bbs.content.util.AuthUtil;
 import com.bbs.content.util.ThreadLocalUtil;
 import com.bbs.vo.BaseParam;
@@ -58,12 +59,11 @@ public class ContentController {
     private CommentService commentService;
     private NewContentService newContentService;
     private NewTagService newTagService;
-
     private TagService tagService;
     private TransactionDefinition transactionDefinition;
     private DataSourceTransactionManager transactionManager;
     private AuthUtil.UserAPI api;
-
+    private VisitPageService visitPageService;
 
     /**
      * 获取内容id：创建id
@@ -167,6 +167,11 @@ public class ContentController {
                 //用户(自己或他人)主页：
                 result = newsService.getListByUserId(param.getCurrent(),param.getSize(),param.userId,param.userFlag,param.title);
                 break;
+            case 4:
+                Long currentUserId = ThreadLocalUtil.getCurrentUserId();
+                //用户历史访问列表页：
+                result = visitPageService.getListByUserId(param.getCurrent(), param.getSize(), currentUserId, param.title);
+                break;
         }
         if(isNotEmpty(result.getRecords())) {
             List<GetContentDto> list = result.getRecords();
@@ -266,6 +271,10 @@ public class ContentController {
             //访问量加1
             Integer visitNum = newsCache.intrVisit(newId);
             result.setVisitNum(visitNum);
+            
+            //根据newId和用户id查询是否存在，不存在则添加一条用户访问记录
+            visitPageService.createVisitPage(currentUserId,newId);
+
         }
         return Result.success(result);
     }
@@ -273,7 +282,7 @@ public class ContentController {
 
 
     @Autowired
-    public ContentController(NewsService newsService, NewsCache newsCache, ThumbCache thumbCache, CommentService commentService, NewContentService newContentService, NewTagService newTagService, TagService tagService, TransactionDefinition transactionDefinition, DataSourceTransactionManager transactionManager, AuthUtil.UserAPI api) {
+    public ContentController(NewsService newsService, NewsCache newsCache, ThumbCache thumbCache, CommentService commentService, NewContentService newContentService, NewTagService newTagService, TagService tagService, TransactionDefinition transactionDefinition, DataSourceTransactionManager transactionManager, AuthUtil.UserAPI api, VisitPageService visitPageService) {
         this.newsService = newsService;
         this.newsCache = newsCache;
         this.thumbCache = thumbCache;
@@ -284,5 +293,6 @@ public class ContentController {
         this.transactionDefinition = transactionDefinition;
         this.transactionManager = transactionManager;
         this.api = api;
+        this.visitPageService = visitPageService;
     }
 }
