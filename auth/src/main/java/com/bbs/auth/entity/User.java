@@ -93,6 +93,12 @@ public class User implements Serializable {
     @TableField(value = "avatar")
     private String avatar;
 
+    /**
+     * 平台角色
+     */
+    @TableField(value = "paas_role")
+    private Integer paasRole;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 

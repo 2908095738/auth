@@ -11,6 +11,7 @@ import com.bbs.auth.service.UserService;
 import com.bbs.enums.UserStateEnum;
 import lombok.Data;
 import net.sf.jsqlparser.util.validation.metadata.DatabaseException;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -21,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 import java.util.Random;
@@ -52,12 +52,10 @@ public class Register extends ServiceImpl<UserMapper, User> {
     @Data
     public static class Param {
 
-        @NotBlank(message = "用户昵称不能为空")
         private String userName;
 
         private String clinicName;
 
-        @NotBlank(message = "密码不能为空")
         private String password;
 
         @NotNull(message = "手机号不能为空")
@@ -69,6 +67,11 @@ public class Register extends ServiceImpl<UserMapper, User> {
         private String email;
 
         private Long group;
+
+        /**
+         * 平台角色
+         */
+        private Integer paasRole;
     }
 
 
@@ -78,21 +81,24 @@ public class Register extends ServiceImpl<UserMapper, User> {
      * @return 注册是否成功
      */
     @PutMapping("/user")
-    public Result<Boolean> register(@Valid @RequestBody Param param){
+    public Result<User> register(@Valid @RequestBody Param param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         User user = converter.toEntity(param);
         try {
             checkArgument(phoneCodeCache.checkCode(param.phone, param.code), FAILED_USER_CODE_NOT_AVAILABLE);
             checkArgument(dao.notExists(user), FAILED_USER_INFO_DUPLICATION);
 
-            user.setSalt(createSalt());
-            user.setPassword(service.encryptPassword(user));
-            user.setState(UserStateEnum.STATUS_NORMAL.getCode());
+            if(StringUtils.isNoneBlank(user.getPassword())) {
+                user.setSalt(createSalt());
+                user.setPassword(service.encryptPassword(user));
+                user.setState(UserStateEnum.STATUS_NORMAL.getCode());
+
+            }
 
             saveUser(user);
 
             transactionManager.commit(transaction);
-            return success();
+            return success(user);
         } catch (Exception e) {
             e.printStackTrace();
             transactionManager.rollback(transaction);
