@@ -31,7 +31,7 @@ public class GetUserNewsDto {
     private String title;
 
     /**
-     * 内容摘要
+     * 封面
      */
     @TableField(value = "summary")
     private String summary;

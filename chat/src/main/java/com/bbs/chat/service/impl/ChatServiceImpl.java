@@ -357,54 +357,56 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
             return new Page();
         }
 
-        //获取收藏用户信息列表
-        DynamicDataSourceContextHolder.push(DBType.AUTH.getDbName());
-        MPJLambdaWrapper<User> userWrapByFavo = new MPJLambdaWrapper<User>()
-                .select(User::getId, User::getName)
-                .in(User::getId, userIdsByFavo);
+        if (isFavoUserIds){
+            //获取收藏用户信息列表
+            DynamicDataSourceContextHolder.push(DBType.AUTH.getDbName());
+            MPJLambdaWrapper<User> userWrapByFavo = new MPJLambdaWrapper<User>()
+                    .select(User::getId, User::getName)
+                    .in(User::getId, userIdsByFavo);
 
-        Map<Long, List<UserBO>> userByFavoMap = userMapper.selectJoinList(UserBO.class, userWrapByFavo)
-                .stream()
-                .collect(Collectors.groupingBy(UserBO::getId));
-        DynamicDataSourceContextHolder.poll();
+            Map<Long, List<UserBO>> userByFavoMap = userMapper.selectJoinList(UserBO.class, userWrapByFavo)
+                    .stream()
+                    .collect(Collectors.groupingBy(UserBO::getId));
+            DynamicDataSourceContextHolder.poll();
 
-        //查询收藏列表
-        DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
-        MPJLambdaWrapper facWrap = new MPJLambdaWrapper<AgreeDto>()
-                .selectAs(Favorites::getNewId, AgreeDto::getAgreeId)
-                .selectAs(Favorites::getUserId, AgreeDto::getAgreeUid)
-                .selectAs(Favorites::getCreateTime, AgreeDto::getTime)
+            //查询收藏列表
+            DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
+            MPJLambdaWrapper facWrap = new MPJLambdaWrapper<AgreeDto>()
+                    .selectAs(Favorites::getNewId, AgreeDto::getAgreeId)
+                    .selectAs(Favorites::getUserId, AgreeDto::getAgreeUid)
+                    .selectAs(Favorites::getCreateTime, AgreeDto::getTime)
 
-                .rightJoin(Favorites.class, Favorites::getNewId, News::getNewId)
-                .ne(Favorites::getUserId, userId)
-                .eq(News::getCreateId, userId)
-                .orderBy(true, false, Thumb::getUpdateTime);
+                    .rightJoin(Favorites.class, Favorites::getNewId, News::getNewId)
+                    .ne(Favorites::getUserId, userId)
+                    .eq(News::getCreateId, userId)
+                    .orderBy(true, false, Thumb::getUpdateTime);
 
-        List<AgreeDto> tmp = newsMapper.selectJoinPage(new Page(current, little), AgreeDto.class, facWrap).getRecords();
-        DynamicDataSourceContextHolder.poll();
+            List<AgreeDto> tmp = newsMapper.selectJoinPage(new Page(current, little), AgreeDto.class, facWrap).getRecords();
+            DynamicDataSourceContextHolder.poll();
 
-        //收藏列表补值
-        tmp.forEach(t -> {
-            UserBO tmpUser = userByFavoMap.get(t.getAgreeUid()).get(0);
-            t.setName(tmpUser.getName());
-        });
-
-        //两张表查出来的数据合并
-//        boolean isNonNull_2 = Objects.nonNull(tmp.get(0));//查不出来数据，但List却有一个元素，但该元素又是空
-        if (!tmp.isEmpty() /*&& isNonNull_2*/) {
-            tmp.forEach(a -> a.setType(3));
-            if (page.getRecords().isEmpty()) {
-                page.setRecords(new ArrayList());
-            }
-            page.getRecords().addAll(tmp);
-            page.getRecords().sort((l, r) -> {
-                Date lTime = l.getTime();
-                Date rTime = r.getTime();
-
-                return rTime.compareTo(lTime);
+            //收藏列表补值
+            tmp.forEach(t -> {
+                UserBO tmpUser = userByFavoMap.get(t.getAgreeUid()).get(0);
+                t.setName(tmpUser.getName());
             });
+
+            //两张表查出来的数据合并
+//        boolean isNonNull_2 = Objects.nonNull(tmp.get(0));//查不出来数据，但List却有一个元素，但该元素又是空
+            if (!tmp.isEmpty() /*&& isNonNull_2*/) {
+                tmp.forEach(a -> a.setType(3));
+                if (page.getRecords().isEmpty()) {
+                    page.setRecords(new ArrayList());
+                }
+                page.getRecords().addAll(tmp);
+                page.getRecords().sort((l, r) -> {
+                    Date lTime = l.getTime();
+                    Date rTime = r.getTime();
+
+                    return rTime.compareTo(lTime);
+                });
+            }
+            page.setTotal(page.getRecords().size());
         }
-        page.setTotal(page.getRecords().size());
 
         DynamicDataSourceContextHolder.push(DBType.CHAT.getDbName());
 
@@ -438,6 +440,8 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
                 dto.setAvatarPath(avatar);
             });
         }
+
+        page.setSize(page.getRecords().size());
 
         return page;
     }
@@ -574,73 +578,75 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
             return new Page();
         }
 
-        //获取回复评论用户id列表
-        MPJLambdaWrapper<Comment> userIdWrapByComm = new MPJLambdaWrapper<Comment>()
-                .select(Comment::getCreateId)
-                .in(Comment::getParentId, ids)
-                .eq(Comment::getStatus, 20);
-
-        List<Long> userIdsByComm = commentMapper.selectJoinList(Long.class, userIdWrapByComm);
-        DynamicDataSourceContextHolder.poll();
-
-        if (Objects.isNull(userIdsByComm) || userIdsByComm.isEmpty()) {
-            //清除评论未读角标
-            DynamicDataSourceContextHolder.push(DBType.CHAT.getDbName());
-            ChatTop top = topMapper.selectById(userId);
-            top.setCommentCount(0);
-            topMapper.updateById(top);
-            DynamicDataSourceContextHolder.poll();
-
-            return page;//TODO 没人回复我的评论，暂时直接返回，没有考虑补足数量
-        }
-
-        //获取回复评论用户列表
-        DynamicDataSourceContextHolder.push(DBType.AUTH.getDbName());
-        MPJLambdaWrapper<User> wrapByComm = new MPJLambdaWrapper<User>()
-                .select(User::getId, User::getName)
-                .in(User::getId, userIdsByComm);
-
-        Map<Long, List<UserBO>> userMapByComm = userMapper.selectJoinList(UserBO.class, wrapByComm)
-                .stream()
-                .collect(Collectors.groupingBy(UserBO::getId));
-        DynamicDataSourceContextHolder.poll();
-
-        //获取回复评论列表
-        DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
-        if (!ids.isEmpty()) {
-            MPJLambdaWrapper commWrap = new MPJLambdaWrapper<CommDto>()
-                    .selectAs(Comment::getCreateId, CommDto::getCommUid)
-                    .selectAs(Comment::getId, CommDto::getCommId)
-                    .selectAs(Comment::getUpdateTime, CommDto::getTime)
-
+        if (isCommUserIds){
+            //获取回复评论用户id列表
+            MPJLambdaWrapper<Comment> userIdWrapByComm = new MPJLambdaWrapper<Comment>()
+                    .select(Comment::getCreateId)
                     .in(Comment::getParentId, ids)
-                    .eq(Comment::getStatus, 20)
-                    .orderBy(true, false, Comment::getUpdateTime);
+                    .eq(Comment::getStatus, 20);
 
-            List<CommDto> tmp = commentMapper.selectJoinPage(new Page(current, little), CommDto.class, commWrap).getRecords();
+            List<Long> userIdsByComm = commentMapper.selectJoinList(Long.class, userIdWrapByComm);
             DynamicDataSourceContextHolder.poll();
 
-            //两张表查出来的数据合并
-            //boolean isNonNull_2 = Objects.nonNull(tmp.get(0));//查不出来数据，但List却有一个元素，但该元素又是空
-            if (!tmp.isEmpty() /*&& isNonNull_2*/) {
-                tmp.forEach(dto -> {
-                    dto.setType(2);
-                    UserBO tmpUser = userMapByComm.get(dto.getCommUid()).get(0);
-                    dto.setName(tmpUser.getName());
-                });
+            if (Objects.isNull(userIdsByComm) || userIdsByComm.isEmpty()) {
+                //清除评论未读角标
+                DynamicDataSourceContextHolder.push(DBType.CHAT.getDbName());
+                ChatTop top = topMapper.selectById(userId);
+                top.setCommentCount(0);
+                topMapper.updateById(top);
+                DynamicDataSourceContextHolder.poll();
 
-                if (page.getRecords().isEmpty()) {
-                    page.setRecords(new ArrayList());
-                }
-                page.getRecords().addAll(tmp);
-                page.getRecords().sort((l, r) -> {
-                    Date lTime = l.getTime();
-                    Date rTime = r.getTime();
-
-                    return rTime.compareTo(lTime);
-                });
+                return page;//TODO 没人回复我的评论，暂时直接返回，没有考虑补足数量
             }
-            page.setTotal(page.getRecords().size());
+
+            //获取回复评论用户列表
+            DynamicDataSourceContextHolder.push(DBType.AUTH.getDbName());
+            MPJLambdaWrapper<User> wrapByComm = new MPJLambdaWrapper<User>()
+                    .select(User::getId, User::getName)
+                    .in(User::getId, userIdsByComm);
+
+            Map<Long, List<UserBO>> userMapByComm = userMapper.selectJoinList(UserBO.class, wrapByComm)
+                    .stream()
+                    .collect(Collectors.groupingBy(UserBO::getId));
+            DynamicDataSourceContextHolder.poll();
+
+            //获取回复评论列表
+            DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
+            if (!ids.isEmpty()) {
+                MPJLambdaWrapper commWrap = new MPJLambdaWrapper<CommDto>()
+                        .selectAs(Comment::getCreateId, CommDto::getCommUid)
+                        .selectAs(Comment::getId, CommDto::getCommId)
+                        .selectAs(Comment::getUpdateTime, CommDto::getTime)
+
+                        .in(Comment::getParentId, ids)
+                        .eq(Comment::getStatus, 20)
+                        .orderBy(true, false, Comment::getUpdateTime);
+
+                List<CommDto> tmp = commentMapper.selectJoinPage(new Page(current, little), CommDto.class, commWrap).getRecords();
+                DynamicDataSourceContextHolder.poll();
+
+                //两张表查出来的数据合并
+                //boolean isNonNull_2 = Objects.nonNull(tmp.get(0));//查不出来数据，但List却有一个元素，但该元素又是空
+                if (!tmp.isEmpty() /*&& isNonNull_2*/) {
+                    tmp.forEach(dto -> {
+                        dto.setType(2);
+                        UserBO tmpUser = userMapByComm.get(dto.getCommUid()).get(0);
+                        dto.setName(tmpUser.getName());
+                    });
+
+                    if (page.getRecords().isEmpty()) {
+                        page.setRecords(new ArrayList());
+                    }
+                    page.getRecords().addAll(tmp);
+                    page.getRecords().sort((l, r) -> {
+                        Date lTime = l.getTime();
+                        Date rTime = r.getTime();
+
+                        return rTime.compareTo(lTime);
+                    });
+                }
+                page.setTotal(page.getRecords().size());
+            }
         }
 
         //清除评论未读角标
@@ -674,6 +680,8 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
                 dto.setAvatarPath(avatar);
             });
         }
+
+        page.setSize(page.getRecords().size());
 
         return page;
     }

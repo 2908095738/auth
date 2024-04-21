@@ -33,9 +33,10 @@ public class ThumbServiceImpl extends ServiceImpl<ThumbMapper, Thumb>
 
     @Override
     public Result createThumb(CreateThumbParam param) {
-        if (param.getPostUserId().equals(param.getUserId())) {
-            return Result.success("this self thumb");
-        }
+        //TODO 关闭自我点赞
+//        if (param.getPostUserId().equals(param.getUserId())) {
+//            return Result.success("this self thumb");
+//        }
 
         Object value = null;
         String key = RedisKeys.NEW_THUMB_COMMENT.key() + param.getNewId();

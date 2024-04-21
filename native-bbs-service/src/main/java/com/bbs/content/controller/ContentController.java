@@ -14,9 +14,9 @@ import com.bbs.content.service.NewContentService;
 import com.bbs.content.service.NewTagService;
 import com.bbs.content.service.NewsService;
 import com.bbs.content.service.TagService;
+import com.bbs.content.service.VisitPageService;
 import com.bbs.content.util.AuthUtil;
 import com.bbs.content.util.ThreadLocalUtil;
-import com.bbs.content.util.TianDiTuUtil;
 import com.bbs.vo.BaseParam;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -59,13 +59,11 @@ public class ContentController {
     private CommentService commentService;
     private NewContentService newContentService;
     private NewTagService newTagService;
-
     private TagService tagService;
     private TransactionDefinition transactionDefinition;
     private DataSourceTransactionManager transactionManager;
     private AuthUtil.UserAPI api;
-    private TianDiTuUtil tianDiTu;
-
+    private VisitPageService visitPageService;
 
     /**
      * 获取内容id：创建id
@@ -140,15 +138,6 @@ public class ContentController {
          */
         private boolean userFlag = false;
 
-        /**
-         * 经度
-         */
-        private Double log;
-        /**
-         *维度
-         */
-        private Double lat;
-
     }
 
 
@@ -160,6 +149,10 @@ public class ContentController {
     public Result<Page<GetContentDto>> getQueryNews(@Valid QueryNewsParam param){
         Page<GetContentDto> result = new Page<>();
         switch (param.getQueryType()) {
+            case 0:
+                //推荐页：
+                result = newsService.getListByRecommend(param.getCurrent(),param.getSize());
+                break;
             case 1:
                 //关注页：
                 //TODO 根据用户id查询当前用户关注的列表 ThreadLocalUtil.getCurrentUserId()
@@ -167,17 +160,17 @@ public class ContentController {
                 result = newsService.getListByFollower(param.getCurrent(),param.getSize(),userIds,param.title);
                 break;
             case 2:
-                //推荐页：
-                result = newsService.getListByRecommend(param.getCurrent(),param.getSize());
+                //本地页:
+                result = newsService.getListByNative(param.getCurrent(),param.getSize(),param.city, param.title);
                 break;
             case 3:
-                //本地页：
-                String city = tianDiTu.getCityBy(param.getLog(),param.getLat());
-                result = newsService.getListByNative(param.getCurrent(),param.getSize(),city, param.title);
-                break;
-            case 4:
                 //用户(自己或他人)主页：
                 result = newsService.getListByUserId(param.getCurrent(),param.getSize(),param.userId,param.userFlag,param.title);
+                break;
+            case 4:
+                Long currentUserId = ThreadLocalUtil.getCurrentUserId();
+                //用户历史访问列表页：
+                result = visitPageService.getListByUserId(param.getCurrent(), param.getSize(), currentUserId, param.title);
                 break;
         }
         if(isNotEmpty(result.getRecords())) {
@@ -278,6 +271,10 @@ public class ContentController {
             //访问量加1
             Integer visitNum = newsCache.intrVisit(newId);
             result.setVisitNum(visitNum);
+            
+            //根据newId和用户id查询是否存在，不存在则添加一条用户访问记录
+            visitPageService.createVisitPage(currentUserId,newId);
+
         }
         return Result.success(result);
     }
@@ -285,7 +282,7 @@ public class ContentController {
 
 
     @Autowired
-    public ContentController(NewsService newsService, NewsCache newsCache, ThumbCache thumbCache, CommentService commentService, NewContentService newContentService, NewTagService newTagService, TagService tagService, TransactionDefinition transactionDefinition, DataSourceTransactionManager transactionManager, AuthUtil.UserAPI api, TianDiTuUtil tianDiTu) {
+    public ContentController(NewsService newsService, NewsCache newsCache, ThumbCache thumbCache, CommentService commentService, NewContentService newContentService, NewTagService newTagService, TagService tagService, TransactionDefinition transactionDefinition, DataSourceTransactionManager transactionManager, AuthUtil.UserAPI api, VisitPageService visitPageService) {
         this.newsService = newsService;
         this.newsCache = newsCache;
         this.thumbCache = thumbCache;
@@ -296,6 +293,6 @@ public class ContentController {
         this.transactionDefinition = transactionDefinition;
         this.transactionManager = transactionManager;
         this.api = api;
-        this.tianDiTu = tianDiTu;
+        this.visitPageService = visitPageService;
     }
 }
