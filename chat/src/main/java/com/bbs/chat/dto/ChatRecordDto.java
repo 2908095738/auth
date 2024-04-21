@@ -44,7 +44,7 @@ public class ChatRecordDto {
     /**
      * 消息发送方
      * 1.我发给对方
-     * 2.对方发给我
+     * 0.对方发给我
      */
     @TableField(exist = false)
     private Integer type;

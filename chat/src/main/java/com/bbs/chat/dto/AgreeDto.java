@@ -28,7 +28,6 @@ public class AgreeDto {
      */
     private String name;
 
-    //TODO impl ing
     /**
      * 点赞、收藏用户头像路径
      */
