@@ -150,6 +150,8 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
                 .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
                 .orderBy(true, false, News::getCreateTime)
 
+                .in(News::getCreateId,userIds)
+
                 .like(StringUtils.isNotBlank(title), News::getTitle, title)
         );
     }
