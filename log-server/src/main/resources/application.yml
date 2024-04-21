@@ -3,6 +3,14 @@ server:
 spring:
   application:
     name: log
+  main:
+    allow-bean-definition-overriding: true
+  boot:
+    admin:
+      client:
+        url: http://192.168.0.100:7008
+        instance:
+          prefer-ip: true
   datasource:
     url: jdbc:mysql://47.105.39.255:13306/ml_log?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
@@ -54,3 +62,9 @@ apache:
     max-retries: 5
     # 最大重试间隔时间
     max-sleep: 30000
+# Spring Admin 开启监控所有项
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

@@ -19,5 +19,5 @@ logging:
   level:
     com.bbs.monitoring: debug
   file:
-    path: l ogs/monitor
+    path: logs/monitor
   config: classpath:logback-spring.xml
