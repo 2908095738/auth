@@ -3,6 +3,16 @@ server:
   error:
     include-message: always
 spring:
+  application:
+    name: auth
+  main:
+    allow-bean-definition-overriding: true
+  boot:
+    admin:
+      client:
+        url: http://192.168.0.100:7008
+        instance:
+          prefer-ip: true
   datasource:
     url: jdbc:mysql://47.105.39.255:13306/ml_auth?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
@@ -32,7 +42,7 @@ logging:
     com.bbs.auth: debug
     com.baomidou: debug
   file:
-    path: logs/
+    path: logs/auth
   config: classpath:logback-spring.xml
 jwt:
 #  token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9
@@ -59,3 +69,13 @@ apache:
     max-retries: 5
     # 最大重试间隔时间
     max-sleep: 30000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+    logfile:
+      external-file: logs/auth
+  endpoint:
+    health:
+      show-details: always
