@@ -1,9 +1,16 @@
 server:
   port: 8482
-
 spring:
+  application:
+    name: chat
   main:
     allow-bean-definition-overriding: true
+  boot:
+    admin:
+      client:
+        url: http://192.168.0.100:7008
+        instance:
+          prefer-ip: true
   datasource:
     dynamic:
       primary: chat
@@ -58,7 +65,7 @@ logging:
         chat: debug
         api: info
   file:
-    path: logs/
+    path: logs/chat/
   config: classpath:logback-spring.xml
 
 news:
@@ -94,4 +101,9 @@ auth:
     search:
       id: /server/
       list: /server/list
-
+# Spring Admin 开启监控所有项
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
