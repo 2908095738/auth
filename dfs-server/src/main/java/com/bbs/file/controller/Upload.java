@@ -1,8 +1,6 @@
 package com.bbs.file.controller;
 
 import com.bbs.Result;
-import com.bbs.enums.dfs.FileType;
-import com.bbs.enums.dfs.ResourceType;
 import com.bbs.file.util.minio.FileOpt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,8 +23,7 @@ public class Upload {
             @RequestParam("file") MultipartFile file,
             @RequestParam String contentType
     ) throws IllegalArgumentException {
-        String id = fileOpt.resourceID(businessCode, resourceType, fileType);
-        fileOpt.upload(id, file, contentType);
-        return Result.success(fileOpt.preview(id));
+        String resourceID = fileOpt.resourceID(businessCode, resourceType, fileType);
+        return Result.success(fileOpt.upload(resourceID, file, contentType));
     }
 }
