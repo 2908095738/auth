@@ -31,18 +31,11 @@ public class AccountController {
     private ThumbCache thumbCache;
 
 
-    /**
-     * 创建登录用户账号信息
-     * 头像、昵称、性别、年龄、点赞数、积分数、收藏数、关注数、粉丝数
-     */
-
-
-
 
     /**
-     * 查看登录用户账号信息+发布内容列表
-     * 头像、昵称、性别、年龄；点赞数、积分数、收藏数、关注数、粉丝数、(粉丝账户id列表\关注账户id列表\收藏文章id列表)是否企业认证、是否实名认证
-     * 发布内容列表  文章or视频1：标题、内容概要、评论数、收藏数、点赞数
+     * 查看登录用户发布内容列表
+     * 头像、昵称、性别、点赞数、
+     * 发布内容列表  文章or视频or物品 ：标题、内容概要、评论数、收藏数、点赞数
      */
     @GetMapping()
     public Result<GetUserAccountDto> getAccount(Long userId, boolean flag){
@@ -50,9 +43,13 @@ public class AccountController {
         GetUserAccountDto result = service.getByUserId(userId);
         if(Objects.nonNull(result)){
             //获取发布文章列表
-            Page<GetContentDto> newsResult = newsService.getListByUserId(1,10,userId,flag,null);
+            Page<GetContentDto> newsResult = newsService.getListByUserId(1,10,userId, 1, flag,null);
             if(isNotEmpty(newsResult.getRecords()))
+                //点赞数
                 newsResult.getRecords().forEach(o -> o.setLikeCount((Integer) thumbCache.countBy(o.getNewId(), null, null, 1)));
+                //收藏记录
+                //浏览记录
+
             result.setNewsResult(newsResult);
         }
         return Result.success(result);

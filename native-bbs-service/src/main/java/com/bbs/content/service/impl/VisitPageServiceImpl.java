@@ -1,10 +1,8 @@
 package com.bbs.content.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.bbs.content.dto.GetContentDto;
-import com.bbs.content.entity.NewTag;
+import com.bbs.content.dto.VisitPageDto;
 import com.bbs.content.entity.News;
-import com.bbs.content.entity.Tag;
 import com.bbs.content.entity.VisitPage;
 import com.bbs.content.enums.NewCommentStatus;
 import com.bbs.content.mapper.VisitPageMapper;
@@ -24,19 +22,16 @@ public class VisitPageServiceImpl extends MPJBaseServiceImpl<VisitPageMapper, Vi
     implements VisitPageService{
 
     @Override
-    public Page<GetContentDto> getListByUserId(Integer current, Integer size, Long currentUserId, String title) {
-        return selectJoinListPage(new Page<>(current, size), GetContentDto.class, new MPJLambdaWrapper<VisitPage>()
+    public Page<VisitPageDto> getListByUserId(Integer current, Integer size, Long currentUserId, String title) {
+        return selectJoinListPage(new Page<>(current, size), VisitPageDto.class, new MPJLambdaWrapper<VisitPage>()
                 .selectAll(VisitPage.class)
-                .selectAll(News.class)
-                .leftJoin(News.class,News::getNewId,VisitPage::getNewId)
-                .selectCollection(Tag.class, GetContentDto::getTags)
-                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
-                .leftJoin(Tag.class, Tag::getId,NewTag::getTagId)
-                .eq(News::getDeleteFlag, 0)
-                .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
-                .orderBy(true, false, VisitPage::getCreateTime)
 
                 .eq(VisitPage::getUserId,currentUserId)
+                .leftJoin(News.class,News::getNewId,VisitPage::getNewId)
+                .eq(News::getDeleteFlag, 0)
+                .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
+
+                .orderBy(true, false, VisitPage::getCreateTime)
 
                 .like(StringUtils.isNotBlank(title), News::getTitle, title)
         );
