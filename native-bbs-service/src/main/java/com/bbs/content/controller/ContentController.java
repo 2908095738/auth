@@ -160,6 +160,10 @@ public class ContentController {
                 }
                 result = newsService.getListByNative(param.getCurrent(),param.getSize(),param.city, param.title);
                 break;
+            case 3:
+                //按标题搜索文章
+                result = newsService.getListBySearch(param.getTitle(), param.getCurrent(), param.getSize());
+                break;
         }
         if(isNotEmpty(result.getRecords())) {
             List<GetContentDto> list = result.getRecords();

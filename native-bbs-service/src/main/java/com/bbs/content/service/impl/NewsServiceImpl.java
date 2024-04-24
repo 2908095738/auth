@@ -214,6 +214,22 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
         );
     }
 
+    @Override
+    public Page<GetContentDto> getListBySearch(String title, Integer current, Integer size) {
+        return selectJoinListPage(new Page<>(current, size), GetContentDto.class, new MPJLambdaWrapper<News>()
+                .selectAll(News.class)
+                .selectCollection(Tag.class, GetContentDto::getTags)
+
+                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
+                .leftJoin(Tag.class, Tag::getId,NewTag::getTagId)
+
+                .eq(News::getDeleteFlag, 0)
+                .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
+                .like(StringUtils.isNotBlank(title), News::getTitle, title)
+
+                .orderBy(true, false, News::getCreateTime));
+    }
+
 
     @Override
     public Long createNewsId(Long createId, String userName,Integer type) {

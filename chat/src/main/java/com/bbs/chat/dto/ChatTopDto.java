@@ -1,28 +1,31 @@
 package com.bbs.chat.dto;
 
-import com.baomidou.mybatisplus.annotation.TableField;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
- * 消息页顶部三个角标
+ * 消息页顶部未读通知
  */
+@ApiModel("消息页顶部未读通知")
 @Data
 public class ChatTopDto {
     /**
-     * 点赞、收藏角标
+     * 点赞、收藏未读数量
      */
-    @TableField(value = "agree_count")
+    @ApiModelProperty(value = "点赞、收藏未读数量", allowableValues = "[0,infinity]", example = "666")
     private Integer agreeCount;
 
     /**
      * 关注角标
+     * TODO 不在消息页呈现，之后改成消息通知
      */
-    @TableField(value = "fan_count")
+    @ApiModelProperty(hidden = true)
     private Integer fanCount;
 
     /**
-     * 评论角标
+     * 评论未读数量
      */
-    @TableField(value = "comm_count")
+    @ApiModelProperty(value = "评论未读数量", allowableValues = "[0,infinity]", example = "666")
     private Integer commentCount;
 }

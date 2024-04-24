@@ -354,7 +354,9 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
 
         boolean isFavoUserIds = Objects.nonNull(userIdsByFavo) && !userIdsByFavo.isEmpty();
         if (!isThumbUserIds && !isFavoUserIds) {
-            return new Page();
+            Page pagep = new Page();
+            pagep.setSize(0);
+            return pagep;
         }
 
         if (isFavoUserIds){
@@ -575,7 +577,9 @@ public class ChatServiceImpl extends MPJBaseServiceImpl<ChatMapper, Chat> implem
 
         boolean isCommUserIds = Objects.nonNull(ids) && !ids.isEmpty();
         if (!isNewUserIds && !isCommUserIds) {
-            return new Page();
+            Page pagep = new Page();
+            pagep.setSize(0);
+            return pagep;
         }
 
         if (isCommUserIds){
