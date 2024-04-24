@@ -121,10 +121,10 @@ public class News implements Serializable {
     private Integer visitNum;
 
     /**
-     * 排序
+     * 类型：0文章1视频2物品
      */
-    @TableField(value = "sort")
-    private Integer sort;
+    @TableField(value = "type")
+    private Integer type;
 
     /**
      * 精华

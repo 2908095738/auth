@@ -7,6 +7,7 @@ import com.bbs.content.cache.NewsCache;
 import com.bbs.content.cache.ThumbCache;
 import com.bbs.content.dto.GetContentDto;
 import com.bbs.content.dto.GetUserNewsDto;
+import com.bbs.content.dto.VisitPageDto;
 import com.bbs.content.dto.param.CreateNewParam;
 import com.bbs.content.entity.News;
 import com.bbs.content.service.CommentService;
@@ -71,9 +72,9 @@ public class ContentController {
      * @return Long
      */
     @GetMapping("/id")
-    public Result<Long> getNewsId() {
+    public Result<Long> getNewsId(Integer type) {
         AuthUtil.UserAPI.User currentUser = ThreadLocalUtil.getCurrentUser();
-        Long id = newsService.createNewsId(currentUser.getId(), currentUser.getName());
+        Long id = newsService.createNewsId(currentUser.getId(), currentUser.getName(),type);
         return Result.success(id);
     }
 
@@ -129,14 +130,7 @@ public class ContentController {
          * 定位所在城市
          */
         private String city;
-        /**
-         * 用户id
-         */
-        private Long userId;
-        /**
-         * 是否要查当前用户下发布的内容
-         */
-        private boolean userFlag = false;
+
 
     }
 
@@ -161,16 +155,10 @@ public class ContentController {
                 break;
             case 2:
                 //本地页:
+                if(StringUtils.isNotEmpty(param.city)&& Objects.equals(param.city, "全国")){
+                    param.city="";
+                }
                 result = newsService.getListByNative(param.getCurrent(),param.getSize(),param.city, param.title);
-                break;
-            case 3:
-                //用户(自己或他人)主页：
-                result = newsService.getListByUserId(param.getCurrent(),param.getSize(),param.userId,param.userFlag,param.title);
-                break;
-            case 4:
-                Long currentUserId = ThreadLocalUtil.getCurrentUserId();
-                //用户历史访问列表页：
-                result = visitPageService.getListByUserId(param.getCurrent(), param.getSize(), currentUserId, param.title);
                 break;
         }
         if(isNotEmpty(result.getRecords())) {
@@ -193,6 +181,67 @@ public class ContentController {
         return Result.success(result);
     }
 
+    @Data
+    private static class QueryUserNewsParam extends BaseParam {
+
+        /**
+         * 用户id
+         */
+        private Long userId;
+        /**
+         * 类型
+         */
+        private Integer type;
+        /**
+         * 是否要查当前用户下发布的内容
+         */
+        private boolean userFlag = false;
+
+        /**
+         *标题
+         */
+        private String title;
+    }
+
+
+    @GetMapping("/user")
+    public Result<Page<GetContentDto>> getQueryByUser(@Valid QueryUserNewsParam param){
+        Page<GetContentDto> result = new Page<>();
+
+        //用户(自己或他人)发布的内容：
+        result = newsService.getListByUserId(param.getCurrent(),param.getSize(),param.userId,param.type,param.userFlag,param.title);
+        if(isNotEmpty(result.getRecords())) {
+            List<GetContentDto> list = result.getRecords();
+            Set<Long> userIds = list.stream().map(GetContentDto::getCreateId).collect(Collectors.toSet());
+            Map<Long, AuthUtil.UserAPI.VO> userIdMap = new HashMap<>();
+            if(CollUtil.isNotEmpty(userIds)&&userIds.size()>1){
+                userIdMap = api.getUserList(new ArrayList<>(userIds)).stream().collect(Collectors.toMap(AuthUtil.UserAPI.VO::getId, o2 -> o2));
+            }{
+                AuthUtil.UserAPI.VO userByid = api.getUserByid(new ArrayList<>(userIds).get(0));
+                userIdMap.put(userByid.getId(),userByid);
+            }
+            Map<Long, Integer> visitMap = newsCache.getVisit(list.stream().map(GetContentDto::getNewId).collect(Collectors.toList()));
+            for (GetContentDto getContentDto : result.getRecords()) {
+                getContentDto.setUser(userIdMap.get(getContentDto.getCreateId()));
+                getContentDto.setLikeCount((Integer) thumbCache.countBy(getContentDto.getNewId(), null, null, 1));
+                getContentDto.setVisitNum(visitMap.getOrDefault(getContentDto.getNewId(), 0));
+            }
+        }
+        return Result.success(result);
+    }
+
+
+
+
+    @GetMapping("/visit")
+    public Result<Page<VisitPageDto>> getQueryVisitPage(@Valid QueryNewsParam param){
+        Page<VisitPageDto> result = new Page<>();
+        Long currentUserId = ThreadLocalUtil.getCurrentUserId();
+        //用户历史访问列表页：
+        result = visitPageService.getListByUserId(param.getCurrent(), param.getSize(), currentUserId, param.title);
+
+        return Result.success(result);
+    }
 
 
     /**

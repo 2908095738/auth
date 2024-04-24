@@ -150,7 +150,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
                 .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
                 .orderBy(true, false, News::getCreateTime)
 
-                .in(News::getCreateId,userIds)
+                .in(CollUtil.isNotEmpty(userIds),News::getCreateId,userIds)
 
                 .like(StringUtils.isNotBlank(title), News::getTitle, title)
         );
@@ -175,7 +175,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
                         .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
                         .orderBy(true, false, News::getCreateTime)
 
-                        .like(News::getAddr, city)
+                        .like(StringUtils.isNotBlank(city),News::getAddr, city)
 
                         .like(StringUtils.isNotBlank(title), News::getTitle, title)
 //                .in(CollUtil.isNotEmpty(param.getTagIds()), NewTag::getTagId, param.getTagIds())
@@ -187,24 +187,24 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
 
     /**
      * 查询用户主页上发布内容集合
-     * @param userId  用户id
+     *
      * @param current 第几页
      * @param size    几条
+     * @param userId  用户id
+     * @param type
      * @param flag    是否是用户自己  true：是
-     * @param title 标题
+     * @param title   标题
      * @return GetUserAccountDto.GetUserNewsDto
      */
     @Override
-    public Page<GetContentDto> getListByUserId(Integer current, Integer size, Long userId, boolean flag, String title) {
+    public Page<GetContentDto> getListByUserId(Integer current, Integer size, Long userId, Integer type, boolean flag, String title) {
         return selectJoinListPage(new Page<>(current, size), GetContentDto.class, new MPJLambdaWrapper<News>()
                 .selectAll(News.class)
-                .selectCollection(Tag.class, GetContentDto::getTags)
-                .leftJoin(NewTag.class, NewTag::getNewId, News::getNewId)
-                .leftJoin(Tag.class, Tag::getId,NewTag::getTagId)
                 .eq(News::getDeleteFlag, 0)
                 .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
                 .orderBy(true, false, News::getCreateTime)
 
+                .eq(News::getType,type)
                 .in(flag, News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode(), NewCommentStatus.WAIT_FOR_REVIEW.getCode())
                 .eq(!flag, News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
 
@@ -216,11 +216,11 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
 
 
     @Override
-    public Long createNewsId(Long createId, String userName) {
-        //查询当前用户下是否有审核状态为0，删除状态为一的数据，不存在在添加
-        News one = lambdaQuery().eq(News::getCreateId, createId).eq(News::getStatus, 0).eq(News::getDeleteFlag, 1).one();
+    public Long createNewsId(Long createId, String userName,Integer type) {
+        //查询当前用户下是否有审核状态为0，相同类型，删除状态为1的数据，不存在在添加
+        News one = lambdaQuery().eq(News::getCreateId, createId).eq(News::getStatus, 0).eq(News::getDeleteFlag, 1).eq(News::getType,type).one();
         if (Objects.isNull(one)) {
-            one = new News().setCreateId(createId).setUpdateId(createId).setUserName(userName).setDeleteFlag(1);
+            one = new News().setCreateId(createId).setUpdateId(createId).setUserName(userName).setDeleteFlag(1).setType(type);
             save(one);
         }
         return one.getNewId();
