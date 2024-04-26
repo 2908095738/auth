@@ -1,5 +1,7 @@
 package com.bbs.content.entity;
 
+import cn.hutool.core.lang.TypeReference;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -9,6 +11,7 @@ import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 内容表
@@ -41,6 +44,12 @@ public class News implements Serializable {
      */
     @TableField(value = "summary")
     private String summary;
+
+    /**
+     * 轮播图 JSON（含封面）
+     */
+    @TableField(value = "cover")
+    private String cover;
 
     /**
      * 图片
@@ -115,6 +124,12 @@ public class News implements Serializable {
     private Date updateTime;
 
     /**
+     * 设定发布时间
+     */
+    @TableField(value = "release_time")
+    private Date releaseTime;
+
+    /**
      * 浏览数
      */
     @TableField(value = "visit_num")
@@ -146,4 +161,12 @@ public class News implements Serializable {
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+    public List<String> getCoverList() {
+        return JSONUtil.toBean(cover, new TypeReference<List<String>>() {}, true);
+    }
+
+    public void setCover(List<String> cover) {
+        this.cover = JSONUtil.toJsonPrettyStr(cover);
+    }
 }

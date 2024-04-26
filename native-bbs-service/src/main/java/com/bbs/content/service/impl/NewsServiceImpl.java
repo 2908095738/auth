@@ -18,6 +18,7 @@ import com.bbs.content.util.SensitiveFilter;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.HtmlUtils;
 
@@ -253,6 +254,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
     @Override
     public News createNews(CreateNewParam param) {
         News news = converter.toEntity(param);
+        news.setSummary(param.getSummarys().get(NumberUtils.INTEGER_ZERO));
         // 转义 HTML 标记，防止在 HTML 标签中注入攻击语句
         news.setTitle(HtmlUtils.htmlEscape(news.getTitle()));
         // 过滤敏感词

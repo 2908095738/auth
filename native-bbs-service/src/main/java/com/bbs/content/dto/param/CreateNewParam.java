@@ -3,6 +3,7 @@ package com.bbs.content.dto.param;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -25,7 +26,7 @@ public class CreateNewParam {
      * 封面
      */
     @NotNull(message = "封面不能为空！")
-    private String summary;
+    private List<String> summarys;
 
     /**
      * 全部内容
@@ -64,5 +65,8 @@ public class CreateNewParam {
     private List<String> viewUrlList;
 
 
-
+    /**
+     * 设定发布时间
+     */
+    private Date releaseTime;
 }

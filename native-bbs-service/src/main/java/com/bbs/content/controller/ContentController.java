@@ -18,9 +18,11 @@ import com.bbs.content.service.VisitPageService;
 import com.bbs.content.util.AuthUtil;
 import com.bbs.content.util.ThreadLocalUtil;
 import com.bbs.vo.BaseParam;
+import com.google.common.base.Preconditions;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -44,6 +46,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static cn.hutool.core.collection.CollUtil.isNotEmpty;
+import static java.util.Objects.nonNull;
 
 /**
  * 文章/视频
@@ -86,6 +89,10 @@ public class ContentController {
      */
     @PutMapping
     public Result<Boolean> createNews(@RequestBody @Valid CreateNewParam param) {
+        Preconditions.checkArgument(
+                nonNull(param.getSummarys()) && param.getSummarys().size() > NumberUtils.INTEGER_ZERO,
+                "必须上传封面图片"
+        );
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             News news = newsService.createNews(param);
@@ -231,7 +238,7 @@ public class ContentController {
                                              @NotNull(message = "评论每页几条不能为空！") Integer size) {
         Long currentUserId = ThreadLocalUtil.getCurrentUserId();
         GetUserNewsDto result = newsService.getOneById(newId);
-        if (Objects.nonNull(result)) {
+        if (nonNull(result)) {
             Page<GetUserNewsDto.CommentByNewIdDto> commentPage = commentService.getPageByNewId(newId,null, current, size);
             if(isNotEmpty(commentPage.getRecords())) {
                 List<Long> commentIds = new ArrayList<>();
