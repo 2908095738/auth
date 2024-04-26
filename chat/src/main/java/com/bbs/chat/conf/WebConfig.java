@@ -65,12 +65,22 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        // 排除 swagger 访问的路径配置
+        String[] swaggerExcludes = new String[]{
+                "/swagger-ui/**",
+                "/swagger-resources/**",
+                "/webjars/**",
+                "/v3/**",
+                "/doc.html",
+        };
+
         registry.addInterceptor(createLoginInterceptor())
                 .addPathPatterns("/**")
                 .excludePathPatterns("/news/upload")
                 .excludePathPatterns(fileDownPrefix + "/**")
                 .excludePathPatterns(imageDownPrefix + "/**")
-                .excludePathPatterns(videoDownPrefix + "/**");
+                .excludePathPatterns(videoDownPrefix + "/**")
+                .excludePathPatterns(swaggerExcludes);
     }
 }
 
