@@ -22,7 +22,8 @@
         <module>monitoring-server</module>
         <module>log-server</module>
         <module>chat</module>
-<!--        <module>mall</module>-->
+        <module>store-management</module>
+        <!--        <module>mall</module>-->
     </modules>
 
     <properties>
