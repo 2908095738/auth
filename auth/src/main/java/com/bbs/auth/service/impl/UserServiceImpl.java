@@ -153,6 +153,7 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
         User user = cache.get(id);
         if(isNull(user)) {
             user = db.searchByID(id);
+            cache.set(user);
         }
         return user;
     }
