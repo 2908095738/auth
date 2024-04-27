@@ -10,6 +10,7 @@ import com.bbs.content.enums.RedisKeys;
 import com.bbs.content.util.RedisUtil;
 import com.bbs.content.util.ThreadLocalUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -21,11 +22,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.nonNull;
+
 @Service
 public class NewsCacheImpl implements NewsCache {
 
     @Resource
     private RedisUtil redis;
+
+    @Resource
+    private RedisTemplate<String, Integer> redisTemplate;
 
 
     @Override
@@ -86,11 +92,16 @@ public class NewsCacheImpl implements NewsCache {
     public Map<Long,Integer> getVisit(List<Long> newIds) {
         Map<Long, Integer> result = new HashMap<>();
         List<String> redisKeys = newIds.stream().map(o -> RedisKeys.CONTENT_VISIT_NUN_INCR.key() + o).collect(Collectors.toList());
+        List<Integer> visitList = redisTemplate.opsForValue().multiGet(redisKeys);
 
-        List<String> visitList = redis.mget(redisKeys);
-
-        for (int i = 0; i < visitList.size(); i++) {
-            result.put(newIds.get(i),visitList.get(i)==null?0:Integer.parseInt(visitList.get(i)));
+        if(nonNull(visitList)) {
+            for (int i = 0; i < visitList.size(); i++) {
+                Integer value = 0;
+                if(visitList.get(i) != null){
+                    value = visitList.get(i);
+                }
+                result.put(newIds.get(i),value);
+            }
         }
         return result;
     }
