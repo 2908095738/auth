@@ -42,6 +42,13 @@ public class AccountController {
         //获取用户账号信息
         GetUserAccountDto result = service.getByUserId(userId);
         if(Objects.nonNull(result)){
+            result.setLikeCount((Integer) thumbCache.countBy(null,userId,null,2));//点赞
+            //粉丝result.setFanCount();
+            //收藏result.setFavoriteCount();
+            //关注result.setFollowerCount();
+            //浏览量
+
+
             //获取发布文章列表
             Page<GetContentDto> newsResult = newsService.getListByUserId(1,10,userId, 1, flag,null);
             if(isNotEmpty(newsResult.getRecords()))

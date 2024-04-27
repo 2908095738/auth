@@ -7,7 +7,6 @@ import com.bbs.content.cache.NewsCache;
 import com.bbs.content.dto.GetContentDto;
 import com.bbs.content.dto.param.CreateNewParam;
 import com.bbs.content.enums.RedisKeys;
-import com.bbs.content.service.NewsService;
 import com.bbs.content.util.RedisUtil;
 import com.bbs.content.util.ThreadLocalUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -25,16 +24,10 @@ import java.util.stream.Collectors;
 
 @Service
 public class NewsCacheImpl implements NewsCache {
-    @Resource
-    private NewsService newsService;
 
     @Resource
     private RedisUtil redis;
 
-    public NewsCacheImpl() {
-        //初始化热点数据
-
-    }
 
     @Override
     public void create(Long newId, CreateNewParam param) {
