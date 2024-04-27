@@ -270,7 +270,9 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
     @Override
     public News createNews(CreateNewParam param) {
         News news = converter.toEntity(param);
-        news.setSummary(param.getSummarys().get(NumberUtils.INTEGER_ZERO));
+        List<String> cover = param.getSummarys();
+        news.setCover(cover);
+        news.setSummary(cover.get(NumberUtils.INTEGER_ZERO));
         // 转义 HTML 标记，防止在 HTML 标签中注入攻击语句
         news.setTitle(HtmlUtils.htmlEscape(news.getTitle()));
         // 过滤敏感词
