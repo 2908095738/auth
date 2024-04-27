@@ -1,14 +1,13 @@
 package com.bbs.content.cache.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.lang.TypeReference;
 import cn.hutool.json.JSONUtil;
-import com.alibaba.fastjson.JSON;
 import com.bbs.content.cache.NewsCache;
 import com.bbs.content.dto.GetContentDto;
 import com.bbs.content.dto.param.CreateNewParam;
 import com.bbs.content.enums.RedisKeys;
 import com.bbs.content.service.NewsService;
-import com.bbs.content.util.FileUtils;
 import com.bbs.content.util.RedisUtil;
 import com.bbs.content.util.ThreadLocalUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -17,9 +16,11 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -48,8 +49,12 @@ public class NewsCacheImpl implements NewsCache {
             size = size + param.getViewUrlList().size();
             fileList.addAll(param.getViewUrlList());
         }
+        if(CollUtil.isNotEmpty(param.getSummarys())){
+            size = size + param.getSummarys().size();
+            fileList.addAll(param.getSummarys());
+        }
         //添加到待审核内容列表
-        redis.hashSet(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.AUDIT_FILE_SIZE.key()+newId,size+"");
+        redis.hashSet(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.AUDIT_FILE_SIZE.key()+newId.toString(),size+"");
 
         //更新redis上传的文件
         reloadRedisFile(fileList, newId, currentUserId);
@@ -58,21 +63,18 @@ public class NewsCacheImpl implements NewsCache {
 
     private void reloadRedisFile(List<String> fileList,Long newId,  Long currentUserId){
         String json = (String)redis.hashGet(RedisKeys.AUDIT_NEW_FIlE.key(), RedisKeys.NEW.key()+newId.toString());
-        Map<String,String> map = StringUtils.isBlank(json)? new HashMap<>(): JSONUtil.toBean(json, HashMap.class);
-        Map<String, String> newMap = new HashMap<>();
+        Set<String> map = StringUtils.isBlank(json)? new HashSet<>(): JSONUtil.toBean(json, new TypeReference<Set<String>>() {}, true);
+        Set<String> newMap = new HashSet<>();
         if(CollUtil.isNotEmpty(fileList)){
             fileList.forEach(file-> {
-                newMap.put(file,map.get(file));
+                newMap.add(file);
                 map.remove(file);
             });
         }
-        //删除不存在与内容中的图片或视频
-        if(CollUtil.isNotEmpty(map)){
-            List<String> filePathList = new ArrayList<>(map.values());
-            //删除本地文件
-            filePathList.forEach(FileUtils::delteFile);
-        }
-        redis.hashSet(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.NEW.key()+newId, JSON.toJSONString(newMap));
+        //移除map中的文件
+        //TODO
+
+        redis.hashSet(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.NEW.key()+newId, JSONUtil.toJsonPrettyStr(newMap));
         redis.hashSet(RedisKeys.AUDIT_USERID_NEWS.key(), newId.toString(), currentUserId.toString());
     }
 

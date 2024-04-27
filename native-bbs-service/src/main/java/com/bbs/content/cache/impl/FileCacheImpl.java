@@ -2,6 +2,7 @@ package com.bbs.content.cache.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileTypeUtil;
+import cn.hutool.core.lang.TypeReference;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.bbs.content.cache.FileCache;
@@ -20,8 +21,10 @@ import javax.annotation.Resource;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.bbs.content.util.FileUtils.fileType;
@@ -65,46 +68,14 @@ public class FileCacheImpl implements FileCache {
         redisUtil.hashSet(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.NEW.key()+newId, JSON.toJSONString(map));
     }
 
-    @Override
-    public void delAllFiles(List<String> filePathList, Long newId) {
-        String json = (String)redisUtil.hashGet(RedisKeys.AUDIT_NEW_FIlE.key(), RedisKeys.NEW.key()+newId.toString());
-        Map<String,String> map = StringUtils.isBlank(json)? new HashMap<>(): JSONUtil.toBean(json, HashMap.class);
-        filePathList.forEach(localPath->{
-            String orDefault = map.getOrDefault(localPath, null);
-            if(StringUtils.isNotEmpty(orDefault)){
-                //删除本地文件
-                FileUtils.delteFile(orDefault);
-            }
-        });
-        //刷新redis
-        redisUtil.delHash(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.NEW.key()+newId);
-        redisUtil.delHash(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.AUDIT_FILE_SIZE.key()+newId);
-    }
 
     @Override
     public void delAuditFiles(List<String> fileLocalPathList, Long newId) {
         //删除redis
-        redisUtil.delHash(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.AUDIT_FILE_SIZE.key()+newId);
+        redisUtil.delHash(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.AUDIT_FILE_SIZE.key()+newId.toString());
     }
 
 
-    @Override
-    public void delFiles(List<String> filePathList, Long newId) {
-        String json = (String)redisUtil.hashGet(RedisKeys.AUDIT_NEW_FIlE.key(), RedisKeys.NEW.key()+newId.toString());
-        Map<String,String> map = StringUtils.isBlank(json)? new HashMap<>(): JSONUtil.toBean(json, HashMap.class);
-        filePathList.forEach(localPath->{
-            String orDefault = map.getOrDefault(localPath, null);
-            if(StringUtils.isNotEmpty(orDefault)){
-                //删除本地文件
-                FileUtils.delteFile(orDefault);
-                //从map中移除
-                map.remove(localPath);
-            }
-        });
-        //刷新redis
-        redisUtil.hashSet(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.NEW.key()+newId, JSON.toJSONString(map));
-        redisUtil.hashIntr(RedisKeys.AUDIT_NEW_FIlE.key(),RedisKeys.AUDIT_FILE_SIZE.key()+newId,-1);
-    }
 
     @Override
     public List<AuditNewDto> getAuditFile() {
@@ -124,14 +95,15 @@ public class FileCacheImpl implements FileCache {
 
                     //拼接对应文件的key:
                     String filePathResult = (String) json.get(RedisKeys.NEW.key() + newId);
-                    log.debug("filePathResult:"+filePathResult);
-                    Map<String,String> filePathMap = StringUtils.isBlank(filePathResult)? new HashMap<>(): JSONUtil.toBean(filePathResult, HashMap.class);
+                    log.debug("newId:{},filePathResult:{}",newId,filePathResult);
+
+                    Set<String> filePathMap = StringUtils.isBlank(filePathResult)? new HashSet<>(): JSONUtil.toBean(filePathResult, new TypeReference<Set<String>>() {}, true);
                     //判断文件数量是否一致
                     log.debug("fileSize:"+fileSize);
                     if(fileSize == filePathMap.size()&&fileSize!=0){
                         String userId = (String) newContentMap.get(newId);
                         //userId格式：idUID
-                        result.add(new AuditNewDto(userId,newId,new ArrayList<>(filePathMap.keySet())));
+                        result.add(new AuditNewDto(userId,newId,new ArrayList<>(filePathMap)));
                     }
                 }
             });

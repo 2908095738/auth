@@ -58,12 +58,7 @@
             <artifactId>common</artifactId>
             <version>1.0</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.28</version>
-        </dependency>
+
         <!--        Redis 与 序列化工具-->
         <dependency>
             <groupId>org.springframework.boot</groupId>

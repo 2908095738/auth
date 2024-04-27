@@ -183,7 +183,8 @@ public class UploadController {
     @DeleteMapping()
     public Result<Boolean> delFile(@RequestParam("filePathList") @NotNull(message = "删除文件url不能为空！")List<String> filePathList,
                                    @NotNull(message = "内容id不能为空！")Long newId) {
-        fileCache.delFiles(filePathList,newId);
+        //删除文件系统的数据
+        //TODO
         return Result.success();
     }
 

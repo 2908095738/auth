@@ -249,7 +249,8 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
         updateById(new News().setNewId(newId).setDeleteFlag(1));
         List<String> filePathList = Arrays.asList(news.getImageUrl().split(","));
         filePathList.addAll(Arrays.asList(news.getViewUrl().split(",")));
-        fileCache.delAllFiles(filePathList, newId);
+        //删除文件系统的数据
+
     }
 
     @Override
