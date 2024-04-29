@@ -53,6 +53,11 @@ public class Me {
         private String phone;
 
         /**
+         * 个性签名
+         */
+        private String sign;
+
+        /**
          * 账号状态
          */
         private Integer state;
@@ -61,5 +66,10 @@ public class Me {
          * 图片 URL 地址
          */
         private String avatar;
+
+        /**
+         * 平台角色
+         */
+        private Integer paasRole;
     }
 }

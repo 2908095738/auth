@@ -92,4 +92,6 @@ public interface UserService extends MPJBaseService<User> {
      * @return 存在，则占位为 null
      */
     List<User> search(List<Long> ids);
+
+    Boolean isLogin();
 }

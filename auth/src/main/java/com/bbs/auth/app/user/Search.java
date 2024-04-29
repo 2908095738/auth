@@ -109,7 +109,7 @@ public class Search {
             @RequestParam("ids") List<Long> ids
     ) {
         List<VO> vos = converter.toSearchUserVO(service.search(ids));
-        fanService.fillFollowStatus(ids, vos);
+        if(service.isLogin()) fanService.fillFollowStatus(ids, vos);
         return success(vos);
     }
 

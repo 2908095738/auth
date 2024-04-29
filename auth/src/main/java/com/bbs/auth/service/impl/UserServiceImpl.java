@@ -180,6 +180,16 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
     }
 
     @Override
+    public Boolean isLogin() {
+        try {
+            loginUser();
+            return true;
+        } catch (ReLoginException e) {
+            return false;
+        }
+    }
+
+    @Override
     public Result<Page<User>> search(UserParam param) {
         MPJLambdaWrapper<User> wrapper = new MPJLambdaWrapper<>(User.class);
         if(nonNull(param.getId())) {
