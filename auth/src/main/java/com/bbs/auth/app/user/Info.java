@@ -1,6 +1,5 @@
 package com.bbs.auth.app.user;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.bbs.Result;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.service.FanService;

@@ -88,7 +88,7 @@ public class RegisterCompany {
             service.save(company);
             userCompanyService.save(new UserCompany()
                     .setUserId(loginUserID)
-                    .setCompany(company.getId())
+                    .setCompanyId(company.getId())
                     .setPosition(param.getPosition())
                     .setCreateBy(loginUserID)
             );

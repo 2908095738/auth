@@ -1,9 +1,9 @@
 package com.bbs.auth.service.impl;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.auth.entity.Company;
 import com.bbs.auth.service.CompanyService;
 import com.bbs.auth.mapper.CompanyMapper;
+import com.github.yulichang.base.MPJBaseServiceImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 * @createDate 2024-04-28 11:36:25
 */
 @Service
-public class CompanyServiceImpl extends ServiceImpl<CompanyMapper, Company>
+public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Company>
     implements CompanyService{
 
     @Override

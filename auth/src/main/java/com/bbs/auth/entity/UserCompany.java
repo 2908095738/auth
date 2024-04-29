@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -37,8 +38,8 @@ public class UserCompany implements Serializable {
     /**
      * 公司主键
      */
-    @TableField(value = "company")
-    private Long company;
+    @TableField(value = "company_id")
+    private Long companyId;
 
     /**
      * 职位
@@ -78,4 +79,7 @@ public class UserCompany implements Serializable {
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+    @TableField(exist = false)
+    private Company company;
 }

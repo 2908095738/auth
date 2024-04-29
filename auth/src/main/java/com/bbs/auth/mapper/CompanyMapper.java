@@ -1,7 +1,7 @@
 package com.bbs.auth.mapper;
 
 import com.bbs.auth.entity.Company;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 
 /**
 * @author 路晨霖
@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2024-04-28 11:36:25
 * @Entity com.bbs.auth.entity.Company
 */
-public interface CompanyMapper extends BaseMapper<Company> {
+public interface CompanyMapper extends MPJBaseMapper<Company> {
 
 }
 
