@@ -91,29 +91,29 @@ public class WareHouseController {
     }
 
     /**
-     * 获得仓库
+     * 查询仓库
      * @param id
      * @return
      */
-    @GetMapping()
+    @GetMapping("/id")
     public Result<ErpWarehouseRespVO> getWarehouse(@RequestParam("id") Long id) {
         WareHouse warehouse = wareHouseService.getWarehouse(id);
         return Result.success(BeanUtils.toBean(warehouse, ErpWarehouseRespVO.class));
     }
 
     /**
-     * 获得仓库分页
+     * 查询仓库分页
      * @param pageReqVO
      * @return
      */
     @GetMapping("/page")
-    public Result<Page<ErpWarehouseRespVO>> getWarehousePage(@Valid ErpWarehousePageReqVO pageReqVO) {
+    public Result<Page<ErpWarehouseRespVO>> getWarehousePage(ErpWarehousePageReqVO pageReqVO) {
         Page<WareHouse> pageResult = wareHouseService.getWarehousePage(pageReqVO);
         return Result.success(BeanUtils.toBean(pageResult, ErpWarehouseRespVO.class));
     }
 
     /**
-     * 获得仓库精简列表 只包含被开启的仓库，主要用于前端的下拉选项
+     * 查询仓库精简列表 只包含被开启的仓库，主要用于前端的下拉选项
      * @return
      */
     @GetMapping("/simple-list")

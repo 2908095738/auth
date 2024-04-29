@@ -8,7 +8,7 @@ import java.io.Serializable;
 import lombok.Data;
 
 /**
- * 
+ * 自定义表
  * @TableName customize_table
  */
 @TableName(value ="customize_table")

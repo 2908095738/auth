@@ -9,9 +9,10 @@ import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Date;
 
 /**
- * 
+ * 仓库表
  * @TableName ware_house
  */
 @TableName(value ="ware_house")
@@ -83,6 +84,18 @@ public class WareHouse implements Serializable {
      */
     @TableField(value = "type")
     private Integer type;
+
+    /**
+     * 创建时间
+     */
+    @TableField(value = "create_time")
+    private Date createTime;
+
+    /**
+     * 创建人
+     */
+    @TableField(value = "create_id")
+    private Long createId;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

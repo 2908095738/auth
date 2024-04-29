@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+
 
 /**
  * 管理后台 - 自定义表
@@ -44,7 +44,7 @@ public class CustomizeTableController {
      * 查询自定义表 列表
      * @return Long
      */
-    @GetMapping()
+    @GetMapping("/page")
     public Result<Page<CustomizeTable>> getWarehouse(@Valid @RequestBody QueryCustomizeTable param) {
         return Result.success(customizeTableService.getPageBy(param));
     }
@@ -56,7 +56,7 @@ public class CustomizeTableController {
      * @param id 主键
      * @return Long
      */
-    @GetMapping()
+    @GetMapping("/id")
     public Result<CustomizeTable> getWarehouse(@NotNull Long id) {
         return Result.success(customizeTableService.getById(id));
     }

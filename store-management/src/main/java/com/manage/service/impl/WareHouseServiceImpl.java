@@ -10,6 +10,7 @@ import com.manage.dto.warehouse.ErpWarehouseSaveReqVO;
 import com.manage.entity.WareHouse;
 import com.manage.mapper.WareHouseMapper;
 import com.manage.service.WareHouseService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -18,6 +19,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static com.bbs.util.CollectionUtils.convertMap;
 
@@ -121,7 +123,11 @@ public class WareHouseServiceImpl  extends ServiceImpl<WareHouseMapper, WareHous
 
     @Override
     public Page<WareHouse> getWarehousePage(ErpWarehousePageReqVO pageReqVO) {
-        return null;
+        return lambdaQuery()
+                .eq(StringUtils.isNotEmpty(pageReqVO.getName()),WareHouse::getName,pageReqVO.getName())
+                .eq(Objects.nonNull(pageReqVO.getStatus()),WareHouse::getStatus,pageReqVO.getStatus())
+                .eq(WareHouse::getCreateId,1l)
+                .page(new Page<>(pageReqVO.getCurrent(),pageReqVO.getSize()));
     }
 
 }
