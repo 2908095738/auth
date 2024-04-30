@@ -2,13 +2,12 @@ package com.bbs.auth.app.user;
 
 import com.bbs.Result;
 import com.bbs.auth.converter.UserConverter;
-import com.bbs.auth.entity.Company;
 import com.bbs.auth.entity.UserCompany;
+import com.bbs.auth.service.CompanyService;
 import com.bbs.auth.service.TokenService;
 import com.bbs.auth.service.UserCompanyService;
 import com.bbs.auth.service.UserService;
 import com.bbs.exception.ReLoginException;
-import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -32,10 +31,10 @@ public class Me {
     private UserService service;
 
     @Resource
-    private UserCompanyService userCompanyService;
+    private UserConverter converter;
 
     @Resource
-    private UserConverter converter;
+    private CompanyService companyService;
 
     /**
      * 当前用户个人信息
@@ -45,11 +44,7 @@ public class Me {
         String token = tokenService.getToken(request);
         Long uid = tokenService.verify(token).getId();
         VO vo = converter.toMeVO(service.search(uid));
-        List<UserCompany> userCompanyList = userCompanyService.selectJoinList(UserCompany.class, new MPJLambdaWrapper<UserCompany>()
-                .selectAssociation(Company.class, UserCompany::getCompany)
-                .leftJoin(Company.class, Company::getId, UserCompany::getCompanyId)
-                .eq(UserCompany::getUserId, uid)
-        );
+        List<UserCompany> userCompanyList = companyService.searchCompany(uid);
         vo.setUserCompanyList(userCompanyList);
         return success(vo);
     }

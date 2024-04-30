@@ -4,6 +4,8 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
 import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.dao.UserDao;
+import com.bbs.auth.entity.UserCompany;
+import com.bbs.auth.service.CompanyService;
 import com.bbs.auth.service.UserService;
 import com.bbs.auth.util.RedisUtil;
 import com.bbs.auth.util.ZKUtil;
@@ -28,6 +30,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
+
+import java.util.List;
 
 import static com.bbs.Result.failed;
 import static com.bbs.Result.success;
@@ -66,6 +70,8 @@ public class Login {
 
     @Resource
     private UserDao db;
+    @Resource
+    private CompanyService companyService;
 
     @Data
     @NoArgsConstructor
@@ -106,6 +112,11 @@ public class Login {
         private String name;
 
         private String token;
+
+        /**
+         * 用户公司
+         */
+        List<UserCompany> userCompanyList;
     }
 
     @PostMapping("/login")
@@ -143,12 +154,13 @@ public class Login {
                         String encryptPassword = service.encryptPassword(param.password, user.getSalt());
                         checkArgument(user.getPassword().equals(encryptPassword), FAILED_LOGIN_PWD_ERROR);
                     }
+                    List<UserCompany> userCompanyList = companyService.searchCompany(user.getId());
                     String token = tokenService.createToken(user);
                     tokenService.setLoginFlag(user.getId());
                     userCache.expireUserAndPhoneMap(user);
                     log.debug("[Login::login] 用户登录 user={}; token={}", JSONUtil.toJsonPrettyStr(user), token);
                     recordLoginSuccessLog(param, token, loginTime);
-                    return success(new VO(user.getId(), user.getName(), token));
+                    return success(new VO(user.getId(), user.getName(), token, userCompanyList));
                 } catch (IllegalArgumentException e) {
                     recordLoginFailLog(param, e.getMessage(), loginTime);
                     throw e;

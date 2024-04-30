@@ -6,8 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 
+import com.bbs.entity.UserVO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -82,4 +82,7 @@ public class UserCompany implements Serializable {
 
     @TableField(exist = false)
     private Company company;
+
+    @TableField(exist = false)
+    private UserVO user;
 }

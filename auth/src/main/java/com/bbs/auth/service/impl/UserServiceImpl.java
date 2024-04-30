@@ -180,6 +180,11 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
     }
 
     @Override
+    public List<User> search(Set<Long> ids) {
+        return search(new ArrayList<>(ids));
+    }
+
+    @Override
     public Boolean isLogin() {
         try {
             loginUser();
