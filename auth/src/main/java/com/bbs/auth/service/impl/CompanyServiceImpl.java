@@ -1,5 +1,7 @@
 package com.bbs.auth.service.impl;
 
+import cn.hutool.core.lang.TypeReference;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.entity.Company;
@@ -10,6 +12,7 @@ import com.bbs.auth.mapper.CompanyMapper;
 import com.bbs.auth.service.CompanyStructureService;
 import com.bbs.auth.service.UserCompanyService;
 import com.bbs.auth.service.UserService;
+import com.bbs.auth.util.RedisUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
@@ -17,7 +20,10 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
+import static com.bbs.auth.enums.RedisKeys.USER_COMPANY;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
@@ -42,6 +48,9 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
 
     @Resource
     private UserConverter userConverter;
+
+    @Resource
+    private RedisUtil redisUtil;
 
     @Override
     public Boolean exists(Company company) {
@@ -104,11 +113,20 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
 
     @Override
     public List<UserCompany> searchCompany(Long uid) {
-        return userCompanyService.selectJoinList(UserCompany.class, new MPJLambdaWrapper<UserCompany>()
-                .selectAssociation(Company.class, UserCompany::getCompany)
-                .leftJoin(Company.class, Company::getId, UserCompany::getCompanyId)
-                .eq(UserCompany::getUserId, uid)
-        );
+        String key = USER_COMPANY.key(uid);
+        String str = redisUtil.get(key);
+        List<UserCompany> companies;
+        if(isNull(str)) {
+            companies = userCompanyService.selectJoinList(UserCompany.class, new MPJLambdaWrapper<UserCompany>()
+                    .selectAssociation(Company.class, UserCompany::getCompany)
+                    .leftJoin(Company.class, Company::getId, UserCompany::getCompanyId)
+                    .eq(UserCompany::getUserId, uid)
+            );
+            redisUtil.set(USER_COMPANY.key(uid), JSONUtil.toJsonPrettyStr(companies), 7, TimeUnit.DAYS);
+        } else {
+            companies = JSONUtil.toBean(str, new TypeReference<List<UserCompany>>() {}, true);
+        }
+        return companies;
     }
 }
 
