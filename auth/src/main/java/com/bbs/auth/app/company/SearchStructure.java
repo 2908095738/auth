@@ -16,6 +16,7 @@ import javax.annotation.Resource;
 
 import java.util.List;
 
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
 
 @RestController
@@ -29,6 +30,7 @@ public class SearchStructure {
     @Cacheable("companyStructure")
     public Result<List<Tree<Long>>> search(@RequestParam(name = "id") Long id) {
         List<CompanyStructure> companyStructureList = companyService.searchStructure(id);
+        if(companyStructureList.size() == INTEGER_ZERO) companyStructureList = companyService.searchStructure();
         TreeNodeConfig treeNodeConfig = new TreeNodeConfig();
         treeNodeConfig.setDeep(5);
         treeNodeConfig.setParentIdKey("pid");
