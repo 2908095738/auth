@@ -11,6 +11,7 @@ import lombok.Getter;
 public enum NewCommentStatus {
 
     WAIT_FOR_REVIEW(10, "待审核"),
+    RELEASED_WHEN_PENDING(15, "待定时发布"),
     HAVE_RELEASED(20, "已发布"),
     USER_PENDING_DELETION(110, "待审核用户删除"),
     USER_PUBLISHED_DELETE(120, "已发布用户删除"),

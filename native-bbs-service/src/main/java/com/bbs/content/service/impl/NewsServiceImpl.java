@@ -256,6 +256,12 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
     @Override
     public void updateStatus(Integer status, Long newId) {
         News news = new News();
+        if(status==NewCommentStatus.WAIT_FOR_REVIEW.getCode()) {
+            news = lambdaQuery().eq(News::getNewId, newId).eq(News::getStatus, status).one();
+            if(Objects.nonNull(news)&&Objects.nonNull(news.getReleaseTime())) {
+                news.setStatus(NewCommentStatus.WAIT_FOR_REVIEW.getCode());
+            }
+        }
         news.setNewId(newId);
         news.setStatus(status);
         updateById(news);

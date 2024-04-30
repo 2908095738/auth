@@ -48,15 +48,14 @@ public class AccountController {
             //关注result.setFollowerCount();
             //浏览量
 
-
             //获取发布文章列表
             Page<GetContentDto> newsResult = newsService.getListByUserId(1,10,userId, 1, flag,null);
-            if(isNotEmpty(newsResult.getRecords()))
-                //点赞数
-                newsResult.getRecords().forEach(o -> o.setLikeCount((Integer) thumbCache.countBy(o.getNewId(), null, null, 1)));
-                //收藏记录
-                //浏览记录
-
+            if(isNotEmpty(newsResult.getRecords())){
+                newsResult.getRecords().forEach(o -> {
+                    //点赞数
+                    o.setLikeCount((Integer) thumbCache.countBy(o.getNewId(), null, null, 1));
+                });
+            }
             result.setNewsResult(newsResult);
         }
         return Result.success(result);
