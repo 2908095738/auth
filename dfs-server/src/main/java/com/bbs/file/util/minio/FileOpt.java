@@ -4,7 +4,15 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FastByteArrayOutputStream;
 import com.bbs.file.conf.MinioConf;
 import com.bbs.file.util.RedisUtil;
-import io.minio.*;
+import io.minio.GetObjectArgs;
+import io.minio.GetObjectResponse;
+import io.minio.ListObjectsArgs;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
+import io.minio.RemoveObjectsArgs;
+import io.minio.Result;
+import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -136,4 +144,22 @@ public class FileOpt {
         }
         return true;
     }
+
+    /**
+     * 批量删除
+     */
+    public boolean removeList(List<String> resourceID){
+        List<DeleteObject> deletelist = new ArrayList<>();
+        for (String s : resourceID) {
+            deletelist.add(new DeleteObject(s));
+        }
+        RemoveObjectsArgs build = RemoveObjectsArgs.builder().objects(deletelist).bucket(prop.getBucketName()).build();
+        try {
+            minioClient.removeObjects(build);
+        }catch (Exception e){
+            return false;
+        }
+        return true;
+    }
+
 }

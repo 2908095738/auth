@@ -102,7 +102,11 @@ tianditu:
   api:
     search: /geocoder
     timeout: 10000
-
+dfs:
+  host: 192.168.0.8:8082
+  api:
+    deleteList: /batch
+    timeout: 10000
 # Spring Admin 开启监控所有项
 management:
   endpoints:

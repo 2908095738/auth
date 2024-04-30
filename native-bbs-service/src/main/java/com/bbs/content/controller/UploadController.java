@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSON;
 import com.bbs.Result;
 import com.bbs.content.cache.FileCache;
 import com.bbs.content.dto.FileDto;
+import com.bbs.content.util.DfsUtil;
 import com.bbs.content.util.FileUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -52,6 +53,7 @@ public class UploadController {
     @Value("${news.video.down.prefix}")
     private String videoDownPrefix;
 
+    private DfsUtil dfsUtil;
 
     private final FileCache fileCache;
 
@@ -181,10 +183,8 @@ public class UploadController {
      * 删除文件
      */
     @DeleteMapping()
-    public Result<Boolean> delFile(@RequestParam("filePathList") @NotNull(message = "删除文件url不能为空！")List<String> filePathList,
-                                   @NotNull(message = "内容id不能为空！")Long newId) {
-        //删除文件系统的数据
-        //TODO
+    public Result<Boolean> delFile(@RequestParam("filePathList") @NotNull(message = "删除文件url不能为空！")List<String> filePathList) {
+        dfsUtil.deleteList(filePathList);
         return Result.success();
     }
 
@@ -192,11 +192,9 @@ public class UploadController {
 
 
 
-
-
-
     @Autowired
-    public UploadController( FileCache fileCache) {
+    public UploadController(DfsUtil dfsUtil, FileCache fileCache) {
+        this.dfsUtil = dfsUtil;
         this.fileCache = fileCache;
     }
 }

@@ -14,6 +14,7 @@ import com.bbs.content.entity.Tag;
 import com.bbs.content.enums.NewCommentStatus;
 import com.bbs.content.mapper.NewsMapper;
 import com.bbs.content.service.NewsService;
+import com.bbs.content.util.DfsUtil;
 import com.bbs.content.util.SensitiveFilter;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -40,6 +42,8 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
     private NewsConverter converter;
 
     private SensitiveFilter sensitiveFilter;
+
+    private DfsUtil dfsUtil;
 
     private FileCache fileCache;
 
@@ -246,11 +250,18 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
     @Override
     public void delete(Long newId, Long userId) {
         News news = getOptById(newId).orElseThrow(() -> new RuntimeException("数据不存在"));
-        updateById(new News().setNewId(newId).setDeleteFlag(1));
         List<String> filePathList = Arrays.asList(news.getImageUrl().split(","));
         filePathList.addAll(Arrays.asList(news.getViewUrl().split(",")));
+        filePathList.addAll(news.getCoverList());
+        filePathList = filePathList.stream().map(file->{
+            String[] split = file.split("/");
+            return split[split.length - 1];
+        }).collect(Collectors.toList());
         //删除文件系统的数据
-
+        boolean b = dfsUtil.deleteList(filePathList);
+        if(b){
+            removeById(newId);
+        }
     }
 
     @Override

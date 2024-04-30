@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequestMapping
@@ -33,4 +35,12 @@ public class Upload {
         return null;
     }
     }
+
+    @DeleteMapping("/batch")
+    public Result<Boolean> deleteList(@RequestParam("resourceIds") List<String> resourceIds){
+        return Result.success(fileOpt.removeList(resourceIds));
+    }
+
+
+
 }
