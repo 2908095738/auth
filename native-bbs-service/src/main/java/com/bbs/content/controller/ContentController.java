@@ -200,7 +200,7 @@ public class ContentController {
          */
         private Long userId;
         /**
-         * 类型
+         * 类型：1文章2视频3物品
          */
         private Integer type;
         /**
