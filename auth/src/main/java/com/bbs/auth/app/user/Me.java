@@ -4,7 +4,6 @@ import com.bbs.Result;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.entity.Company;
 import com.bbs.auth.entity.UserCompany;
-import com.bbs.auth.service.CompanyService;
 import com.bbs.auth.service.TokenService;
 import com.bbs.auth.service.UserCompanyService;
 import com.bbs.auth.service.UserService;
@@ -31,9 +30,6 @@ public class Me {
 
     @Resource
     private UserService service;
-
-    @Resource
-    private CompanyService companyService;
 
     @Resource
     private UserCompanyService userCompanyService;
