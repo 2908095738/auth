@@ -100,4 +100,10 @@ public class Company implements Serializable {
 
     @TableField(exist = false)
     private Page<UserCompany> staffList;
+
+    /**
+     * 是否设置了公司结构
+     */
+    @TableField(exist = false)
+    private Boolean isSetCompanyStructure;
 }

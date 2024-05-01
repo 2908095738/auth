@@ -6,7 +6,10 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
+
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 公司架构
@@ -14,6 +17,8 @@ import lombok.Data;
  */
 @TableName(value ="company_structure")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class CompanyStructure implements Serializable {
     /**
      * 主键
@@ -77,4 +82,12 @@ public class CompanyStructure implements Serializable {
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+    public CompanyStructure(Long companyId, String name, Long pid, Long createBy, Integer weight) {
+        this.companyId = companyId;
+        this.name = name;
+        this.pid = pid;
+        this.createBy = createBy;
+        this.weight = weight;
+    }
 }

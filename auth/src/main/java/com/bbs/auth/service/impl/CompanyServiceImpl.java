@@ -128,6 +128,26 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
         }
         return companies;
     }
+
+    @Override
+    public void searchUserPosition(Long uid, Long companyID) {
+         userCompanyService.lambdaQuery()
+                 .eq(UserCompany::getCompanyId, companyID)
+                 .eq(UserCompany::getUserId, uid)
+                 .list();
+    }
+
+    @Override
+    public Boolean searchIsSetCompanyStructure(Long companyID) {
+        return companyStructureService.lambdaQuery()
+                .eq(CompanyStructure::getCompanyId, companyID)
+                .exists();
+    }
+
+    @Override
+    public void createCompanyStructure(CompanyStructure companyStructure) {
+        companyStructureService.save(companyStructure);
+    }
 }
 
 

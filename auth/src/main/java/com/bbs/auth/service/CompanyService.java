@@ -26,4 +26,20 @@ public interface CompanyService extends MPJBaseService<Company> {
     Company searchCompanyStaff(Long companyID, Page<UserCompany> page);
 
     List<UserCompany> searchCompany(Long uid);
+
+    /**
+     * 查询职位
+     * @param uid 用户 ID
+     * @param companyID 公司 ID
+     */
+    void searchUserPosition(Long uid, Long companyID);
+
+    /**
+     * 是否设置过公司结构
+     * @param companyID 公司 ID
+     * @return 是否设置过公司结构
+     */
+    Boolean searchIsSetCompanyStructure(Long companyID);
+
+    void createCompanyStructure(CompanyStructure companyStructure);
 }
