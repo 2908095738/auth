@@ -23,6 +23,8 @@ public interface CompanyService extends MPJBaseService<Company> {
 
     List<CompanyStructure> searchStructure();
 
+    List<CompanyStructure> searchStructure(Long companyID, String name);
+
     Company searchCompanyStaff(Long companyID, Page<UserCompany> page);
 
     List<UserCompany> searchCompany(Long uid);

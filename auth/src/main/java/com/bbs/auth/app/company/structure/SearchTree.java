@@ -1,4 +1,4 @@
-package com.bbs.auth.app.company;
+package com.bbs.auth.app.company.structure;
 
 import cn.hutool.core.lang.tree.Tree;
 import cn.hutool.core.lang.tree.TreeNodeConfig;
@@ -24,13 +24,13 @@ import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
 
 @RestController
 @RequestMapping
-public class SearchStructure {
+public class SearchTree {
 
     @Resource
     private CompanyService companyService;
 
 
-    @GetMapping("/company/structure")
+    @GetMapping("/company/structure/tree")
     @Cacheable("companyStructure")
     public Result<VO> search(@RequestParam(name = "id") Long id) {
         List<CompanyStructure> companyStructureList = companyService.searchStructure(id);

@@ -1,8 +1,7 @@
-package com.bbs.auth.app.company;
+package com.bbs.auth.app.company.structure;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
-import com.bbs.auth.entity.Company;
+import com.bbs.auth.entity.CompanyStructure;
 import com.bbs.auth.service.CompanyService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,20 +9,22 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.List;
 
-@RestController
+@RestController("searchStructure")
 @RequestMapping
-public class SearchStaff {
+public class Search {
+
 
     @Resource
     private CompanyService companyService;
 
-    @GetMapping("/company/staff")
-    public Result<Company> search(
+
+    @GetMapping("/company/structure/all")
+    public Result<List<CompanyStructure>> search(
             @RequestParam("id") Long id,
-            @RequestParam("current") Integer current,
-            @RequestParam("size") Integer size
+            @RequestParam(name = "name", required = false) String name
     ) {
-        return Result.success(companyService.searchCompanyStaff(id, new Page<>(current, size)));
+        return Result.success(companyService.searchStructure(id, name));
     }
 }

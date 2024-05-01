@@ -24,7 +24,6 @@ import java.util.concurrent.TimeUnit;
 
 import static com.bbs.auth.enums.RedisKeys.USER_COMPANY;
 import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
 
@@ -68,18 +67,20 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
 
     @Override
     public List<CompanyStructure> searchStructure(Long companyID) {
-        if(nonNull(companyID)) {
-            return companyStructureService.lambdaQuery()
-                    .eq(CompanyStructure::getCompanyId, companyID)
-                    .list();
-        } else {
-            return searchStructure();
-        }
+        return searchStructure(companyID, null);
     }
 
     @Override
     public List<CompanyStructure> searchStructure() {
         return searchStructure(LONG_ZERO);
+    }
+
+    @Override
+    public List<CompanyStructure> searchStructure(Long companyID, String name) {
+        return companyStructureService.lambdaQuery()
+                .eq(CompanyStructure::getCompanyId, companyID)
+                .like(StringUtils.isNotBlank(name), CompanyStructure::getName, name)
+                .list();
     }
 
     @Override

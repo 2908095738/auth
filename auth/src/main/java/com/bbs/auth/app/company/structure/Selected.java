@@ -1,4 +1,4 @@
-package com.bbs.auth.app.company;
+package com.bbs.auth.app.company.structure;
 
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
@@ -32,7 +32,7 @@ import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
 
 @RestController
 @RequestMapping
-public class SelectStructure {
+public class Selected {
 
     private static final String LABEL = "label";
 
