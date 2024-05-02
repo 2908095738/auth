@@ -1,10 +1,17 @@
 package com.bbs.auth.service.impl;
 
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.auth.entity.CompanyStructure;
 import com.bbs.auth.service.CompanyStructureService;
 import com.bbs.auth.mapper.CompanyStructureMapper;
+import com.bbs.auth.util.RedisUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+
+import static com.bbs.auth.enums.RedisKeys.COMPANY_STRUCTURE;
 
 /**
 * @author 路晨霖
@@ -15,6 +22,26 @@ import org.springframework.stereotype.Service;
 public class CompanyStructureServiceImpl extends ServiceImpl<CompanyStructureMapper, CompanyStructure>
     implements CompanyStructureService{
 
+    @Resource
+    private RedisUtil redisUtil;
+
+    private String cacheKey(Long id) {
+        return COMPANY_STRUCTURE.key(id);
+    }
+
+    @Override
+    public CompanyStructure search(Long id) {
+        String cacheKey = cacheKey(id);
+        String str = redisUtil.get(cacheKey);
+        CompanyStructure companyStructure;
+        if(StringUtils.isNotBlank(str)) {
+            companyStructure = JSONUtil.toBean(str, CompanyStructure.class);
+        } else {
+            companyStructure = getById(id);
+            redisUtil.set(cacheKey, JSONUtil.toJsonPrettyStr(companyStructure));
+        }
+        return companyStructure;
+    }
 }
 
 

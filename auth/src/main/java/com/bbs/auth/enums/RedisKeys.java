@@ -31,6 +31,8 @@ public enum RedisKeys {
 
     USER_COMPANY("user_company", "用户的公司信息"),
 
+    COMPANY_STRUCTURE("company_structure", "公司结构信息"),
+
     RESOURCE("resource", "资源"),
     RESOURCE_PAGE_TREE("resource:page:tree", "页面资源 Tree"),
     RESOURCE_PARENT_ID_MAP("resource:parent:id:map", "页面资源映射（Map<parentId,resourceId>）"),

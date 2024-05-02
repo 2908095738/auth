@@ -44,4 +44,13 @@ public interface CompanyService extends MPJBaseService<Company> {
     Boolean searchIsSetCompanyStructure(Long companyID);
 
     void createCompanyStructure(CompanyStructure companyStructure);
+
+    /**
+     * 将用户加入公司
+     * @param userID 用户ID
+     * @param companyID 公司ID
+     * @param structureID 部门ID
+     * @param isAdmin 是否为管理员
+     */
+    void join(Long userID, Long companyID, Long structureID, Boolean isAdmin);
 }

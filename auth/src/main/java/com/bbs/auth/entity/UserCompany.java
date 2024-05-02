@@ -42,7 +42,13 @@ public class UserCompany implements Serializable {
     private Long companyId;
 
     /**
-     * 职位
+     * 部门ID（公司结构ID）
+     */
+    @TableField(value = "structure_id")
+    private Long structureId;
+
+    /**
+     * 职位名称
      */
     @TableField(value = "position")
     private String position;
@@ -85,4 +91,14 @@ public class UserCompany implements Serializable {
 
     @TableField(exist = false)
     private UserVO user;
+
+    @TableField(exist = false)
+    private CompanyStructure structure;
+
+    public UserCompany(Long userID, Long companyID, Long structureID, Long loginUID) {
+        this.userId = userID;
+        this.companyId = companyID;
+        this.structureId = structureID;
+        this.createBy = loginUID;
+    }
 }

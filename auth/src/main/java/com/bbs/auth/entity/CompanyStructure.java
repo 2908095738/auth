@@ -51,6 +51,12 @@ public class CompanyStructure implements Serializable {
     private String introduction;
 
     /**
+     * 单位管理员（单位内唯一）
+     */
+    @TableField(value = "admin")
+    private Long admin;
+
+    /**
      * 创建时间
      */
     @TableField(value = "create_time")

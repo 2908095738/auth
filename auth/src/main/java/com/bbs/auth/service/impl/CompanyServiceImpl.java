@@ -16,14 +16,19 @@ import com.bbs.auth.util.RedisUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
 
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import static com.bbs.auth.enums.RedisKeys.COMPANY_STRUCTURE;
 import static com.bbs.auth.enums.RedisKeys.USER_COMPANY;
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
 
@@ -50,6 +55,10 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
 
     @Resource
     private RedisUtil redisUtil;
+    @Resource
+    private TransactionDefinition transactionDefinition;
+    @Resource
+    private DataSourceTransactionManager transactionManager;
 
     @Override
     public Boolean exists(Company company) {
@@ -89,16 +98,58 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
         Page<UserCompany> userCompanyPage = userCompanyService.lambdaQuery()
                 .eq(UserCompany::getCompanyId, companyID)
                 .page(page);
+        fillUserToUserCompanyPage(userCompanyPage); //填充用户信息
+        company.setStaffList(userCompanyPage);
+        return company;
+    }
 
+    private void fillUserToUserCompanyPage(Page<UserCompany> userCompanyPage) {
         List<UserCompany> userCompanyList = userCompanyPage.getRecords();
         // 创建下标映射（用于快速填充用户信息）
         if(userCompanyList.size() > INTEGER_ZERO) {
             Set<Long> ids = new HashSet<>();
             Map<Long, Integer> indexMap = new HashMap<>();
+
+            List<String> structureCacheKeys = new ArrayList<>();
+            List<Long> structureIds = new ArrayList<>();
+            Map<Long, Integer> structureIdAndIndexMap = new HashMap<>();
             for (int index = INTEGER_ZERO; index < userCompanyList.size(); index++) {
-                Long uid = userCompanyList.get(index).getUserId();
+                UserCompany userCompany = userCompanyList.get(index);
+                Long uid = userCompany.getUserId();
                 indexMap.put(uid, index);
                 ids.add(uid);
+
+                Long structureId = userCompany.getStructureId();
+                structureIdAndIndexMap.put(structureId, index);
+                structureCacheKeys.add(COMPANY_STRUCTURE.key(structureId));
+
+                structureIds.add(structureId);
+            }
+            List<String> structureStrList = redisUtil.multiGet(structureCacheKeys);
+            List<Long> cacheEmptyIds = new ArrayList<>();
+            Map<Long, Integer> cacheEmptyIdAndIndexMap = new HashMap<>();
+            for (int index = 0; index < structureStrList.size(); index++) {
+                String structureStr = structureStrList.get(index);
+                if(StringUtils.isNotBlank(structureStr)) {
+                    CompanyStructure companyStructure = JSONUtil.toBean(structureStr, CompanyStructure.class);
+                    Integer userCompanyListIndex = structureIdAndIndexMap.get(companyStructure.getId());
+                    UserCompany userCompany = userCompanyList.get(userCompanyListIndex);
+                    userCompany.setStructure(companyStructure);
+                } else {
+                    Long emptyStructureID = structureIds.get(index);
+                    cacheEmptyIds.add(emptyStructureID);
+                    cacheEmptyIdAndIndexMap.put(emptyStructureID, index);
+                }
+            }
+            if(cacheEmptyIds.size() > INTEGER_ZERO) {
+                Map<String, String> cacheEmptyStructureCache = new HashMap<>();
+                companyStructureService.listByIds(cacheEmptyIds).forEach(structure -> {
+                    Long cacheEmptyStructureId = structure.getId();
+                    cacheEmptyStructureCache.put(COMPANY_STRUCTURE.key(cacheEmptyStructureId), JSONUtil.toJsonPrettyStr(structure));
+                    Integer cacheEmptyStructureIndex = cacheEmptyIdAndIndexMap.get(cacheEmptyStructureId);
+                    userCompanyList.get(cacheEmptyStructureIndex).setStructure(structure);
+                });
+                redisUtil.multiSet(cacheEmptyStructureCache);
             }
             // 填充用户信息
             userService.search(ids).forEach(user -> {
@@ -107,9 +158,6 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
                 userCompany.setUser(userConverter.toVO(user));
             });
         }
-
-        company.setStaffList(userCompanyPage);
-        return company;
     }
 
     @Override
@@ -148,6 +196,26 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
     @Override
     public void createCompanyStructure(CompanyStructure companyStructure) {
         companyStructureService.save(companyStructure);
+    }
+
+    @Override
+    public void join(Long userID, Long companyID, Long structureID, Boolean isAdmin) {
+        Long loginUID = userService.loginUser().getId();
+        UserCompany userCompany = new UserCompany(userID, companyID, structureID, loginUID);
+        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
+        try {
+            userCompanyService.save(userCompany);
+            if(nonNull(isAdmin) && isAdmin) {
+                companyStructureService.lambdaUpdate()
+                        .eq(CompanyStructure::getCompanyId, companyID)
+                        .set(CompanyStructure::getAdmin, userID)
+                        .update();
+            }
+            transactionManager.commit(transaction);
+        } catch (Exception e) {
+            transactionManager.rollback(transaction);
+            throw new RuntimeException(e);
+        }
     }
 }
 
