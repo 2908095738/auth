@@ -248,6 +248,11 @@ public class ContentController {
         private String title;
     }
 
+    /**
+     * 用户发布的内容
+     * @param param
+     * @return
+     */
 
     @GetMapping("/user")
     public Result<Page<GetContentDto>> getQueryByUser(@Valid QueryUserNewsParam param){
@@ -259,17 +264,10 @@ public class ContentController {
         result = newsService.getListByUserId(param.getCurrent(),param.getSize(),param.userId,param.type,param.userFlag,param.title);
         if(isNotEmpty(result.getRecords())) {
             List<GetContentDto> list = result.getRecords();
-            Set<Long> userIds = list.stream().map(GetContentDto::getCreateId).collect(Collectors.toSet());
-            Map<Long, AuthUtil.UserAPI.VO> userIdMap = new HashMap<>();
-            if(CollUtil.isNotEmpty(userIds)&&userIds.size()>1){
-                userIdMap = api.getUserList(new ArrayList<>(userIds)).stream().collect(Collectors.toMap(AuthUtil.UserAPI.VO::getId, o2 -> o2));
-            }{
-                AuthUtil.UserAPI.VO userByid = api.getUserByid(new ArrayList<>(userIds).get(0));
-                userIdMap.put(userByid.getId(),userByid);
-            }
+            AuthUtil.UserAPI.VO userByid = api.getUserByid(param.getUserId());
             Map<Long, Integer> visitMap = newsCache.getVisit(list.stream().map(GetContentDto::getNewId).collect(Collectors.toList()));
             for (GetContentDto getContentDto : result.getRecords()) {
-                getContentDto.setUser(userIdMap.get(getContentDto.getCreateId()));
+                getContentDto.setUser(userByid);
                 getContentDto.setLikeCount((Integer) thumbCache.countBy(getContentDto.getNewId(), null, null, 1));
                 getContentDto.setVisitNum(visitMap.getOrDefault(getContentDto.getNewId(), 0));
             }
@@ -278,14 +276,30 @@ public class ContentController {
     }
 
 
-
-
+    /**
+     * 当前用户访问的内容
+     * @param param
+     * @return
+     */
     @GetMapping("/visit")
-    public Result<Page<VisitPageDto>> getQueryVisitPage(@Valid QueryNewsParam param){
+    public Result<Page<VisitPageDto>> getQueryDraftPage(QueryNewsParam param){
         Page<VisitPageDto> result = new Page<>();
         Long currentUserId = ThreadLocalUtil.getCurrentUserId();
         //用户历史访问列表页：
         result = visitPageService.getListByUserId(param.getCurrent(), param.getSize(), currentUserId, param.title);
+        //TODO weimy
+        return Result.success(result);
+    }
+
+    /**
+     * 当前用户草稿内容
+     * @return
+     */
+    @GetMapping("/draft")
+    public Result<List<GetContentDto>> getQueryDraftList(){
+
+        Long currentUserId = ThreadLocalUtil.getCurrentUserId();
+        List<GetContentDto> result = newsService.getListByDraft(currentUserId);
 
         return Result.success(result);
     }

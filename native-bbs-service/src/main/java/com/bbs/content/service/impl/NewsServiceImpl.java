@@ -2,7 +2,6 @@ package com.bbs.content.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.bbs.content.cache.FileCache;
 import com.bbs.content.converter.NewsConverter;
 import com.bbs.content.dto.GetContentDto;
 import com.bbs.content.dto.GetUserNewsDto;
@@ -26,6 +25,7 @@ import org.springframework.web.util.HtmlUtils;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,8 +44,6 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
     private SensitiveFilter sensitiveFilter;
 
     private DfsUtil dfsUtil;
-
-    private FileCache fileCache;
 
     private Map<Integer, GetContentDto> newMap = new HashMap<>();
 
@@ -153,7 +151,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
                 .leftJoin(Tag.class, Tag::getId,NewTag::getTagId)
                 .eq(News::getDeleteFlag, 0)
                 .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
-                .orderBy(true, false, News::getCreateTime)
+                .orderBy(true, false, News::getUpdateTime)
 
                 .in(CollUtil.isNotEmpty(userIds),News::getCreateId,userIds)
 
@@ -178,7 +176,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
                         .leftJoin(Tag.class, Tag::getId,NewTag::getTagId)
                         .eq(News::getDeleteFlag, 0)
                         .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
-                        .orderBy(true, false, News::getCreateTime)
+                        .orderBy(true, false, News::getUpdateTime)
 
                         .like(StringUtils.isNotBlank(city),News::getAddr, city)
 
@@ -207,7 +205,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
                 .selectAll(News.class)
                 .eq(News::getDeleteFlag, 0)
                 .eq(News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
-                .orderBy(true, false, News::getCreateTime)
+                .orderBy(true, false, News::getUpdateTime)
 
                 .eq(News::getType,type)
                 .eq(News::getCreateId,userId)
@@ -218,6 +216,20 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
                 //.in(CollUtil.isNotEmpty(param.getTagIds()), NewTag::getTagId, param.getTagIds())
 
         );
+    }
+
+    @Override
+    public List<GetContentDto> getListByDraft(Long currentUserId) {
+
+        selectJoinList(GetContentDto.class, new MPJLambdaWrapper<News>()
+                .selectAll(News.class)
+                .eq(News::getDeleteFlag, 0)
+                .eq(News::getStatus, NewCommentStatus.DRAFT.getCode())
+                .orderBy(true, false, News::getUpdateTime)
+                .eq(News::getCreateId,currentUserId)
+        );
+
+        return Collections.emptyList();
     }
 
     @Override
@@ -344,8 +356,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
     }
 
     @Resource
-    public void setFileService(FileCache fileCache) {
-        this.fileCache = fileCache;
+    public void setDfsUtil(DfsUtil dfsUtil) {
+        this.dfsUtil = dfsUtil;
     }
-
 }

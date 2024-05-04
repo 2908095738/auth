@@ -20,8 +20,12 @@ public interface NewsService extends IService<News> {
     Page<GetContentDto> getListByRecommend(Integer current, Integer size);
     Page<GetContentDto> getListByFollower(Integer current, Integer size, List<Long> userIds, String title);
     Page<GetContentDto> getListByNative(Integer current, Integer size, String city, String title);
-    Page<GetContentDto> getListByUserId(Integer current, Integer size, Long userId, Integer type, boolean flag, String title);
+
     Page<GetContentDto> getListBySearch(String title, Integer current, Integer size);
+
+    Page<GetContentDto> getListByUserId(Integer current, Integer size, Long userId, Integer type, boolean flag, String title);
+
+    List<GetContentDto> getListByDraft(Long currentUserId);
 
     GetUserNewsDto getOneById(Long newId);
 
