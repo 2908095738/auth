@@ -4,9 +4,10 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.Date;
-import lombok.Data;
 
 /**
  * 
@@ -19,7 +20,7 @@ public class TableValue implements Serializable {
      * 
      */
     @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+    private Long id;
 
     /**
      * 内容（{property1 :value1,property2: value2}）
@@ -28,10 +29,10 @@ public class TableValue implements Serializable {
     private Object value;
 
     /**
-     * 仓库表 id
+     * 自定义表 id
      */
-    @TableField(value = "ware_house_id")
-    private Long wareHouseId;
+    @TableField(value = "table_id")
+    private Long tableId;
 
     /**
      * 创建时间

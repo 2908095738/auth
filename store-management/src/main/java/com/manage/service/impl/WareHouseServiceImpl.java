@@ -1,6 +1,7 @@
 package com.manage.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.enums.CommonStatusEnum;
@@ -60,7 +61,7 @@ public class WareHouseServiceImpl  extends ServiceImpl<WareHouseMapper, WareHous
 
         // 2.1 如果开启，则需要关闭所有其它的默认
         if (defaultStatus==1) {
-            WareHouse warehouse = null;//warehouseMapper.selectByDefaultStatus();
+            WareHouse warehouse = lambdaQuery().eq(WareHouse::getDefaultStatus,defaultStatus).eq(WareHouse::getId,id).one();
             if (warehouse != null) {
                 baseMapper.updateById(new WareHouse().setId(warehouse.getId()).setDefaultStatus(1));
             }
@@ -109,11 +110,10 @@ public class WareHouseServiceImpl  extends ServiceImpl<WareHouseMapper, WareHous
 
     @Override
     public List<WareHouse> getWarehouseListByStatus(Integer status) {
-
-
-
-
-        return null;
+        return lambdaQuery()
+                .eq(WareHouse::getStatus,status)
+                .eq(WareHouse::getCreateId,1l)
+                .list();
     }
 
     @Override
@@ -123,11 +123,15 @@ public class WareHouseServiceImpl  extends ServiceImpl<WareHouseMapper, WareHous
 
     @Override
     public Page<WareHouse> getWarehousePage(ErpWarehousePageReqVO pageReqVO) {
-        return lambdaQuery()
-                .eq(StringUtils.isNotEmpty(pageReqVO.getName()),WareHouse::getName,pageReqVO.getName())
-                .eq(Objects.nonNull(pageReqVO.getStatus()),WareHouse::getStatus,pageReqVO.getStatus())
-                .eq(WareHouse::getCreateId,1l)
-                .page(new Page<>(pageReqVO.getCurrent(),pageReqVO.getSize()));
+        LambdaQueryChainWrapper<WareHouse> eq = lambdaQuery()
+                .eq(StringUtils.isNotEmpty(pageReqVO.getName()), WareHouse::getName, pageReqVO.getName())
+                .eq(Objects.nonNull(pageReqVO.getStatus()), WareHouse::getStatus, pageReqVO.getStatus())
+                .eq(WareHouse::getCreateId, 1l);
+        if(Objects.nonNull(pageReqVO.getStatus())){
+            return eq.page(pageReqVO.toPage());
+        }{
+            return new Page<WareHouse>().setRecords(eq.list());
+        }
     }
 
 }

@@ -116,7 +116,7 @@ public class WareHouseController {
      * 查询仓库精简列表 只包含被开启的仓库，主要用于前端的下拉选项
      * @return
      */
-    @GetMapping("/simple-list")
+    @GetMapping("/simple")
     public Result<List<ErpWarehouseRespVO>> getWarehouseSimpleList() {
         List<WareHouse> list = wareHouseService.getWarehouseListByStatus(CommonStatusEnum.ENABLE.getStatus());
         return Result.success(convertList(list, warehouse -> new ErpWarehouseRespVO().setId(warehouse.getId())
@@ -128,7 +128,7 @@ public class WareHouseController {
      * @param pageReqVO
      * @param response
      */
-    @GetMapping("/export-excel")
+    @GetMapping("/export")
     public void exportWarehouseExcel(@Valid ErpWarehousePageReqVO pageReqVO,
               HttpServletResponse response) throws IOException {
         List<WareHouse> list = wareHouseService.getWarehousePage(pageReqVO).getRecords();
