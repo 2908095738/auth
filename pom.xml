@@ -17,7 +17,7 @@
 
     <modules>
         <module>common</module>
-        <module>native-bbs-service</module>
+        <module>content-server</module>
         <module>dfs-server</module>
         <module>monitoring-server</module>
         <module>log-server</module>
