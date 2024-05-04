@@ -36,6 +36,19 @@ public class GetUserNewsDto {
     @TableField(value = "summary")
     private String summary;
 
+
+    /**
+     * 轮播图 JSON（含封面）
+     */
+    @TableField(value = "cover")
+    private String cover;
+
+    /**
+     * 轮播图 list（含封面）
+     */
+    @TableField(exist = false)
+    private List<String> coverList;
+
     /**
      * 全部内容
      */
@@ -110,7 +123,6 @@ public class GetUserNewsDto {
      */
     @TableField(value = "update_time")
     private Date updateTime;
-
 
 
     /**

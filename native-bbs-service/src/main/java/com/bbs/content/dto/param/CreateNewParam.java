@@ -69,4 +69,9 @@ public class CreateNewParam {
      * 设定发布时间
      */
     private Date releaseTime;
+
+    /**
+     * 状态 0未保存 5草稿 10.待审核 15待定时发布 20.已发布 110.待审核用户删除 120.已发布用户删除 100010.待审核管理员删除 100020.已发布管理员删除
+     */
+    private Integer status;
 }

@@ -210,6 +210,7 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
                 .orderBy(true, false, News::getCreateTime)
 
                 .eq(News::getType,type)
+                .eq(News::getCreateId,userId)
                 .in(flag, News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode(), NewCommentStatus.WAIT_FOR_REVIEW.getCode())
                 .eq(!flag, News::getStatus, NewCommentStatus.HAVE_RELEASED.getCode())
 
@@ -238,8 +239,8 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
 
     @Override
     public Long createNewsId(Long createId, String userName,Integer type) {
-        //查询当前用户下是否有审核状态为0，相同类型，删除状态为1的数据，不存在在添加
-        News one = lambdaQuery().eq(News::getCreateId, createId).eq(News::getStatus, 0).eq(News::getDeleteFlag, 1).eq(News::getType,type).one();
+        //查询当前用户下是否有状态为0，相同类型，删除状态为1的数据，不存在在添加
+        News one = lambdaQuery().eq(News::getCreateId, createId).eq(News::getStatus, NewCommentStatus.NO_SAVE.getCode()).eq(News::getDeleteFlag, 1).eq(News::getType,type).one();
         if (Objects.isNull(one)) {
             one = new News().setCreateId(createId).setUpdateId(createId).setUserName(userName).setDeleteFlag(1).setType(type);
             save(one);
@@ -295,7 +296,6 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, News> implem
         news.setTitle(HtmlUtils.htmlEscape(news.getTitle()));
         // 过滤敏感词
         news.setTitle(sensitiveFilter.filter(news.getTitle()))
-                .setStatus(NewCommentStatus.WAIT_FOR_REVIEW.getCode())
                 .setUpdateId(news.getCreateId())
                 .setDeleteFlag(0);
         news.setImageUrl(String.join(",",param.getImageUrlList()));

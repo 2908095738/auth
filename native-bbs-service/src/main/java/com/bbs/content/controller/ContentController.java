@@ -1,6 +1,8 @@
 package com.bbs.content.controller;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.lang.TypeReference;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.content.cache.NewsCache;
@@ -10,6 +12,7 @@ import com.bbs.content.dto.GetUserNewsDto;
 import com.bbs.content.dto.VisitPageDto;
 import com.bbs.content.dto.param.CreateNewParam;
 import com.bbs.content.entity.News;
+import com.bbs.content.enums.NewCommentStatus;
 import com.bbs.content.service.CommentService;
 import com.bbs.content.service.NewContentService;
 import com.bbs.content.service.NewTagService;
@@ -96,6 +99,7 @@ public class ContentController {
         );
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
+            param.setStatus(NewCommentStatus.WAIT_FOR_REVIEW.getCode());
             News news = newsService.createNews(param);
             if(StringUtils.isNotBlank(param.getContent()))newContentService.createByNew(param.getNewId(), param.getContent());
             if(CollUtil.isNotEmpty(param.getTagIds())){
@@ -112,6 +116,36 @@ public class ContentController {
         }
         return Result.failedNull();
     }
+
+
+    /**
+     * 保存草稿
+     *
+     * @param param param
+     * @return Boolean
+     */
+    @PutMapping("/draft")
+    public Result<Boolean> createNewsDraft(@RequestBody @Valid CreateNewParam param) {
+
+        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
+        try {
+            param.setStatus(NewCommentStatus.DRAFT.getCode());
+            newsService.createNews(param);
+            if(StringUtils.isNotBlank(param.getContent()))newContentService.createByNew(param.getNewId(), param.getContent());
+            if(CollUtil.isNotEmpty(param.getTagIds())){
+                List<Long> newIds = tagService.addAndUpdateWeight(param.getTagNames(), param.getTagIds());
+                param.getTagIds().addAll(newIds);
+                newTagService.createByNew(param.getNewId(), param.getTagIds());
+            }
+            transactionManager.commit(transaction);
+            return Result.success();
+        } catch (RuntimeException e) {
+            transactionManager.rollback(transaction);
+            e.printStackTrace();
+        }
+        return Result.failedNull();
+    }
+
 
 
     @Data
@@ -218,7 +252,9 @@ public class ContentController {
     @GetMapping("/user")
     public Result<Page<GetContentDto>> getQueryByUser(@Valid QueryUserNewsParam param){
         Page<GetContentDto> result = new Page<>();
-
+        if(Objects.isNull(param.getUserId())){
+            param.setUserId(ThreadLocalUtil.getCurrentUserId());
+        }
         //用户(自己或他人)发布的内容：
         result = newsService.getListByUserId(param.getCurrent(),param.getSize(),param.userId,param.type,param.userFlag,param.title);
         if(isNotEmpty(result.getRecords())) {
@@ -325,7 +361,7 @@ public class ContentController {
             AuthUtil.UserAPI.VO userByid = api.getUserByid(result.getCreateId());
             result.setUser(userByid);
             result.setLikeCount((Integer) thumbCache.countBy(result.getNewId(), null, null, 1));
-
+            result.setCoverList(JSONUtil.toBean(result.getCover(), new TypeReference<List<String>>() {}, true));
             result.setCommentByNewIdDtoList(commentPage);
             result.setThisUser(Objects.equals(currentUserId, result.getCreateId()));//是否是当前用户
             //访问量加1

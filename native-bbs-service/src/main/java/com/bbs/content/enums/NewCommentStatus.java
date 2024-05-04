@@ -9,7 +9,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum NewCommentStatus {
-
+    NO_SAVE(0, "未保存"),
+    DRAFT(5, "草稿箱"),
     WAIT_FOR_REVIEW(10, "待审核"),
     RELEASED_WHEN_PENDING(15, "待定时发布"),
     HAVE_RELEASED(20, "已发布"),
