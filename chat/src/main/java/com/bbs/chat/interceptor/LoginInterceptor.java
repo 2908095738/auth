@@ -30,7 +30,6 @@ public class LoginInterceptor implements HandlerInterceptor {
         if (token != null) {
             AuthUtil.UserAPI.User user = api.getLoginUser();
             if (nonNull(user)) {
-                log.debug("[LoginInterceptor::afterCompletion] 用户信息：{}", toJSONString(user));
                 ThreadLocalUtil.addCurrentUser(user);
                 return true;
             }

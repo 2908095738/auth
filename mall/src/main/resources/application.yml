@@ -1,0 +1,60 @@
+server:
+  port: 8421
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    dynamic:
+      primary: chat
+      strict: false
+      datasource:
+        mallc:
+          url: jdbc:mysql://localhost:3306/local_mallc?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+          username: root
+          password: root
+          driver-class-name: com.mysql.cj.jdbc.Driver
+        auth:
+          url: jdbc:mysql://localhost:3306/local_auth?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+          username: root
+          password: root
+          driver-class-name: com.mysql.cj.jdbc.Driver
+  redis:
+    host: 192.168.157.128
+    port: 6379
+  rabbitmq:
+    username: admin
+    password: admin
+    addresses: 192.168.157.128:5672
+    virtual-host: /
+    connection-timeout: 15000
+    listener:
+      simple:
+        concurrency: 5 #并发
+        max-concurrency: 10 #最大并发
+        prefetch: 1 #每次发送一条消息
+        acknowledge-mode: manual #手动回复ack
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.log4j2.Log4j2Impl
+
+logging:
+  level:
+    com.bbs: debug
+    com.baomidou: debug
+  file:
+    path: logs/
+  config: classpath:logback-spring.xml
+
+jwt:
+  #  token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9
+  name: token
+  token: 123456
+  expireTime: 7
+
+tokenName: Authorization
+authServerIP: localhost
+authServerPort: 8080
+auth:
+  host: 192.168.100.6:7005

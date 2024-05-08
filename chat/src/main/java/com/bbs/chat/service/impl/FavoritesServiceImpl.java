@@ -1,10 +1,12 @@
 package com.bbs.chat.service.impl;
 
+import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.Result;
 import com.bbs.chat.entity.ChatTop;
 import com.bbs.chat.entity.Favorites;
 import com.bbs.chat.entity.News;
+import com.bbs.chat.enums.DBType;
 import com.bbs.chat.mapper.ChatTopMapper;
 import com.bbs.chat.mapper.FavoritesMapper;
 import com.bbs.chat.service.FavoritesService;
@@ -24,22 +26,29 @@ public class FavoritesServiceImpl extends ServiceImpl<FavoritesMapper, Favorites
 
     @Override
     public Result createFavorites(Favorites favorites) {
+        //TODO 以后再规避自己收藏自己依然有未读提示
+
         //查询被收藏方id
+        DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
         MPJLambdaWrapper byIdWrap = new MPJLambdaWrapper<News>()
                 .select(News::getCreateId)
                 .leftJoin(News.class, News::getNewId, Favorites::getNewId)
                 .eq(Favorites::getDeleteFlag, 0)
+                .eq(Favorites::getCreateTime, Favorites::getUpdateTime)
                 .eq(Favorites::getUserId, favorites.getUserId())
                 .eq(Favorites::getNewId, favorites.getNewId());
         Map<String, Object> tmpMap = getMap(byIdWrap);
+        DynamicDataSourceContextHolder.poll();
 
         if (Objects.nonNull(tmpMap)) {
-            Long byUserId = (Long) getMap(byIdWrap).get("create_id");
+            Long byUserId = (Long) tmpMap.get("create_id");
 
-            ChatTop tmpTop = new MPJLambdaWrapper<ChatTop>(ChatTop.class)//查询消息页顶部未读
+            DynamicDataSourceContextHolder.push(DBType.CHAT.getDbName());
+            MPJLambdaWrapper<ChatTop> wrap = new MPJLambdaWrapper<ChatTop>(ChatTop.class);//查询消息页顶部未读
+            wrap
                     .selectAll(ChatTop.class)
-                    .eq(ChatTop::getUserId, byUserId)
-                    .one();
+                    .eq(ChatTop::getUserId, byUserId);
+            ChatTop tmpTop = chatTopMapper.selectOne(wrap);
 
             //消息页顶部未读赋值
             if (Objects.nonNull(tmpTop)) {
@@ -52,6 +61,8 @@ public class FavoritesServiceImpl extends ServiceImpl<FavoritesMapper, Favorites
                 tmpTop.setAgreeCount(1);
                 chatTopMapper.insert(tmpTop);
             }
+            DynamicDataSourceContextHolder.poll();
+
             return Result.success();
         } else {
             return Result.failed("db no data");
@@ -60,6 +71,8 @@ public class FavoritesServiceImpl extends ServiceImpl<FavoritesMapper, Favorites
 
     @Override
     public Result cancelFavorites(Favorites favorites) {
+        DynamicDataSourceContextHolder.push(DBType.CONTENT.getDbName());
+
         //查询被收藏方id
         MPJLambdaWrapper byIdWrap = new MPJLambdaWrapper<News>()
                 .select(News::getCreateId)
@@ -69,15 +82,20 @@ public class FavoritesServiceImpl extends ServiceImpl<FavoritesMapper, Favorites
                 .eq(Favorites::getNewId, favorites.getNewId());
         Map<String, Object> tmpMap = getMap(byIdWrap);
 
+        DynamicDataSourceContextHolder.poll();
+
         if (Objects.isNull(tmpMap)) {
             return Result.failed("db data err");
         }
 
-        Long byUserId = (Long) getMap(byIdWrap).get("create_id");
-        ChatTop tmpTop = new MPJLambdaWrapper<ChatTop>(ChatTop.class)//查询消息页顶部未读
+        DynamicDataSourceContextHolder.push(DBType.CHAT.getDbName());
+
+        Long byUserId = (Long) tmpMap.get("create_id");
+        MPJLambdaWrapper<ChatTop> wrap = new MPJLambdaWrapper<ChatTop>();//查询消息页顶部未读
+        wrap
                 .selectAll(ChatTop.class)
-                .eq(ChatTop::getUserId, byUserId)
-                .one();
+                .eq(ChatTop::getUserId, byUserId);
+        ChatTop tmpTop = chatTopMapper.selectOne(wrap);
 
         //消息页顶部未读赋值
         if (Objects.nonNull(tmpTop)) {
@@ -85,6 +103,9 @@ public class FavoritesServiceImpl extends ServiceImpl<FavoritesMapper, Favorites
             tmpTop.setAgreeCount(nowAgree);
 
             int line = chatTopMapper.updateById(tmpTop);
+
+            DynamicDataSourceContextHolder.poll();
+
             if (line > 0) {
                 return Result.success();
             } else {

@@ -1,14 +1,39 @@
 server:
   port: 8482
-
 spring:
+  application:
+    name: chat
   main:
     allow-bean-definition-overriding: true
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  boot:
+    admin:
+      client:
+        url: http://192.168.0.100:7008
+        instance:
+          prefer-ip: true
   datasource:
-    url: jdbc:mysql://192.168.100.8:3306/native_bbs?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: root
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    dynamic:
+      primary: chat
+      strict: false
+      datasource:
+        chat:
+          url: jdbc:mysql://47.105.39.255:13306/ml_chat?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+          username: root
+          password: root
+          driver-class-name: com.mysql.cj.jdbc.Driver
+        content:
+          url: jdbc:mysql://47.105.39.255:13306/ml_content?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+          username: root
+          password: root
+          driver-class-name: com.mysql.cj.jdbc.Driver
+        auth:
+          url: jdbc:mysql://47.105.39.255:13306/ml_auth?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+          username: root
+          password: root
+          driver-class-name: com.mysql.cj.jdbc.Driver
   servlet:
     multipart:
       enabled: true
@@ -16,13 +41,14 @@ spring:
       max-request-size: 1000MB
       resolve-lazily: false
   redis:
-    host: 192.168.100.6
+    host: 192.168.0.100
     port: 6379
+    password: shenbimaliang
   rabbitmq:
     username: admin
-    password: admin
-    addresses: 192.168.100.6:5672
-    virtual-host: /test/host
+    password: shenbimaliang
+    addresses: 192.168.0.100:5672
+    virtual-host: bthost
     connection-timeout: 15000
     listener:
       simple:
@@ -36,10 +62,13 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.log4j2.Log4j2Impl
 logging:
   level:
-    com.bbs: debug
-    com.baomidou: debug
+    com:
+      baomidou: debug
+      bbs:
+        chat: debug
+        api: info
   file:
-    path: logs/
+    path: logs/chat/
   config: classpath:logback-spring.xml
 
 news:
@@ -66,5 +95,18 @@ tokenName: Authorization
 authServerIP: 192.168.100.6
 authServerPort: 8080
 auth:
-  host: 192.168.100.6:7005
-
+  host: 192.168.0.100:8515
+  api:
+    verify:
+      path: /verify
+      token: authorization
+      timeout: 10000
+    search:
+      id: /server/
+      list: /server/list
+# Spring Admin 开启监控所有项
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

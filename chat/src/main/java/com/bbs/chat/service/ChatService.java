@@ -10,7 +10,7 @@ import com.bbs.chat.entity.Chat;
 import java.util.List;
 
 public interface ChatService extends IService<Chat> {
-    Result createChat(CreateChatParam param, Long userId);
+    Result<ChatRecordDto> createChat(CreateChatParam param, Long userId);
 
     /**
      * 获取消息页顶部的点赞/收藏、关注、评论角标
@@ -28,17 +28,16 @@ public interface ChatService extends IService<Chat> {
      * @param size    未读消息几条
      * @return
      */
-    ChatListDto getChat(Long userId, Integer current, Integer size);
+    Result<ChatListDto> getChat(Long userId, Integer current, Integer size);
 
     /**
      * 获取聊天记录
      *
-     * @param sendUid   发送方用户id
-     * @param acceptUid 接收方用户id
+     * @param targetUID   聊天对方 UID
      * @param current   第几页
      * @param size      几条
      */
-    Page<ChatRecordDto> getRecord(Long sendUid, Long acceptUid, Integer current, Integer size);
+    Page<ChatRecordDto> getRecord(Long targetUID, Integer current, Integer size);
 
     /**
      * 获取点赞、收藏列表

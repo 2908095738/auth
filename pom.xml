@@ -17,13 +17,13 @@
 
     <modules>
         <module>common</module>
-        <module>native-bbs-service</module>
-        <module>auth</module>
-        <module>auth-sdk</module>
+        <module>content-server</module>
         <module>dfs-server</module>
         <module>monitoring-server</module>
         <module>log-server</module>
         <module>chat</module>
+        <module>store-management</module>
+        <!--        <module>mall</module>-->
     </modules>
 
     <properties>

@@ -12,17 +12,16 @@ import com.bbs.chat.dto.MqFavoritesDto;
 import com.bbs.chat.dto.MqFollowDto;
 import com.bbs.chat.dto.param.CancelThumbParam;
 import com.bbs.chat.dto.param.CreateThumbParam;
+import com.bbs.chat.entity.Comment;
+import com.bbs.chat.entity.Fan;
 import com.bbs.chat.mq.RabbitmqConfig;
 import com.bbs.chat.service.CommentService;
 import com.bbs.chat.service.FavoritesService;
 import com.bbs.chat.service.FollowService;
 import com.bbs.chat.service.ThumbService;
 import com.rabbitmq.client.Channel;
-import org.checkerframework.checker.units.qual.A;
-import org.springframework.amqp.core.ExchangeTypes;
-import org.springframework.amqp.rabbit.annotation.Exchange;
-import org.springframework.amqp.rabbit.annotation.Queue;
-import org.springframework.amqp.rabbit.annotation.QueueBinding;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +36,7 @@ import java.util.Map;
 //TODO 下述监听当接收非200的响应时暂未进行处理
 @Component
 public class ChatMQListener {
+    private static final Logger log = LoggerFactory.getLogger(ChatMQListener.class);
     @Autowired
     private ThumbService thumbService;
 
@@ -61,10 +61,11 @@ public class ChatMQListener {
     @Autowired
     private FavoritesConverter favoritesConverter;
 
-    @RabbitListener(queues = RabbitmqConfig.QUEUE_INFORM_AGREE)
+//    @RabbitListener(queues = RabbitmqConfig.QUEUE_INFORM_AGREE)
     public void receiveThumb(Message message, @Headers Map<String, Object> header, Channel channel) {
+        log.error("message"+message.getPayload());
         CreateThumbParam createThumbParam = JSON.parseObject((String) message.getPayload()).to(CreateThumbParam.class);
-        Result result = thumbService.createThumb(thumbConverter.toEntity(createThumbParam));
+        Result result = thumbService.createThumb(createThumbParam);
         Long deliveryTag = (Long) header.get(AmqpHeaders.DELIVERY_TAG);
         try {
             if (result.getCode() == 200) {
@@ -83,7 +84,7 @@ public class ChatMQListener {
         }
     }
 
-    @RabbitListener(queues = RabbitmqConfig.QUEUE_INFORM_DEL_AGREE)
+//    @RabbitListener(queues = RabbitmqConfig.QUEUE_INFORM_DEL_AGREE)
     public void receiveThumbCancel(Message message, @Headers Map<String, Object> header, Channel channel) {
         CancelThumbParam cancelThumbParam = JSON.parseObject((String) message.getPayload()).to(CancelThumbParam.class);
         Result result = thumbService.cancelThumb(cancelThumbParam);
@@ -105,10 +106,21 @@ public class ChatMQListener {
         }
     }
 
-    @RabbitListener(queues = RabbitmqConfig.QUEUE_COMMENT)
+//    @RabbitListener(queues = RabbitmqConfig.QUEUE_COMMENT)
     public void receiveComm(Message message, @Headers Map<String, Object> header, Channel channel) {
-        MqCommentDto mqCommentDto = JSON.parseObject((String) message.getPayload()).to(MqCommentDto.class);
-        Result result = commentService.createComment(commentConverter.toEntity(mqCommentDto));
+        //日期防报错特殊处理
+        JSONObject tmpJSON = JSON.parseObject((String) message.getPayload());
+
+        long timestamp = (long) tmpJSON.get("time");
+        Date now = new Date(timestamp);
+
+        //dto赋值
+        tmpJSON.remove("time");
+        MqCommentDto tmpDto = tmpJSON.to(MqCommentDto.class);
+        Comment comment = commentConverter.toEntity(tmpDto);
+        comment.setCreateTime(now);
+
+        Result result = commentService.createComment(comment);
         Long deliveryTag = (Long) header.get(AmqpHeaders.DELIVERY_TAG);
         try {
             if (result.getCode() == 200) {
@@ -127,19 +139,19 @@ public class ChatMQListener {
         }
     }
 
-    @RabbitListener(queues = RabbitmqConfig.QUEUE_FOLLOW)
+    //TODO Cloud 队列-路由键错误
+//    @RabbitListener(queues = RabbitmqConfig.QUEUE_FOLLOW)
     public void receiveFollow(Message message, @Headers Map<String, Object> header, Channel channel) {
         //日期防报错特殊处理
         JSONObject tmpJSON = JSON.parseObject((String) message.getPayload());
-        long timestamp = (long) tmpJSON.get("createTime");
-        Date now = new Date(timestamp);
+        tmpJSON.remove("createTime");
 
         //dto赋值
-        tmpJSON.remove("createTime");
         MqFollowDto tmpDto = tmpJSON.to(MqFollowDto.class);
-        tmpDto.setCreateTime(now);
+        Fan fan = followConverter.toEntity(tmpDto);
+        fan.setCreateTime(new Date());
 
-        Result result = followService.createFollow(followConverter.toEntity(tmpDto));
+        Result result = followService.createFollow(fan);
         Long deliveryTag = (Long) header.get(AmqpHeaders.DELIVERY_TAG);
         try {
             if (result.getCode() == 200) {
@@ -158,19 +170,18 @@ public class ChatMQListener {
         }
     }
 
-    @RabbitListener(queues = RabbitmqConfig.QUEUE_UNFOLLOW)
+//    @RabbitListener(queues = RabbitmqConfig.QUEUE_UNFOLLOW)
     public void receiveUNFollow(Message message, @Headers Map<String, Object> header, Channel channel) {
         //日期防报错特殊处理
         JSONObject tmpJSON = JSON.parseObject((String) message.getPayload());
-        long timestamp = (long) tmpJSON.get("createTime");
-        Date now = new Date(timestamp);
+        tmpJSON.remove("createTime");
 
         //dto赋值
-        tmpJSON.remove("createTime");
         MqFollowDto tmpDto = tmpJSON.to(MqFollowDto.class);
-        tmpDto.setCreateTime(now);
+        Fan fan = followConverter.toEntity(tmpDto);
+        fan.setCreateTime(new Date());
 
-        Result result = followService.cancelFollow(followConverter.toEntity(tmpDto));
+        Result result = followService.cancelFollow(fan);
         Long deliveryTag = (Long) header.get(AmqpHeaders.DELIVERY_TAG);
         try {
             if (result.getCode() == 200) {
@@ -189,17 +200,12 @@ public class ChatMQListener {
         }
     }
 
-    @RabbitListener(queues = RabbitmqConfig.QUEUE_FAVORITE)
+//    @RabbitListener(queues = RabbitmqConfig.QUEUE_FAVORITE)
     public void receiveFavo(Message message, @Headers Map<String, Object> header, Channel channel) {
-        //日期防报错特殊处理
+        //防报错
         JSONObject tmpJSON = JSON.parseObject((String) message.getPayload());
-        long timestamp = (long) tmpJSON.get("createTime");
-        Date now = new Date(timestamp);
-
-        //dto赋值
         tmpJSON.remove("createTime");
         MqFavoritesDto tmpDto = tmpJSON.to(MqFavoritesDto.class);
-        tmpDto.setCreateTime(now);
 
         Result result = favoritesService.createFavorites(favoritesConverter.toEntity(tmpDto));
         Long deliveryTag = (Long) header.get(AmqpHeaders.DELIVERY_TAG);
@@ -220,17 +226,10 @@ public class ChatMQListener {
         }
     }
 
-    @RabbitListener(queues = RabbitmqConfig.QUEUE_UNFAVORITE)
+//    @RabbitListener(queues = RabbitmqConfig.QUEUE_UNFAVORITE)
     public void receiveUNFavo(Message message, @Headers Map<String, Object> header, Channel channel) {
-        //日期防报错特殊处理
         JSONObject tmpJSON = JSON.parseObject((String) message.getPayload());
-        long timestamp = (long) tmpJSON.get("createTime");
-        Date now = new Date(timestamp);
-
-        //dto赋值
-        tmpJSON.remove("createTime");
         MqFavoritesDto tmpDto = tmpJSON.to(MqFavoritesDto.class);
-        tmpDto.setCreateTime(now);
 
         Result result = favoritesService.cancelFavorites(favoritesConverter.toEntity(tmpDto));
         Long deliveryTag = (Long) header.get(AmqpHeaders.DELIVERY_TAG);

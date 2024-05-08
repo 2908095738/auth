@@ -1,0 +1,103 @@
+package com.manage.service;
+
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.manage.dto.warehouse.ErpWarehousePageReqVO;
+import com.manage.dto.warehouse.ErpWarehouseSaveReqVO;
+import com.manage.entity.WareHouse;
+
+import javax.validation.Valid;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+
+/**
+ * ERP 仓库 Service 接口
+ *
+ * @author 芋道源码
+ */
+public interface WareHouseService {
+
+    /**
+     * 创建仓库
+     *
+     * @param createReqVO 创建信息
+     * @return 编号
+     */
+    Long createWarehouse(@Valid ErpWarehouseSaveReqVO createReqVO);
+
+    /**
+     * 更新ERP 仓库
+     *
+     * @param updateReqVO 更新信息
+     */
+    void updateWarehouse(@Valid ErpWarehouseSaveReqVO updateReqVO);
+
+    /**
+     * 更新仓库默认状态
+     *
+     * @param id     编号
+     * @param defaultStatus 默认状态
+     */
+    void updateWarehouseDefaultStatus(Long id, Integer defaultStatus);
+
+    /**
+     * 删除仓库
+     *
+     * @param id 编号
+     */
+    void deleteWarehouse(Long id);
+
+    /**
+     * 获得仓库
+     *
+     * @param id 编号
+     * @return 仓库
+     */
+    WareHouse getWarehouse(Long id);
+
+    /**
+     * 校验仓库列表的有效性
+     *
+     * @param ids 编号数组
+     * @return 仓库列表
+     */
+    List<WareHouse> validWarehouseList(Collection<Long> ids);
+
+    /**
+     * 获得指定状态的仓库列表
+     *
+     * @param status 状态
+     * @return 仓库列表
+     */
+    List<WareHouse> getWarehouseListByStatus(Integer status);
+
+    /**
+     * 获得仓库列表
+     *
+     * @param ids 编号数组
+     * @return 仓库列表
+     */
+    List<WareHouse> getWarehouseList(Collection<Long> ids);
+
+    /**
+     * 获得仓库 Map
+     *
+     * @param ids 编号数组
+     * @return 仓库 Map
+     */
+    default Map<Long, WareHouse> getWarehouseMap(Collection<Long> ids) {
+        return getWarehouseList(ids).stream().collect(Collectors.toMap(WareHouse::getId,o1->o1));
+    }
+
+    /**
+     * 获得仓库分页
+     *
+     * @param pageReqVO 分页查询
+     * @return 仓库分页
+     */
+    Page<WareHouse> getWarehousePage(ErpWarehousePageReqVO pageReqVO);
+
+}

@@ -2,14 +2,20 @@ package com.bbs.file.util.minio;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FastByteArrayOutputStream;
-import com.bbs.enums.dfs.FileType;
-import com.bbs.enums.dfs.ResourceType;
 import com.bbs.file.conf.MinioConf;
 import com.bbs.file.util.RedisUtil;
-import io.minio.*;
-import io.minio.http.Method;
+import io.minio.GetObjectArgs;
+import io.minio.GetObjectResponse;
+import io.minio.ListObjectsArgs;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
+import io.minio.RemoveObjectsArgs;
+import io.minio.Result;
+import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,6 +38,9 @@ public class FileOpt {
 
     @Resource
     private RedisUtil redisUtil;
+
+    @Value("${minio.endpoint}")
+    private String url;
 
     private static final String FILE_INCR_NUM = "dfs:file:num:incr:";
 
@@ -61,31 +70,17 @@ public class FileOpt {
      * 文件上传
      * @param file 文件
      */
-    public void upload(String resourceID, MultipartFile file, String contentType) {
+    public String upload(String resourceID, MultipartFile file, String contentType) {
         try {
-            PutObjectArgs objectArgs = PutObjectArgs.builder().bucket(prop.getBucketName()).object(resourceID)
+            PutObjectArgs args = PutObjectArgs.builder().bucket(prop.getBucketName()).object(resourceID)
                     .stream(file.getInputStream(), file.getSize(), -1).contentType(contentType).build();
             //文件名称相同会覆盖
-            minioClient.putObject(objectArgs);
+            minioClient.putObject(args);
+            return url + "/" + prop.getBucketName() + "/" + resourceID;
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
-    }
-
-    /**
-     * 预览图片
-     * @param resourceID 资源ID
-     * @return 预览 URL
-     */
-    public String preview(String resourceID){
-        // 查看文件地址
-        GetPresignedObjectUrlArgs build = new GetPresignedObjectUrlArgs().builder().bucket(prop.getBucketName()).object(resourceID).method(Method.GET).build();
-        try {
-            return minioClient.getPresignedObjectUrl(build);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     /**
@@ -149,4 +144,22 @@ public class FileOpt {
         }
         return true;
     }
+
+    /**
+     * 批量删除
+     */
+    public boolean removeList(List<String> resourceID){
+        List<DeleteObject> deletelist = new ArrayList<>();
+        for (String s : resourceID) {
+            deletelist.add(new DeleteObject(s));
+        }
+        RemoveObjectsArgs build = RemoveObjectsArgs.builder().objects(deletelist).bucket(prop.getBucketName()).build();
+        try {
+            minioClient.removeObjects(build);
+        }catch (Exception e){
+            return false;
+        }
+        return true;
+    }
+
 }
