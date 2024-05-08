@@ -22,6 +22,9 @@ public class TokenCacheImpl implements TokenCache {
     @Resource
     private ZKUtil zkUtil;
 
+    private String key(Long uid) {
+        return RedisKeys.USER_UID_AND_TOKEN_MAP.key(uid);
+    }
 
     private Integer getTokenTimeOutMax() { return Integer.valueOf(zkUtil.getForPath(ZookeeperNodePaths.CacheConf.Token.TIMEOUT_MAX)); }
 
@@ -30,17 +33,17 @@ public class TokenCacheImpl implements TokenCache {
     @Override
     public void setToken(Long uid, String token) {
         int timeout = RandomUtil.randomInt(getTokenTimeOutMin(), getTokenTimeOutMax());
-        redis.set(RedisKeys.USER_UID_AND_TOKEN_MAP.key(uid), token, timeout, TimeUnit.MINUTES);
+        redis.set(key(uid), token, timeout, TimeUnit.MINUTES);
     }
 
     @Override
     public String getToken(Long uid) throws IllegalArgumentException {
-        return redis.get(RedisKeys.USER_UID_AND_TOKEN_MAP.key(uid));
+        return redis.get(key(uid));
     }
 
     @Override
     public void expireToken(Long uid) {
         int timeout = RandomUtil.randomInt(getTokenTimeOutMin(), getTokenTimeOutMax());
-        redis.expire(RedisKeys.USER_UID_AND_TOKEN_MAP.key(uid), timeout, TimeUnit.MINUTES);
+        redis.expire(key(uid), timeout, TimeUnit.MINUTES);
     }
 }

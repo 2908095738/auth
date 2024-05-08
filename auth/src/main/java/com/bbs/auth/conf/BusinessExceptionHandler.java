@@ -22,6 +22,7 @@ public class BusinessExceptionHandler {
     @ResponseBody
     @ExceptionHandler(value = BusinessException.class)
     public Result<Object> errorHandler(BusinessException exception) {
+        exception.printStackTrace();
         return Result.failed(exception.getCode(), exception.getMessage());
     }
 
@@ -29,5 +30,14 @@ public class BusinessExceptionHandler {
     @ExceptionHandler(value = ReLoginException.class)
     public void errorHandler(ReLoginException exception) throws IOException {
         response.sendError(exception.getCode(), exception.getMessage());
+    }
+
+    @ResponseBody
+    @ExceptionHandler(value = IllegalArgumentException.class)
+    public void errorHandler(IllegalArgumentException exception) throws IOException {
+        String message = exception.getMessage();
+        exception.printStackTrace();
+        log.debug("[ExceptionHandler::IllegalArgumentException] error={}", message);
+        response.sendError(400, message);
     }
 }

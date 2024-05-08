@@ -1,6 +1,6 @@
 package com.bbs.auth.app.user.admin;
 
-import com.bbs.auth.cache.UserCache;
+import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.UserGroup;
 import com.bbs.auth.service.UserGroupService;

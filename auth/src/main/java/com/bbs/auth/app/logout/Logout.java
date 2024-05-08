@@ -1,27 +1,29 @@
-package com.bbs.auth.app.register.logout;
+package com.bbs.auth.app.logout;
 
 import com.bbs.Result;
 import com.bbs.entity.UserVO;
 import com.bbs.auth.service.TokenService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 @Slf4j
 @RestController
 @RequestMapping
-public class UserLogout {
+public class Logout {
 
-    private final TokenService tokenService;
+    @Resource
+    private TokenService tokenService;
 
-    @DeleteMapping("/user")
+    @DeleteMapping
     public Result<Boolean> logout(HttpServletRequest request) {
         String token = tokenService.getToken(request);
+        log.debug("[UserLogout::logout] token={}", token);
         if(StringUtils.isNotBlank(token) && tokenService.verifyToken(token)) {
             UserVO userVO = tokenService.parseToken(token);
             tokenService.clearLoginFlag(userVO.getId());
@@ -30,8 +32,4 @@ public class UserLogout {
         return Result.failed(500, "账号登出失败，请联系客服！");
     }
 
-    @Autowired
-    public UserLogout(TokenService tokenService) {
-        this.tokenService = tokenService;
-    }
 }
