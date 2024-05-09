@@ -40,6 +40,12 @@ public class User implements Serializable {
     private String name;
 
     /**
+     * 个性签名
+     */
+    @TableField(value = "sign")
+    private String sign;
+
+    /**
      * 密码
      */
     @TableField(value = "password")
@@ -98,6 +104,12 @@ public class User implements Serializable {
      */
     @TableField(value = "paas_role")
     private Integer paasRole;
+
+    /**
+     * 个人首页背景图片
+     */
+    @TableField(value = "background_image")
+    private String backgroundImage;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

@@ -51,6 +51,11 @@ public class Info {
         private String name;
 
         /**
+         * 个性签名
+         */
+        private String sign;
+
+        /**
          * 图片 URL 地址
          */
         private String avatar;
@@ -64,5 +69,10 @@ public class Info {
          * 登录用户是否关注了当前用户
          */
         private Boolean isFollow;
+
+        /**
+         * 个人首页背景图片
+         */
+        private String backgroundImage;
     }
 }

@@ -7,7 +7,6 @@ import com.bbs.auth.util.PhoneUtil;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.entity.Fan;
 import com.bbs.auth.entity.User;
-import com.bbs.auth.mapper.UserMapper;
 import com.bbs.auth.service.FanService;
 import com.bbs.auth.service.UserService;
 import com.bbs.entity.UserVO;
@@ -34,13 +33,8 @@ public class Search {
 
     @Resource
     private UserService service;
-
     @Resource
     private UserConverter converter;
-
-    @Resource
-    private UserMapper mapper;
-
     @Resource
     private FanService fanService;
 
@@ -74,27 +68,39 @@ public class Search {
     public Result<Page<VO>> search(
             @RequestParam("val") String val,
             @RequestParam("current") Integer current,
-            @RequestParam("size") Integer size
+            @RequestParam("size") Integer size,
+            @RequestParam(name = "fan", required = false, defaultValue = "true") Boolean fan
     ) throws ReLoginException {
         Long numVal = null;
         if(PhoneUtil.isNumber(val)) {
             numVal = Long.parseLong(val);
         }
         UserVO loginUser = service.loginUser();
-        Page<User> page = mapper.selectJoinPage(new Page<>(current, size), User.class, new MPJLambdaWrapper<User>()
-                .selectAll(User.class)
-                .selectAssociation(Fan.class, User::getFan)
-                .leftJoin(Fan.class, on -> on
-                        .eq(Fan::getDeleteFlag, NumberUtils.INTEGER_ZERO)
-                        .eq(Fan::getUserId, loginUser.getId())
-                        .eq(Fan::getFollowUserId, User::getId)
-                )
-                .like(!PhoneUtil.isNumber(val), User::getName, val)
-                .eq(nonNull(numVal), User::getPhone, numVal)
-                .or(nonNull(numVal))
-                .eq(nonNull(numVal), User::getId, numVal)
-                .ne(User::getId, loginUser.getId())
-        );
+        Page<User> page;
+        if(fan) {
+            page = service.selectJoinListPage(new Page<>(current, size), User.class, new MPJLambdaWrapper<User>()
+                    .selectAll(User.class)
+                    .selectAssociation(Fan.class, User::getFan)
+                    .leftJoin(Fan.class, on -> on
+                            .eq(Fan::getDeleteFlag, NumberUtils.INTEGER_ZERO)
+                            .eq(Fan::getUserId, loginUser.getId())
+                            .eq(Fan::getFollowUserId, User::getId)
+                    )
+                    .like(!PhoneUtil.isNumber(val), User::getName, val)
+                    .eq(nonNull(numVal), User::getPhone, numVal)
+                    .or(nonNull(numVal))
+                    .eq(nonNull(numVal), User::getId, numVal)
+                    .ne(User::getId, loginUser.getId())
+            );
+        } else {
+            page = service.lambdaQuery()
+                    .like(!PhoneUtil.isNumber(val), User::getName, val)
+                    .eq(nonNull(numVal), User::getPhone, numVal)
+                    .or(nonNull(numVal))
+                    .eq(nonNull(numVal), User::getId, numVal)
+                    .ne(User::getId, loginUser.getId())
+                    .page(new Page<>(current, size));
+        }
         List<VO> vos = page.getRecords().stream().map(user -> {
             VO vo = converter.toSearchUserVO(user);
             vo.setIsFollow(nonNull(user.getFan()));
@@ -109,7 +115,7 @@ public class Search {
             @RequestParam("ids") List<Long> ids
     ) {
         List<VO> vos = converter.toSearchUserVO(service.search(ids));
-        fanService.fillFollowStatus(ids, vos);
+        if(service.isLogin()) fanService.fillFollowStatus(ids, vos);
         return success(vos);
     }
 

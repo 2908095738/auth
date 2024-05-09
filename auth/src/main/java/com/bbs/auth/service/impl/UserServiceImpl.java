@@ -153,6 +153,7 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
         User user = cache.get(id);
         if(isNull(user)) {
             user = db.searchByID(id);
+            cache.set(user);
         }
         return user;
     }
@@ -176,6 +177,21 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
             }
         }
         return users;
+    }
+
+    @Override
+    public List<User> search(Set<Long> ids) {
+        return search(new ArrayList<>(ids));
+    }
+
+    @Override
+    public Boolean isLogin() {
+        try {
+            loginUser();
+            return true;
+        } catch (ReLoginException e) {
+            return false;
+        }
     }
 
     @Override
