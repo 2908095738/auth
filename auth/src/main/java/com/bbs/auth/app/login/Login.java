@@ -4,6 +4,9 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
 import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.dao.UserDao;
+import com.bbs.auth.entity.Company;
+import com.bbs.auth.entity.UserCompany;
+import com.bbs.auth.service.CompanyService;
 import com.bbs.auth.service.UserService;
 import com.bbs.auth.util.RedisUtil;
 import com.bbs.auth.util.ZKUtil;
@@ -28,6 +31,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
+
+import java.util.List;
 
 import static com.bbs.Result.failed;
 import static com.bbs.Result.success;
@@ -66,6 +71,8 @@ public class Login {
 
     @Resource
     private UserDao db;
+    @Resource
+    private CompanyService companyService;
 
     @Data
     @NoArgsConstructor
@@ -90,6 +97,17 @@ public class Login {
          * 登录类型
          */
         private Integer loginType;
+
+        /**
+         * 是否查询用户公司信息
+         */
+        private Boolean searchCompany;
+
+        /**
+         * 是否检查公司结构（增加【是否设置公司结构】的查询结果）
+         * 注：需要 searchCompany = true
+         */
+        private Boolean checkCompanyStructure;
     }
 
     @Data
@@ -106,6 +124,23 @@ public class Login {
         private String name;
 
         private String token;
+
+        /**
+         * 用户公司
+         */
+        List<UserCompany> userCompanyList;
+
+        /**
+         * 是否设置了公司结构
+         */
+        Boolean isSettingCompanyStructure;
+
+        public VO(Long uid, String name, String token, List<UserCompany> userCompanyList) {
+            this.uid = uid;
+            this.name = name;
+            this.token = token;
+            this.userCompanyList = userCompanyList;
+        }
     }
 
     @PostMapping("/login")
@@ -143,12 +178,16 @@ public class Login {
                         String encryptPassword = service.encryptPassword(param.password, user.getSalt());
                         checkArgument(user.getPassword().equals(encryptPassword), FAILED_LOGIN_PWD_ERROR);
                     }
+                    List<UserCompany> userCompanyList = null;
+                    if(param.searchCompany != null && param.searchCompany) {
+                        userCompanyList = searchUserCompany(user.getId());
+                        searchIsSetCompanyStructure(param.checkCompanyStructure, userCompanyList);
+                    }
                     String token = tokenService.createToken(user);
                     tokenService.setLoginFlag(user.getId());
                     userCache.expireUserAndPhoneMap(user);
-                    log.debug("[Login::login] 用户登录 user={}; token={}", JSONUtil.toJsonPrettyStr(user), token);
                     recordLoginSuccessLog(param, token, loginTime);
-                    return success(new VO(user.getId(), user.getName(), token));
+                    return success(new VO(user.getId(), user.getName(), token, userCompanyList));
                 } catch (IllegalArgumentException e) {
                     recordLoginFailLog(param, e.getMessage(), loginTime);
                     throw e;
@@ -218,8 +257,21 @@ public class Login {
         }
     }
 
+    private List<UserCompany> searchUserCompany(Long uid) {
+        return companyService.searchCompany(uid);
+    }
+
     private RDeque<String> deque() {
         return redisson.getDeque(LOG_DEQUE_KEY);
+    }
+
+    private void searchIsSetCompanyStructure(boolean checkCompanyStructure, List<UserCompany> userCompanyList) {
+        if(checkCompanyStructure) {
+            for (UserCompany userCompany : userCompanyList) {
+                Company company = userCompany.getCompany();
+                company.setIsSetCompanyStructure(companyService.searchIsSetCompanyStructure(userCompany.getCompanyId()));
+            }
+        }
     }
 
     public void recordLoginSuccessLog(Param param, String newToken, String loginTime) {

@@ -6,7 +6,7 @@ import com.bbs.auth.service.ResourceService;
 import com.bbs.auth.service.ResourceTypeService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
-import com.bbs.vo.BaseParam;
+import com.bbs.entity.vo.BaseParam;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

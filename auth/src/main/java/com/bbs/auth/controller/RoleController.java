@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.auth.entity.Role;
 import com.bbs.auth.service.RoleService;
-import com.bbs.vo.BaseParam;
+import com.bbs.entity.vo.BaseParam;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

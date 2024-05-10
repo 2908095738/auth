@@ -91,6 +91,12 @@ public class ZookeeperNodePaths {
             public static final String SIGN_NAME = "/conf/captcha/alibaba/signName";
 
             public static final String TEMPLATE_CODE = "/conf/captcha/alibaba/templateCode";
+
+            public static final String ACCESS_KEY = "/conf/captcha/alibaba/accessKey";
+
+            public static final String ACCESS_KEY_SECRET = "/conf/captcha/alibaba/accessKeySecret";
+
+            public static final String ENDPOINT = "/conf/captcha/alibaba/endpoint";
         }
     }
 }

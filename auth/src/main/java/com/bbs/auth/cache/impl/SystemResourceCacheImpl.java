@@ -5,7 +5,6 @@ import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.lang.tree.Tree;
 import cn.hutool.json.JSONUtil;
 import com.bbs.auth.cache.SystemResourceCache;
-import com.bbs.auth.enums.RedisKeys;
 import com.bbs.auth.util.RedisUtil;
 import com.bbs.auth.entity.Resource;
 import com.bbs.auth.enums.ResourceTypeEnum;
@@ -15,20 +14,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.bbs.auth.cache.impl.SystemResourceCacheImpl.ResourceCache.isTopLevelResource;
 import static com.bbs.auth.cache.impl.SystemResourceCacheImpl.ResourceCache.notTopLevelResource;
+import static com.bbs.auth.enums.RedisKeys.*;
 import static com.bbs.auth.util.RedisUtil.Redisson.lockExec;
 import static java.util.Objects.nonNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.commons.lang3.math.NumberUtils.*;
 
 @Slf4j
-@Service
 public class SystemResourceCacheImpl implements SystemResourceCache {
 
     @Slf4j
@@ -41,7 +39,7 @@ public class SystemResourceCacheImpl implements SystemResourceCache {
         @javax.annotation.Resource
         private RedisUtil redis;
 
-        private final String key = RedisKeys.RESOURCE.key();
+        private final String key = RESOURCE.key();
 
         @Override
         public List<Resource> reloadNotLock() {
@@ -129,9 +127,9 @@ public class SystemResourceCacheImpl implements SystemResourceCache {
         @javax.annotation.Resource
         private RedissonClient redisson;
 
-        private final String key = RedisKeys.RESOURCE_PAGE_TREE.key();
+        private final String key = RESOURCE_PAGE_TREE.key();
 
-        private final String lockKey = RedisKeys.RESOURCE.LOCK.key();
+        private final String lockKey = RESOURCE.LOCK.key();
 
         @Override
         public Result<Boolean> reload() {
@@ -207,7 +205,7 @@ public class SystemResourceCacheImpl implements SystemResourceCache {
             List<Resource> lackResources = new ArrayList<>();   //缺少的资源（间接与用户账户关联，比如子级资源）
             resources.forEach(resource -> {
                 if(isTopLevelResource(resource)) {
-                    String str = redis.get(RedisKeys.RESOURCE_PAGE_TREE_ALL_CHILDREN.key(resource.getId()));
+                    String str = redis.get(RESOURCE_PAGE_TREE_ALL_CHILDREN.key(resource.getId()));
                     lackResources.addAll(
                             isLoadCache(str) ?
                                     JSONUtil.toBean(str, new TypeReference<List<Resource>>() {}, true) :
@@ -223,7 +221,7 @@ public class SystemResourceCacheImpl implements SystemResourceCache {
         private List<Resource> searchFillChildren(Resource resource) {
             List<Resource> temporaryContainer = new ArrayList<>();      //临时容器
             recursionSearchFillChildren(resource, temporaryContainer);   //递归查询【子级资源】，并填充到【临时容器】
-            loadToCache(RedisKeys.RESOURCE_PAGE_TREE_ALL_CHILDREN.key(resource.getId()), temporaryContainer);    //加载到缓存
+            loadToCache(RESOURCE_PAGE_TREE_ALL_CHILDREN.key(resource.getId()), temporaryContainer);    //加载到缓存
             return temporaryContainer;
         }
 

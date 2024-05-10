@@ -1,4 +1,4 @@
-package com.bbs.auth.vx;
+package com.bbs.auth.api.vx;
 
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;

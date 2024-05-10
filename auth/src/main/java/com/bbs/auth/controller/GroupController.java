@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.auth.entity.Group;
 import com.bbs.auth.service.GroupService;
-import com.bbs.vo.BaseParam;
+import com.bbs.entity.vo.BaseParam;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;

@@ -9,6 +9,7 @@ import com.bbs.exception.ReLoginException;
 import com.github.yulichang.base.MPJBaseService;
 
 import java.util.List;
+import java.util.Set;
 
 /**
 * @author Lenovo
@@ -92,4 +93,8 @@ public interface UserService extends MPJBaseService<User> {
      * @return 存在，则占位为 null
      */
     List<User> search(List<Long> ids);
+
+    List<User> search(Set<Long> ids);
+
+    Boolean isLogin();
 }

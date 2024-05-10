@@ -14,7 +14,6 @@ import static cn.hutool.http.HttpStatus.*;
 
 @Slf4j
 public class AuthUtil {
-    public static void main(String[] args) {}
 
     public String tokenName;
 

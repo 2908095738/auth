@@ -1,4 +1,4 @@
-package com.bbs.auth.vx;
+package com.bbs.auth.api.vx;
 
 import com.bbs.auth.enums.ZookeeperNodePaths;
 import lombok.extern.slf4j.Slf4j;
