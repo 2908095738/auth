@@ -26,6 +26,7 @@
         <module>store-management</module>
         <!--        <module>mall</module>-->
         <module>stream-management</module>
+        <module>financial</module>
     </modules>
 
     <properties>
