@@ -1,12 +1,12 @@
 package com.bbs.auth.service.impl;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.bbs.Result;
 import com.bbs.auth.entity.Resource;
 import com.bbs.auth.entity.ResourceType;
 import com.bbs.auth.mapper.ResourceTypeMapper;
 import com.bbs.auth.service.ResourceTypeService;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.bbs.Result;
-import com.bbs.entity.vo.BaseParam;
+import com.bbs.vo.BaseParam;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.stereotype.Service;

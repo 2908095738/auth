@@ -1,6 +1,6 @@
 package com.bbs.auth.entity.param;
 
-import com.bbs.entity.vo.BaseParam;
+import com.bbs.vo.BaseParam;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

@@ -1,17 +1,23 @@
 package com.bbs.auth.controller;
 
 import cn.hutool.core.lang.tree.Tree;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.bbs.Result;
 import com.bbs.auth.entity.ResourceType;
 import com.bbs.auth.service.ResourceService;
 import com.bbs.auth.service.ResourceTypeService;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.bbs.Result;
-import com.bbs.entity.vo.BaseParam;
+import com.bbs.vo.BaseParam;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
