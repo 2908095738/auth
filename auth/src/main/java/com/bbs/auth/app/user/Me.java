@@ -36,11 +36,14 @@ public class Me {
     @Resource
     private CompanyService companyService;
 
+    @Resource
+    private HttpServletRequest request;
+
     /**
      * 当前用户个人信息
      */
     @GetMapping
-    public Result<VO> me(HttpServletRequest request) throws ReLoginException {
+    public Result<VO> me() throws ReLoginException {
         String token = tokenService.getToken(request);
         Long uid = tokenService.verify(token).getId();
         VO vo = converter.toMeVO(service.search(uid));
