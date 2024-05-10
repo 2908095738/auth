@@ -16,6 +16,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>auth</module>
         <module>common</module>
         <module>content-server</module>
         <module>dfs-server</module>
