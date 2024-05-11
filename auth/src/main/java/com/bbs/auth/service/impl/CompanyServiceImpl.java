@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.entity.Company;
 import com.bbs.auth.entity.CompanyStructure;
+import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.UserCompany;
 import com.bbs.auth.service.CompanyService;
 import com.bbs.auth.mapper.CompanyMapper;
@@ -220,11 +221,22 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
     }
 
     @Override
-    public CompanyStructure searchUserCompanyStructure(Long uid) {
+    public CompanyStructure searchUserCompanyStructure(Long uid, Long companyID) {
         return companyStructureService.selectJoinOne(CompanyStructure.class, new MPJLambdaWrapper<CompanyStructure>()
                 .selectAll(CompanyStructure.class)
-                .rightJoin(UserCompany.class, UserCompany::getCompanyId, CompanyStructure::getId, ext -> ext
+                .rightJoin(UserCompany.class, UserCompany::getStructureId, CompanyStructure::getId, ext -> ext
                         .eq(UserCompany::getUserId, uid)
+                        .eq(UserCompany::getCompanyId, companyID)
+                )
+        );
+    }
+
+    @Override
+    public List<User> searchStructureStaff(Set<Long> structureIds) {
+        return userService.selectJoinList(User.class, new MPJLambdaWrapper<User>()
+                .selectAll(User.class)
+                .rightJoin(UserCompany.class, UserCompany::getUserId, User::getId, ext -> ext
+                        .in(UserCompany::getStructureId, structureIds)
                 )
         );
     }

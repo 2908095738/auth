@@ -3,6 +3,7 @@ package com.bbs.auth.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.auth.entity.Company;
 import com.bbs.auth.entity.CompanyStructure;
+import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.UserCompany;
 import com.github.yulichang.base.MPJBaseService;
 
@@ -55,5 +56,7 @@ public interface CompanyService extends MPJBaseService<Company> {
      */
     void join(Long userID, Long companyID, Long structureID, Boolean isAdmin);
 
-    CompanyStructure searchUserCompanyStructure(Long uid);
+    CompanyStructure searchUserCompanyStructure(Long uid, Long companyID);
+
+    List<User> searchStructureStaff(Set<Long> structureIds);
 }

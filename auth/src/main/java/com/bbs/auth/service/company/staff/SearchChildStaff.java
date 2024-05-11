@@ -2,6 +2,7 @@ package com.bbs.auth.service.company.staff;
 
 import com.bbs.api.auth.company.staff.ChildStaff;
 import com.bbs.auth.entity.CompanyStructure;
+import com.bbs.auth.entity.User;
 import com.bbs.auth.service.CompanyService;
 import com.bbs.auth.service.UserService;
 import org.apache.dubbo.config.annotation.DubboService;
@@ -31,7 +32,7 @@ public class SearchChildStaff implements com.bbs.api.auth.company.staff.SearchCh
     @Override
     public Set<ChildStaff> search(Long uid, Long companyID) {
 
-        CompanyStructure userCompanyStructure = companyService.searchUserCompanyStructure(uid);
+        CompanyStructure userCompanyStructure = companyService.searchUserCompanyStructure(uid, companyID);
 
         // 当前用户归属结构的【层级】
         Integer hierarchical = userCompanyStructure.getHierarchical();  // 2 4(5)
@@ -43,15 +44,16 @@ public class SearchChildStaff implements com.bbs.api.auth.company.staff.SearchCh
         Set<Long> parentStructureIds = new HashSet<>();
         parentStructureIds.add(userCompanyStructure.getId());
 
-        Set<ChildStaff> result = new HashSet<>();
+        Set<Long> structureIds = new HashSet<>();
 
         // 获取子级结构的 ID列表
-        loop(parentStructureIds, hierarchical, allStructureHierarchicalGroup, result);
+        loop(parentStructureIds, hierarchical, allStructureHierarchicalGroup, structureIds);
 
-        return result;
+        List<User> users = companyService.searchStructureStaff(structureIds);
+        return users.stream().map(user -> new ChildStaff(user.getId(), user.getName())).collect(Collectors.toSet());
     }
 
-    private void loop(Set<Long> parentStructureIds, Integer hierarchical, Map<Integer, List<CompanyStructure>> allStructureHierarchicalGroup, Set<ChildStaff> result) {
+    private void loop(Set<Long> parentStructureIds, Integer hierarchical, Map<Integer, List<CompanyStructure>> allStructureHierarchicalGroup, Set<Long> result) {
         int nextHierarchical = hierarchical + INTEGER_ONE;  //递增层级
 
         // 获取子级结构的 ID列表
@@ -68,8 +70,8 @@ public class SearchChildStaff implements com.bbs.api.auth.company.staff.SearchCh
     /**
      * 查询用户并填充到容器
      */
-    private void searchAndFillUser(Set<Long> childStructureIds, Set<ChildStaff> result) {
-        if(nonNull(childStructureIds) && childStructureIds.size() > INTEGER_ZERO) result.addAll(searchUser(childStructureIds));
+    private void searchAndFillUser(Set<Long> childStructureIds, Set<Long> result) {
+        if(nonNull(childStructureIds) && childStructureIds.size() > INTEGER_ZERO) result.addAll(childStructureIds);
     }
 
     /**
@@ -112,11 +114,5 @@ public class SearchChildStaff implements com.bbs.api.auth.company.staff.SearchCh
                     .collect(Collectors.toSet());
         }
         return childStructureIds;
-    }
-
-    private Set<ChildStaff> searchUser(Set<Long> childStructureIds) {
-        return userService.search(childStructureIds).stream()
-                .map(user -> new ChildStaff(user.getId(), user.getName()))
-                .collect(Collectors.toSet());
     }
 }
