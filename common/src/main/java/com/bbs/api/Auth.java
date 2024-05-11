@@ -84,31 +84,6 @@ public class Auth {
             return null;
         }
 
-        public User getUserByID(Long id) {
-            if(Objects.nonNull(id)) {
-                String serverHost = host + searchIdPath;
-                try {
-                    HttpResponse response = HttpRequest.get(serverHost+id)
-                            .timeout(verifyTimeout).execute();
-                    if(response.isOk()) {
-                        String body = response.body();
-                        Result result = JSONUtil.toBean(body, Result.class);
-                        log.debug(JSONUtil.toJsonPrettyStr(result));
-                        if(HttpStatus.HTTP_OK == result.getCode()) {
-                            Object data = result.getData();
-                            if(nonNull(data)) {
-                                return JSONUtil.parseObj(data).toBean(User.class);
-                            }
-                        }
-                    }
-                    return null;
-                } catch (HttpException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            return null;
-        }
-
         public List<User> getUserList(List<Long> ids) {
             if(CollUtil.isNotEmpty(ids)) {
                 String serverHost = host + searchListPath;

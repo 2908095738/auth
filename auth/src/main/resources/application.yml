@@ -82,6 +82,7 @@ management:
 dubbo:
   application:
     name: auth
+    qos-enable: false
   protocol:
     name: dubbo
     port: -1

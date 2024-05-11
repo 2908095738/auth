@@ -79,6 +79,7 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
         return searchStructure(companyID, null);
     }
 
+
     @Override
     public List<CompanyStructure> searchStructure() {
         return searchStructure(LONG_ZERO);
@@ -216,6 +217,16 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
             transactionManager.rollback(transaction);
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public CompanyStructure searchUserCompanyStructure(Long uid) {
+        return companyStructureService.selectJoinOne(CompanyStructure.class, new MPJLambdaWrapper<CompanyStructure>()
+                .selectAll(CompanyStructure.class)
+                .rightJoin(UserCompany.class, UserCompany::getCompanyId, CompanyStructure::getId, ext -> ext
+                        .eq(UserCompany::getUserId, uid)
+                )
+        );
     }
 }
 

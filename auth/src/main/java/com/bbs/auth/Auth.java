@@ -1,6 +1,7 @@
 package com.bbs.auth;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -16,6 +17,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableRetry    //启用操作重试
 @EnableCaching
 @SpringBootApplication
+@EnableDubbo
 public class Auth implements ApplicationRunner {
     public static void main(String[] args) {
         SpringApplication.run(Auth.class, args);

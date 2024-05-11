@@ -51,6 +51,18 @@ public class CompanyStructure implements Serializable {
     private String introduction;
 
     /**
+     * 层级
+     */
+    @TableField(value = "hierarchical")
+    private Integer hierarchical;
+
+    /**
+     * 权重
+     */
+    @TableField(value = "weight")
+    private Integer weight;
+
+    /**
      * 单位管理员（单位内唯一）
      */
     @TableField(value = "admin")
@@ -79,12 +91,6 @@ public class CompanyStructure implements Serializable {
      */
     @TableField(value = "update_by")
     private Long updateBy;
-
-    /**
-     * 权重
-     */
-    @TableField(value = "weight")
-    private Integer weight;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

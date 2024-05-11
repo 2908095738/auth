@@ -1,6 +1,7 @@
 package com.bbs.stream;
 
 import cn.hutool.extra.spring.EnableSpringUtil;
+import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -10,6 +11,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @ComponentScan({"com.bbs.api", "com.bbs.stream"})
 @MapperScan({"com.bbs.stream.mapper"})
 @EnableAsync
+@EnableDubbo
 @EnableSpringUtil
 @SpringBootApplication
 public class StreamServer {
