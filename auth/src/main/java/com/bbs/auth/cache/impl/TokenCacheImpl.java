@@ -2,10 +2,10 @@ package com.bbs.auth.cache.impl;
 
 import cn.hutool.core.util.RandomUtil;
 import com.bbs.auth.cache.TokenCache;
-import com.bbs.auth.enums.RedisKeys;
-import com.bbs.auth.enums.ZookeeperNodePaths;
 import com.bbs.auth.util.RedisUtil;
 import com.bbs.auth.util.ZKUtil;
+import com.bbs.auth.enums.RedisKeys;
+import com.bbs.auth.enums.ZookeeperNodePaths;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

@@ -11,15 +11,12 @@ import com.bbs.auth.entity.Resource;
 import com.bbs.auth.entity.RoleGroup;
 import com.bbs.auth.entity.RoleResource;
 import com.bbs.auth.entity.UserGroup;
+import com.bbs.auth.enums.ResourceNames;
 import com.bbs.auth.enums.ResourceTypeEnum;
 import com.bbs.auth.mapper.ResourceMapper;
-import com.bbs.auth.service.ResourceService;
-import com.bbs.auth.service.RoleGroupService;
-import com.bbs.auth.service.RoleResourceService;
-import com.bbs.auth.service.UserGroupService;
-import com.bbs.auth.service.UserService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
+import com.bbs.auth.service.*;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Lazy;
@@ -29,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.bbs.auth.enums.ResourceNames.UserConfig.*;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
 
@@ -79,19 +75,19 @@ public class ResourceServiceImpl extends MPJBaseServiceImpl<ResourceMapper, Reso
         if(nonNull(resources) && resources.size() > 0) {
             ResourceController.UserConfig config = new ResourceController.UserConfig();
             resources.forEach(resource -> {
-                if(CLINIC_NAME.getName().equals(resource.getName())) {
+                if(ResourceNames.UserConfig.CLINIC_NAME.getName().equals(resource.getName())) {
                     config.setClinicName(resource);
                 }
-                if(STOCK_COUNT_TYPE.getName().equals(resource.getName())) {
+                if(ResourceNames.UserConfig.STOCK_COUNT_TYPE.getName().equals(resource.getName())) {
                     config.setStockStateCountRule(resource);
                 }
-                if(STOCK_COUNT_VAL.getName().equals(resource.getName())) {
+                if(ResourceNames.UserConfig.STOCK_COUNT_VAL.getName().equals(resource.getName())) {
                     config.setStockStateCountVal(resource);
                 }
-                if(STOCK_COUNT_UNIT.getName().equals(resource.getName())) {
+                if(ResourceNames.UserConfig.STOCK_COUNT_UNIT.getName().equals(resource.getName())) {
                     config.setStockStateCountUnit(resource);
                 }
-                if(DRUG_EXPIRE_VAL.getName().equals(resource.getName())) {
+                if(ResourceNames.UserConfig.DRUG_EXPIRE_VAL.getName().equals(resource.getName())) {
                     config.setExpiryAlert(resource);
                 }
             });

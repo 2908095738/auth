@@ -2,9 +2,9 @@ package com.bbs.auth.service.impl;
 
 import com.bbs.auth.entity.Group;
 import com.bbs.auth.entity.UserGroup;
-import com.bbs.auth.enums.RoleCodeEnum;
 import com.bbs.auth.mapper.UserGroupMapper;
 import com.bbs.auth.service.PermissionService;
+import com.bbs.auth.enums.RoleCodeEnum;
 import com.bbs.auth.service.UserService;
 import com.bbs.entity.UserVO;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;

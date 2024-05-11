@@ -79,3 +79,11 @@ management:
   endpoint:
     health:
       show-details: always
+dubbo:
+  application:
+    name: auth
+  protocol:
+    name: dubbo
+    port: -1
+  registry:
+    address: zookeeper://${apache.zookeeper.connect-url}

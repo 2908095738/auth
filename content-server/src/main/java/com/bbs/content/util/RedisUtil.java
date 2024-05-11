@@ -1,5 +1,9 @@
 package com.bbs.content.util;
 
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.date.TimeInterval;
+import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
@@ -14,8 +18,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 @Component
+@Slf4j
 public class RedisUtil {
 
     @Resource(name = "protoStuffTemplate")
@@ -163,5 +169,88 @@ public class RedisUtil {
     }
 
 
+    @Slf4j
+    @Component
+    public static class Redisson {
+        /**
+         * 暴力解锁
+         */
+        public static void forceUnlock(RLock lock) {
+            lock.forceUnlock();
+            log.warn("Redisson: 暴力解除 lock={}", lock.getName());
+        }
 
+        /**
+         * 加锁执行代码，抢锁失败 or 异常则直接执行
+         *
+         * @param function  代码
+         * @param lock      Redisson Lock
+         * @param waitTime  等待获取锁时间
+         * @param leaseTime 自动解锁时间
+         * @param unit      时间单位
+         * @param <R>       执行结果类型
+         * @return 代码执行结果
+         */
+        public static <R> R lockExec(RLock lock, int waitTime, int leaseTime, TimeUnit unit, Supplier<R> function) {
+            try {
+                if (lock.tryLock(waitTime, leaseTime, unit)) {
+                    log.debug("Redisson: 获取锁 key={}", lock.getName());
+                    try {
+                        TimeInterval timer = DateUtil.timer();
+                        R result = function.get();
+                        long interval = timer.interval();
+                        log.debug("Redisson: 分布式锁业务代码执行完成 key={}; 耗时（毫秒）={}", lock.getName(), interval);
+                        timer.interval();
+                        return result;
+                    } finally {
+                        if (lock.isLocked()) {   //判断是否持有锁，并释放
+                            lock.unlock();
+                            log.debug("Redisson: 释放锁 key={}", lock.getName());
+                        }
+                    }
+                }
+            } catch (InterruptedException e) {
+                log.error("Redisson: 分布式锁，中断异常！！！key={}", lock.getName());
+                e.printStackTrace();
+            }
+            if (lock.getHoldCount() > 0) forceUnlock(lock);  //出现异常后，依旧持有锁，则暴力解锁
+            return function.get();  //再执行业务
+        }
+
+        /**
+         * 加锁执行代码，抢锁失败 or 异常则直接执行
+         * @param function 代码
+         * @param lock Redisson Lock
+         * @param waitTime  等待获取锁时间
+         * @param leaseTime 自动解锁时间
+         * @param unit 时间单位
+         */
+        public static void lockExec(RLock lock, int waitTime, int leaseTime, TimeUnit unit, Runnable function) {
+            try {
+                if(lock.tryLock(waitTime, leaseTime, unit)) {
+                    log.debug("Redisson: 获取锁 key={}", lock.getName());
+                    try {
+                        TimeInterval timer = DateUtil.timer();
+                        function.run();
+                        long interval = timer.interval();
+                        log.debug("Redisson: 执行完成 key={}; 耗时（毫秒）={}", lock.getName(), interval);
+                        timer.interval();
+                        return;
+                    } finally {
+                        if(lock.isLocked()) {
+                            lock.unlock();
+                            log.debug("Redisson: 释放锁 key={}", lock.getName());
+                        }
+                    }
+                }
+            } catch (InterruptedException e) {
+                log.error("Redisson: 分布式锁，中断异常！！！key={}", lock.getName());
+                e.printStackTrace();
+            }
+            if(lock.getHoldCount() > 0) {
+                forceUnlock(lock);
+            }
+            function.run();
+        }
+    }
 }

@@ -16,6 +16,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>auth</module>
         <module>common</module>
         <module>content-server</module>
         <module>dfs-server</module>
@@ -25,6 +26,7 @@
         <module>store-management</module>
         <!--        <module>mall</module>-->
         <module>stream-management</module>
+        <module>financial</module>
     </modules>
 
     <properties>
@@ -165,6 +167,14 @@
                 </executions>
             </plugin>
         </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
 
 
