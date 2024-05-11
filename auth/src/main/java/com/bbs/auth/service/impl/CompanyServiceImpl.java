@@ -113,7 +113,7 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
 
             List<String> structureCacheKeys = new ArrayList<>();
             List<Long> structureIds = new ArrayList<>();
-            Map<Long, Integer> structureIdAndIndexMap = new HashMap<>();
+
             for (int index = INTEGER_ZERO; index < userCompanyList.size(); index++) {
                 UserCompany userCompany = userCompanyList.get(index);
                 Long uid = userCompany.getUserId();
@@ -121,34 +121,34 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
                 ids.add(uid);
 
                 Long structureId = userCompany.getStructureId();
-                structureIdAndIndexMap.put(structureId, index);
                 structureCacheKeys.add(COMPANY_STRUCTURE.key(structureId));
 
                 structureIds.add(structureId);
             }
             List<String> structureStrList = redisUtil.multiGet(structureCacheKeys);
-            List<Long> cacheEmptyIds = new ArrayList<>();
-            Map<Long, Integer> cacheEmptyIdAndIndexMap = new HashMap<>();
+            List<Long> cacheEmptyStructureIds = new ArrayList<>();
+            Map<Long, Integer> cacheEmptyStructureIdAndIndexMap = new HashMap<>();
+
             for (int index = 0; index < structureStrList.size(); index++) {
                 String structureStr = structureStrList.get(index);
                 if(StringUtils.isNotBlank(structureStr)) {
                     CompanyStructure companyStructure = JSONUtil.toBean(structureStr, CompanyStructure.class);
-                    Integer userCompanyListIndex = structureIdAndIndexMap.get(companyStructure.getId());
-                    UserCompany userCompany = userCompanyList.get(userCompanyListIndex);
-                    userCompany.setStructure(companyStructure);
+                    UserCompany userCompany = userCompanyList.get(index);
+                    userCompany.setStructure(companyStructure); //填充用户的部门信息 1
                 } else {
                     Long emptyStructureID = structureIds.get(index);
-                    cacheEmptyIds.add(emptyStructureID);
-                    cacheEmptyIdAndIndexMap.put(emptyStructureID, index);
+                    cacheEmptyStructureIds.add(emptyStructureID);
+                    cacheEmptyStructureIdAndIndexMap.put(emptyStructureID, index);
                 }
             }
-            if(cacheEmptyIds.size() > INTEGER_ZERO) {
+
+            if(cacheEmptyStructureIds.size() > INTEGER_ZERO) {
                 Map<String, String> cacheEmptyStructureCache = new HashMap<>();
-                companyStructureService.listByIds(cacheEmptyIds).forEach(structure -> {
+                companyStructureService.listByIds(cacheEmptyStructureIds).forEach(structure -> {
                     Long cacheEmptyStructureId = structure.getId();
                     cacheEmptyStructureCache.put(COMPANY_STRUCTURE.key(cacheEmptyStructureId), JSONUtil.toJsonPrettyStr(structure));
-                    Integer cacheEmptyStructureIndex = cacheEmptyIdAndIndexMap.get(cacheEmptyStructureId);
-                    userCompanyList.get(cacheEmptyStructureIndex).setStructure(structure);
+                    Integer cacheEmptyStructureIndex = cacheEmptyStructureIdAndIndexMap.get(cacheEmptyStructureId);
+                    userCompanyList.get(cacheEmptyStructureIndex).setStructure(structure);  //填充用户的部门信息 2
                 });
                 redisUtil.multiSet(cacheEmptyStructureCache);
             }
