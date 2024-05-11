@@ -7,6 +7,7 @@ import com.bbs.auth.entity.UserCompany;
 import com.github.yulichang.base.MPJBaseService;
 
 import java.util.List;
+import java.util.Set;
 
 /**
 * @author 路晨霖
@@ -53,4 +54,6 @@ public interface CompanyService extends MPJBaseService<Company> {
      * @param isAdmin 是否为管理员
      */
     void join(Long userID, Long companyID, Long structureID, Boolean isAdmin);
+
+    CompanyStructure searchUserCompanyStructure(Long uid);
 }

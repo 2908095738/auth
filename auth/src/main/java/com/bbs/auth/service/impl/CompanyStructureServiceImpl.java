@@ -6,6 +6,7 @@ import com.bbs.auth.entity.CompanyStructure;
 import com.bbs.auth.service.CompanyStructureService;
 import com.bbs.auth.mapper.CompanyStructureMapper;
 import com.bbs.auth.util.RedisUtil;
+import com.github.yulichang.base.MPJBaseServiceImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,7 @@ import static com.bbs.auth.enums.RedisKeys.COMPANY_STRUCTURE;
 * @createDate 2024-04-29 22:47:45
 */
 @Service
-public class CompanyStructureServiceImpl extends ServiceImpl<CompanyStructureMapper, CompanyStructure>
+public class CompanyStructureServiceImpl extends MPJBaseServiceImpl<CompanyStructureMapper, CompanyStructure>
     implements CompanyStructureService{
 
     @Resource

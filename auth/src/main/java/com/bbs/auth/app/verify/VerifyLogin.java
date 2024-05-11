@@ -59,7 +59,7 @@ public class VerifyLogin {
      */
     @PostMapping("/verify")
     public Result<UserVO> verify(@RequestBody UserTokenVerifyParam param) throws InterruptedException {
-        log.debug("[UserService::verifyToken] 请求 param={}", param);
+        log.debug("[UserAPI::verifyToken] 请求 param={}", param);
         UserVO userVO = tokenService.parseToken(param.getToken().split(" ")[1]);
         Long uid = userVO.getId();
         String loginFlagStr = tokenService.getLoginFlag(uid);
@@ -68,7 +68,7 @@ public class VerifyLogin {
                 User user = cache.search(uid);
                 if(service.userIsUsable(user)) {
                     userVO = converter.toVO(user);
-                    log.debug("[UserService::verifyToken] 响应 user={}", userVO);
+                    log.debug("[UserAPI::verifyToken] 响应 user={}", userVO);
                     return success(SUCCESS_USER_LOGIN, userVO);
                 }
             }

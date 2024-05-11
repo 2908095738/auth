@@ -1,5 +1,6 @@
 package com.bbs.auth.converter;
 
+import com.bbs.api.Auth;
 import com.bbs.auth.app.register.Register;
 import com.bbs.auth.app.user.Search;
 import com.bbs.auth.app.user.Info;
@@ -27,4 +28,8 @@ public interface UserConverter {
     Info.VO toInfoVO(User entity);
 
     Me.VO toMeVO(User entity);
+
+    com.bbs.api.auth.User toAPIUser(UserVO vo);
+
+    List<com.bbs.api.auth.User> toAPIUser(List<User> entity);
 }
