@@ -4,7 +4,6 @@ import com.bbs.api.auth.company.staff.ChildStaff;
 import com.bbs.auth.entity.CompanyStructure;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.service.CompanyService;
-import com.bbs.auth.service.UserService;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.stereotype.Service;
 
@@ -25,9 +24,6 @@ public class SearchChildStaff implements com.bbs.api.auth.company.staff.SearchCh
 
     @Resource
     private CompanyService companyService;
-
-    @Resource
-    private UserService userService;
 
     @Override
     public Set<ChildStaff> search(Long uid, Long companyID) {
