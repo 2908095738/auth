@@ -1,19 +1,18 @@
 package com.bbs.stream.service.impl;
 
-import cn.hutool.http.HttpUtil;
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.api.Auth;
+import com.bbs.api.auth.company.staff.ChildStaff;
+import com.bbs.api.auth.company.staff.SearchChildStaff;
 import com.bbs.stream.dto.StreamDto;
 import com.bbs.stream.entity.Stream;
-import com.bbs.stream.entity.UserCompany;
 import com.bbs.stream.mapper.StreamMapper;
 import com.bbs.stream.service.StreamService;
+import com.bbs.stream.util.ThreadLocalUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -24,25 +23,25 @@ import java.util.stream.Collectors;
 
 @Service
 public class StreamServiceImpl extends MPJBaseServiceImpl<StreamMapper, Stream> implements StreamService {
+
+    @DubboReference
+    private SearchChildStaff searchChildStaff;
+
     @Resource
     private Auth.UserAPI userAPI;
 
     @Override
     public Result create(Long companyId, Stream stream) {
-        Long topUserId = getTopUid(companyId, stream.getCreateUid());
-
         //规避重复点击
         Stream dbEntity = getOne(new MPJLambdaWrapper<Stream>()
                 .select(Stream::getId)
                 .eq(Stream::getCreateUid, stream.getCreateUid())
-                .eq(Stream::getTopUid, topUserId)
                 .eq(Stream::getType, stream.getType())
                 .eq(Stream::getStatus, 1)
         );
         if (!ObjectUtils.isEmpty(dbEntity))
             return Result.success();
 
-        stream.setTopUid(topUserId);
         boolean isDone = save(stream);
         if (isDone)
             return Result.success();
@@ -50,55 +49,54 @@ public class StreamServiceImpl extends MPJBaseServiceImpl<StreamMapper, Stream> 
             return Result.failed("create fail");
     }
 
-    /**
-     * 获取上级用户id
-     *
-     * @param companyId 公司id
-     * @param createUid 创建用户id
-     * @return
-     */
-    private Long getTopUid(Long companyId, Long createUid) {
-        List<UserCompany> respList = getUCompany(companyId);
-        Map<Long, UserCompany> userKeyMap = respList.stream().collect(Collectors.toMap(UserCompany::getUserId, item -> item));
-        UserCompany now = userKeyMap.get(createUid);
-
-        //TODO 如果该接口空指针什么的，把userCompanyKeyMap换成userKeyMap
-        Long userCompanyId = now.getLead();
-        Map<Long, UserCompany> userCompanyKeyMap = respList.stream().collect(Collectors.toMap(UserCompany::getId, item -> item));
-        return userCompanyKeyMap.get(userCompanyId).getUserId();
-    }
-
-    /**
-     * 获取职位列表
-     *
-     * @param companyId 公司id
-     * @return
-     */
-    private List<UserCompany> getUCompany(Long companyId) {
-        //TODO 从JSON获取数据的字符串硬编码待解决
-        JSONObject jsonObject = JSON.parseObject(getResp(companyId));
-        JSONObject da = (JSONObject) jsonObject.get("data");
-        JSONObject sL = (JSONObject) da.get("staffList");
-        JSONArray list = (JSONArray) sL.get("records");
-        return list.toList(UserCompany.class);
-    }
-
-    private String getResp(Long companyId) {
-        //TODO 分页、请求地址硬编码待解决
-        Map<String, Object> reqParam = new HashMap();
-        reqParam.put("id", companyId);
-        reqParam.put("current", 1);
-        reqParam.put("size", 2);
-        return HttpUtil.get("http://192.168.0.100:8515/company/staff", reqParam);
-    }
-
     @Override
-    public Page<StreamDto> list(Integer current, Integer size, Integer status, Integer type, Long topUid) {
+    public Page<StreamDto> list(Long companyId, Integer current, Integer size, Integer status, Integer type) {
+        //获取下属信息
+        Set<ChildStaff> downUserList = searchChildStaff.search(ThreadLocalUtil.getCurrentUserId(), companyId);
+//        Map<Long, String> nameByIdOfUser = downUserList.stream().collect(Collectors.toMap(ChildStaff::getId, ChildStaff::getName));
+        List<Long> userIds = downUserList.stream().map(ChildStaff::getId).collect(Collectors.toList());
+
+        //获取分页
+        Page<StreamDto> page = getPage(userIds, current, size, status, type);
+        if (CollectionUtils.isEmpty(page.getRecords()))
+            return page;
+
+        //筛选原审批列表
+//        List<StreamDto> records = getFixRecords(page.getRecords(), nameByIdOfUser);
+//        page.setRecords(records);
+//        if (CollectionUtils.isEmpty(page.getRecords()))
+//            return page;
+
+        //下属id列表
+        Set<Long> uidsTmp = page.getRecords().stream()
+                .map(StreamDto::getCreateUid)
+                .collect(Collectors.toSet());
+        List<Long> uids = new ArrayList();
+        uids.addAll(uidsTmp);
+
+        //返回列表的实例域赋值
+        Map<Long, Auth.UserAPI.User> userByUid = userAPI.getUserList(uids).stream()
+                .collect(Collectors.toMap(Auth.UserAPI.User::getId, u -> u));
+        List<StreamDto> dtos = page.getRecords();
+        for (StreamDto dto : dtos) {
+            Auth.UserAPI.User now = userByUid.get(dto.getCreateUid());
+            dto.setAvatar(now.getAvatar());
+            dto.setName(now.getName());
+        }
+
+        return page;
+    }
+
+    private Page<StreamDto> getPage(List<Long> userIds, Integer current, Integer size, Integer status, Integer type) {
+        /**
+         * TODO 性能问题，因为先从DB查全表，再筛选数据。
+         */
         MPJLambdaWrapper<Stream> wrapper = new MPJLambdaWrapper<Stream>()
                 .select(Stream::getId, Stream::getCreateUid, Stream::getType)
                 .select(Stream::getContent, Stream::getCreateTime, Stream::getStatus)
+                .select(Stream::getLeadr)
 
-                .eq(Stream::getTopUid, topUid)
+                .in(Stream::getCreateUid, userIds)
                 .orderByDesc(Stream::getCreateTime);
 
         if (!ObjectUtils.isEmpty(status))
@@ -106,27 +104,15 @@ public class StreamServiceImpl extends MPJBaseServiceImpl<StreamMapper, Stream> 
         if (!ObjectUtils.isEmpty(type))
             wrapper.eq(Stream::getType, type);
 
-        Page<StreamDto> page = selectJoinListPage(new Page(current, size), StreamDto.class, wrapper);
+        return selectJoinListPage(new Page(current, size), StreamDto.class, wrapper);
+    }
 
-        if (CollectionUtils.isEmpty(page.getRecords()))
-            return page;
-
-        //用户头像赋值
-        Set<Long> uidsTmp = page.getRecords().stream()
-                .map(StreamDto::getCreateUid)
-                .collect(Collectors.toSet());
-        List<Long> uids = new ArrayList();
-        uids.addAll(uidsTmp);
-
-        Map<Long, List<Auth.UserAPI.User>> tmpMap = userAPI.getUserList(uids).stream()
-                .collect(Collectors.groupingBy(Auth.UserAPI.User::getId));
-        List<StreamDto> dtos = page.getRecords();
-        for (StreamDto dto : dtos) {
-            Auth.UserAPI.User now = tmpMap.get(dto.getCreateUid()).get(0);
-            dto.setAvatar(now.getAvatar());
-            dto.setName(now.getName());
+    private List<StreamDto> getFixRecords(List<StreamDto> oriList, Map<Long, String> nameByIdOfUser) {
+        List<StreamDto> result = new ArrayList();
+        for (StreamDto dto : oriList) {
+            if (nameByIdOfUser.containsKey(dto.getCreateUid()))
+                result.add(dto);
         }
-
-        return page;
+        return result;
     }
 }

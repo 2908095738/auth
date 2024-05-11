@@ -45,7 +45,7 @@ springdoc:
   # 需要扫描的包路径
   packagesToScan: com.bbs.stream
   # 匹配的url路径
-  pathsToMatch: /*
+  pathsToMatch: /stream/**
 
 mybatis-plus:
   configuration:
@@ -93,6 +93,11 @@ apache:
     scheme: auth
     # 验证内容id
     auth_id: admin:123456
+dfs:
+  host: 192.168.0.7:8082
+  api:
+    deleteList: /batch
+    timeout: 10000
 dubbo:
   application:
     name: stream

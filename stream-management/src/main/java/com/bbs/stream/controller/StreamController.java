@@ -10,6 +10,11 @@ import com.bbs.stream.util.ThreadLocalUtil;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -19,7 +24,6 @@ import org.springframework.web.bind.annotation.*;
  * 审批控制器
  */
 @Controller
-//@Api(tags = "审批控制器")
 @Tag(name = "StreamController", description = "审批控制器")
 @RequestMapping("/stream")
 public class StreamController {
@@ -37,7 +41,14 @@ public class StreamController {
      * @return
      */
     @ResponseBody
-    @ApiOperation(value = "创建审批", httpMethod = "PUT", consumes = "application/json", produces = "application/json")
+    @Operation(summary = "创建审批",
+            parameters = {
+                    @Parameter(description = "创建审批请求参数", required = true,
+                            content = @Content(mediaType = "application/json"), schema = @Schema(implementation = CreateStreamParam.class))
+            },
+            responses = {
+                    @ApiResponse(description = "审批结果", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class))),
+            })
     @PutMapping("/create")
     public Result create(@RequestBody CreateStreamParam param) {
         Long nowUid = ThreadLocalUtil.getCurrentUserId();
@@ -60,17 +71,20 @@ public class StreamController {
      * @return
      */
     @ResponseBody
-    @ApiOperation(value = "获取审批列表", httpMethod = "GET", produces = "application/json")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "current", value = "页码", defaultValue = "1", allowableValues = "[1,infinity]", required = true, dataTypeClass = Integer.class, example = "1"),
-            @ApiImplicitParam(name = "size", value = "条数", defaultValue = "10", allowableValues = "[1,infinity]", required = true, dataTypeClass = Integer.class, example = "10"),
-            @ApiImplicitParam(name = "status", value = "审批状态：0.已审批;1.待审批;2.被驳回", allowableValues = "[0,2]", required = false, dataTypeClass = Integer.class, example = "1"),
-            @ApiImplicitParam(name = "type", value = "审批类型: 1.请假;", allowableValues = "[1,1]", required = false, dataTypeClass = Integer.class, example = "1"),
-    })
+    @Operation(summary = "获取审批列表",
+            parameters = {
+                    @Parameter(name = "companyId", description = "公司id", required = true, schema = @Schema(implementation = Long.class), example = "1"),
+                    @Parameter(name = "current", description = "页码", required = true, schema = @Schema(implementation = Integer.class), example = "1"),
+                    @Parameter(name = "size", description = "条数", required = true, schema = @Schema(implementation = Integer.class), example = "10"),
+                    @Parameter(name = "status", description = "审批状态：0.已审批;1.待审批;2.被驳回", schema = @Schema(implementation = Integer.class), example = "1"),
+                    @Parameter(name = "type", description = "审批类型: 1.请假;", required = false, allowEmptyValue = true, schema = @Schema(implementation = Integer.class), example = "1")
+            },
+            responses = {
+                    @ApiResponse(description = "审批列表", content = @Content(mediaType = "application/json", schema = @Schema(allOf = {Page.class, StreamDto.class}))),
+            })
     @GetMapping("/page")
-    public Result<Page<StreamDto>> page(Integer current, Integer size, Integer status, Integer type) {
-        Long nowUid = ThreadLocalUtil.getCurrentUserId();
-        Page<StreamDto> page = streamService.list(current, size, status, type, nowUid);
+    public Result<Page<StreamDto>> page(Long companyId, Integer current, Integer size, Integer status, Integer type) {
+        Page<StreamDto> page = streamService.list(companyId, current, size, status, type);
         return Result.success(page);
     }
 
@@ -92,6 +106,7 @@ public class StreamController {
         Stream entity = new Stream();
         entity.setId(id);
         entity.setStatus(status);
+        entity.setLeadr(ThreadLocalUtil.getCurrentUserId());
 
         boolean isDone = streamService.updateById(entity);
         if (isDone)
