@@ -31,8 +31,8 @@ public class Stream implements Serializable {
     /**
      * 审批用户id
      */
-    @TableField(value = "top_uid")
-    private Long topUid;
+    @TableField(value = "leadr")
+    private Long leadr;
 
     /**
      * 1：请假

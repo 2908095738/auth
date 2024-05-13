@@ -21,10 +21,23 @@ public class StreamDto {
     private Long id;
 
     /**
-     * 创建用户id
+     * 提交用户id
      */
-    @ApiModelProperty(value = "创建用户id", allowableValues = "[1,infinity]", example = "1")
+    @ApiModelProperty(value = "提交用户id", allowableValues = "[1,infinity]", example = "1")
     private Long createUid;
+
+    /**
+     * 审批用户id
+     */
+    @ApiModelProperty(value = "审批用户id", allowableValues = "[1,infinity]", example = "1")
+    private Long leadr;
+
+    /**
+     * 审批用户名称
+     *  TODO 审批方可能比当前用户职位更高，也没有能调用所有用户信息的接口，故需要另说
+     */
+//    @ApiModelProperty(value = "审批用户名称")
+//    private String leadName;
 
     /**
      * 创建用户头像

@@ -20,12 +20,12 @@ public interface StreamService extends IService<Stream> {
     /**
      * 获取审批列表
      *
-     * @param current 页码
-     * @param size    条数
-     * @param status  审批状态: 0.已审批;1.待审批
-     * @param type    审批类型: 1.请假;
-     * @param topUid  审批用户id
+     * @param companyId 公司id
+     * @param current   页码
+     * @param size      条数
+     * @param status    审批状态: 0.已审批;1.待审批
+     * @param type      审批类型: 1.请假;
      * @return
      */
-    Page<StreamDto> list(Integer current, Integer size, Integer status, Integer type, Long topUid);
+    Page<StreamDto> list(Long companyId, Integer current, Integer size, Integer status, Integer type);
 }
