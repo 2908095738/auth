@@ -1,12 +1,27 @@
 package com.bbs.financial.service.impl;
 
+import cn.hutool.core.lang.tree.Tree;
+import cn.hutool.core.lang.tree.TreeNodeConfig;
+import cn.hutool.core.lang.tree.TreeUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.financial.entity.Account;
+import com.bbs.financial.entity.AccountRemark;
 import com.bbs.financial.service.AccountService;
 import com.bbs.financial.mapper.AccountMapper;
 import com.github.yulichang.base.MPJBaseServiceImpl;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
+import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
 
 /**
 * @author 路晨霖
@@ -34,7 +49,6 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
      *
      * @param account 科目
      */
-
     @Override
     public void insertAccount(Account account)
     {
@@ -61,5 +75,56 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
     public void deleteAccountByIds(List<Long> ids)
     {
         baseMapper.deleteBatchIds(ids);
+    }
+
+    @Cacheable(cacheNames = "account-tree")
+    @Override
+    public List<Tree<Long>> tree(String accountSort, Long companyId, String name, String no) {
+        List<Account> allAccount = list(Wrappers.lambdaQuery(Account.class)
+                .eq(StringUtils.isNotBlank(accountSort), Account::getAccountSort, accountSort)
+                .eq(isNull(companyId), Account::getCompanyId, INTEGER_ZERO)
+                .and(nonNull(companyId), wrapper -> wrapper
+                        .eq(Account::getCompanyId, INTEGER_ZERO)
+                        .or()
+                        .eq(Account::getCompanyId, companyId)
+                )
+                .and((StringUtils.isNotBlank(name) || StringUtils.isNotBlank(no)), wrapper -> wrapper
+                        .like(StringUtils.isNotBlank(name), Account::getName, name)
+                        .or()
+                        .like(StringUtils.isNotBlank(no), Account::getNo, no)
+                )
+        );
+
+        if (allAccount.size() > INTEGER_ZERO) {
+            TreeNodeConfig treeNodeConfig = new TreeNodeConfig();
+            treeNodeConfig.setDeep(5);
+            treeNodeConfig.setParentIdKey("parentId");
+            treeNodeConfig.setChildrenKey("children");
+
+            return TreeUtil.build(allAccount, LONG_ZERO, treeNodeConfig, (account, tree) -> {
+                tree.setId(account.getId());
+                tree.setParentId(account.getParentId());
+                tree.putExtra("label", account.getNo() + " " + account.getName());
+            });
+        }
+        return new ArrayList<>();
+    }
+
+    @Cacheable(cacheNames = "account-join")
+    @Override
+    public Page<Account> join(String no, String name, String sort, Long companyId, Integer current, Integer size) {
+        return selectJoinListPage(new Page<>(current, size), Account.class, new MPJLambdaWrapper<Account>()
+                .selectAll(Account.class)
+                .leftJoin(AccountRemark.class, on -> on
+                        .eq(AccountRemark::getAccountId, Account::getId)
+                        .eq(nonNull(companyId), AccountRemark::getCompanyId, companyId)
+                )
+                .selectAssociation(AccountRemark.class, Account::getRemark)
+                .like(StringUtils.isNotBlank(sort), Account::getSort, sort)
+                .or()
+                .like(StringUtils.isNotBlank(no), Account::getNo, no)
+                .or()
+                .like(StringUtils.isNotBlank(name), Account::getName, name)
+        );
     }
 }

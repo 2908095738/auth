@@ -1,21 +1,25 @@
 package com.bbs.financial.entity;
 
+import cn.hutool.core.lang.tree.Tree;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
+import java.util.List;
 
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
 
 /**
  * 科目
  * @TableName account
  */
-@TableName(value ="account")
+@TableName(value ="account_2")
 @Data
+@Accessors(chain = true)
 @EqualsAndHashCode(callSuper = true)
 public class Account extends Model<Account> implements Serializable {
     /**
@@ -67,38 +71,56 @@ public class Account extends Model<Account> implements Serializable {
     private String periodExchangeRateAdjust;
 
     /**
-     * 二级科目
-     */
-    @TableField(value = "second_level_account")
-    private String secondLevelAccount;
-
-    /**
-     * 三级科目
-     */
-    @TableField(value = "three_level_account")
-    private String threeLevelAccount;
-
-    /**
-     * 四级科目
-     */
-    @TableField(value = "four_level_account")
-    private String fourLevelAccount;
-
-    /**
-     * 五级科目
-     */
-    @TableField(value = "five_level_account")
-    private String fiveLevelAccount;
-
-    /**
      * 辅助核算段
      */
     @TableField(value = "auxiliary_calculation")
     private String auxiliaryCalculation;
+
+    /**
+     * 公司ID
+     */
+    @TableField(value = "company_id")
+    private Long companyId;
+
+    /**
+     * 上级ID
+     */
+    @TableField(value = "parent_id")
+    private Long parentId;
+
+    /**
+     * 权重
+     */
+    @TableField(value = "weight")
+    private Integer weight;
+
+    /**
+     * 级别
+     */
+    @TableField(value = "level")
+    private Integer level;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
     @TableField(exist = false)
     private AccountRemark remark;
+
+    /**
+     * 父级名称
+     */
+    @TableField(exist = false)
+    private String parentName;
+
+    /**
+     * 子级
+     */
+    @TableField(exist = false)
+    private List<Tree<String>> children;
+
+    /**
+     * label
+     */
+    @TableField(exist = false)
+    private String label;
 }

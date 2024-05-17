@@ -1,6 +1,5 @@
 package com.bbs.auth.converter;
 
-import com.bbs.api.Auth;
 import com.bbs.auth.app.register.Register;
 import com.bbs.auth.app.user.Search;
 import com.bbs.auth.app.user.Info;

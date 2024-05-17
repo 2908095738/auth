@@ -1,5 +1,7 @@
 package com.bbs.financial.service;
 
+import cn.hutool.core.lang.tree.Tree;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.financial.entity.Account;
 import com.github.yulichang.base.MPJBaseService;
 
@@ -41,4 +43,8 @@ public interface AccountService extends MPJBaseService<Account> {
      * @param ids 需要删除的科目主键集合
      */
     void deleteAccountByIds(List<Long> ids);
+
+    List<Tree<Long>> tree(String accountSort, Long companyId, String name, String no);
+
+    Page<Account> join(String no, String name, String sort, Long companyId, Integer current, Integer size);
 }
