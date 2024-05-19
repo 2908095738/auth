@@ -77,6 +77,17 @@
 <!--            <artifactId>easypoi-base</artifactId>-->
 <!--            <version>3.2.1</version>-->
 <!--        </dependency>-->
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-spring-boot-starter</artifactId>
+            <version>3.2.12</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.dubbo/dubbo-registry-zookeeper -->
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-registry-zookeeper</artifactId>
+            <version>3.2.12</version>
+        </dependency>
 
     </dependencies>
 

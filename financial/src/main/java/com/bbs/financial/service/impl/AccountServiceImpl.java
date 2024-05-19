@@ -95,16 +95,23 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
                 )
         );
 
-        if (allAccount.size() > INTEGER_ZERO) {
+        return tree(allAccount);
+    }
+
+    @Override
+    public List<Tree<Long>> tree(List<Account> accounts) {
+        if (accounts.size() > INTEGER_ZERO) {
             TreeNodeConfig treeNodeConfig = new TreeNodeConfig();
             treeNodeConfig.setDeep(5);
             treeNodeConfig.setParentIdKey("parentId");
             treeNodeConfig.setChildrenKey("children");
 
-            return TreeUtil.build(allAccount, LONG_ZERO, treeNodeConfig, (account, tree) -> {
+            return TreeUtil.build(accounts, LONG_ZERO, treeNodeConfig, (account, tree) -> {
                 tree.setId(account.getId());
                 tree.setParentId(account.getParentId());
                 tree.putExtra("label", account.getNo() + " " + account.getName());
+                tree.putExtra("accountSort", account.getAccountSort());
+                tree.putExtra("direction", account.getDirection());
             });
         }
         return new ArrayList<>();

@@ -1,27 +1,26 @@
 package com.bbs.financial.entity;
 
-import cn.hutool.core.lang.tree.Tree;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
-import java.util.List;
 
-import com.baomidou.mybatisplus.extension.activerecord.Model;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
  * 科目
- * @TableName account
+ * @TableName account_2
  */
 @TableName(value ="account_2")
 @Data
 @Accessors(chain = true)
-@EqualsAndHashCode(callSuper = true)
-public class Account extends Model<Account> implements Serializable {
+@NoArgsConstructor
+@AllArgsConstructor
+public class Account implements Serializable {
     /**
      * 主键
      */
@@ -43,6 +42,12 @@ public class Account extends Model<Account> implements Serializable {
     /**
      * 会计科目名称
      */
+    @TableField(value = "account_name")
+    private String accountName;
+
+    /**
+     * 名称
+     */
     @TableField(value = "name")
     private String name;
 
@@ -59,13 +64,13 @@ public class Account extends Model<Account> implements Serializable {
     private String direction;
 
     /**
-     * 外币核算
+     * 是否外币核算
      */
     @TableField(value = "currency")
     private String currency;
 
     /**
-     * 期末调汇
+     * 是否期末调汇
      */
     @TableField(value = "period_exchange_rate_adjust")
     private String periodExchangeRateAdjust;
@@ -75,6 +80,24 @@ public class Account extends Model<Account> implements Serializable {
      */
     @TableField(value = "auxiliary_calculation")
     private String auxiliaryCalculation;
+
+    /**
+     * 是否现金支付
+     */
+    @TableField(value = "cash_pay")
+    private Integer cashPay;
+
+    /**
+     * 是否数量核算
+     */
+    @TableField(value = "quantitative_account")
+    private Integer quantitativeAccount;
+
+    /**
+     * 数量核算单位
+     */
+    @TableField(value = "quantity_account_unit")
+    private String quantityAccountUnit;
 
     /**
      * 公司ID
@@ -105,22 +128,4 @@ public class Account extends Model<Account> implements Serializable {
 
     @TableField(exist = false)
     private AccountRemark remark;
-
-    /**
-     * 父级名称
-     */
-    @TableField(exist = false)
-    private String parentName;
-
-    /**
-     * 子级
-     */
-    @TableField(exist = false)
-    private List<Tree<String>> children;
-
-    /**
-     * label
-     */
-    @TableField(exist = false)
-    private String label;
 }

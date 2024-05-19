@@ -65,7 +65,7 @@ auth:
   api:
     verify:
       path: /verify
-      token: authorization
+      token: Authorization
       timeout: 10000
     search:
       id: /server/
@@ -87,3 +87,12 @@ management:
     web:
       exposure:
         include: "*"
+dubbo:
+  application:
+    name: financial
+    qos-enable: false
+  protocol:
+    name: dubbo
+    port: -1
+  registry:
+    address: zookeeper://${apache.zookeeper.connect-url}

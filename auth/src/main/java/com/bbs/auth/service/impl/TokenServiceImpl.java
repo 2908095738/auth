@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import static cn.hutool.core.bean.BeanUtil.toBean;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.math.NumberUtils.*;
 
 @Slf4j
 @Service
@@ -115,10 +116,15 @@ public class TokenServiceImpl implements TokenService {
         return LOGIN_TOKEN_PREFIX + uid;
     }
 
+    private static final String TOKEN_PREFIX = " ";
+
     @Override
     public UserVO verify(String token) throws ReLoginException {
-        if(verifyToken(token)) {
-            Long id = parseToken(token).getId();
+        String[] arr = token.split(TOKEN_PREFIX);
+        // 前端 token 可能以【前缀 token】的格式，这里以空格为分隔符，尝试判断获取实际的 token 部分
+        String tokenPart = arr.length == INTEGER_TWO ? arr[INTEGER_ONE] : arr[INTEGER_ZERO];
+        if(verifyToken(tokenPart)) {
+            Long id = parseToken(tokenPart).getId();
             if(nonNull(getLoginFlag(id))) {
                 try {
                     User user = userCache.search(id);
