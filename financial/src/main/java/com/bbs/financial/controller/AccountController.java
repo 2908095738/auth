@@ -5,19 +5,16 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
-import com.bbs.api.Auth;
-import com.bbs.api.auth.UserAPI;
-import com.bbs.financial.entity.Account;
-import com.bbs.financial.entity.AccountCurrency;
-import com.bbs.financial.entity.AccountRemark;
+import com.bbs.financial.entity.*;
 import com.bbs.financial.service.AccountCurrencyService;
 import com.bbs.financial.service.AccountService;
+import com.bbs.financial.service.AuxiliaryCalculationService;
+import com.bbs.financial.service.MoneyTypeService;
 import com.bbs.financial.util.LoginUser;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -26,6 +23,7 @@ import java.util.stream.Collectors;
 
 import static com.bbs.Result.failed;
 import static com.bbs.Result.success;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.math.NumberUtils.*;
 
@@ -53,7 +51,7 @@ public class AccountController
 
 
         String no = param.getNo();
-        boolean isSearchNo = StringUtils.isNotBlank(no) && no.length() > NO_MAX_LENGTH + INTEGER_ONE;
+        boolean isSearchNo = StringUtils.isNotBlank(no) && no.indexOf('-') > -INTEGER_ONE;
         String[] split = null;
 
         if(isSearchNo) {
@@ -161,7 +159,7 @@ public class AccountController
             @RequestParam Integer size
     ) {
 
-        boolean isSearchNo = StringUtils.isNotBlank(no) && no.length() > NO_MAX_LENGTH + INTEGER_ONE;
+        boolean isSearchNo = StringUtils.isNotBlank(no) && no.indexOf('-') > -INTEGER_ONE;
         String[] split = null;
 
         if(isSearchNo) {
@@ -169,6 +167,10 @@ public class AccountController
             no = split[INTEGER_ZERO];
         }
 
+        String finalNo = no;
+        String[] finalSplit = split;
+        int level = isSearchNo ? finalSplit.length - INTEGER_ONE : INTEGER_ZERO;
+        int parentLevel = level - INTEGER_ONE;
         Page<Account> page = accountService.selectJoinListPage(new Page<>(current, size), Account.class, new MPJLambdaWrapper<Account>()
                 .selectAll(Account.class)
                 .leftJoin(AccountRemark.class, on -> on
@@ -176,12 +178,19 @@ public class AccountController
                         .eq(nonNull(companyId), AccountRemark::getCompanyId, companyId)
                 )
                 .selectAssociation(AccountRemark.class, Account::getRemark)
-                .like(StringUtils.isNotBlank(sort), Account::getSort, sort)
-                .or()
-                .like(StringUtils.isNotBlank(no), Account::getNo, no)
-                .or()
-                .like(StringUtils.isNotBlank(name), Account::getName, name)
-                .eq(isSearchNo, Account::getLevel, isSearchNo ? split.length - INTEGER_ONE : INTEGER_ZERO)
+                .and(
+                        StringUtils.isNotBlank(sort) || isSearchNo || StringUtils.isNotBlank(finalNo) || StringUtils.isNotBlank(name),
+                        wrapper -> wrapper
+                            .eq(StringUtils.isNotBlank(sort), Account::getSort, sort)
+                            // 如果需要查询子级：同时查具体科目与直接父级科目（用于判断父级是否存在）
+                            .in(isSearchNo, Account::getLevel, level, parentLevel)
+                            .and(wrapper2 -> wrapper2
+                                    // 如果搜索格式为 xxx-xx，则精确匹配 no（后续代码再筛选子级），否则模糊匹配 no
+                                    .eq(StringUtils.isNotBlank(finalNo) && isSearchNo, Account::getNo, finalNo)
+                                    .likeRight(StringUtils.isNotBlank(finalNo) && !isSearchNo, Account::getNo, finalNo)
+                                    .or(StringUtils.isNotBlank(name)).like(StringUtils.isNotBlank(name), Account::getName, name)
+                            )
+                )
         );
         if(isSearchNo) {
             // 根据 no 中的 - 的数量，获取科目序号
@@ -197,16 +206,21 @@ public class AccountController
                 indexStr = indexStr.substring(INTEGER_ONE);
 
             }
-            int index = Integer.parseInt(indexStr);
-            // 从中获取数据
-            Account account = page.getRecords().stream()
-                    .sorted(Comparator.comparing(Account::getWeight))
-                    .collect(Collectors.toList())
-                    .get(index);
 
-            // 封装 Page 返回
+            // 封装 Page
             Page<Account> result = new Page<>(current, INTEGER_ONE);
-            result.setRecords(Collections.singletonList(account));
+            int index = Integer.parseInt(indexStr);
+            // 从中子级科目，过滤出目标科目（对应序号 xxx-01）和父级科目
+            Account targetAccount = null;
+            Account parentAccount = null;
+            List<Account> accountList = page.getRecords();
+            for (Account account : accountList) {
+                if (account.getWeight() == index) targetAccount = account;
+                if (account.getLevel() == parentLevel) parentAccount = account;
+            }
+            if(isNull(parentAccount)) return failed(400, "父级科目不存在，请先创建父级科目");
+            // 如果没用对应序号的子级科目，则返回空数组
+            result.setRecords(nonNull(targetAccount) ? Collections.singletonList(targetAccount) : new ArrayList<>());
             return success(result);
         }
         return success(page);
@@ -285,5 +299,44 @@ public class AccountController
                 .select(Account::getName)
                 .like(StringUtils.isNotBlank(name), Account::getName, name)
         ));
+    }
+
+    @Resource
+    private MoneyTypeService moneyTypeService;
+
+    @PutMapping("/money/type")
+    public Result<Boolean> addMoneyType(@RequestBody MoneyType moneyType)
+    {
+        if(moneyTypeService.lambdaQuery()
+                .eq(MoneyType::getCode, moneyType.getCode())
+                .eq(MoneyType::getCompanyId, moneyType.getCompanyId())
+                .exists()) {
+            return failed(400, "创建失败，币种已存在");
+        }
+        moneyType.setCreateBy(LoginUser.getId());
+        return success(moneyTypeService.save(moneyType));
+    }
+
+    @GetMapping("/money/type/list")
+    public Result<List<MoneyType>> searchMoneyTypeList(@RequestParam Long companyId) {
+        return success(moneyTypeService.lambdaQuery().eq(MoneyType::getCompanyId, companyId).list());
+    }
+
+    @Resource
+    private AuxiliaryCalculationService auxiliaryCalculationService;
+
+    @PutMapping("/auxiliary/calculation")
+    public Result<Boolean> addAuxiliaryCalculation(@RequestBody AuxiliaryCalculation auxiliaryCalculation) {
+        if(auxiliaryCalculationService.lambdaQuery()
+                .eq(AuxiliaryCalculation::getCompanyId, auxiliaryCalculation.getCompanyId())
+                .eq(AuxiliaryCalculation::getName, auxiliaryCalculation.getName()).exists()) {
+            return failed(400, "创建失败，辅助核算项已存在");
+        }
+        return success(auxiliaryCalculationService.save(auxiliaryCalculation));
+    }
+
+    @GetMapping("/auxiliary/calculation/list")
+    public Result<List<AuxiliaryCalculation>> searchAuxiliaryCalculationList(@RequestParam Long companyId) {
+        return success(auxiliaryCalculationService.lambdaQuery().eq(AuxiliaryCalculation::getCompanyId, companyId).list());
     }
 }

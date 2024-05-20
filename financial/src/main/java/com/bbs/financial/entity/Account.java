@@ -76,7 +76,7 @@ public class Account implements Serializable {
     private String periodExchangeRateAdjust;
 
     /**
-     * 辅助核算段
+     * 是否辅助核算
      */
     @TableField(value = "auxiliary_calculation")
     private String auxiliaryCalculation;
@@ -85,19 +85,14 @@ public class Account implements Serializable {
      * 是否现金支付
      */
     @TableField(value = "cash_pay")
-    private Integer cashPay;
+    private String cashPay;
 
     /**
      * 是否数量核算
      */
     @TableField(value = "quantitative_account")
-    private Integer quantitativeAccount;
+    private String quantitativeAccount;
 
-    /**
-     * 数量核算单位
-     */
-    @TableField(value = "quantity_account_unit")
-    private String quantityAccountUnit;
 
     /**
      * 公司ID
@@ -122,6 +117,12 @@ public class Account implements Serializable {
      */
     @TableField(value = "level")
     private Integer level;
+
+    /**
+     * 数量核算: 计量单位
+     */
+    @TableField(value = "measurement_unit")
+    private String measurementUnit;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

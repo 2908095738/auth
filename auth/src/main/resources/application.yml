@@ -86,5 +86,6 @@ dubbo:
   protocol:
     name: dubbo
     port: -1
+    host: 192.168.0.100 # 设置在 dubbo 上暴露的 ip
   registry:
     address: zookeeper://${apache.zookeeper.connect-url}

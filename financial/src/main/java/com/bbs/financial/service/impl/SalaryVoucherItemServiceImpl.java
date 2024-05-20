@@ -24,7 +24,7 @@ public class SalaryVoucherItemServiceImpl extends MPJBaseServiceImpl<SalaryVouch
         return selectJoinListPage(salaryVoucherItemPage, SalaryVoucherItemVo.class,new MPJLambdaWrapper<SalaryVoucherItem>()
                 .selectAll(SalaryVoucherItem.class)
                 .leftJoin(AuxiliaryCalculation.class, AuxiliaryCalculation::getId, SalaryVoucherItem::getAccountingItemTypeId, o-> o
-                        .select(AuxiliaryCalculation::getTypeName)
+                        .select(AuxiliaryCalculation::getName)
                         .selectAs(AuxiliaryCalculation::getId,SalaryVoucherItemVo::getTypeId))
                 .eq(SalaryVoucherItem::getCId, cId)
                 .eq(Objects.nonNull(type),SalaryVoucherItem::getType, type)

@@ -64,7 +64,7 @@ public class SalaryVoucherItemController {
     @PostMapping("/item")
     public Result<Boolean> add(@RequestBody String name)
     {
-        AuxiliaryCalculation salaryAccountingItemType = new AuxiliaryCalculation().setTypeName(name);
+        AuxiliaryCalculation salaryAccountingItemType = new AuxiliaryCalculation().setName(name);
         salaryAccountingItemTypeService.save(salaryAccountingItemType);
         salaryVoucherItemService.save(new SalaryVoucherItem().setAccountingItemTypeId(salaryAccountingItemType.getId()).setCId(1L).setIsActive(true));
         return success();

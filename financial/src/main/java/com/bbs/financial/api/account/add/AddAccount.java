@@ -8,6 +8,8 @@ import com.bbs.financial.entity.AccountCurrency;
 import com.bbs.financial.service.AccountAuxiliaryService;
 import com.bbs.financial.service.AccountCurrencyService;
 import com.bbs.financial.service.AccountService;
+import com.bbs.financial.util.LoginUser;
+import com.google.common.base.Preconditions;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -64,7 +66,7 @@ public class AddAccount {
         /**
          * 是否现金支付
          */
-        private Integer cashPay;
+        private String cashPay;
 
         /**
          * 辅助核算段
@@ -74,12 +76,12 @@ public class AddAccount {
         /**
          * 辅助核算
          */
-        private List<String> auxiliaryAccount;
+        private List<String> auxiliaryNameAccount;
 
         /**
          * 是否数量核算
          */
-        private Integer quantitativeAccount;
+        private String quantitativeAccount;
 
         /**
          * 数量核算单位
@@ -106,6 +108,11 @@ public class AddAccount {
          * 级别
          */
         private Integer level;
+
+        /**
+         * 数量核算: 计量单位
+         */
+        private String measurementUnit;
     }
 
     @Resource
@@ -126,33 +133,43 @@ public class AddAccount {
     private DataSourceTransactionManager transactionManager;
 
     @PutMapping("/account")
-    public Result<Boolean> add(@RequestBody Param param) {
+    public Result<Long> add(@RequestBody Param param) {
         Account account = converter.toEntity(param);
-        Long parentId = account.getParentId();
-        Integer level = param.getLevel();
         String no = param.getNo();
-        String[] split = no.split("-");
+        boolean isChild = no.indexOf("-") > -INTEGER_ONE;
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
 
 
         try {
-            if(nonNull(parentId) && nonNull(level)) {
+            if(isChild) {
+                String[] split = no.split("-");
+                Integer level = split.length - INTEGER_ONE;
+                no = split[INTEGER_ZERO];
+                Account parent = db.lambdaQuery().eq(Account::getNo, no).eq(Account::getLevel, level - INTEGER_ONE).one();
+                Preconditions.checkArgument(nonNull(parent), "父级科目为空，无法添加");
                 Long peerLevel = db.lambdaQuery()
-                        .eq(Account::getNo, split[INTEGER_ZERO])
+                        .eq(Account::getNo, no)
                         .eq(Account::getLevel, level)
                         .count();
-                account.setWeight(peerLevel.intValue() + INTEGER_ONE);
+                account.setWeight(peerLevel.intValue());
+                account.setNo(no);
+                account.setParentId(parent.getId());
+                account.setAccountName(parent.getAccountName());
+                account.setLevel(level);
             }
             db.save(account);
-            accountAuxiliaryService.saveBatch(param.getAuxiliaryAccount().stream().map(auxiliaryAccountName -> {
+            accountAuxiliaryService.saveBatch(param.getAuxiliaryNameAccount().stream().map(name -> {
                 AccountAuxiliary accountAuxiliary = new AccountAuxiliary();
                 accountAuxiliary.setAccountId(account.getId());
-                accountAuxiliary.setName(auxiliaryAccountName);
+                accountAuxiliary.setName(name);
                 return accountAuxiliary;
             }).collect(Collectors.toList()));
-            accountCurrencyService.saveBatch(param.getCurrencyList());
+            accountCurrencyService.saveBatch(param.getCurrencyList().stream().peek(currency -> {
+                currency.setCompanyId(param.companyId);
+                currency.setCreateBy(LoginUser.getId());
+            }).collect(Collectors.toList()));
             transactionManager.commit(transaction);
-            return Result.success();
+            return Result.success(account.getId());
         } catch (Exception e) {
             transactionManager.rollback(transaction);
             throw new RuntimeException(e);
