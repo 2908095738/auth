@@ -1,7 +1,7 @@
 package com.bbs.financial.service;
 
-import com.bbs.financial.entity.EmployeeSalary;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.bbs.financial.entity.EmployeeSalary;
 
 /**
  *

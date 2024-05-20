@@ -95,4 +95,4 @@ dubbo:
     name: dubbo
     port: -1
   registry:
-    address: zookeeper://${apache.zookeeper.connect-url}
+    address: zookeeper://${apache.zookeeper.connect-url}?blockUntilConnectedWait=100000&timeout=100000
