@@ -2,9 +2,9 @@ package com.bbs.financial.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
-import com.bbs.financial.entity.SalaryAccountingItemType;
+import com.bbs.financial.entity.AuxiliaryCalculation;
 import com.bbs.financial.entity.SalaryVoucherItem;
-import com.bbs.financial.service.SalaryAccountingItemTypeService;
+import com.bbs.financial.service.AuxiliaryCalculationService;
 import com.bbs.financial.service.SalaryVoucherItemService;
 import com.bbs.financial.vo.SalaryVoucherItemVo;
 import com.bbs.vo.BaseParam;
@@ -31,7 +31,7 @@ public class SalaryVoucherItemController {
     @Resource
     private SalaryVoucherItemService salaryVoucherItemService;
     @Resource
-    private SalaryAccountingItemTypeService salaryAccountingItemTypeService;
+    private AuxiliaryCalculationService salaryAccountingItemTypeService;
 
     @Data
     public static class ListParam extends BaseParam {
@@ -64,7 +64,7 @@ public class SalaryVoucherItemController {
     @PostMapping("/item")
     public Result<Boolean> add(@RequestBody String name)
     {
-        SalaryAccountingItemType salaryAccountingItemType = new SalaryAccountingItemType().setTypeName(name);
+        AuxiliaryCalculation salaryAccountingItemType = new AuxiliaryCalculation().setTypeName(name);
         salaryAccountingItemTypeService.save(salaryAccountingItemType);
         salaryVoucherItemService.save(new SalaryVoucherItem().setAccountingItemTypeId(salaryAccountingItemType.getId()).setCId(1L).setIsActive(true));
         return success();

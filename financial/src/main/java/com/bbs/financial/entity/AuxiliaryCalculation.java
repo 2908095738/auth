@@ -13,10 +13,10 @@ import java.io.Serializable;
  * 核算项目类型表
  * @TableName salary_accounting_item_type
  */
-@TableName(value ="salary_accounting_item_type")
+@TableName(value ="auxiliary_calculation")
 @Data
 @Accessors(chain = true)
-public class SalaryAccountingItemType implements Serializable {
+public class AuxiliaryCalculation implements Serializable {
     /**
      * 
      */

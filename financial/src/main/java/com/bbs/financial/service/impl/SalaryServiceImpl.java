@@ -3,6 +3,7 @@ package com.bbs.financial.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.financial.controller.SalaryController;
 import com.bbs.financial.entity.Certificate;
+import com.bbs.financial.entity.EmployeeItemExtend;
 import com.bbs.financial.entity.EmployeeSalary;
 import com.bbs.financial.entity.Salary;
 import com.bbs.financial.mapper.SalaryMapper;
@@ -25,11 +26,16 @@ public class SalaryServiceImpl extends MPJBaseServiceImpl<SalaryMapper, Salary>
 
     @Override
     public Page<SalaryVo> selectJoinList(SalaryController.SalaryListParam param) {
-
         return selectJoinListPage(new Page<>(param.getCurrent(),param.getSize()),SalaryVo.class,new MPJLambdaWrapper<Salary>()
                 .selectAll(Salary.class)
-                .selectCollection(EmployeeSalary.class,SalaryVo::getEmployeeSalaries)
+                .selectCollection(EmployeeSalary.class,SalaryVo::getEmployeeSalaries,o->
+                    o.collection(EmployeeItemExtend.class,EmployeeSalary::getEmployeeItemExtends)
+                )
                 .leftJoin(EmployeeSalary.class,EmployeeSalary::getSalaryId,Salary::getId)
+                .leftJoin(EmployeeItemExtend.class, on -> on
+                    .eq(EmployeeItemExtend::getSalaryId,EmployeeSalary::getSalaryId)
+                    .eq(EmployeeItemExtend::getEmployeeId,EmployeeSalary::getEmployeeId)
+                )
                 .selectAssociation(Certificate.class,SalaryVo::getJCertificate)
                 .selectAssociation(Certificate.class,SalaryVo::getFCertificate)
                 .leftJoin(Certificate.class,Certificate::getId,Salary::getJCertificateId)
@@ -41,6 +47,7 @@ public class SalaryServiceImpl extends MPJBaseServiceImpl<SalaryMapper, Salary>
                 .orderBy(true,true,Salary::getImportDate)
         );
     }
+
 
     @Override
     public SalaryVo selectOneAndEmployeeSalary(Long id) {

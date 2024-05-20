@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 员工工资表
@@ -72,6 +73,8 @@ public class EmployeeSalary implements Serializable {
     @TableField(value = "net_amount")
     private Long netAmount;
 
+    @TableField(exist = false)
+    private List<EmployeeItemExtend> employeeItemExtends;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

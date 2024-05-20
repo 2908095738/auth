@@ -3,11 +3,20 @@ package com.bbs.financial.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
-import com.bbs.financial.entity.SalaryAccountingItemType;
-import com.bbs.financial.service.SalaryAccountingItemTypeService;
-import org.springframework.web.bind.annotation.*;
+import com.bbs.financial.entity.AuxiliaryCalculation;
+import com.bbs.financial.service.AuxiliaryCalculationService;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import javax.annotation.Resource;
 import java.util.List;
+
 import static com.bbs.Result.success;
 
 
@@ -21,13 +30,13 @@ import static com.bbs.Result.success;
 public class SalaryAccountingItemTypeController {
 
     @Resource
-    private SalaryAccountingItemTypeService salaryAccountingItemTypeService;
+    private AuxiliaryCalculationService salaryAccountingItemTypeService;
 
     /**
      * 查询核算项目类型列表
      */
     @GetMapping("/salary/item/type/list")
-    public Result<Page<SalaryAccountingItemType>> list(SalaryAccountingItemType salaryAccountingItemType, @RequestParam Integer current, @RequestParam Integer size)
+    public Result<Page<AuxiliaryCalculation>> list(AuxiliaryCalculation salaryAccountingItemType, @RequestParam Integer current, @RequestParam Integer size)
     {
         return success(salaryAccountingItemTypeService.page(new Page<>(current, size), new QueryWrapper<>(salaryAccountingItemType)));
     }
@@ -37,7 +46,7 @@ public class SalaryAccountingItemTypeController {
      * 新增核算项目类型
      */
     @PostMapping("/salary/item/type")
-    public Result<Boolean> add(@RequestBody SalaryAccountingItemType salaryAccountingItemType)
+    public Result<Boolean> add(@RequestBody AuxiliaryCalculation salaryAccountingItemType)
     {
         salaryAccountingItemTypeService.save(salaryAccountingItemType);
         return success();
@@ -47,7 +56,7 @@ public class SalaryAccountingItemTypeController {
      * 修改核算项目类型
      */
     @PutMapping("/salary/item/type")
-    public Result<Boolean> edit(@RequestBody SalaryAccountingItemType salaryAccountingItemType)
+    public Result<Boolean> edit(@RequestBody AuxiliaryCalculation salaryAccountingItemType)
     {
         salaryAccountingItemTypeService.updateById(salaryAccountingItemType);
         return success();
