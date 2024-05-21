@@ -35,8 +35,8 @@ public class CertificateAbstract implements Serializable {
     /**
      * 科目
      */
-    @TableField(value = "account")
-    private String account;
+    @TableField(value = "account_id")
+    private Long accountId;
 
     /**
      * 借方金额
@@ -49,6 +49,12 @@ public class CertificateAbstract implements Serializable {
      */
     @TableField(value = "loans_money")
     private Long loansMoney;
+
+    /**
+     * 权重
+     */
+    @TableField(value = "weight")
+    private Integer weight;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

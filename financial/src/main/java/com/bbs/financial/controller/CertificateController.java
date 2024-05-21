@@ -27,7 +27,6 @@ public class CertificateController {
     /**
      * 查询记账凭证列表
      */
-//    @RequiresPermissions("system:certificate:list")
     @GetMapping("/list")
     public Result<Page<Certificate>> list(Certificate certificate, @RequestParam Integer current, @RequestParam Integer size)
     {
@@ -37,7 +36,6 @@ public class CertificateController {
     /**
      * 获取记账凭证详细信息
      */
-//    @RequiresPermissions("system:certificate:query")
     @GetMapping(value = "/{id}")
     public Result<Certificate> getInfo(@PathVariable("id") Long id)
     {
@@ -47,8 +45,6 @@ public class CertificateController {
     /**
      * 新增记账凭证
      */
-//    @RequiresPermissions("system:certificate:add")
-//    @Log(title = "记账凭证", businessType = BusinessType.INSERT)
     @PostMapping
     public Result<Boolean> add(@RequestBody Certificate certificate)
     {
@@ -57,22 +53,8 @@ public class CertificateController {
     }
 
     /**
-     * 修改记账凭证
-     */
-//    @RequiresPermissions("system:certificate:edit")
-//    @Log(title = "记账凭证", businessType = BusinessType.UPDATE)
-    @PutMapping
-    public Result<Boolean> edit(@RequestBody Certificate certificate)
-    {
-        certificateService.updateById(certificate);
-        return success();
-    }
-
-    /**
      * 删除记账凭证
      */
-//    @RequiresPermissions("system:certificate:remove")
-    //   @Log(title = "记账凭证", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
     public Result<Boolean> remove(@PathVariable List<Long> ids)
     {

@@ -48,12 +48,6 @@ public class Certificate implements Serializable {
     private Date date;
 
     /**
-     * 权重
-     */
-    @TableField(value = "weight")
-    private Integer weight;
-
-    /**
      * 创建时间
      */
     @TableField(value = "create_time")
