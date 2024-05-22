@@ -5,7 +5,12 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
+
+import com.github.yulichang.annotation.EntityMapping;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 
 /**
  * 记账凭证摘要
@@ -13,6 +18,9 @@ import lombok.Data;
  */
 @TableName(value ="certificate_abstract")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldNameConstants
 public class CertificateAbstract implements Serializable {
     /**
      * 主键
@@ -58,4 +66,11 @@ public class CertificateAbstract implements Serializable {
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+    @TableField(exist = false)
+    private Certificate certificate;
+
+    @TableField(exist = false)
+    @EntityMapping(thisField = Fields.accountId, joinField = Account.Fields.id)
+    private Account account;
 }

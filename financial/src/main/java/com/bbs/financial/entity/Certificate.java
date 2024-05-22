@@ -1,5 +1,7 @@
 package com.bbs.financial.entity;
 
+import com.alibaba.fastjson.annotation.JSONField;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -8,7 +10,14 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
+import com.bbs.api.auth.User;
+import com.bbs.enums.financial.CertificateWordEnum;
+import com.bbs.vo.Company;
+import com.github.yulichang.annotation.EntityMapping;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 
 /**
  * 记账凭证
@@ -16,6 +25,9 @@ import lombok.Data;
  */
 @TableName(value ="certificate")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldNameConstants
 public class Certificate implements Serializable {
     /**
      * 主键
@@ -33,7 +45,8 @@ public class Certificate implements Serializable {
      * 凭证字
      */
     @TableField(value = "certificate_word")
-    private String certificateWord;
+    @JSONField(serialzeFeatures = SerializerFeature.WriteEnumUsingToString)
+    private CertificateWordEnum certificateWord;
 
     /**
      * 编号（凭证号）
@@ -46,6 +59,12 @@ public class Certificate implements Serializable {
      */
     @TableField(value = "date")
     private Date date;
+
+    /**
+     * 信息审核人
+     */
+    @TableField(value = "auth_by")
+    private Long authBy;
 
     /**
      * 创建时间
@@ -74,10 +93,19 @@ public class Certificate implements Serializable {
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
+    @TableField(exist = false)
+    private User createUser;
 
     @TableField(exist = false)
+    private User authUser;
+
+    @TableField(exist = false)
+    @EntityMapping(thisField = Fields.id, joinField = CertificateAbstract.Fields.certificateId)
     private List<CertificateAbstract> abstracts;
 
     @TableField(exist = false)
     private List<CertificateFile> files;
+
+    @TableField(exist = false)
+    private Company company;
 }

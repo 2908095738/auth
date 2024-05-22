@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Component
@@ -49,6 +50,11 @@ public class UserAPIImpl implements UserAPI {
 
     @Override
     public List<User> getUserList(List<Long> ids) {
+        return converter.toAPIUser(userService.search(ids));
+    }
+
+    @Override
+    public List<User> getUserList(Set<Long> ids) {
         return converter.toAPIUser(userService.search(ids));
     }
 }

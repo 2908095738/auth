@@ -149,6 +149,17 @@ public class AccountController
         }
     }
 
+    @GetMapping("/account/join")
+    public Result<Account> one(@RequestParam Long id) {
+        return success(accountService.selectJoinOne(Account.class, new MPJLambdaWrapper<Account>()
+                .selectAll(Account.class)
+                .leftJoin(AccountRemark.class, AccountRemark::getAccountId, Account::getId, ext -> ext
+                        .selectAssociation(AccountRemark.class, Account::getRemark)
+                )
+                .eq(Account::getId, id)
+        ));
+    }
+
     @GetMapping("/account/list/join")
     public Result<Page<Account>> list(
             @RequestParam(required = false) String no,

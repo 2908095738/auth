@@ -11,5 +11,6 @@ public interface CertificateConverter {
 
     @Mapping(target = "abstracts", ignore = true)
     @Mapping(target = "files", ignore = true)
+    @Mapping(target = "certificateWord", ignore = true)
     Certificate toEntity(AddCertificate.Param param);
 }

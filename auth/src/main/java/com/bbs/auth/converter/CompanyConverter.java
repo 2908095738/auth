@@ -4,8 +4,12 @@ import com.bbs.auth.app.company.RegisterCompany;
 import com.bbs.auth.entity.Company;
 import org.mapstruct.Mapper;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface CompanyConverter {
 
     Company toEntity(RegisterCompany.Param param);
+
+    List<com.bbs.vo.Company> toVO(List<Company> entity);
 }

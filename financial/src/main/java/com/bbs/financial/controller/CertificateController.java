@@ -1,16 +1,24 @@
 package com.bbs.financial.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
+import com.bbs.api.auth.UserAPI;
+import com.bbs.api.auth.company.CompanyAPI;
+import com.bbs.financial.entity.Account;
 import com.bbs.financial.entity.Certificate;
+import com.bbs.financial.entity.CertificateAbstract;
+import com.bbs.financial.service.CertificateAbstractService;
 import com.bbs.financial.service.CertificateService;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.List;
+import java.util.*;
 
 import static com.bbs.Result.success;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 
 /**
  * 记账凭证Controller
@@ -18,47 +26,115 @@ import static com.bbs.Result.success;
  * @date 2024-05-13
  */
 @RestController
-@RequestMapping("/certificate")
+@RequestMapping
 public class CertificateController {
 
     @Resource
     private CertificateService certificateService;
 
+    @DubboReference
+    private CompanyAPI companyAPI;
+
+    @DubboReference
+    private UserAPI userAPI;
+
     /**
      * 查询记账凭证列表
      */
-    @GetMapping("/list")
-    public Result<Page<Certificate>> list(Certificate certificate, @RequestParam Integer current, @RequestParam Integer size)
-    {
-        return success(certificateService.page(new Page<>(current, size), new QueryWrapper<>(certificate)));
+    @GetMapping("/certificate/list")
+    public Result<Page<Certificate>> list(Certificate param, @RequestParam Integer current, @RequestParam Integer size) {
+        Page<Certificate> page = certificateService.page(new Page<>(current, size), new MPJLambdaWrapper<Certificate>()
+                .selectAll(Certificate.class)
+                .leftJoin(CertificateAbstract.class, CertificateAbstract::getCertificateId, Certificate::getId, ext -> ext
+                        .selectCollection(CertificateAbstract.class, Certificate::getAbstracts)
+                )
+        );
+        fillCompany(page);
+
+        return success(page);
     }
 
-    /**
-     * 获取记账凭证详细信息
-     */
-    @GetMapping(value = "/{id}")
-    public Result<Certificate> getInfo(@PathVariable("id") Long id)
-    {
-        return success(certificateService.getById(id));
-    }
+    private void fillCompany(Page<Certificate> page) {
+        List<Certificate> certificates = page.getRecords();
 
-    /**
-     * 新增记账凭证
-     */
-    @PostMapping
-    public Result<Boolean> add(@RequestBody Certificate certificate)
-    {
-        certificateService.save(certificate);
-        return success();
+        Map<Long, List<Certificate>> companyIdAndCertificateMap = new HashMap<>();  // 存储公司 ID, 凭证列表的 map（用于查询到公司信息后，快速填充到每个凭证中）
+        Set<Long> companyIds = new HashSet<>(); //存储公司 ID 的 set（用于查询公司信息）
+        for (Certificate certificate : certificates) {
+            Long companyId = certificate.getCompanyId();
+
+            // 将公司信息，以 Map.Entity<公司ID, List<凭证>> 的格式存储
+            List<Certificate> certificateList = companyIdAndCertificateMap.getOrDefault(companyId, new ArrayList<>());
+            certificateList.add(certificate);
+            companyIdAndCertificateMap.putIfAbsent(companyId, certificateList);
+
+            // 去重保存公司 ID
+            companyIds.add(companyId);
+        }
+
+        // 查询公司信息，并回填到每个凭证中
+        companyAPI.list(companyIds).forEach(company -> companyIdAndCertificateMap.get(company.getId()).forEach(certificate -> certificate.setCompany(company)));
     }
 
     /**
      * 删除记账凭证
      */
-    @DeleteMapping("/{ids}")
+    @DeleteMapping("/certificate/{ids}")
     public Result<Boolean> remove(@PathVariable List<Long> ids)
     {
         certificateService.getBaseMapper().deleteBatchIds(ids);
         return success();
+    }
+
+    @Resource
+    private CertificateAbstractService certificateAbstractService;
+
+    @GetMapping("/certificate/abstract")
+    public Result<Page<CertificateAbstract>> searchCertificateAbstract(@RequestParam Integer current, @RequestParam(defaultValue = "10") Integer size) {
+        Page<CertificateAbstract> page = certificateAbstractService.selectJoinListPage(new Page<>(current, size), CertificateAbstract.class, new MPJLambdaWrapper<CertificateAbstract>()
+                .selectAll(CertificateAbstract.class)
+                .leftJoin(Account.class, Account::getId, CertificateAbstract::getAccountId, ext -> ext
+                        .selectAssociation(Account.class, CertificateAbstract::getAccount)
+                )
+                .leftJoin(Certificate.class, Certificate::getId, CertificateAbstract::getCertificateId, ext -> ext
+                        .selectAssociation(Certificate.class, CertificateAbstract::getCertificate)
+                )
+        );
+        fillCreateUserAndAuthUser(page);
+        return success(page);
+    }
+
+    private void fillCreateUserAndAuthUser(Page<CertificateAbstract> page) {
+        if(page.getRecords().size() >= INTEGER_ONE) {
+            Map<Long, List<Certificate>> needFillAuthUserMap = new HashMap<>();
+            Map<Long, List<Certificate>> needFillCreateUserMap = new HashMap<>();
+            List<CertificateAbstract> records = page.getRecords();
+            Set<Long> uidList = new HashSet<>();
+            for (CertificateAbstract record : records) {
+                Certificate certificate = record.getCertificate();
+                Long authUserID = certificate.getAuthBy();
+                Long createByUserID = certificate.getCreateBy();
+
+                if (nonNull(authUserID)) {
+                    List<Certificate> authUserList = needFillAuthUserMap.getOrDefault(authUserID, new ArrayList<>());
+                    authUserList.add(certificate);
+                    needFillAuthUserMap.putIfAbsent(authUserID, authUserList);
+                    uidList.add(authUserID);
+                }
+
+                if (nonNull(createByUserID)) {
+                    List<Certificate> createUserList = needFillCreateUserMap.getOrDefault(createByUserID, new ArrayList<>());
+                    createUserList.add(certificate);
+                    needFillCreateUserMap.putIfAbsent(createByUserID, createUserList);
+                    uidList.add(createByUserID);
+                }
+            }
+            if(uidList.size() >= INTEGER_ONE) {
+                userAPI.getUserList(uidList).forEach(user -> {
+                    Long uid = user.getId();
+                    needFillAuthUserMap.get(uid).forEach(certificate -> certificate.setAuthUser(user));
+                    needFillCreateUserMap.get(uid).forEach(certificate -> certificate.setCreateUser(user));
+                });
+            }
+        }
     }
 }

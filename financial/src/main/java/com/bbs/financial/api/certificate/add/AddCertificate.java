@@ -1,11 +1,13 @@
 package com.bbs.financial.api.certificate.add;
 
 import com.bbs.Result;
+import com.bbs.enums.financial.CertificateWordEnum;
 import com.bbs.financial.converter.CertificateConverter;
 import com.bbs.financial.entity.Certificate;
 import com.bbs.financial.entity.CertificateAbstract;
 import com.bbs.financial.service.CertificateAbstractService;
 import com.bbs.financial.service.CertificateService;
+import com.bbs.financial.util.LoginUser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -103,6 +105,8 @@ public class AddCertificate {
     public Result<Boolean> add(@RequestBody Param param) {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         Certificate certificate = converter.toEntity(param);
+        certificate.setCertificateWord(CertificateWordEnum.RECORD);
+        certificate.setCreateBy(LoginUser.getId());
         try {
             db.save(certificate);
             certificateAbstractService.saveBatch(param.abstracts.stream().map(certificateAbstract -> {
@@ -111,6 +115,7 @@ public class AddCertificate {
                 entity.setAccountId(certificateAbstract.getAccountId());
                 entity.setBorrowMoney(Long.valueOf(certificateAbstract.getBorrowMoney().replace(",", "")));
                 entity.setLoansMoney(Long.valueOf(certificateAbstract.getLoansMoney().replace(",", "")));
+                entity.setCertificateAbstract(certificateAbstract.getCertificateAbstract());
                 return entity;
             }).collect(Collectors.toList()));
             transactionManager.commit(transaction);
