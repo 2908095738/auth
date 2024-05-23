@@ -6,7 +6,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.financial.entity.SalaryType;
 import com.bbs.financial.service.SalaryTypeService;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -37,9 +44,9 @@ public class SalaryTypeController {
      * 新增工资类型
      */
     @PostMapping("/type")
-    public Result<Boolean> add(@RequestBody SalaryType salaryType)
+    public Result<Boolean> add(@RequestBody String typeName)
     {
-        salaryTypeService.save(salaryType);
+        salaryTypeService.save(new SalaryType().setTypeName(typeName));
         return success();
     }
 

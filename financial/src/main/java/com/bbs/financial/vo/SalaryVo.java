@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.bbs.financial.entity.Certificate;
+import com.bbs.financial.entity.EmployeeItemExtend;
 import com.bbs.financial.entity.EmployeeSalary;
 import lombok.Data;
 
@@ -64,5 +65,7 @@ public class SalaryVo {
     @TableField(exist = false)
     private List<EmployeeSalary> employeeSalaries;
 
+    @TableField(exist = false)
+    private List<EmployeeItemExtend> employeeItemExtends;
 
 }

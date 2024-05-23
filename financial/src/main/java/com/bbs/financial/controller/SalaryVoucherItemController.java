@@ -66,7 +66,7 @@ public class SalaryVoucherItemController {
     {
         AuxiliaryCalculation salaryAccountingItemType = new AuxiliaryCalculation().setName(name);
         salaryAccountingItemTypeService.save(salaryAccountingItemType);
-        salaryVoucherItemService.save(new SalaryVoucherItem().setAccountingItemTypeId(salaryAccountingItemType.getId()).setCId(1L).setIsActive(true));
+        salaryVoucherItemService.save(new SalaryVoucherItem().setAccountingItemTypeId(salaryAccountingItemType.getId()).setCompanyId(1L).setIsActive(true));
         return success();
     }
 
@@ -80,7 +80,7 @@ public class SalaryVoucherItemController {
         salaryVoucherItemService.lambdaUpdate()
                 .set(SalaryVoucherItem::getIsActive,isActive)
                 .eq(SalaryVoucherItem::getAccountingItemTypeId,salaryVoucherItemId)
-                .eq(SalaryVoucherItem::getCId,1l)
+                .eq(SalaryVoucherItem::getCompanyId,1l)
                 .update();
         return success();
     }

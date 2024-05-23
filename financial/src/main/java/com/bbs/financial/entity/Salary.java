@@ -27,8 +27,8 @@ public class Salary implements Serializable {
     /**
      * 公司id
      */
-    @TableField(value = "c_id")
-    private Long cId;
+    @TableField(value = "company_id")
+    private Long companyId;
 
     /**
      * 导入日期

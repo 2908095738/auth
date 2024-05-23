@@ -13,4 +13,6 @@ import java.util.List;
 public interface SalaryVoucherItemService extends IService<SalaryVoucherItem> {
 
     Page<SalaryVoucherItemVo> selectjoinPage(Page salaryVoucherItemPage, Long cId, Integer type);
+
+    List<SalaryVoucherItemVo> selectjoinByIsActive(Long cId, Integer isActive);
 }

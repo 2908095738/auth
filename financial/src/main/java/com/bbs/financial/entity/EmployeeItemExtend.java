@@ -40,5 +40,8 @@ public class EmployeeItemExtend implements Serializable {
     private Long content;
 
     @TableField(exist = false)
+    private String name;
+
+    @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }
