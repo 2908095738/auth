@@ -8,6 +8,7 @@ import com.bbs.financial.entity.CertificateTemplateAbstract;
 import com.bbs.financial.entity.PriceType;
 import com.bbs.financial.service.CertificateTemplateService;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,6 +26,9 @@ public class SearchTemplateJoinList {
     @GetMapping("/certificate/template/join/list")
     public Result<Page<CertificateTemplate>> search(
             @RequestParam Long companyId,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String comment,
+            @RequestParam(required = false) String type,
             @RequestParam(defaultValue = "1") Integer current,
             @RequestParam(defaultValue = "10") Integer size
     ) {
@@ -39,6 +43,12 @@ public class SearchTemplateJoinList {
                         .leftJoin(PriceType.class, PriceType::getId, CertificateTemplateAbstract::getPriceTypeId)
                         .leftJoin(Account.class, Account::getId, CertificateTemplateAbstract::getAccountId)
                         .eq(CertificateTemplate::getCompanyId, companyId)
+                        .like(StringUtils.isNotBlank(type), CertificateTemplate::getType, type)
+                        .and(StringUtils.isNotBlank(name) || StringUtils.isNotBlank(comment), ext -> ext
+                                .like(StringUtils.isNotBlank(name), CertificateTemplate::getName, name)
+                                .or()
+                                .like(StringUtils.isNotBlank(comment), CertificateTemplate::getComment, comment)
+                        )
                 )
         );
     }
