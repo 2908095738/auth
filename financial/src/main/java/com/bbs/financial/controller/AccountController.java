@@ -9,7 +9,7 @@ import com.bbs.financial.entity.*;
 import com.bbs.financial.service.AccountCurrencyService;
 import com.bbs.financial.service.AccountService;
 import com.bbs.financial.service.AuxiliaryCalculationService;
-import com.bbs.financial.service.MoneyTypeService;
+import com.bbs.financial.service.PriceTypeService;
 import com.bbs.financial.util.LoginUser;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import com.google.common.base.Preconditions;
@@ -313,24 +313,24 @@ public class AccountController
     }
 
     @Resource
-    private MoneyTypeService moneyTypeService;
+    private PriceTypeService priceTypeService;
 
     @PutMapping("/money/type")
-    public Result<Boolean> addMoneyType(@RequestBody MoneyType moneyType)
+    public Result<Boolean> addMoneyType(@RequestBody PriceType priceType)
     {
-        if(moneyTypeService.lambdaQuery()
-                .eq(MoneyType::getCode, moneyType.getCode())
-                .eq(MoneyType::getCompanyId, moneyType.getCompanyId())
+        if(priceTypeService.lambdaQuery()
+                .eq(PriceType::getCode, priceType.getCode())
+                .eq(PriceType::getCompanyId, priceType.getCompanyId())
                 .exists()) {
             return failed(400, "创建失败，币种已存在");
         }
-        moneyType.setCreateBy(LoginUser.getId());
-        return success(moneyTypeService.save(moneyType));
+        priceType.setCreateBy(LoginUser.getId());
+        return success(priceTypeService.save(priceType));
     }
 
     @GetMapping("/money/type/list")
-    public Result<List<MoneyType>> searchMoneyTypeList(@RequestParam Long companyId) {
-        return success(moneyTypeService.lambdaQuery().eq(MoneyType::getCompanyId, companyId).list());
+    public Result<List<PriceType>> searchMoneyTypeList(@RequestParam Long companyId) {
+        return success(priceTypeService.lambdaQuery().eq(PriceType::getCompanyId, companyId).list());
     }
 
     @Resource

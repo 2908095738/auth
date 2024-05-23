@@ -58,8 +58,8 @@ public class CertificateTemplateAbstract implements Serializable {
     /**
      * 币别ID
      */
-    @TableField(value = "money_type_id")
-    private Long moneyTypeId;
+    @TableField(value = "price_type_id")
+    private Long priceTypeId;
 
     /**
      * 借方金额
@@ -83,5 +83,8 @@ public class CertificateTemplateAbstract implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @TableField(exist = false)
-    private MoneyType moneyType;
+    private PriceType priceType;
+
+    @TableField(exist = false)
+    private Account account;
 }

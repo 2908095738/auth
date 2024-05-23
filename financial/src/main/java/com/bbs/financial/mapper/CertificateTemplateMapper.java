@@ -1,7 +1,7 @@
 package com.bbs.financial.mapper;
 
 import com.bbs.financial.entity.CertificateTemplate;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 
 /**
 * @author 路晨霖
@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2024-05-23 03:05:38
 * @Entity com.bbs.financial.entity.CertificateTemplate
 */
-public interface CertificateTemplateMapper extends BaseMapper<CertificateTemplate> {
+public interface CertificateTemplateMapper extends MPJBaseMapper<CertificateTemplate> {
 
 }
 

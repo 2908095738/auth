@@ -10,11 +10,11 @@ import lombok.Data;
 
 /**
  * 币别
- * @TableName money_type
+ * @TableName price_type
  */
-@TableName(value ="money_type")
+@TableName(value ="price_type")
 @Data
-public class MoneyType implements Serializable {
+public class PriceType implements Serializable {
     /**
      * 
      */
