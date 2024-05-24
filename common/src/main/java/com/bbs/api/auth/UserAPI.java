@@ -14,4 +14,6 @@ public interface UserAPI {
     List<User> getUserList(List<Long> ids);
 
     List<User> getUserList(Set<Long> ids);
+
+    List<User> searchByUserOrSave(Long companyId, List<User> userList);
 }

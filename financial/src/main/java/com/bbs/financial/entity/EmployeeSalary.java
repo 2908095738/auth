@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -34,6 +35,47 @@ public class EmployeeSalary implements Serializable {
     @TableField(value = "employee_id")
     private Long employeeId;
 
+    /**
+     * 工资日期
+     */
+    @TableField(value = "period_date")
+    private Date periodDate;
+
+    /**
+     * 计薪日
+     */
+    @TableField(value = "pay_day")
+    private Integer payDay;
+
+    /**
+     * 出勤天数
+     */
+    @TableField(value = "attendance_day")
+    private Integer attendanceDay;
+
+    /**
+     * 基本工资
+     */
+    @TableField(value = "base_amount")
+    private Long baseAmount;
+
+    /**
+     * 应发工资
+     */
+    @TableField(value = "gross_amount")
+    private Long grossAmount;
+
+    /**
+     * 出勤工资
+     */
+    @TableField(value = "attendance_amount")
+    private Long attendanceAmount;
+
+    /**
+     * 员工实际收到的工资金额
+     */
+    @TableField(value = "net_amount")
+    private Long netAmount;
 
     /**
      * 用户名称
@@ -45,7 +87,7 @@ public class EmployeeSalary implements Serializable {
      * 手机号
      */
     @TableField(value = "phone")
-    private Long phone;
+    private String phone;
 
     /**
      * 身份证号
@@ -59,23 +101,16 @@ public class EmployeeSalary implements Serializable {
     @TableField(value = "job_card")
     private String jobCard;
 
-
     /**
-     * 应发工资
+     * 部门名称
      */
-    @TableField(value = "gross_amount")
-    private Long grossAmount;
-
-
-    /**
-     * 员工实际收到的工资金额
-     */
-    @TableField(value = "net_amount")
-    private Long netAmount;
+    @TableField(value = "company_structure_name")
+    private String companyStructureName;
 
     @TableField(exist = false)
     private List<EmployeeItemExtend> employeeItemExtends;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
 }

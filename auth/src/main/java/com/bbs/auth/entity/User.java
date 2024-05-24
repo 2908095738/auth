@@ -4,16 +4,16 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
-import java.util.Date;
-import java.util.List;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+import java.util.Date;
+import java.util.List;
+
 /**
- * 用户
+ * 用户表
  * @TableName user
  */
 @TableName(value ="user")
@@ -40,6 +40,12 @@ public class User implements Serializable {
     private String name;
 
     /**
+     * 性别
+     */
+    @TableField(value = "sex")
+    private Integer sex;
+
+    /**
      * 个性签名
      */
     @TableField(value = "sign")
@@ -50,6 +56,12 @@ public class User implements Serializable {
      */
     @TableField(value = "password")
     private String password;
+
+    /**
+     * 身份证号
+     */
+    @TableField(value = "id_card")
+    private String idCard;
 
     /**
      * 手机号
@@ -64,7 +76,14 @@ public class User implements Serializable {
     private Integer salt;
 
     /**
-     * 账号状态
+     * 工号
+     */
+    @TableField(exist = false)
+    private String jobCard;
+
+
+    /**
+     * 账号状态： 0：冻结1：正常 -1：封禁 2：离职
      */
     @TableField(value = "state")
     private Integer state;

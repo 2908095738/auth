@@ -10,8 +10,11 @@ public enum SalayExeclHeaderEnum {
 
     ID(0, "工号"),
     NAME(1, "姓名"),
-    DEPARTMENT(2, "部门"),
+    PHONE(4, "手机号"),
     ID_NUMBER(3, "身份证号"),
+
+    DEPARTMENT(2, "部门"),
+
     TOTAL_INCOME(13, "应发工资"),
     NET_SALARY(32, "实发工资"),
 

@@ -6,6 +6,7 @@ import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.service.TokenService;
 import com.bbs.auth.service.UserService;
 import com.bbs.entity.UserVO;
+import com.bbs.util.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.stereotype.Component;
@@ -56,5 +57,11 @@ public class UserAPIImpl implements UserAPI {
     @Override
     public List<User> getUserList(Set<Long> ids) {
         return converter.toAPIUser(userService.search(ids));
+    }
+
+    @Override
+    public List<User>  searchByUserOrSave(Long companyId, List<User> userList) {
+        List<com.bbs.auth.entity.User> users = userService.searchByUserOrSave(companyId, userList);
+        return BeanUtils.toBean(users, User.class);
     }
 }

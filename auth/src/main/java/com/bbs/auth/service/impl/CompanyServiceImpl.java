@@ -1,5 +1,6 @@
 package com.bbs.auth.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.TypeReference;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -87,10 +88,10 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
     }
 
     @Override
-    public List<CompanyStructure> searchStructure(Long companyID, String name) {
+    public List<CompanyStructure> searchStructure(Long companyID, List<String> name) {
         return companyStructureService.lambdaQuery()
-                .eq(CompanyStructure::getCompanyId, companyID)
-                .like(StringUtils.isNotBlank(name), CompanyStructure::getName, name)
+                .eq(Objects.nonNull(companyID),CompanyStructure::getCompanyId, companyID)
+                .in(CollUtil.isNotEmpty(name), CompanyStructure::getName, name)
                 .list();
     }
 

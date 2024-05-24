@@ -21,7 +21,7 @@ public class User implements Serializable {
 
     private String email;
 
-    private String phone;
+    private Long phone;
 
     private String token;
 
@@ -31,4 +31,35 @@ public class User implements Serializable {
      * 是否关注了当前登录用户
      */
     private Boolean isFollow;
+
+
+    /**
+     * 身份证号
+     */
+    private String idCard;
+
+    /**
+     * 工号
+     */
+    private String jobCard;
+
+    /**
+     * 公司 ID
+     */
+    private Long companyId;
+
+    /**
+     * 部门名称（公司结构名称）
+     */
+    private String structureName;
+
+    public User(String jobId, String name, Long phone, String idCard, String groupName) {
+        this.jobCard = jobId;
+        this.name = name;
+        this.phone = phone;
+        this.idCard = idCard;
+        this.structureName = groupName;
+    }
+
+
 }

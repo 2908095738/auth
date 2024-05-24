@@ -97,4 +97,6 @@ public interface UserService extends MPJBaseService<User> {
     List<User> search(Set<Long> ids);
 
     Boolean isLogin();
+
+    List<User> searchByUserOrSave(Long companyId, List<com.bbs.api.auth.User> userList);
 }

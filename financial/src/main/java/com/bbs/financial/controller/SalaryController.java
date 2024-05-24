@@ -6,6 +6,9 @@ import cn.hutool.poi.excel.ExcelUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
+import com.bbs.api.auth.User;
+import com.bbs.api.auth.UserAPI;
+import com.bbs.api.auth.company.CompanyAPI;
 import com.bbs.financial.entity.EmployeeItemExtend;
 import com.bbs.financial.entity.EmployeeSalary;
 import com.bbs.financial.entity.Salary;
@@ -17,9 +20,12 @@ import com.bbs.financial.service.SalaryVoucherItemService;
 import com.bbs.financial.vo.SalaryVo;
 import com.bbs.financial.vo.SalaryVoucherItemVo;
 import com.bbs.vo.BaseParam;
+import com.bbs.vo.CompanyStructure;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.StringUtils;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,9 +39,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.bbs.Result.success;
@@ -48,6 +56,12 @@ import static com.bbs.Result.success;
 @RestController
 @Slf4j
 public class SalaryController {
+
+    @DubboReference
+    private CompanyAPI companyAPI;
+
+    @DubboReference
+    private UserAPI userAPI;
 
     @Resource
     private SalaryService salaryService;
@@ -77,7 +91,7 @@ public class SalaryController {
         /**
          * 公司id
          */
-        private Long companyId = 1L;
+        private Long companyId;
 
     }
 
@@ -100,33 +114,79 @@ public class SalaryController {
     }
 
 
-
     /**
      * 导入工资表
      */
     @Transactional
     @PostMapping("/salary/import")
-    public Result<Boolean> add(@RequestParam("importDate") String importDate,@RequestParam("typeId") Long typeId,@RequestParam("file") MultipartFile file)
-    {
+    public Result<Boolean> add(@RequestParam("companyId") Long companyId,@RequestParam("importDate") String importDate,@RequestParam("typeId") Long typeId,@RequestParam("file") MultipartFile file){
         Long netAmountCount = 0L;
         List<EmployeeSalary> employeeSalaryArrayList = new ArrayList<>();
         List<EmployeeItemExtend> employeeItemExtends = new ArrayList<>();
+
+
         try {
             ExcelReader reader = ExcelUtil.getReader(file.getInputStream());
             reader.setIgnoreEmptyRow(true);
             List<Map<String,Object>> list = reader.read(2,3, Integer.MAX_VALUE);
-            netAmountCount = initEmployeeSalary(list,employeeSalaryArrayList,netAmountCount,employeeItemExtends);
-            log.info("{}",list);
-            Salary salary = new Salary().setCompanyId(1L).setImportDate(importDate).setTypeId(typeId).setNetAmount(netAmountCount).setStaffCount(list.size());
-            salaryService.save(salary);
-            employeeSalaryArrayList.forEach(employeeSalary -> employeeSalary.setSalaryId(salary.getId()));
-            employeeSalaryService.saveBatch(employeeSalaryArrayList);
-            employeeItemExtendService.saveBatch(employeeItemExtends);
+            if(CollectionUtils.isNotEmpty(list)){
+                Map<Integer, List<SalaryVoucherItemVo>> groupByType = salaryVoucherItemService.selectjoinByIsActive(1L, 1).stream().collect(Collectors.groupingBy(SalaryVoucherItemVo::getType));
+                List<SalaryVoucherItemVo> salaryVoucherItemVoByEmployee = groupByType.get(1);
+                List<SalaryVoucherItemVo> salaryVoucherItemVoBySalary = groupByType.get(0);
+                List<User> userQuery = new ArrayList<>();//待查询用户信息列表
+                Set<String> groupNameList = new HashSet<>();//待查询部门名称列表
+                //循环计算总金额，判断，将员工信息放入待查询用户信息列表中，将部门名称放入待查询部门名称列表中
+                netAmountCount = initEmployeeSalary(list,netAmountCount,salaryVoucherItemVoByEmployee,userQuery,groupNameList);
+                //根据部门名称查询部门信息
+                List<CompanyStructure> companyStructureList = companyAPI.searchStructureNames(companyId,groupNameList);
+                //查不到部门信息提示手动添加
+                if(CollectionUtils.isEmpty(companyStructureList)){
+                    return Result.failed("部门信息未查询到，请手动添加");
+                }
+                //根据工号、名称、身份证号、手机号查询员工信息
+                List<User> users = userAPI.searchByUserOrSave(companyId,userQuery);
+                if(CollectionUtils.isEmpty(users)){
+                    return Result.failed("员工信息自动添加失败或未查询到，请手动处理");
+                }
+                Salary salary = new Salary().setCompanyId(companyId).setImportDate(importDate).setTypeId(typeId).setNetAmount(netAmountCount).setStaffCount(list.size());
+                salaryService.save(salary);
+
+                initEmployeeSalary(salary.getId(),list,employeeSalaryArrayList,salaryVoucherItemVoBySalary,employeeItemExtends,users);
+                log.info("{}",list);
+                employeeSalaryService.saveBatch(employeeSalaryArrayList);
+                employeeItemExtendService.saveBatch(employeeItemExtends);
+            }
         }   catch (Exception e) {
             log.error("导入失败",e);
-            return Result.failed("导入失败");
+            return Result.failed(e.getMessage());
         }
         return success();
+    }
+
+
+
+    private Long initEmployeeSalary(List<Map<String, Object>> list, Long netAmountCount, List<SalaryVoucherItemVo> salaryVoucherItemVoByEmployee,List<User> userQuery,Set<String> groupNameList) {
+        for (int i = 0; i < list.size(); i++) {
+            Map<String, Object> employeeSalaryMap = list.get(i);
+            //如果员工的必填数据为空，则报错
+            for (SalaryVoucherItemVo salaryVoucherItemVo : salaryVoucherItemVoByEmployee) {
+                if (Objects.isNull(employeeSalaryMap.get(salaryVoucherItemVo.getTypeName()))){
+                    throw new RuntimeException("没有员工唯一标识数据");
+                }
+            }
+            String jobId = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.ID.getValue())) ? employeeSalaryMap.get(SalayExeclHeaderEnum.ID.getValue()).toString() : null;//工号
+            String name = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.NAME.getValue())) ? employeeSalaryMap.get(SalayExeclHeaderEnum.NAME.getValue()).toString() : null;//名称
+            String idCard = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.ID_NUMBER.getValue()))?employeeSalaryMap.get(SalayExeclHeaderEnum.ID_NUMBER.getValue()).toString():null;//身份证号
+            Long phone = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.PHONE.getValue()))&&StrUtil.isNotBlank(employeeSalaryMap.get(SalayExeclHeaderEnum.PHONE.getValue()).toString())? Long.valueOf(employeeSalaryMap.get(SalayExeclHeaderEnum.PHONE.getValue()).toString()) :null;//手机号
+            String groupName = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.DEPARTMENT.getValue())) ? employeeSalaryMap.get(SalayExeclHeaderEnum.DEPARTMENT.getValue()).toString() : null;//部门
+
+            userQuery.add(new User(jobId,name,phone,idCard,groupName));
+            groupNameList.add(groupName);
+
+            Double netAmount = StringUtils.isNotEmpty(employeeSalaryMap.get(SalayExeclHeaderEnum.NET_SALARY.getValue()).toString())?Double.parseDouble(employeeSalaryMap.get(SalayExeclHeaderEnum.NET_SALARY.getValue()).toString())*100:0;//实发
+            netAmountCount=netAmountCount+netAmount.longValue();
+        }
+        return netAmountCount;
     }
 
     /**
@@ -134,51 +194,53 @@ public class SalaryController {
      *
      * @param list
      * @param employeeSalaryArrayList
-     * @param netAmountCount
      * @param employeeItemExtends
      */
-    private Long initEmployeeSalary(List<Map<String, Object>> list, List<EmployeeSalary> employeeSalaryArrayList, Long netAmountCount, List<EmployeeItemExtend> employeeItemExtends) {
-        Map<Integer, List<SalaryVoucherItemVo>> groupByType = salaryVoucherItemService.selectjoinByIsActive(1L, 1).stream().collect(Collectors.groupingBy(SalaryVoucherItemVo::getType));
-        List<SalaryVoucherItemVo> salaryVoucherItemVoByEmployee = groupByType.get(1);
-        List<SalaryVoucherItemVo> salaryVoucherItemVoBySalary = groupByType.get(0);
+    private void initEmployeeSalary(Long salaryId,
+                                    List<Map<String, Object>> list,
+                                    List<EmployeeSalary> employeeSalaryArrayList,
+                                    List<SalaryVoucherItemVo> salaryVoucherItemVoBySalary,
+                                    List<EmployeeItemExtend> employeeItemExtends,
+                                    List<User> users) {
+
+
+        Map<String, Long> userMap = users.stream().collect(Collectors.toMap(o1 -> o1.getName() + o1.getPhone() + o1.getIdCard() + o1.getJobCard(), User::getId));
 
         for (int i = 0; i < list.size(); i++) {
-
             Map<String, Object> employeeSalaryMap = list.get(i);
-            //如果员工的数据为空，则报错
-            for (SalaryVoucherItemVo salaryVoucherItemVo : salaryVoucherItemVoByEmployee) {
-                if (Objects.isNull(employeeSalaryMap.get(salaryVoucherItemVo.getTypeName()))){
-                    throw new RuntimeException();
-                }
-            }
-            String jobId = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.ID.getValue())) ? employeeSalaryMap.get(SalayExeclHeaderEnum.ID.getValue()).toString() : null;//工号
-            String name = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.NAME.getValue())) ? employeeSalaryMap.get(SalayExeclHeaderEnum.NAME.getValue()).toString() : null;//名称
-            String groupName = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.DEPARTMENT.getValue())) ? employeeSalaryMap.get(SalayExeclHeaderEnum.NAME.getValue()).toString() : null;//部门
-            String idCard = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.ID_NUMBER.getValue()))?employeeSalaryMap.get(SalayExeclHeaderEnum.ID_NUMBER.getValue()).toString():null;//身份证号
-
 
             Double grossAmount = StringUtils.isNotEmpty(employeeSalaryMap.get(SalayExeclHeaderEnum.TOTAL_INCOME.getValue()).toString()) ?Double.parseDouble(employeeSalaryMap.get(SalayExeclHeaderEnum.TOTAL_INCOME.getValue()).toString())*100:0;//应发
             Double netAmount = StringUtils.isNotEmpty(employeeSalaryMap.get(SalayExeclHeaderEnum.NET_SALARY.getValue()).toString())?Double.parseDouble(employeeSalaryMap.get(SalayExeclHeaderEnum.NET_SALARY.getValue()).toString())*100:0;//实发
 
+
             EmployeeSalary employeeSalary = new EmployeeSalary();
-            employeeSalary.setSalaryId(1L);
-            employeeSalary.setEmployeeId(i+1L);
+            employeeSalary.setSalaryId(salaryId);
+
+            String jobId = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.ID.getValue())) ? employeeSalaryMap.get(SalayExeclHeaderEnum.ID.getValue()).toString() : null;//工号
+            String name = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.NAME.getValue())) ? employeeSalaryMap.get(SalayExeclHeaderEnum.NAME.getValue()).toString() : null;//名称
+            String idCard = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.ID_NUMBER.getValue()))?employeeSalaryMap.get(SalayExeclHeaderEnum.ID_NUMBER.getValue()).toString():null;//身份证号
+            String phone = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.PHONE.getValue()))?employeeSalaryMap.get(SalayExeclHeaderEnum.PHONE.getValue()).toString():null;//手机号
+
+            employeeSalary.setEmployeeId(userMap.get(name + phone + idCard + jobId));
             employeeSalary.setEmployeeName(name);
             employeeSalary.setIdCard(idCard);
             employeeSalary.setJobCard(jobId);
+            employeeSalary.setPhone(phone);
+
+            String groupName = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.DEPARTMENT.getValue())) ? employeeSalaryMap.get(SalayExeclHeaderEnum.NAME.getValue()).toString() : null;//部门
+            employeeSalary.setCompanyStructureName(groupName);
 
             employeeSalary.setGrossAmount(grossAmount.longValue());
             employeeSalary.setNetAmount(netAmount.longValue());
             employeeSalaryArrayList.add(employeeSalary);
 
             for (SalaryVoucherItemVo salaryVoucherItemVo:salaryVoucherItemVoBySalary){
-                Double fieldContent =  employeeSalaryMap.get(salaryVoucherItemVo.getTypeName())!=null&& StrUtil.isNotEmpty(employeeSalaryMap.get(salaryVoucherItemVo.getTypeName()).toString()) ?Double.parseDouble(employeeSalaryMap.get(salaryVoucherItemVo.getTypeName()).toString()):0;
-                employeeItemExtends.add(new EmployeeItemExtend().setSalaryId(1L).setEmployeeId(i+1L).setContent(fieldContent.longValue()).setItemTypeId(salaryVoucherItemVo.getTypeId()));
+                Double fieldContent =  employeeSalaryMap.get(salaryVoucherItemVo.getTypeName())!=null
+                        && StrUtil.isNotEmpty(employeeSalaryMap.get(salaryVoucherItemVo.getTypeName()).toString())
+                        ?Double.parseDouble(employeeSalaryMap.get(salaryVoucherItemVo.getTypeName()).toString())*100:0;
+                employeeItemExtends.add(new EmployeeItemExtend().setSalaryId(salaryId).setEmployeeId(userMap.get(name + phone + idCard + jobId)).setContent(fieldContent.longValue()).setItemTypeId(salaryVoucherItemVo.getTypeId()));
             }
-
-            netAmountCount=netAmountCount+netAmount.longValue();
         }
-        return netAmountCount;
     }
 
 

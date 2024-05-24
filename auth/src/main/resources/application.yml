@@ -85,10 +85,15 @@ dubbo:
     qos-enable: false
   protocol:
     name: dubbo
-    transporter: "20882"
+    port: 20883
+    host: 192.168.0.8
+  #    transporter: "20883"
   #    host: 192.168.0.100 # 设置在 dubbo 上暴露的 ip
   registry:
     address: zookeeper://${apache.zookeeper.connect-url}
+    timeout: 50000
+    parameters:
+      blockUntilConnectedWait: 50
   config-center:
     address: zookeeper://${apache.zookeeper.connect-url}
   metadata-report:

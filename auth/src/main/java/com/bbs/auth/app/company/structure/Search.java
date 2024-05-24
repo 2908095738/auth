@@ -3,6 +3,7 @@ package com.bbs.auth.app.company.structure;
 import com.bbs.Result;
 import com.bbs.auth.entity.CompanyStructure;
 import com.bbs.auth.service.CompanyService;
+import com.google.common.collect.Lists;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,6 +26,6 @@ public class Search {
             @RequestParam("id") Long id,
             @RequestParam(name = "name", required = false) String name
     ) {
-        return Result.success(companyService.searchStructure(id, name));
+        return Result.success(companyService.searchStructure(id, Lists.newArrayList(name)));
     }
 }

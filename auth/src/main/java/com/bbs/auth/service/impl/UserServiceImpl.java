@@ -4,15 +4,19 @@ import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Opt;
 import cn.hutool.crypto.SecureUtil;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.bbs.Result;
 import com.bbs.auth.cache.user.PhoneCache;
 import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.dao.UserDao;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.bbs.Result;
+import com.bbs.auth.entity.CompanyStructure;
 import com.bbs.auth.entity.User;
+import com.bbs.auth.entity.UserCompany;
 import com.bbs.auth.entity.param.UserParam;
 import com.bbs.auth.mapper.UserMapper;
+import com.bbs.auth.service.CompanyStructureService;
 import com.bbs.auth.service.TokenService;
+import com.bbs.auth.service.UserCompanyService;
 import com.bbs.auth.service.UserService;
 import com.bbs.entity.UserVO;
 import com.bbs.enums.UserStateEnum;
@@ -25,10 +29,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 import static com.bbs.Result.success;
 import static com.bbs.auth.cache.user.UserCache.cacheIsExists;
@@ -54,6 +63,15 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
     @Lazy
     @Resource
     private UserCache cache;
+
+    @Lazy
+    @Resource
+    private UserCompanyService userCompanyService;
+
+    @Lazy
+    @Resource
+    private CompanyStructureService structureService;
+
 
     @Override
     public Boolean userStateIsNormal(User user) { return UserStateEnum.STATUS_NORMAL.getCode().equals(user.getState()); }
@@ -192,6 +210,39 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
         } catch (ReLoginException e) {
             return false;
         }
+    }
+
+    @Transactional
+    @Override
+    public List<User> searchByUserOrSave(Long companyId, List<com.bbs.api.auth.User> userList) {
+        List<User> result = new ArrayList<>();
+        //userList循环
+        for (com.bbs.api.auth.User user : userList) {
+             //循环根据用户名，身份证号，手机号，工号查询用户
+            User user1 = selectJoinOne(User.class,new MPJLambdaWrapper<User>()
+                    .selectAll(User.class)
+                    .selectAssociation(UserCompany.class,User::getJobCard,o->o.result(UserCompany::getJobCard))
+                    .leftJoin(UserCompany.class,UserCompany::getUserId, User::getId)
+                    .eq(StringUtils.isNotBlank(user.getIdCard()),User::getIdCard, user.getIdCard())
+                    .eq(StringUtils.isNotBlank(user.getJobCard()),UserCompany::getJobCard, user.getJobCard())
+                    .eq(StringUtils.isNotBlank(user.getName()),User::getName, user.getName())
+                    .eq(Objects.nonNull(user.getPhone()),User::getPhone, user.getPhone())
+                    .eq(UserCompany::getCompanyId,companyId)
+            );
+            //查不到就添加一条
+            if(isNull(user1)) {
+                user1 = new User();
+                user1.setName(user.getName());
+                user1.setPhone(user.getPhone());
+                user1.setIdCard(user.getIdCard());
+                user1.setJobCard(user.getJobCard());
+                save(user1);
+                CompanyStructure structure = structureService.search(companyId,user.getStructureName());
+                userCompanyService.save(new UserCompany(user1.getId(),companyId,user.getJobCard(),structure.getId()));
+            }
+            result.add(user1);
+        }
+        return result;
     }
 
     @Override

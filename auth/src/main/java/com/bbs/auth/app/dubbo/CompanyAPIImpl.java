@@ -4,12 +4,15 @@ import com.bbs.api.auth.company.CompanyAPI;
 import com.bbs.auth.converter.CompanyConverter;
 import com.bbs.auth.service.CompanyService;
 import com.bbs.vo.Company;
+import com.bbs.vo.CompanyStructure;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -27,4 +30,13 @@ public class CompanyAPIImpl implements CompanyAPI {
     public List<Company> list(Collection<Long> ids) {
         return converter.toVO(companyService.listByIds(ids));
     }
+
+    @Override
+    public List<CompanyStructure> searchStructureNames(Long companyId, Collection<String> name) {
+        if (name != null && !name.isEmpty()) {
+            return converter.toCSVO(companyService.searchStructure(companyId, new ArrayList<>(name)));
+        }
+        return Collections.emptyList();
+    }
+
 }
