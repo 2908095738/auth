@@ -28,6 +28,10 @@ import java.util.Map;
 @Component
 public class DFS {
 
+    public static final String clean_api = "/batch";
+
+    public static final String clean_temporary_api = "/clean/temporary";
+
     @Slf4j
     @Component
     public static class Clean {
@@ -35,14 +39,12 @@ public class DFS {
         @Value("${dfs.host}")
         private String host;
 
-        private static final String temporary_api = "/clean/temporary";
 
-
-        public void batchClean(List<String> resourceIds) {
+        public void batchClean(String api, List<String> resourceIds) {
             Map<String, Object> param = new HashMap<>();
             param.put("resourceIds", resourceIds);
-            String resultStr = HttpRequest.delete(host + temporary_api)
-                    .body(JSONUtil.toJsonPrettyStr(param))
+            String resultStr = HttpRequest.delete(host + api)
+                    .form(param)
                     .execute().body();
             if(StringUtils.isNotBlank(resultStr)) {
                 Result<Upload.VO> result = JSONUtil.toBean(resultStr, new TypeReference<Result<Upload.VO>>() {
@@ -72,6 +74,8 @@ public class DFS {
 
         private static final String FILE_TYPE = "fileType";
 
+        private static final String CONTENT_TYPE = "contentType";
+
         private static final String FILE = "file";
 
 
@@ -80,8 +84,18 @@ public class DFS {
             return uploadFile(host + api, map);
         }
 
+        public VO uploadFile(BusinessCode businessCode, ResourceType resourceType, String contentType, MultipartFile file) {
+            Map<String,Object> map = createParam(businessCode, resourceType, contentType, file);
+            return uploadFile(host + api, map);
+        }
+
         public VO uploadTemporaryFile(BusinessCode businessCode, ResourceType resourceType, FileType fileType, MultipartFile file) {
             Map<String,Object> map = createParam(businessCode, resourceType, fileType, file);
+            return uploadFile(host + temporary_api, map);
+        }
+
+        public VO uploadTemporaryFile(BusinessCode businessCode, ResourceType resourceType, String contentType, MultipartFile file) {
+            Map<String,Object> map = createParam(businessCode, resourceType, contentType, file);
             return uploadFile(host + temporary_api, map);
         }
 
@@ -90,6 +104,15 @@ public class DFS {
             map.put(BUSINESS_CODE, businessCode.getCode());
             map.put(RESOURCE_TYPE, resourceType.getCode());
             map.put(FILE_TYPE, fileType.getCode());
+            map.put(FILE, toInputStream(file));
+            return map;
+        }
+
+        private Map<String,Object> createParam(BusinessCode businessCode, ResourceType resourceType, String contentType, MultipartFile file) {
+            Map<String,Object> map = Maps.newHashMap();
+            map.put(BUSINESS_CODE, businessCode.getCode());
+            map.put(RESOURCE_TYPE, resourceType.getCode());
+            map.put(CONTENT_TYPE, contentType);
             map.put(FILE, toInputStream(file));
             return map;
         }

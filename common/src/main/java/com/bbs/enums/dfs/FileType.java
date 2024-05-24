@@ -14,7 +14,7 @@ import static cn.hutool.http.ContentType.*;
 @AllArgsConstructor
 public enum FileType {
 
-    NO_FILE(10, "非文件", OCTET_STREAM.getValue()),
+    FILE(10, "未知", OCTET_STREAM.getValue()),
 
     IMAGE(11, "图片", MimeTypeUtils.IMAGE_JPEG_VALUE),
 

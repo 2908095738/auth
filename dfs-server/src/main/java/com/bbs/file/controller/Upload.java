@@ -14,6 +14,8 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import java.util.List;
 
+import static java.util.Objects.nonNull;
+
 @Slf4j
 @RestController
 @RequestMapping
@@ -26,12 +28,19 @@ public class Upload {
     public Result<DFS.Upload.VO> upload(
             @RequestParam String businessCode,
             @RequestParam Integer resourceType,
-            @RequestParam Integer fileType,
+            @RequestParam(required = false) Integer fileType,
+            @RequestParam(required = false) String contentType,
             @RequestParam("file") MultipartFile file
     ) {
         try {
-            String resourceID = fileOpt.resourceID(businessCode, resourceType, fileType);
-            String url = fileOpt.upload(resourceID, file, FileType.map.get(fileType).getContentType());
+            String resourceID = fileOpt.resourceID(businessCode, resourceType, nonNull(fileType) ? fileType : FileType.FILE.getCode());
+            String url = fileOpt.upload(
+                    resourceID,
+                    file,
+                    (nonNull(fileType) ? FileType.map.get(resourceType).getContentType() : (
+                            nonNull(contentType) ? contentType : file.getContentType()
+                    ))
+            );
             return Result.success(new DFS.Upload.VO(url, resourceID));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -45,19 +54,11 @@ public class Upload {
     @AllArgsConstructor
     public static class Param {
 
-        private String businessCode;
-
-        private Integer resourceType;
-
-        private Integer fileType;
-
-        private MultipartFile file;
-
-        private String contentType;
+        private List<String> resourceIds;
     }
 
     @DeleteMapping("/batch")
-    public Result<Boolean> deleteList(@RequestParam("resourceIds") List<String> resourceIds){
-        return Result.success(fileOpt.removeList(resourceIds));
+    public Result<Boolean> deleteList(Param param){
+        return Result.of(fileOpt.removeList(param.resourceIds));
     }
 }

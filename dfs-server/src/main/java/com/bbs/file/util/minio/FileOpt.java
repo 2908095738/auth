@@ -10,9 +10,7 @@ import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
-import io.minio.RemoveObjectsArgs;
 import io.minio.Result;
-import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -100,8 +98,6 @@ public class FileOpt {
 
     /**
      * 文件上传
-     * @param files
-     * @return
      */
     public List<String> upload(List<MultipartFile> files) {
         List<String> urls = new ArrayList<>(files.size());
@@ -186,18 +182,14 @@ public class FileOpt {
     /**
      * 批量删除
      */
-    public boolean removeList(List<String> resourceID){
-        List<DeleteObject> list = new ArrayList<>();
-        for (String s : resourceID) {
-            list.add(new DeleteObject(s));
-        }
-        RemoveObjectsArgs build = RemoveObjectsArgs.builder().objects(list).bucket(prop.getBucketName()).build();
+    public boolean removeList(List<String> resourceIds){
         try {
-            minioClient.removeObjects(build);
+            for (String resourceId : resourceIds) {
+                minioClient.removeObject(RemoveObjectArgs.builder().bucket(prop.getBucketName()).object(resourceId).build());
+            }
         }catch (Exception e){
             return false;
         }
         return true;
     }
-
 }

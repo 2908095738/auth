@@ -9,13 +9,15 @@ spring:
     admin:
       client:
         url: http://192.168.0.100:7008
-        instance:
-          prefer-ip: true
   datasource:
     url: jdbc:mysql://47.105.39.255:13306/ml_financial?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-file-size: 1024MB        # 设置单个文件最大大小
+      max-request-size: 1024MB
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.log4j2.Log4j2Impl

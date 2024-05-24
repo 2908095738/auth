@@ -46,7 +46,7 @@ public class EverydayCleanTmpDFS {
             if(StringUtils.isNotBlank(cleanFlag) && yesterday.equals(cleanFlag)) {
                 Set<String> need = protoStuffTemplate.opsForSet().members(CONTENT_FILE_UPLOAD_TMP.key());   // 从缓存中获取昨日的临时文件
                 if(nonNull(need) && need.size() > INTEGER_ZERO) {
-                    clean.batchClean(new ArrayList<>(need));    //调用 DFS 服务，执行清除
+                    clean.batchClean(DFS.clean_temporary_api, new ArrayList<>(need));    //调用 DFS 服务，执行清除
                     protoStuffTemplate.opsForValue().set(key, DateUtil.now());  //设置清楚标识
                 }
             }
