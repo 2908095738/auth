@@ -1,10 +1,9 @@
 package com.bbs.auth.service.impl;
 
 import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.auth.entity.CompanyStructure;
-import com.bbs.auth.service.CompanyStructureService;
 import com.bbs.auth.mapper.CompanyStructureMapper;
+import com.bbs.auth.service.CompanyStructureService;
 import com.bbs.auth.util.RedisUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import org.apache.commons.lang3.StringUtils;
@@ -42,6 +41,12 @@ public class CompanyStructureServiceImpl extends MPJBaseServiceImpl<CompanyStruc
             redisUtil.set(cacheKey, JSONUtil.toJsonPrettyStr(companyStructure));
         }
         return companyStructure;
+    }
+
+
+    @Override
+    public CompanyStructure search(Long companyId, String structureName) {
+          return lambdaQuery().eq(CompanyStructure::getCompanyId, companyId).eq(StringUtils.isNotBlank(structureName),CompanyStructure::getName, structureName).one();
     }
 }
 

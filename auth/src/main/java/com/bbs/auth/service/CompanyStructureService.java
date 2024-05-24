@@ -1,7 +1,6 @@
 package com.bbs.auth.service;
 
 import com.bbs.auth.entity.CompanyStructure;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.github.yulichang.base.MPJBaseService;
 
 /**
@@ -12,4 +11,6 @@ import com.github.yulichang.base.MPJBaseService;
 public interface CompanyStructureService extends MPJBaseService<CompanyStructure> {
 
     CompanyStructure search(Long id);
+
+    CompanyStructure search(Long companyId, String structureName);
 }

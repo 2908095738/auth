@@ -31,10 +31,10 @@ public class SalaryType implements Serializable {
     private String typeName;
 
     /**
-     * 工资类型的描述
+     * 公司id
      */
-    @TableField(value = "description")
-    private String description;
+    @TableField(value = "company_id")
+    private Long companyId;
 
     /**
      * 工资类型创建的时间

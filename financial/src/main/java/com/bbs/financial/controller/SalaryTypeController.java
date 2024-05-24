@@ -44,9 +44,9 @@ public class SalaryTypeController {
      * 新增工资类型
      */
     @PostMapping("/type")
-    public Result<Boolean> add(@RequestBody String typeName)
+    public Result<Boolean> add(@RequestBody String typeName,Long companyId)
     {
-        salaryTypeService.save(new SalaryType().setTypeName(typeName));
+        salaryTypeService.save(new SalaryType().setTypeName(typeName).setCompanyId(companyId));
         return success();
     }
 

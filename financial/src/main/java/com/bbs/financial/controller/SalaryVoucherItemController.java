@@ -9,7 +9,9 @@ import com.bbs.financial.service.SalaryVoucherItemService;
 import com.bbs.financial.vo.SalaryVoucherItemVo;
 import com.bbs.vo.BaseParam;
 import lombok.Data;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 import static com.bbs.Result.success;
 
@@ -37,7 +40,7 @@ public class SalaryVoucherItemController {
     public static class ListParam extends BaseParam {
        Integer type;
 
-       Long cId = 1l;
+       Long companyId;
     }
 
     /**
@@ -46,7 +49,7 @@ public class SalaryVoucherItemController {
     @GetMapping("/item/list")
     public Result<Page<SalaryVoucherItemVo>> list(ListParam param)
     {
-        return success(salaryVoucherItemService.selectjoinPage(new Page(param.getCurrent(), param.getSize()),param.getCId(),param.getType()));
+        return success(salaryVoucherItemService.selectjoinPage(new Page(param.getCurrent(), param.getSize()),param.getCompanyId(),param.getType()));
     }
 
 //    /**
@@ -62,11 +65,11 @@ public class SalaryVoucherItemController {
      * 新增当前公司核算凭证
      */
     @PostMapping("/item")
-    public Result<Boolean> add(@RequestBody String name)
+    public Result<Boolean> add(@RequestBody String name, Long companyId)
     {
-        AuxiliaryCalculation salaryAccountingItemType = new AuxiliaryCalculation().setName(name);
+        AuxiliaryCalculation salaryAccountingItemType = new AuxiliaryCalculation().setName(name).setCompanyId(companyId);
         salaryAccountingItemTypeService.save(salaryAccountingItemType);
-        salaryVoucherItemService.save(new SalaryVoucherItem().setAccountingItemTypeId(salaryAccountingItemType.getId()).setCompanyId(1L).setIsActive(true));
+        salaryVoucherItemService.save(new SalaryVoucherItem().setAccountingItemTypeId(salaryAccountingItemType.getId()).setCompanyId(companyId).setIsActive(true));
         return success();
     }
 
@@ -75,12 +78,12 @@ public class SalaryVoucherItemController {
      * 启用/禁用企业核算项目
      */
     @PutMapping("/salary/item/status")
-    public Result<Boolean> edit(@RequestParam("salaryVoucherItemId") Long salaryVoucherItemId,@RequestParam("isActive") Boolean isActive)
+    public Result<Boolean> edit(@RequestParam("salaryVoucherItemId") Long salaryVoucherItemId,@RequestParam("isActive") Boolean isActive,@RequestParam("companyId") Long companyId)
     {
         salaryVoucherItemService.lambdaUpdate()
                 .set(SalaryVoucherItem::getIsActive,isActive)
                 .eq(SalaryVoucherItem::getAccountingItemTypeId,salaryVoucherItemId)
-                .eq(SalaryVoucherItem::getCompanyId,1l)
+                .eq(SalaryVoucherItem::getCompanyId,companyId)
                 .update();
         return success();
     }
@@ -98,13 +101,13 @@ public class SalaryVoucherItemController {
         return success();
     }
 
-//    /**
-//     * 删除当前公司核算凭证
-//     */
-//    @DeleteMapping("/item/list/{ids}")
-//    public Result<Boolean> remove(@PathVariable List<Long> ids)
-//    {
-//        salaryVoucherItemService.getBaseMapper().deleteBatchIds(ids);
-//        return success();
-//    }
+    /**
+     * 删除当前公司核算凭证
+     */
+    @DeleteMapping("/item/{ids}")
+    public Result<Boolean> remove(@PathVariable List<Long> ids)
+    {
+        salaryVoucherItemService.getBaseMapper().deleteBatchIds(ids);
+        return success();
+    }
 }
