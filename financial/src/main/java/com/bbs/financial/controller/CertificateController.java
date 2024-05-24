@@ -41,7 +41,7 @@ public class CertificateController {
     /**
      * 查询记账凭证列表
      */
-    @GetMapping("/certificate/list")
+//    @GetMapping("/certificate/list")
     public Result<Page<Certificate>> list(Certificate param, @RequestParam Integer current, @RequestParam Integer size) {
         Page<Certificate> page = certificateService.page(new Page<>(current, size), new MPJLambdaWrapper<Certificate>()
                 .selectAll(Certificate.class)
