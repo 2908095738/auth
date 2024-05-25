@@ -29,7 +29,6 @@ public class SalaryVoucherItemServiceImpl extends MPJBaseServiceImpl<SalaryVouch
                         .selectAs(AuxiliaryCalculation::getId,SalaryVoucherItemVo::getTypeId))
                 .eq(SalaryVoucherItem::getCompanyId, cId)
                 .eq(Objects.nonNull(type),SalaryVoucherItem::getType, type)
-                .orderByDesc(SalaryVoucherItem::getCreatedAt)
         );
     }
 

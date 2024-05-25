@@ -1,8 +1,10 @@
 package com.bbs.financial.controller;
 
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.poi.excel.ExcelReader;
 import cn.hutool.poi.excel.ExcelUtil;
+import cn.hutool.poi.excel.ExcelWriter;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
@@ -38,7 +40,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +82,7 @@ public class SalaryController {
 
     @Resource
     private EmployeeItemExtendService employeeItemExtendService;
+
 
     @Data
     public static class SalaryListParam extends BaseParam {
@@ -245,6 +254,42 @@ public class SalaryController {
 
 
 
+    @GetMapping("/salary/temp/export")
+    public void export(HttpServletResponse response, @RequestParam("companyId") Long companyId) {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        Map<String, Object> map = new HashMap<>();
+
+        SalaryListParam salaryListParam = new SalaryListParam();
+        salaryListParam.setSize(999);
+        salaryListParam.setCurrent(1);
+        List<SalaryVoucherItemVo> salaryVoucherItemVoPage = salaryVoucherItemService.selectjoinPage(salaryListParam.toPage(), companyId, null).getRecords();
+        salaryVoucherItemVoPage.forEach(salaryVoucherItemVo -> {
+            map.put(salaryVoucherItemVo.getTypeName(), "");
+            rows.add(map);
+        });
+        log.debug("salaryVoucherItemVoPage:{}",salaryVoucherItemVoPage);
+        OutputStream out = null;
+        ExcelWriter writer = ExcelUtil.getWriter(new String("资金模板.xlsx".getBytes(StandardCharsets.UTF_8)));
+        try {
+            out = response.getOutputStream();
+            writer.merge(rows.size() - 1, "资金表");
+            writer.setColumnWidth(-1, 20);
+            writer.write(rows, true);
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8");
+            response.setHeader("content-disposition", "attachment;fileName=" + URLEncoder.encode("资金模板.xlsx", "UTF-8"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            writer.flush(out, true);
+            writer.close();
+            IoUtil.close(out);
+        }
+
+
+
+    }
+
+
     /**
      * 修改工资
      */
@@ -261,8 +306,7 @@ public class SalaryController {
      */
     @Transactional
     @DeleteMapping("/salary/{ids}")
-    public Result<Boolean> remove(@PathVariable List<Long> ids)
-    {
+    public Result<Boolean> remove(@PathVariable List<Long> ids){
         salaryService.getBaseMapper().deleteBatchIds(ids);
         employeeSalaryService.remove(new QueryWrapper<EmployeeSalary>().in("salary_id",ids));
         employeeItemExtendService.remove(new QueryWrapper<EmployeeItemExtend>().in("salary_id",ids));

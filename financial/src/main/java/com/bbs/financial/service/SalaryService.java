@@ -6,6 +6,8 @@ import com.bbs.financial.controller.SalaryController;
 import com.bbs.financial.entity.Salary;
 import com.bbs.financial.vo.SalaryVo;
 
+import java.util.List;
+
 /**
  *
  */
@@ -16,4 +18,5 @@ public interface SalaryService extends IService<Salary> {
     SalaryVo selectOneAndEmployeeSalary(Long id);
 
 
+    List<Long> countMoneyByTemplate(Long salaryId, Long useField, Integer salaryType, String useEmployee);
 }

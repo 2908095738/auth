@@ -1,5 +1,6 @@
 package com.bbs.financial.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.financial.controller.SalaryController;
 import com.bbs.financial.entity.AuxiliaryCalculation;
@@ -15,6 +16,8 @@ import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -61,9 +64,32 @@ public class SalaryServiceImpl extends MPJBaseServiceImpl<SalaryMapper, Salary>
     public SalaryVo selectOneAndEmployeeSalary(Long id) {
         return selectJoinOne(SalaryVo.class,new MPJLambdaWrapper<Salary>()
                 .selectAll(Salary.class)
-                .selectCollection(EmployeeSalary.class,SalaryVo::getEmployeeSalaries)
+                .selectCollection(EmployeeSalary.class,SalaryVo::getEmployeeSalaries,
+                        o->o.collection(EmployeeItemExtend.class,EmployeeSalary::getEmployeeItemExtends,
+                                o1->o1.association(AuxiliaryCalculation.class, EmployeeItemExtend::getName,result->result.result(AuxiliaryCalculation::getName))))
                 .leftJoin(EmployeeSalary.class,EmployeeSalary::getSalaryId,Salary::getId)
+                .leftJoin(EmployeeItemExtend.class, on -> on
+                        .eq(EmployeeItemExtend::getSalaryId,EmployeeSalary::getSalaryId)
+                        .eq(EmployeeItemExtend::getEmployeeId,EmployeeSalary::getEmployeeId)
+                )
                 .eq(Salary::getId,id)
+        );
+    }
+
+    @Override
+    public List<Long> countMoneyByTemplate(Long salaryId, Long useField, Integer salaryType, String useEmployee) {
+        List<String> useEmployeeList = Arrays.asList(useEmployee.split(","));
+        return selectJoinList(Long.class,new MPJLambdaWrapper<Salary>()
+                .select(EmployeeItemExtend::getContent)
+                .leftJoin(EmployeeSalary.class,EmployeeSalary::getSalaryId,Salary::getId)
+                .leftJoin(EmployeeItemExtend.class, on -> on
+                        .eq(EmployeeItemExtend::getSalaryId,EmployeeSalary::getSalaryId)
+                        .eq(EmployeeItemExtend::getEmployeeId,EmployeeSalary::getEmployeeId)
+                )
+                .eq(Salary::getId,salaryId)
+                .eq(EmployeeItemExtend::getItemTypeId,useField)
+                .in(CollUtil.isNotEmpty(useEmployeeList),EmployeeItemExtend::getEmployeeId,useEmployeeList)
+//                .in(EmployeeItemExtend::getSalaryType,salaryType)
         );
     }
 

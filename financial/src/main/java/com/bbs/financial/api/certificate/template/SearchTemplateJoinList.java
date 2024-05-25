@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.Arrays;
 
 @RequestMapping
 @RestController
@@ -29,6 +30,7 @@ public class SearchTemplateJoinList {
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String comment,
             @RequestParam(required = false) String type,
+            @RequestParam(required = false) String typeNames,
             @RequestParam(defaultValue = "1") Integer current,
             @RequestParam(defaultValue = "10") Integer size
     ) {
@@ -44,6 +46,7 @@ public class SearchTemplateJoinList {
                         .leftJoin(Account.class, Account::getId, CertificateTemplateAbstract::getAccountId)
                         .eq(CertificateTemplate::getCompanyId, companyId)
                         .like(StringUtils.isNotBlank(type), CertificateTemplate::getType, type)
+                        .in(StringUtils.isNotBlank(typeNames),CertificateTemplate::getType,Arrays.asList(typeNames.split(",")))
                         .and(StringUtils.isNotBlank(name) || StringUtils.isNotBlank(comment), ext -> ext
                                 .like(StringUtils.isNotBlank(name), CertificateTemplate::getName, name)
                                 .or()

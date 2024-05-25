@@ -4,12 +4,12 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
-import java.util.List;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+import java.util.List;
 
 /**
  * 记账凭证：模板
@@ -20,6 +20,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CertificateTemplate implements Serializable {
+
     /**
      * 主键
      */
@@ -49,6 +50,12 @@ public class CertificateTemplate implements Serializable {
      */
     @TableField(value = "company_id")
     private Long companyId;
+
+    /**
+     * 是否启用该项目：1启用，0关闭
+     */
+    @TableField(value = "is_active")
+    private Boolean isActive;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
