@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 
 @RestController
@@ -138,8 +139,8 @@ public class AddCertificate {
             CertificateAbstract entity = new CertificateAbstract();
             entity.setCertificateId(certificate.getId());
             entity.setAccountId(certificateAbstract.getAccountId());
-            entity.setBorrowMoney(Long.valueOf(certificateAbstract.getBorrowMoney().replace(",", "")));
-            entity.setLoansMoney(Long.valueOf(certificateAbstract.getLoansMoney().replace(",", "")));
+            if(nonNull(certificateAbstract.getBorrowMoney())) entity.setBorrowMoney(Long.valueOf(certificateAbstract.getBorrowMoney().replace(",", "")));
+            if(nonNull(certificateAbstract.getLoansMoney())) entity.setLoansMoney(Long.valueOf(certificateAbstract.getLoansMoney().replace(",", "")));
             entity.setCertificateAbstract(certificateAbstract.getCertificateAbstract());
             return entity;
         }).collect(Collectors.toList()));

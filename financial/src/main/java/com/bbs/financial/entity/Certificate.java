@@ -104,6 +104,7 @@ public class Certificate implements Serializable {
     private List<CertificateAbstract> abstracts;
 
     @TableField(exist = false)
+    @EntityMapping(thisField = Fields.id, joinField = CertificateFile.Fields.certificateId)
     private List<CertificateFile> files;
 
     @TableField(exist = false)
