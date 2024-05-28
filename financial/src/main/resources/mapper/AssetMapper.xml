@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bbs.financial.mapper.AssetMapper">
+
+    <resultMap id="BaseResultMap" type="com.bbs.financial.entity.Asset">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="companyId" column="company_id" jdbcType="BIGINT"/>
+            <result property="entryMonth" column="entry_month" jdbcType="VARCHAR"/>
+            <result property="no" column="no" jdbcType="VARCHAR"/>
+            <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="assetTypeId" column="asset_type_id" jdbcType="TINYINT"/>
+            <result property="structureId" column="structure_id" jdbcType="BIGINT"/>
+            <result property="startDate" column="start_date" jdbcType="DATE"/>
+            <result property="num" column="num" jdbcType="BIGINT"/>
+            <result property="spec" column="spec" jdbcType="VARCHAR"/>
+            <result property="storagePlace" column="storage_place" jdbcType="VARCHAR"/>
+            <result property="useId" column="use_id" jdbcType="BIGINT"/>
+            <result property="depreciationMethod" column="depreciation_method" jdbcType="TINYINT"/>
+            <result property="durableMonths" column="durable_months" jdbcType="INTEGER"/>
+            <result property="originalValue" column="original_value" jdbcType="BIGINT"/>
+            <result property="amountTaxPaid" column="amount_tax_paid" jdbcType="BIGINT"/>
+            <result property="ratioRemaining" column="ratio_remaining" jdbcType="BIGINT"/>
+            <result property="ratioRemainingValue" column="ratio_remaining_value" jdbcType="BIGINT"/>
+            <result property="impairment" column="Impairment" jdbcType="BIGINT"/>
+            <result property="depreciationMonths" column="depreciation_months" jdbcType="INTEGER"/>
+            <result property="beginDepreciationAccumulated" column="begin_depreciation_accumulated" jdbcType="BIGINT"/>
+            <result property="beginPeriod" column="begin_period" jdbcType="BIGINT"/>
+            <result property="depreciationMonthValue" column="depreciation_month_value" jdbcType="BIGINT"/>
+            <result property="fixedAssetsAccountId" column="fixed_assets_account_id" jdbcType="BIGINT"/>
+            <result property="purchaseAssetsOtherPartAccountId" column="purchase_assets_other_part_account_id" jdbcType="BIGINT"/>
+            <result property="assetsCertificateId" column="assets_certificate_id" jdbcType="BIGINT"/>
+            <result property="taxesAccountId" column="taxes_account_id" jdbcType="BIGINT"/>
+            <result property="depreciationAccountId" column="depreciation_account_id" jdbcType="BIGINT"/>
+            <result property="depreciationCostAccountId" column="depreciation_cost_account_id" jdbcType="BIGINT"/>
+            <result property="assetsCleanAccountId" column="assets_clean_account_id" jdbcType="BIGINT"/>
+            <result property="assetsCleanCertificateId" column="assets_clean_certificate_id" jdbcType="BIGINT"/>
+            <result property="assetsCleanMonth" column="assets_clean_month" jdbcType="VARCHAR"/>
+            <result property="impairmentAccountId" column="Impairment_account_id" jdbcType="BIGINT"/>
+            <result property="impairmentOtherPartAccountId" column="Impairment_other_part_account_id" jdbcType="BIGINT"/>
+            <result property="impairmentCertificateId" column="Impairment_certificate_id" jdbcType="BIGINT"/>
+            <result property="otherCertificateId" column="other_certificate_id" jdbcType="BIGINT"/>
+            <result property="status" column="status" jdbcType="TINYINT"/>
+            <result property="remark" column="remark" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="createBy" column="create_by" jdbcType="BIGINT"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="updateBy" column="update_by" jdbcType="BIGINT"/>
+            <result property="isDeleted" column="is_deleted" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,company_id,entry_month,
+        no,name,asset_type_id,
+        structure_id,start_date,num,
+        spec,storage_place,use_id,
+        depreciation_method,durable_months,original_value,
+        amount_tax_paid,ratio_remaining,ratio_remaining_value,
+        Impairment,depreciation_months,begin_depreciation_accumulated,
+        begin_period,depreciation_month_value,fixed_assets_account_id,
+        purchase_assets_other_part_account_id,assets_certificate_id,taxes_account_id,
+        depreciation_account_id,depreciation_cost_account_id,assets_clean_account_id,
+        assets_clean_certificate_id,assets_clean_month,Impairment_account_id,
+        Impairment_other_part_account_id,Impairment_certificate_id,other_certificate_id,
+        status,remark,create_time,
+        create_by,update_time,update_by,
+        is_deleted
+    </sql>
+</mapper>

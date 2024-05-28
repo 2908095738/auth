@@ -1,0 +1,70 @@
+package com.bbs.financial.controller;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.bbs.Result;
+import com.bbs.financial.entity.Asset;
+import com.bbs.financial.service.AssetService;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+import static com.bbs.Result.success;
+
+/**
+ * 资产Controller
+ * @author vctgo
+ * @date 2024-05-28
+ */
+@RestController
+public class AssetController {
+
+    @Resource
+    private AssetService assetService;
+
+    /**
+     * 查询资产列表
+     */
+    @GetMapping("/asset/list")
+    public Result<Page<Asset>> list(Asset asset, @RequestParam Integer current, @RequestParam Integer size)
+    {
+        return success(assetService.page(new Page<>(current, size), new QueryWrapper<>(asset)));
+    }
+
+    /**
+     * 获取资产详细信息
+     */
+    @GetMapping(value = "/asset/{id}")
+    public Result<Asset> getInfo(@PathVariable("id") Long id)
+    {
+        return success(assetService.getById(id));
+    }
+
+
+    /**
+     * 修改资产
+     */
+    @PutMapping("/asset")
+    public Result<Boolean> edit(@RequestBody Asset asset)
+    {
+        assetService.updateById(asset);
+        return success();
+    }
+
+    /**
+     * 删除资产
+     */
+    @DeleteMapping("/asset/{ids}")
+    public Result<Boolean> remove(@PathVariable List<Long> ids)
+    {
+        assetService.getBaseMapper().deleteBatchIds(ids);
+        return success();
+    }
+}
