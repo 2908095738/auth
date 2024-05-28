@@ -1,6 +1,5 @@
 package com.bbs.financial.api.certificate.template;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.financial.entity.Account;
 import com.bbs.financial.entity.CertificateTemplate;
@@ -15,28 +14,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
 @RequestMapping
 @RestController
-public class SearchTemplateJoinList {
+public class SearchTemplateJoinOne {
 
     @Resource
     private CertificateTemplateService db;
 
-    @GetMapping("/certificate/template/join/list")
-    public Result<Page<CertificateTemplate>> search(
-            @RequestParam Long companyId,
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String comment,
-            @RequestParam(required = false) String type,
-            @RequestParam(required = false) String typeNames,
-            @RequestParam(defaultValue = "1") Integer current,
-            @RequestParam(defaultValue = "10") Integer size
+    @GetMapping("/certificate/template/join")
+    public Result<CertificateTemplate> search(
+            @RequestParam Long id
     ) {
         return Result.success(
-                db.selectJoinListPage(new Page<>(current, size), CertificateTemplate.class, new MPJLambdaWrapper<CertificateTemplate>()
+                db.selectJoinOne(CertificateTemplate.class, new MPJLambdaWrapper<CertificateTemplate>()
                         .selectAll(CertificateTemplate.class)
                         .selectCollection(CertificateTemplateAbstract.class, CertificateTemplate::getTemplateAbstractList, collection -> collection
                                 .association(PriceType.class, CertificateTemplateAbstract::getPriceType)
@@ -45,14 +35,7 @@ public class SearchTemplateJoinList {
                         .leftJoin(CertificateTemplateAbstract.class, CertificateTemplateAbstract::getTemplateId, CertificateTemplate::getId)
                         .leftJoin(PriceType.class, PriceType::getId, CertificateTemplateAbstract::getPriceTypeId)
                         .leftJoin(Account.class, Account::getId, CertificateTemplateAbstract::getAccountId)
-                        .eq(CertificateTemplate::getCompanyId, companyId)
-                        .like(isNotBlank(type), CertificateTemplate::getType, type)
-                        .in(isNotBlank(typeNames), CertificateTemplate::getType, isNotBlank(typeNames) ? asList(typeNames.split(",")) : null)
-                        .and(isNotBlank(name) || isNotBlank(comment), ext -> ext
-                                .like(isNotBlank(name), CertificateTemplate::getName, name)
-                                .or()
-                                .like(isNotBlank(comment), CertificateTemplate::getComment, comment)
-                        )
+                        .eq(CertificateTemplate::getId, id)
                 )
         );
     }

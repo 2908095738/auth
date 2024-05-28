@@ -8,6 +8,7 @@ import com.bbs.enums.dfs.ResourceType;
 import com.bbs.financial.entity.CertificateFile;
 import com.bbs.financial.service.CertificateFileService;
 import com.bbs.financial.util.LoginUser;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,6 +17,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.util.Date;
+
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 @RestController
 @RequestMapping
@@ -33,28 +37,31 @@ public class UploadFile {
             @RequestParam String certificateWord,
             @RequestParam Long no,
             @RequestParam String date,
-            @RequestParam MultipartFile file
+            @RequestParam MultipartFile file,
+            @RequestParam(required = false) Long certificateId
     ) {
+        String contentType = file.getContentType();
         DFS.Upload.VO vo = upload.uploadFile(
                 BusinessCode.FINANCIAL_CERTIFICATE,
                 ResourceType.FILE,
-                file.getContentType(),
+                contentType,
                 file
         );
-        return Result.success(
-                certificateFileService.save(
-                        new CertificateFile(
-                                file.getOriginalFilename(),
-                                companyId,
-                                certificateWord,
-                                no,
-                                new Date(Long.parseLong(date)),
-                                vo.getUrl(),
-                                vo.getResourceID(),
-                                FileType.FILE.getCode(),
-                                LoginUser.getId()
-                        )
-                )
+        Integer fileType = (StringUtils.isNotBlank(contentType) && contentType.indexOf("image") >= INTEGER_ZERO) ?
+                FileType.IMAGE.getCode() : FileType.FILE.getCode();
+        CertificateFile entity = new CertificateFile(
+                file.getOriginalFilename(),
+                companyId,
+                certificateWord,
+                no,
+                new Date(Long.parseLong(date)),
+                vo.getUrl(),
+                vo.getResourceID(),
+                fileType,
+                contentType,
+                LoginUser.getId()
         );
+        if(nonNull(certificateId)) entity.setCertificateId(certificateId);
+        return Result.success(certificateFileService.save(entity));
     }
 }

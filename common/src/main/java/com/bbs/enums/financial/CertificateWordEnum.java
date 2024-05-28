@@ -2,6 +2,7 @@ package com.bbs.enums.financial;
 
 import cn.hutool.core.util.EnumUtil;
 import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -19,6 +20,7 @@ public enum CertificateWordEnum {
     @EnumValue
     private final Integer code;
 
+    @JsonValue
     private final String msg;
 
     public static final Map<Integer, CertificateWordEnum> enumMap =

@@ -83,6 +83,12 @@ public class CertificateFile implements Serializable {
     private Integer fileType;
 
     /**
+     * 文件类型
+     */
+    @TableField(value = "content_type")
+    private String contentType;
+
+    /**
      * 创建时间
      */
     @TableField(value = "create_time")
@@ -109,7 +115,7 @@ public class CertificateFile implements Serializable {
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
-    public CertificateFile(String name, Long companyId, String certificateWord, Long no, Date date, String url, String resourceId, Integer fileType, Long createBy) {
+    public CertificateFile(String name, Long companyId, String certificateWord, Long no, Date date, String url, String resourceId, Integer fileType, String contentType, Long createBy) {
         this.name = name;
         this.companyId = companyId;
         this.certificateWord = certificateWord;
@@ -118,6 +124,7 @@ public class CertificateFile implements Serializable {
         this.url = url;
         this.resourceId = resourceId;
         this.fileType = fileType;
+        this.contentType = contentType;
         this.createBy = createBy;
     }
 }
