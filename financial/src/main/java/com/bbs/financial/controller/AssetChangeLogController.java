@@ -6,10 +6,8 @@ import com.bbs.Result;
 import com.bbs.financial.entity.AssetChangeLog;
 import com.bbs.financial.service.AssetChangeLogService;
 import org.springframework.web.bind.annotation.*;
-
 import javax.annotation.Resource;
 import java.util.List;
-
 import static com.bbs.Result.success;
 
 /**

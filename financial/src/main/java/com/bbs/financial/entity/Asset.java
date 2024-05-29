@@ -166,12 +166,6 @@ public class Asset implements Serializable {
     private Long purchaseAssetsOtherPartAccountId;
 
     /**
-     * 资产凭证
-     */
-    @TableField(value = "assets_certificate_id")
-    private Long assetsCertificateId;
-
-    /**
      * 税金科目
      */
     @TableField(value = "taxes_account_id")
@@ -196,12 +190,6 @@ public class Asset implements Serializable {
     private Long assetsCleanAccountId;
 
     /**
-     * 资产清理凭证
-     */
-    @TableField(value = "assets_clean_certificate_id")
-    private Long assetsCleanCertificateId;
-
-    /**
      * 清理月份
      */
     @TableField(value = "assets_clean_month")
@@ -218,18 +206,6 @@ public class Asset implements Serializable {
      */
     @TableField(value = "Impairment_other_part_account_id")
     private Long impairmentOtherPartAccountId;
-
-    /**
-     * 减值凭证
-     */
-    @TableField(value = "Impairment_certificate_id")
-    private Long impairmentCertificateId;
-
-    /**
-     * 其他凭证
-     */
-    @TableField(value = "other_certificate_id")
-    private Long otherCertificateId;
 
     /**
      * 状态:正常 清理

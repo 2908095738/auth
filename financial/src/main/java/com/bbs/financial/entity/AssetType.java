@@ -44,7 +44,7 @@ public class AssetType implements Serializable {
      * 折旧方法
      */
     @TableField(value = "depreciation_method")
-    private Integer depreciationMethod;
+    private String depreciationMethod;
 
     /**
      * 预计使用年限
