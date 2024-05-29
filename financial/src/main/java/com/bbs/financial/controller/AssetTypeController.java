@@ -1,12 +1,18 @@
 package com.bbs.financial.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.financial.entity.AssetType;
 import com.bbs.financial.service.AssetTypeService;
 import com.bbs.financial.util.LoginUser;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -28,9 +34,9 @@ public class AssetTypeController {
      * 查询资产类别列表
      */
     @GetMapping("/asset/type/list")
-    public Result<Page<AssetType>> list(AssetType assetType, @RequestParam Integer current, @RequestParam Integer size)
+    public Result<Page<AssetType>> list(Long companyId, @RequestParam Integer current, @RequestParam Integer size)
     {
-        return success(assetTypeService.page(new Page<>(current, size), new QueryWrapper<>(assetType)));
+        return success(assetTypeService.selectJoinPage(companyId, current, size));
     }
 
     /**

@@ -4,9 +4,10 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.Date;
-import lombok.Data;
 
 /**
  * 资产类别
@@ -64,10 +65,23 @@ public class AssetType implements Serializable {
     private Long fixedAssetsAccountId;
 
     /**
+     * 固定资产科目
+     */
+    @TableField(exist = false)
+    private String fixedAssetsAccountName;
+
+
+    /**
      * 折旧科目
      */
     @TableField(value = "depreciation_account_id")
     private Long depreciationAccountId;
+
+    /**
+     * 折旧科目
+     */
+    @TableField(exist = false)
+    private String depreciationAccountName;
 
     /**
      * 备注
