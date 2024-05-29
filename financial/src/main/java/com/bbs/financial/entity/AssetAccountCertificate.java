@@ -8,12 +8,12 @@ import java.io.Serializable;
 import lombok.Data;
 
 /**
- * 资产关联的凭证表
- * @TableName asset_certificate
+ * 资产关联的科目和凭证表
+ * @TableName asset_account_certificate
  */
-@TableName(value ="asset_certificate")
+@TableName(value ="asset_account_certificate")
 @Data
-public class AssetCertificate implements Serializable {
+public class AssetAccountCertificate implements Serializable {
     /**
      * 
      */

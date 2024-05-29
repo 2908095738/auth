@@ -154,58 +154,10 @@ public class Asset implements Serializable {
     private Long depreciationMonthValue;
 
     /**
-     * 固定资产科目
-     */
-    @TableField(value = "fixed_assets_account_id")
-    private Long fixedAssetsAccountId;
-
-    /**
-     * 资产购入对方科目
-     */
-    @TableField(value = "purchase_assets_other_part_account_id")
-    private Long purchaseAssetsOtherPartAccountId;
-
-    /**
-     * 税金科目
-     */
-    @TableField(value = "taxes_account_id")
-    private Long taxesAccountId;
-
-    /**
-     * 折旧科目
-     */
-    @TableField(value = "depreciation_account_id")
-    private Long depreciationAccountId;
-
-    /**
-     * 折旧费用科目
-     */
-    @TableField(value = "depreciation_cost_account_id")
-    private Long depreciationCostAccountId;
-
-    /**
-     * 资产清理科目
-     */
-    @TableField(value = "assets_clean_account_id")
-    private Long assetsCleanAccountId;
-
-    /**
      * 清理月份
      */
     @TableField(value = "assets_clean_month")
     private String assetsCleanMonth;
-
-    /**
-     * 减值准备科目
-     */
-    @TableField(value = "Impairment_account_id")
-    private Long impairmentAccountId;
-
-    /**
-     * 减值准备对方科目
-     */
-    @TableField(value = "Impairment_other_part_account_id")
-    private Long impairmentOtherPartAccountId;
 
     /**
      * 状态:正常 清理

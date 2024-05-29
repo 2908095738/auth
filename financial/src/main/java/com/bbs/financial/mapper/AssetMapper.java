@@ -1,12 +1,12 @@
 package com.bbs.financial.mapper;
 
 import com.bbs.financial.entity.Asset;
-import com.github.yulichang.base.MPJBaseMapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
  * @Entity com.bbs.financial.entity.Asset
  */
-public interface AssetMapper extends MPJBaseMapper<Asset> {
+public interface AssetMapper extends BaseMapper<Asset> {
 
 }
 
