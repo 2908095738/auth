@@ -70,6 +70,12 @@ public class Asset implements Serializable {
     private Long num;
 
     /**
+     * 数量单位
+     */
+    @TableField(value = "num_unit")
+    private Long numUnit;
+
+    /**
      * 规格型号
      */
     @TableField(value = "spec")

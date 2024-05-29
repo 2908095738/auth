@@ -5,13 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.financial.entity.Asset;
 import com.bbs.financial.service.AssetService;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -51,7 +45,7 @@ public class AssetController {
     /**
      * 修改资产
      */
-    @PutMapping("/asset")
+    @PostMapping("/asset")
     public Result<Boolean> edit(@RequestBody Asset asset)
     {
         assetService.updateById(asset);
