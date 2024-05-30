@@ -5,7 +5,10 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
+
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 资产数量单位
@@ -13,6 +16,8 @@ import lombok.Data;
  */
 @TableName(value ="asset_num_unit")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class AssetNumUnit implements Serializable {
     /**
      * 主键
@@ -34,4 +39,9 @@ public class AssetNumUnit implements Serializable {
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+    public AssetNumUnit(String name, Long companyId) {
+        this.name = name;
+        this.companyId = companyId;
+    }
 }

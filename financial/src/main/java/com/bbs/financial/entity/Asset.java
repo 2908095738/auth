@@ -6,7 +6,10 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
+
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 资产表
@@ -14,6 +17,8 @@ import lombok.Data;
  */
 @TableName(value ="asset")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Asset implements Serializable {
     /**
      * 
@@ -49,7 +54,7 @@ public class Asset implements Serializable {
      * 资产类别
      */
     @TableField(value = "asset_type_id")
-    private Integer assetTypeId;
+    private Long assetTypeId;
 
     /**
      * 部门ID（公司结构ID）
@@ -72,8 +77,8 @@ public class Asset implements Serializable {
     /**
      * 数量单位
      */
-    @TableField(value = "num_unit")
-    private Long numUnit;
+    @TableField(value = "num_unit_id")
+    private Long numUnitId;
 
     /**
      * 规格型号

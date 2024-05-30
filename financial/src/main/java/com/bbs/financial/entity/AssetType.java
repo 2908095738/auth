@@ -29,12 +29,6 @@ public class AssetType implements Serializable {
     private Long companyId;
 
     /**
-     * 类别编码
-     */
-    @TableField(value = "code")
-    private String code;
-
-    /**
      * 资产类别名称
      */
     @TableField(value = "name")
@@ -121,4 +115,9 @@ public class AssetType implements Serializable {
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+    public AssetType(String name, Long companyId) {
+        this.companyId = companyId;
+        this.name = name;
+    }
 }
