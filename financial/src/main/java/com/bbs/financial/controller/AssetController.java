@@ -33,6 +33,18 @@ public class AssetController {
     }
 
     /**
+     * 折旧凭证
+     * 查询资产列表：1当月没有生成折旧凭证 2开始使用日期月份比当前月份小
+     * 计算要生成的值：
+     */
+    @GetMapping("/asset/depreciation/debt")
+    public Result debt()
+    {
+        return success();
+    }
+
+
+    /**
      * 获取资产详细信息
      */
     @GetMapping(value = "/asset/{id}")
