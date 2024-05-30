@@ -1,11 +1,15 @@
 package com.bbs.financial.service.impl;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.financial.entity.Asset;
-import com.bbs.financial.service.AssetService;
+import com.bbs.financial.entity.AssetAccountCertificate;
 import com.bbs.financial.mapper.AssetMapper;
+import com.bbs.financial.service.AssetService;
 import com.github.yulichang.base.MPJBaseServiceImpl;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  *
@@ -13,7 +17,20 @@ import org.springframework.stereotype.Service;
 @Service
 public class AssetServiceImpl extends MPJBaseServiceImpl<AssetMapper, Asset>
     implements AssetService{
-
+    /**
+     * 1当月没有生成折旧凭证 2开始使用日期月份比当前月份小
+     * @return
+     */
+    @Override
+    public List<Asset> selectNowJoinList() {
+        return selectJoinList(Asset.class, new MPJLambdaWrapper<Asset>()
+                .selectAll(Asset.class)
+                .selectAssociation(AssetAccountCertificate.class,Asset::getAssetAccountCertificate)
+                .leftJoin(AssetAccountCertificate.class, AssetAccountCertificate::getAssetId, Asset::getId)
+                .eq(Asset::getIsDeleted, 0)
+                .lt(Asset::getStartDate,new Date())//开始使用日期月份比当前月份小
+        );
+    }
 }
 
 
