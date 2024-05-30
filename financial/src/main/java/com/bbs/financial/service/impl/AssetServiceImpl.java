@@ -4,13 +4,14 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.financial.entity.Asset;
 import com.bbs.financial.service.AssetService;
 import com.bbs.financial.mapper.AssetMapper;
+import com.github.yulichang.base.MPJBaseServiceImpl;
 import org.springframework.stereotype.Service;
 
 /**
  *
  */
 @Service
-public class AssetServiceImpl extends ServiceImpl<AssetMapper, Asset>
+public class AssetServiceImpl extends MPJBaseServiceImpl<AssetMapper, Asset>
     implements AssetService{
 
 }
