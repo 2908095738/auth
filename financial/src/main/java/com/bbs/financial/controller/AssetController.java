@@ -54,6 +54,7 @@ public class AssetController {
     @GetMapping("/asset/depreciation/debt")
     public Result debt()
     {
+        //当月有没有生成折旧凭证
         Certificate certificate = certificateService.selectByNowDepreciation();
         if(Objects.nonNull(certificate)){
             return success(certificate);
@@ -62,7 +63,6 @@ public class AssetController {
             Long result = 0L;
             if(CollUtil.isNotEmpty(assets)){
                 for (Asset asset : assets) {
-                    Date startDate = asset.getStartDate();//开始时间
                     Integer depreciationMethod = asset.getDepreciationMethod();//折旧方法
                     if(depreciationMethod == 1){
                         //平均年限法
@@ -70,12 +70,18 @@ public class AssetController {
                         result= result + depreciationMonthValue;
                     }else if(depreciationMethod == 2){
                         //双倍余额递减法
+                        Integer durableMonths = asset.getDurableMonths();//预计使用月数
+                        Date startDate = asset.getStartDate();//开始时间：2023-05-01
+                        Date nowDate = new Date();//现在时间：2024-05-31
+
                         Long originalValue = asset.getOriginalValue();//原值
+                        int durableYears = durableMonths / 12;//预计使用年限
+                        Long ratioRemainingValue = asset.getRatioRemainingValue();//预计残值
+
+
+                        //TODO 把
 
                     }
-
-
-
                 }
             }
             return success(result);

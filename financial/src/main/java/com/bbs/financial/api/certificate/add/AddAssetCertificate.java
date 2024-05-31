@@ -26,6 +26,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 
@@ -74,10 +75,11 @@ public class AddAssetCertificate {
     @PutMapping("/asset/depreciation/certificate")
     public Result<Boolean> add(@RequestBody Param param) {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-
         try {
+            // 获取资产:1开始使用日期月份比当前月份小 2排除折旧方法为不计提折旧的资产
             List<Asset> assets = assetService.selectNowJoinList();
             if(CollUtil.isNotEmpty(assets)){
+                // 凭证号
                 long no = db.lambdaQuery().eq(Certificate::getCompanyId, param.getCompanyId())
                         .ge(Certificate::getCreateTime, DateUtil.beginOfMonth(new Date()))
                         .lt(Certificate::getCreateTime, DateUtil.beginOfMonth(DateUtil.offsetMonth(new Date(), INTEGER_ONE)))
@@ -89,29 +91,59 @@ public class AddAssetCertificate {
                 certificate.setNo(no);
                 certificate.setDate(param.createTime);
                 certificate.setCreateBy(LoginUser.getId());
+                certificate.setType(INTEGER_ONE);
                 db.save(certificate);
 
-                List<CertificateAbstract> certificateAbstracts = new ArrayList<>();
+                List<CertificateAbstract> certificateAbstractsBorrow = new ArrayList<>();
+                List<CertificateAbstract> certificateAbstractsLoan = new ArrayList<>();
                 assets.forEach(asset -> {
+                    long money = 0L;
+                    Integer depreciationMethod = asset.getDepreciationMethod();//折旧方法
+                    if(depreciationMethod == 1){
+                        //平均年限法
+                        money = asset.getDepreciationMonthValue();//平均月折旧额
+
+                    }else if(depreciationMethod == 2){
+//                      TODO  money =
+                    }
                     AssetAccountCertificate assetAccountCertificate = asset.getAssetAccountCertificate();
                     //借
                     CertificateAbstract borrow = new CertificateAbstract();
                     borrow.setCertificateId(certificate.getId());
-                    borrow.setCertificateAbstract("计提折旧费用");
+                    borrow.setCertificateAbstract(param.digest);
                     borrow.setAccountId(assetAccountCertificate.getDepreciationAccountId());
-//                    borrow.setBorrowMoney(asset.getd);
+                    borrow.setBorrowMoney(money);
                     borrow.setLoansMoney(0L);
                     //贷
                     CertificateAbstract loan = new CertificateAbstract();
                     loan.setCertificateId(certificate.getId());
-                    loan.setCertificateAbstract("计提折旧费用");
+                    loan.setCertificateAbstract(param.digest);
                     loan.setAccountId(assetAccountCertificate.getDepreciationCostAccountId());
                     loan.setBorrowMoney(0L);
-//                    loan.setLoansMoney();
-                    certificateAbstracts.add(borrow);
-                    certificateAbstracts.add(loan);
+                    loan.setLoansMoney(money);
+                    certificateAbstractsBorrow.add(borrow);
+                    certificateAbstractsLoan.add(loan);
                 });
-//                certificateAbstractService.saveBatch();
+
+                List<CertificateAbstract> certificateAbstractAddList = new ArrayList<>();
+
+                //合并科目id相同的数据
+                certificateAbstractAddList.addAll(new ArrayList<>(certificateAbstractsBorrow.stream().collect(Collectors.toMap(
+                                CertificateAbstract::getAccountId,
+                                a -> a, (o1, o2) -> {
+                                    o1.setBorrowMoney(o1.getBorrowMoney() + o2.getBorrowMoney());
+                                    return o1;
+                                }))
+                        .values()));
+
+                certificateAbstractAddList.addAll(new ArrayList<>(certificateAbstractsLoan.stream().collect(Collectors.toMap(
+                                CertificateAbstract::getAccountId,
+                                a -> a, (o1, o2) -> {
+                                    o1.setLoansMoney(o1.getLoansMoney() + o2.getLoansMoney());
+                                    return o1;
+                                }))
+                        .values()));
+                certificateAbstractService.saveBatch(certificateAbstractAddList);
             }
             transactionManager.commit(transaction);
             return Result.success();

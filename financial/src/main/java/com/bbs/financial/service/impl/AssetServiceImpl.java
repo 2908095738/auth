@@ -18,7 +18,8 @@ import java.util.List;
 public class AssetServiceImpl extends MPJBaseServiceImpl<AssetMapper, Asset>
     implements AssetService{
     /**
-     * 1当月没有生成折旧凭证 2开始使用日期月份比当前月份小
+     * 1开始使用日期月份比当前月份小
+     * 2排除折旧方法为不计提折旧的资产
      * @return
      */
     @Override
@@ -28,6 +29,7 @@ public class AssetServiceImpl extends MPJBaseServiceImpl<AssetMapper, Asset>
                 .selectAssociation(AssetAccountCertificate.class,Asset::getAssetAccountCertificate)
                 .leftJoin(AssetAccountCertificate.class, AssetAccountCertificate::getAssetId, Asset::getId)
                 .eq(Asset::getIsDeleted, 0)
+                .ne(Asset::getDepreciationMethod, 3)//排除折旧方法为不计提折旧的资产
                 .lt(Asset::getStartDate,new Date())//开始使用日期月份比当前月份小
         );
     }

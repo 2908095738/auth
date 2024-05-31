@@ -4,12 +4,12 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
-import java.util.Date;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+import java.util.Date;
 
 /**
  * 资产表
@@ -31,12 +31,6 @@ public class Asset implements Serializable {
      */
     @TableField(value = "company_id")
     private Long companyId;
-
-    /**
-     * 录入月份
-     */
-    @TableField(value = "entry_month")
-    private String entryMonth;
 
     /**
      * 资产编码
@@ -95,8 +89,8 @@ public class Asset implements Serializable {
     /**
      * 使用人id
      */
-    @TableField(value = "use_id")
-    private Long useId;
+    @TableField(value = "use_user_id")
+    private Long useUserId;
 
     /**
      * 折旧方法
@@ -147,22 +141,52 @@ public class Asset implements Serializable {
     private Integer depreciationMonths;
 
     /**
-     * 期初累计折旧
-     */
-    @TableField(value = "begin_depreciation_accumulated")
-    private Long beginDepreciationAccumulated;
-
-    /**
      * 期初净值=原值-期初累计折旧
      */
     @TableField(value = "begin_period")
     private Long beginPeriod;
 
     /**
-     * 月折旧额
+     * 期初累计折旧
+     */
+    @TableField(value = "begin_depreciation_accumulated")
+    private Long beginDepreciationAccumulated;
+
+    /**
+     * 平均月折旧额
      */
     @TableField(value = "depreciation_month_value")
     private Long depreciationMonthValue;
+
+    /**
+     * 当月折旧额
+     */
+    @TableField(value = "depreciation_now_month_value")
+    private Long depreciationNowMonthValue;
+
+    /**
+     * 本年折旧额
+     */
+    @TableField(value = "depreciation_year_value")
+    private Long depreciationYearValue;
+
+    /**
+     * 期末累计折旧
+     */
+    @TableField(value = "after_depreciation_accumulated")
+    private Long afterDepreciationAccumulated;
+
+    /**
+     * 期末净值
+     */
+    @TableField(value = "after_period")
+    private Long afterPeriod;
+
+    /**
+     * 期末减值准备
+     */
+    @TableField(value = "after_Impairment")
+    private Long afterImpairment;
 
     /**
      * 清理月份
