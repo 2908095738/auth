@@ -1,11 +1,11 @@
 package com.bbs.financial.service;
 
 import com.bbs.financial.entity.Asset;
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.github.yulichang.base.MPJBaseService;
 
 /**
  *
  */
-public interface AssetService extends IService<Asset> {
+public interface AssetService extends MPJBaseService<Asset> {
 
 }

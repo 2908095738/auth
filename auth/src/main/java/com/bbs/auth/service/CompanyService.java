@@ -32,13 +32,6 @@ public interface CompanyService extends MPJBaseService<Company> {
     List<UserCompany> searchCompany(Long uid);
 
     /**
-     * 查询职位
-     * @param uid 用户 ID
-     * @param companyID 公司 ID
-     */
-    void searchUserPosition(Long uid, Long companyID);
-
-    /**
      * 是否设置过公司结构
      * @param companyID 公司 ID
      * @return 是否设置过公司结构
@@ -59,4 +52,6 @@ public interface CompanyService extends MPJBaseService<Company> {
     CompanyStructure searchUserCompanyStructure(Long uid, Long companyID);
 
     List<User> searchStructureStaff(Set<Long> structureIds);
+
+    List<CompanyStructure> searchStructure(Set<Long> structureIds);
 }

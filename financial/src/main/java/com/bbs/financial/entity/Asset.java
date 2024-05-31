@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
 
+import com.bbs.api.auth.User;
+import com.bbs.vo.CompanyStructure;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,12 +33,6 @@ public class Asset implements Serializable {
      */
     @TableField(value = "company_id")
     private Long companyId;
-
-    /**
-     * 录入月份
-     */
-    @TableField(value = "entry_month")
-    private String entryMonth;
 
     /**
      * 资产编码
@@ -95,8 +91,8 @@ public class Asset implements Serializable {
     /**
      * 使用人id
      */
-    @TableField(value = "use_id")
-    private Long useId;
+    @TableField(value = "use_user_id")
+    private Long useUserId;
 
     /**
      * 折旧方法
@@ -217,4 +213,22 @@ public class Asset implements Serializable {
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+    @TableField(exist = false)
+    private AssetNumUnit numUnit;
+
+    @TableField(exist = false)
+    private AssetType assetType;
+
+    @TableField(exist = false)
+    private CompanyStructure companyStructure;
+
+    @TableField(exist = false)
+    private User useUser;
+
+    @TableField(exist = false)
+    private User createUser;
+
+    @TableField(exist = false)
+    private User updateUser;
 }

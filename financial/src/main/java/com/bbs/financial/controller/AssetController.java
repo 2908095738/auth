@@ -3,14 +3,26 @@ package com.bbs.financial.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
+import com.bbs.api.auth.User;
+import com.bbs.api.auth.UserAPI;
+import com.bbs.api.auth.company.CompanyAPI;
 import com.bbs.financial.entity.Asset;
+import com.bbs.financial.entity.AssetNumUnit;
+import com.bbs.financial.entity.AssetType;
 import com.bbs.financial.service.AssetService;
+import com.bbs.vo.CompanyStructure;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.bbs.Result.success;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 /**
  * 资产Controller
@@ -22,14 +34,63 @@ public class AssetController {
 
     @Resource
     private AssetService assetService;
+    @DubboReference
+    private CompanyAPI companyAPI;
+
+    @DubboReference
+    private UserAPI userAPI;
 
     /**
      * 查询资产列表
      */
     @GetMapping("/asset/list")
-    public Result<Page<Asset>> list(Asset asset, @RequestParam Integer current, @RequestParam Integer size)
+    public Result<Page<Asset>> list(Asset assetParam, @RequestParam Integer current, @RequestParam Integer size)
     {
-        return success(assetService.page(new Page<>(current, size), new QueryWrapper<>(asset)));
+        Page<Asset> result = assetService.selectJoinListPage(new Page<>(current, size), Asset.class, new MPJLambdaWrapper<>(assetParam)
+                .selectAll(Asset.class)
+                .leftJoin(AssetNumUnit.class, AssetNumUnit::getId, Asset::getNumUnitId, ext -> ext
+                        .selectAssociation(AssetNumUnit.class, Asset::getNumUnit)
+                )
+                .leftJoin(AssetType.class, AssetType::getId, Asset::getAssetTypeId, ext -> ext
+                        .selectAssociation(AssetType.class, Asset::getAssetType)
+                )
+        );
+        Set<Long> companyStructureIds = new HashSet<>();
+        Set<Long> userIds = new HashSet<>();
+        result.getRecords().forEach(asset -> {
+            userIds.add(asset.getCreateBy());
+            if(nonNull(asset.getStructureId())) companyStructureIds.add(asset.getStructureId());
+            if(nonNull(asset.getUseUserId())) userIds.add(asset.getUseUserId());
+            if(nonNull(asset.getUpdateBy())) userIds.add(asset.getUpdateBy());
+        });
+        // 查询并填充所属部门
+        Map<Long, CompanyStructure> companyStructureIdMap = null;
+        if(companyStructureIds.size() > INTEGER_ZERO) {
+            companyStructureIdMap = companyAPI
+                    .search(companyStructureIds).stream()
+                    .collect(Collectors.toMap(CompanyStructure::getId, companyStructure -> companyStructure));
+        }
+        // 查询并填充所属用户、创建用户、修改用户
+        Map<Long, User> userIdMap = null;
+        if(userIds.size() > INTEGER_ZERO) {
+            userIdMap = userAPI.getUserList(userIds)
+                    .stream().collect(Collectors.toMap(User::getId, user -> user));
+        }
+        boolean companyStructureIdMapIsNull = nonNull(companyStructureIdMap);
+        boolean userIdMapIsNull = nonNull(userIdMap);
+        if(companyStructureIdMapIsNull || userIdMapIsNull) {
+            for (Asset asset : result.getRecords()) {
+                if(companyStructureIdMapIsNull && nonNull(asset.getCompanyId())) {
+                    asset.setCompanyStructure(companyStructureIdMap.get(asset.getCompanyId()));
+                }
+                if(userIdMapIsNull) {
+                    asset.setCreateUser(userIdMap.get(asset.getCreateBy()));
+                    if(nonNull(asset.getUseUserId())) asset.setUseUser(userIdMap.get(asset.getUseUserId()));
+                    if(nonNull(asset.getUpdateBy())) asset.setUpdateUser(userIdMap.get(asset.getUpdateBy()));
+                }
+            }
+        }
+        return success(result);
     }
 
     /**
@@ -38,7 +99,7 @@ public class AssetController {
      * 计算要生成的值：
      */
     @GetMapping("/asset/depreciation/debt")
-    public Result debt()
+    public Result<Boolean> debt()
     {
         return success();
     }
@@ -72,5 +133,23 @@ public class AssetController {
     {
         assetService.getBaseMapper().deleteBatchIds(ids);
         return success();
+    }
+
+
+    /**
+     * 查询存放地点
+     */
+    @GetMapping("/asset/storage/place")
+    public Result<List<String>> searchStoragePlace(
+            @RequestParam Long companyId,
+            @RequestParam(required = false) String name
+    ) {
+        return success(assetService.listObjs(new QueryWrapper<Asset>()
+                .select("DISTINCT storage_place")
+                .eq("company_id", companyId)
+                .like(StringUtils.isNotBlank(name), "storage_place", name)
+                .isNotNull("storage_place")
+                .orderByAsc("storage_place")
+        ));
     }
 }
