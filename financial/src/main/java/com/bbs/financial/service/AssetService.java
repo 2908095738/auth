@@ -1,14 +1,14 @@
 package com.bbs.financial.service;
 
 import com.bbs.financial.entity.Asset;
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.github.yulichang.base.MPJBaseService;
 
 import java.util.List;
 
 /**
  *
  */
-public interface AssetService extends IService<Asset> {
+public interface AssetService extends MPJBaseService<Asset> {
 
     List<Asset> selectNowJoinList();
 
