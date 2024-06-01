@@ -8,6 +8,7 @@ import com.bbs.financial.entity.Asset;
 import com.bbs.financial.entity.AssetAccountCertificate;
 import com.bbs.financial.entity.Certificate;
 import com.bbs.financial.entity.CertificateAbstract;
+import com.bbs.financial.service.AssetAccountCertificateService;
 import com.bbs.financial.service.AssetService;
 import com.bbs.financial.service.CertificateAbstractService;
 import com.bbs.financial.service.CertificateService;
@@ -42,6 +43,8 @@ public class AddAssetCertificate {
     private DataSourceTransactionManager transactionManager;
     @Resource
     private AssetService assetService;
+    @Resource
+    private AssetAccountCertificateService assetAccountCertificateService;
 
     @Data
     @NoArgsConstructor
@@ -54,64 +57,59 @@ public class AddAssetCertificate {
         private Long companyId;
 
         /**
-         * 工资ID
+         * 资产ID
          */
-        private Long salaryId;
-
-        /**
-         * 凭证生成时间
-         */
-        private Date createTime;
-
-        /**
-         * 凭证摘要
-         */
-        private String digest;
+        private List<Long> assetIds;
 
     }
 
 
-    @PutMapping("/asset/depreciation/certificate")
+    @PutMapping("/asset/certificate")
     public Result<Boolean> add(@RequestBody Param param) {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-
         try {
-            List<Asset> assets = assetService.selectNowJoinList();
+            // 获取资产:根据资产ID列表
+            List<Asset> assets = assetService.selectJoinList(param.assetIds);
             if(CollUtil.isNotEmpty(assets)){
+                List<CertificateAbstract> certificateAbstracts = new ArrayList<>();
+                // 凭证号
                 long no = db.lambdaQuery().eq(Certificate::getCompanyId, param.getCompanyId())
                         .ge(Certificate::getCreateTime, DateUtil.beginOfMonth(new Date()))
                         .lt(Certificate::getCreateTime, DateUtil.beginOfMonth(DateUtil.offsetMonth(new Date(), INTEGER_ONE)))
                         .count() + INTEGER_ONE;
+                for (Asset asset : assets) {
+                    Certificate certificate = new Certificate();
+                    certificate.setCompanyId(param.companyId);
+                    certificate.setCertificateWord(CertificateWordEnum.RECORD);
+                    certificate.setNo(no);
+                    certificate.setDate(new Date());
+                    certificate.setCreateBy(LoginUser.getId());
+                    db.save(certificate);
 
-                Certificate certificate = new Certificate();
-                certificate.setCompanyId(param.companyId);
-                certificate.setCertificateWord(CertificateWordEnum.RECORD);
-                certificate.setNo(no);
-                certificate.setDate(param.createTime);
-                certificate.setCreateBy(LoginUser.getId());
-                db.save(certificate);
-
-                List<CertificateAbstract> certificateAbstracts = new ArrayList<>();
-                assets.forEach(asset -> {
                     AssetAccountCertificate assetAccountCertificate = asset.getAssetAccountCertificate();
                     //借
                     CertificateAbstract borrow = new CertificateAbstract();
                     borrow.setCertificateId(certificate.getId());
-                    borrow.setCertificateAbstract("计提折旧费用");
-                    borrow.setAccountId(assetAccountCertificate.getDepreciationAccountId());
-//                    borrow.setBorrowMoney(asset.getd);
+                    borrow.setCertificateAbstract("购入"+asset.getName());
+                    borrow.setAccountId(assetAccountCertificate.getFixedAssetsAccountId());
+                    borrow.setBorrowMoney(asset.getOriginalValue());
                     borrow.setLoansMoney(0L);
                     //贷
                     CertificateAbstract loan = new CertificateAbstract();
                     loan.setCertificateId(certificate.getId());
-                    loan.setCertificateAbstract("计提折旧费用");
-                    loan.setAccountId(assetAccountCertificate.getDepreciationCostAccountId());
+                    loan.setCertificateAbstract("购入"+asset.getName());
+                    loan.setAccountId(assetAccountCertificate.getPurchaseAssetsOtherPartAccountId());
                     loan.setBorrowMoney(0L);
-//                    loan.setLoansMoney();
+                    loan.setLoansMoney(asset.getOriginalValue());
                     certificateAbstracts.add(borrow);
                     certificateAbstracts.add(loan);
-                });
-//                certificateAbstractService.saveBatch();
+
+                    no += INTEGER_ONE;
+
+                    assetAccountCertificate.setAssetsCertificateId(certificate.getId());
+                    assetAccountCertificateService.save(assetAccountCertificate);
+                }
+                certificateAbstractService.saveBatch(certificateAbstracts);
             }
             transactionManager.commit(transaction);
             return Result.success();

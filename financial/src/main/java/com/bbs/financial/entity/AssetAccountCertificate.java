@@ -39,7 +39,7 @@ public class AssetAccountCertificate implements Serializable {
     private Long purchaseAssetsOtherPartAccountId;
 
     /**
-     * 资产凭证
+     * 资产凭证id
      */
     @TableField(value = "assets_certificate_id")
     private Long assetsCertificateId;
@@ -63,13 +63,19 @@ public class AssetAccountCertificate implements Serializable {
     private Long depreciationCostAccountId;
 
     /**
+     * 当月折旧凭证id
+     */
+    @TableField(value = "depreciation_certificate_id")
+    private Long depreciationCertificateId;
+
+    /**
      * 资产清理科目
      */
     @TableField(value = "assets_clean_account_id")
     private Long assetsCleanAccountId;
 
     /**
-     * 资产清理凭证
+     * 资产清理凭证id
      */
     @TableField(value = "assets_clean_certificate_id")
     private Long assetsCleanCertificateId;
@@ -83,23 +89,23 @@ public class AssetAccountCertificate implements Serializable {
     /**
      * 减值准备科目
      */
-    @TableField(value = "Impairment_account_id")
+    @TableField(value = "impairment_account_id")
     private Long impairmentAccountId;
 
     /**
      * 减值准备对方科目
      */
-    @TableField(value = "Impairment_other_part_account_id")
+    @TableField(value = "impairment_other_part_account_id")
     private Long impairmentOtherPartAccountId;
 
     /**
-     * 减值凭证
+     * 减值凭证id
      */
     @TableField(value = "Impairment_certificate_id")
     private Long impairmentCertificateId;
 
     /**
-     * 其他凭证
+     * 其他凭证id
      */
     @TableField(value = "other_certificate_id")
     private Long otherCertificateId;

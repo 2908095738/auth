@@ -6,10 +6,6 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
-import java.util.Date;
-import java.util.List;
-
 import com.bbs.api.auth.User;
 import com.bbs.enums.financial.CertificateWordEnum;
 import com.bbs.vo.Company;
@@ -18,6 +14,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+
+import java.io.Serializable;
+import java.util.Date;
+import java.util.List;
+
 
 /**
  * 记账凭证
@@ -89,6 +90,12 @@ public class Certificate implements Serializable {
      */
     @TableField(value = "update_by")
     private Long updateBy;
+
+    /**
+     * 凭证类型：1折旧凭证
+     */
+    @TableField(value = "type")
+    private Integer type;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
