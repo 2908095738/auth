@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static com.bbs.Result.success;
@@ -84,7 +86,9 @@ public class AssetController {
                     }
                 }
             }
-            return success(result);
+        Map<String, Long> map = new HashMap<>();
+        map.put("num",result);
+        return success(map);
         }
     }
 
