@@ -66,7 +66,11 @@ public class AddAssetDepreciationCertificate {
 
     }
 
-
+    /**
+     * 生成折旧凭证：多个资产合并为一个凭证
+     * @param param
+     * @return
+     */
     @PutMapping("/asset/depreciation/certificate")
     public Result<Boolean> add(@RequestBody Param param) {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
