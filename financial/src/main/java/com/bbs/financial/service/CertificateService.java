@@ -11,4 +11,5 @@ import com.github.yulichang.extension.mapping.base.MPJDeepService;
  */
 public interface CertificateService extends MPJDeepService<Certificate> {
 
+    Certificate selectByNowDepreciation();
 }

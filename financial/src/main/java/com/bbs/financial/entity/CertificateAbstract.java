@@ -19,8 +19,8 @@ import lombok.experimental.FieldNameConstants;
 @TableName(value ="certificate_abstract")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 @FieldNameConstants
+@AllArgsConstructor
 public class CertificateAbstract implements Serializable {
     /**
      * 主键

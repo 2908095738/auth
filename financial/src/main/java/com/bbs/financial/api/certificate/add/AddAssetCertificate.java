@@ -76,7 +76,7 @@ public class AddAssetCertificate {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
 
         try {
-            List<Asset> assets = new ArrayList<>();//assetService.selectJoinList();
+            List<Asset> assets = assetService.selectNowJoinList();
             if(CollUtil.isNotEmpty(assets)){
                 long no = db.lambdaQuery().eq(Certificate::getCompanyId, param.getCompanyId())
                         .ge(Certificate::getCreateTime, DateUtil.beginOfMonth(new Date()))

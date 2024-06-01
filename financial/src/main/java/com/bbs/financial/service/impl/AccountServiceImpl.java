@@ -3,6 +3,7 @@ package com.bbs.financial.service.impl;
 import cn.hutool.core.lang.tree.Tree;
 import cn.hutool.core.lang.tree.TreeNodeConfig;
 import cn.hutool.core.lang.tree.TreeUtil;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.financial.entity.Account;
@@ -80,7 +81,12 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
     @Cacheable(cacheNames = "account-tree")
     @Override
     public List<Tree<Long>> tree(String accountSort, Long companyId, String name, String no) {
-        List<Account> allAccount = list(Wrappers.lambdaQuery(Account.class)
+        List<Account> allAccount = list(searchAccountWrapper(accountSort, companyId, name, no));
+        return tree(allAccount);
+    }
+
+    private Wrapper<Account> searchAccountWrapper(String accountSort, Long companyId, String name, String no) {
+        return Wrappers.lambdaQuery(Account.class)
                 .eq(StringUtils.isNotBlank(accountSort), Account::getAccountSort, accountSort)
                 .eq(isNull(companyId), Account::getCompanyId, INTEGER_ZERO)
                 .and(nonNull(companyId), wrapper -> wrapper
@@ -92,10 +98,12 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
                         .like(StringUtils.isNotBlank(name), Account::getName, name)
                         .or()
                         .like(StringUtils.isNotBlank(no), Account::getNo, no)
-                )
-        );
+                );
+    }
 
-        return tree(allAccount);
+    @Override
+    public Page<Account> page(Page<Account> page, String accountSort, Long companyId, String name, String no) {
+        return page(page, searchAccountWrapper(accountSort, companyId, name, no));
     }
 
     @Override

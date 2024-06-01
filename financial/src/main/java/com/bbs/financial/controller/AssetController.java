@@ -1,5 +1,7 @@
 package com.bbs.financial.controller;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
@@ -7,8 +9,10 @@ import com.bbs.api.auth.User;
 import com.bbs.api.auth.UserAPI;
 import com.bbs.api.auth.company.CompanyAPI;
 import com.bbs.financial.entity.Asset;
+import com.bbs.financial.entity.Certificate;
 import com.bbs.financial.entity.AssetNumUnit;
 import com.bbs.financial.entity.AssetType;
+import com.bbs.financial.service.CertificateService;
 import com.bbs.financial.service.AssetService;
 import com.bbs.vo.CompanyStructure;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
@@ -17,12 +21,11 @@ import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 
 import static com.bbs.Result.success;
-import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 /**
  * 资产Controller
@@ -36,62 +39,11 @@ public class AssetController {
     private AssetService assetService;
     @DubboReference
     private CompanyAPI companyAPI;
-
     @DubboReference
     private UserAPI userAPI;
 
-    /**
-     * 查询资产列表
-     */
-    @GetMapping("/asset/list")
-    public Result<Page<Asset>> list(Asset assetParam, @RequestParam Integer current, @RequestParam Integer size)
-    {
-        Page<Asset> result = assetService.selectJoinListPage(new Page<>(current, size), Asset.class, new MPJLambdaWrapper<>(assetParam)
-                .selectAll(Asset.class)
-                .leftJoin(AssetNumUnit.class, AssetNumUnit::getId, Asset::getNumUnitId, ext -> ext
-                        .selectAssociation(AssetNumUnit.class, Asset::getNumUnit)
-                )
-                .leftJoin(AssetType.class, AssetType::getId, Asset::getAssetTypeId, ext -> ext
-                        .selectAssociation(AssetType.class, Asset::getAssetType)
-                )
-        );
-        Set<Long> companyStructureIds = new HashSet<>();
-        Set<Long> userIds = new HashSet<>();
-        result.getRecords().forEach(asset -> {
-            userIds.add(asset.getCreateBy());
-            if(nonNull(asset.getStructureId())) companyStructureIds.add(asset.getStructureId());
-            if(nonNull(asset.getUseUserId())) userIds.add(asset.getUseUserId());
-            if(nonNull(asset.getUpdateBy())) userIds.add(asset.getUpdateBy());
-        });
-        // 查询并填充所属部门
-        Map<Long, CompanyStructure> companyStructureIdMap = null;
-        if(companyStructureIds.size() > INTEGER_ZERO) {
-            companyStructureIdMap = companyAPI
-                    .search(companyStructureIds).stream()
-                    .collect(Collectors.toMap(CompanyStructure::getId, companyStructure -> companyStructure));
-        }
-        // 查询并填充所属用户、创建用户、修改用户
-        Map<Long, User> userIdMap = null;
-        if(userIds.size() > INTEGER_ZERO) {
-            userIdMap = userAPI.getUserList(userIds)
-                    .stream().collect(Collectors.toMap(User::getId, user -> user));
-        }
-        boolean companyStructureIdMapIsNull = nonNull(companyStructureIdMap);
-        boolean userIdMapIsNull = nonNull(userIdMap);
-        if(companyStructureIdMapIsNull || userIdMapIsNull) {
-            for (Asset asset : result.getRecords()) {
-                if(companyStructureIdMapIsNull && nonNull(asset.getCompanyId())) {
-                    asset.setCompanyStructure(companyStructureIdMap.get(asset.getCompanyId()));
-                }
-                if(userIdMapIsNull) {
-                    asset.setCreateUser(userIdMap.get(asset.getCreateBy()));
-                    if(nonNull(asset.getUseUserId())) asset.setUseUser(userIdMap.get(asset.getUseUserId()));
-                    if(nonNull(asset.getUpdateBy())) asset.setUpdateUser(userIdMap.get(asset.getUpdateBy()));
-                }
-            }
-        }
-        return success(result);
-    }
+    @Resource
+    private CertificateService certificateService;
 
     /**
      * 折旧凭证
@@ -99,9 +51,34 @@ public class AssetController {
      * 计算要生成的值：
      */
     @GetMapping("/asset/depreciation/debt")
-    public Result<Boolean> debt()
+    public Result<Object> debt()
     {
-        return success();
+        Certificate certificate = certificateService.selectByNowDepreciation();
+        if(Objects.nonNull(certificate)){
+            return success(certificate);
+        }{
+            List<Asset> assets = assetService.selectNowJoinList();
+            Long result = 0L;
+            if(CollUtil.isNotEmpty(assets)){
+                for (Asset asset : assets) {
+                    Date startDate = asset.getStartDate();//开始时间
+                    Integer depreciationMethod = asset.getDepreciationMethod();//折旧方法
+                    if(depreciationMethod == 1){
+                        //平均年限法
+                        Long depreciationMonthValue = asset.getDepreciationMonthValue();//平均月折旧额
+                        result= result + depreciationMonthValue;
+                    }else if(depreciationMethod == 2){
+                        //双倍余额递减法
+                        Long originalValue = asset.getOriginalValue();//原值
+
+                    }
+
+
+
+                }
+            }
+            return success(result);
+        }
     }
 
 
