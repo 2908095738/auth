@@ -5,10 +5,13 @@ import com.bbs.vo.CompanyStructure;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 public interface CompanyAPI {
 
     List<Company> list(Collection<Long> ids);
 
     List<CompanyStructure> searchStructureNames(Long companyId, Collection<String> name);
+
+    List<CompanyStructure> search(Set<Long> structureIds);
 }

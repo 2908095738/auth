@@ -2,26 +2,23 @@ package com.bbs.financial.controller;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
+import com.bbs.api.auth.UserAPI;
+import com.bbs.api.auth.company.CompanyAPI;
 import com.bbs.financial.entity.Asset;
 import com.bbs.financial.entity.Certificate;
 import com.bbs.financial.service.AssetService;
 import com.bbs.financial.service.CertificateService;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.dubbo.config.annotation.DubboReference;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+import java.util.Map;
 
 import static com.bbs.Result.success;
 
@@ -35,18 +32,14 @@ public class AssetController {
 
     @Resource
     private AssetService assetService;
+    @DubboReference
+    private CompanyAPI companyAPI;
+    @DubboReference
+    private UserAPI userAPI;
 
     @Resource
     private CertificateService certificateService;
 
-    /**
-     * 查询资产列表
-     */
-    @GetMapping("/asset/list")
-    public Result<Page<Asset>> list(Asset asset, @RequestParam Integer current, @RequestParam Integer size)
-    {
-        return success(assetService.page(new Page<>(current, size), new QueryWrapper<>(asset)));
-    }
 
     /**
      * 折旧凭证
@@ -121,5 +114,23 @@ public class AssetController {
     {
         assetService.getBaseMapper().deleteBatchIds(ids);
         return success();
+    }
+
+
+    /**
+     * 查询存放地点
+     */
+    @GetMapping("/asset/storage/place")
+    public Result<List<String>> searchStoragePlace(
+            @RequestParam Long companyId,
+            @RequestParam(required = false) String name
+    ) {
+        return success(assetService.listObjs(new QueryWrapper<Asset>()
+                .select("DISTINCT storage_place")
+                .eq("company_id", companyId)
+                .like(StringUtils.isNotBlank(name), "storage_place", name)
+                .isNotNull("storage_place")
+                .orderByAsc("storage_place")
+        ));
     }
 }

@@ -24,11 +24,11 @@ import java.util.List;
  * 记账凭证
  * @TableName certificate
  */
+@FieldNameConstants
 @TableName(value ="certificate")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@FieldNameConstants
 public class Certificate implements Serializable {
     /**
      * 主键
@@ -107,11 +107,17 @@ public class Certificate implements Serializable {
     private User authUser;
 
     @TableField(exist = false)
-    @EntityMapping(thisField = Fields.id, joinField = CertificateAbstract.Fields.certificateId)
+    @EntityMapping(
+            thisField = Fields.id,
+            joinField = CertificateAbstract.Fields.certificateId
+    )
     private List<CertificateAbstract> abstracts;
 
     @TableField(exist = false)
-    @EntityMapping(thisField = Fields.id, joinField = CertificateFile.Fields.certificateId)
+    @EntityMapping(
+            thisField = Fields.id,
+            joinField = CertificateFile.Fields.certificateId
+    )
     private List<CertificateFile> files;
 
     @TableField(exist = false)

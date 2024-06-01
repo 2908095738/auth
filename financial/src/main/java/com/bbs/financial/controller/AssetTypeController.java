@@ -51,19 +51,17 @@ public class AssetTypeController {
     /**
      * 新增资产类别
      */
-    @PostMapping("/asset/type")
-    public Result<Boolean> add(@RequestBody AssetType assetType)
-    {
+    @PutMapping("/asset/type")
+    public Result<Long> add(@RequestBody AssetType assetType) {
         assetType.setCreateBy(LoginUser.getId());
-        assetType.setUpdateBy(LoginUser.getId());
         assetTypeService.save(assetType);
-        return success();
+        return success(assetType.getId());
     }
 
     /**
      * 修改资产类别
      */
-    @PutMapping("/asset/type")
+    @PostMapping("/asset/type")
     public Result<Boolean> edit(@RequestBody AssetType assetType)
     {
         assetTypeService.updateById(assetType);

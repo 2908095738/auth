@@ -46,6 +46,8 @@ public interface AccountService extends MPJBaseService<Account> {
 
     List<Tree<Long>> tree(String accountSort, Long companyId, String name, String no);
 
+    Page<Account> page(Page<Account> page, String accountSort, Long companyId, String name, String no);
+
     List<Tree<Long>> tree(List<Account> accounts);
 
     Page<Account> join(String no, String name, String sort, Long companyId, Integer current, Integer size);

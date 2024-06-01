@@ -58,11 +58,6 @@ public class AddAsset {
         private Long companyId;
 
         /**
-         * 录入月份
-         */
-        private String entryMonth;
-
-        /**
          * 资产编码
          */
         private String no;
@@ -111,7 +106,7 @@ public class AddAsset {
         /**
          * 使用人id
          */
-        private Long useId;
+        private Long useUserId;
 
         /**
          * 折旧方法
@@ -212,6 +207,8 @@ public class AddAsset {
                             (Objects.equals(count, LONG_ZERO) ? LONG_ONE : count)
                     );
                 }
+            } else {
+                asset.setUpdateBy(LoginUser.getId());
             }
             assetService.saveOrUpdate(asset);
             transactionManager.commit(transaction);

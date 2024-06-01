@@ -10,10 +10,7 @@ import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -37,6 +34,11 @@ public class CompanyAPIImpl implements CompanyAPI {
             return converter.toCSVO(companyService.searchStructure(companyId, new ArrayList<>(name)));
         }
         return Collections.emptyList();
+    }
+
+    @Override
+    public List<CompanyStructure> search(Set<Long> structureIds) {
+        return converter.toCSVO(companyService.searchStructure(structureIds));
     }
 
 }

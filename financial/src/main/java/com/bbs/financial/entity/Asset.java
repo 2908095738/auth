@@ -4,12 +4,15 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import java.io.Serializable;
+import java.util.Date;
+
+import com.bbs.api.auth.User;
+import com.bbs.vo.CompanyStructure;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
-import java.util.Date;
+import lombok.experimental.FieldNameConstants;
 
 /**
  * 资产表
@@ -19,6 +22,7 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldNameConstants
 public class Asset implements Serializable {
     /**
      * 
@@ -241,4 +245,22 @@ public class Asset implements Serializable {
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+    @TableField(exist = false)
+    private AssetNumUnit numUnit;
+
+    @TableField(exist = false)
+    private AssetType assetType;
+
+    @TableField(exist = false)
+    private CompanyStructure companyStructure;
+
+    @TableField(exist = false)
+    private User useUser;
+
+    @TableField(exist = false)
+    private User createUser;
+
+    @TableField(exist = false)
+    private User updateUser;
 }

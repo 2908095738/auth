@@ -47,57 +47,12 @@ public class AccountController
      */
     @GetMapping("/account/list")
     public Result<Page<Account>> list(Account param, @RequestParam Integer current, @RequestParam Integer size) {
-        String name = param.getName();
-
-
-        String no = param.getNo();
-        boolean isSearchNo = StringUtils.isNotBlank(no) && no.indexOf('-') > -INTEGER_ONE;
-        String[] split = null;
-
-        if(isSearchNo) {
-            split = no.split("-");
-            param.setNo(split[INTEGER_ZERO]);
-        }
-
-        param.setName(null);
-        Page<Account> page = accountService.page(new Page<>(current, size), new QueryWrapper<>(param)
-                .eq("company_id", INTEGER_ZERO)
-                .or().eq(nonNull(param.getCompanyId()), "company_id", param.getCompanyId())
-                .or().like(StringUtils.isNotBlank(name), "name", name)
-                .or().like(StringUtils.isNotBlank(no), "no", no)
-                // 根据 no 中的 - 的数量，获取需要查询的科目 level
-                // ps: value 的三元，可忽略，用于解决 IDEA Null 检查
-                // ps:（无具体作用，该判断是否生效取决于 eq 的 isSearchNo; 如果生效，value 始终为 split.length - INTEGER_ONE）
-                .eq(isSearchNo, "level", isSearchNo ? split.length - INTEGER_ONE : INTEGER_ZERO)
-        );
-
-        if(isSearchNo) {
-            // 根据 no 中的 - 的数量，获取科目序号
-            String indexStr = split[split.length - INTEGER_ONE];
-
-            // 清除 xxx-01-xxx 中 01 的 0
-            if(indexStr.charAt(INTEGER_ZERO) == '0') {
-
-                //前端输入最小值 xxxx-01 or xxxx-1，不能为 0
-                Preconditions.checkArgument(indexStr.length() > INTEGER_ONE, "子级序号不能为 0，最小为 1");
-
-                // 获取前端输入的序号（xxxx-01-xxx 的 1）
-                indexStr = indexStr.substring(INTEGER_ONE);
-                int index = Integer.parseInt(indexStr);
-
-                // 从中获取数据
-                Account account = page.getRecords().stream()
-                        .sorted(Comparator.comparing(Account::getWeight))
-                        .collect(Collectors.toList())
-                        .get(index);
-
-                // 封装 Page 返回
-                Page<Account> result = new Page<>(current, INTEGER_ONE);
-                result.setRecords(Collections.singletonList(account));
-                return success(result);
-            }
-        }
-        return success(page);
+        return success(accountService.page(new Page<>(current, size),
+                param.getAccountSort(),
+                param.getCompanyId(),
+                param.getName(),
+                param.getNo()
+        ));
     }
 
     private Tree<Long> loop(String[] noStrArr, Tree<Long> result, Integer level) {

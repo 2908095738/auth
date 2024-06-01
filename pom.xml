@@ -39,7 +39,7 @@
         <druid.version>1.2.11</druid.version>
 
         <validation-api.version>2.0.1.Final</validation-api.version>
-        <lombok.version>1.18.24</lombok.version>
+        <lombok.version>1.18.30</lombok.version>
         <mapstruct.version>1.5.2.Final</mapstruct.version>
 
         <jackson-core.version>2.14.1</jackson-core.version>

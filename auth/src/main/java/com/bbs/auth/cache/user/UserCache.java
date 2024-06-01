@@ -22,6 +22,7 @@ import org.springframework.web.client.RestClientException;
 import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -85,7 +86,7 @@ public class UserCache {
     }
 
     public List<User> get(List<Long> ids) {
-        List<String> idStrList = ids.stream().map(USER::key).collect(Collectors.toList());
+        List<String> idStrList = ids.stream().filter(Objects::nonNull).map(USER::key).collect(Collectors.toList());
         return redis.multiGet(idStrList)
                 .stream().map(str -> nonNull(str) ? JSONUtil.toBean(str, User.class) : null)
                 .collect(Collectors.toList());
