@@ -55,10 +55,22 @@ public class Asset implements Serializable {
     private Long assetTypeId;
 
     /**
+     * 资产类别
+     */
+    @TableField(exist = false)
+    private String assetTypeName;
+
+    /**
      * 部门ID（公司结构ID）
      */
     @TableField(value = "structure_id")
     private Long structureId;
+
+    /**
+     * 部门名称
+     */
+    @TableField(exist = false)
+    private String structureName;
 
     /**
      * 开始使用日期
@@ -79,6 +91,12 @@ public class Asset implements Serializable {
     private Long numUnitId;
 
     /**
+     * 数量单位名称
+     */
+    @TableField(exist = false)
+    private String numUnitName;
+
+    /**
      * 规格型号
      */
     @TableField(value = "spec")
@@ -95,6 +113,12 @@ public class Asset implements Serializable {
      */
     @TableField(value = "use_user_id")
     private Long useUserId;
+
+    /**
+     * 使用人名称
+     */
+    @TableField(exist = false)
+    private String useUserName;
 
     /**
      * 折旧方法
@@ -223,6 +247,12 @@ public class Asset implements Serializable {
     private Long createBy;
 
     /**
+     * 信息创建人名称
+     */
+    @TableField(exist = false)
+    private String createUserName;
+
+    /**
      * 修改时间
      */
     @TableField(value = "update_time")
@@ -233,6 +263,12 @@ public class Asset implements Serializable {
      */
     @TableField(value = "update_by")
     private Long updateBy;
+
+    /**
+     * 信息修改人名称
+     */
+    @TableField(exist = false)
+    private String updateUserName;
 
     /**
      * 0表示未删除，1表示已删除

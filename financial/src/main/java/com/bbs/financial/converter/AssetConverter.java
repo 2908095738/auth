@@ -3,6 +3,7 @@ package com.bbs.financial.converter;
 import com.bbs.financial.api.asset.AddAsset;
 import com.bbs.financial.api.asset.SearchAssetList;
 import com.bbs.financial.entity.Asset;
+import com.bbs.financial.entity.AssetAccountCertificate;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
@@ -21,4 +22,9 @@ public interface AssetConverter {
     })
     Asset toEntity(AddAsset.Param param);
     Asset toEntity(SearchAssetList.Param param);
+
+    @Mappings({
+            @Mapping(target = "id", ignore = true),
+    })
+    AssetAccountCertificate toAccountCertificateEntity(AddAsset.Param param);
 }

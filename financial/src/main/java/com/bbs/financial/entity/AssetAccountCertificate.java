@@ -15,7 +15,7 @@ import lombok.Data;
 @Data
 public class AssetAccountCertificate implements Serializable {
     /**
-     * 
+     * 主键
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
