@@ -16,4 +16,6 @@ public interface UserAPI {
     List<User> getUserList(Set<Long> ids);
 
     List<User> searchByUserOrSave(Long companyId, List<User> userList);
+
+    User getUserByName(String userName);
 }

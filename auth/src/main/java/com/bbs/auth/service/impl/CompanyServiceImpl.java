@@ -78,7 +78,9 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
 
     @Override
     public List<CompanyStructure> searchStructure(Long companyID) {
-        return searchStructure(companyID, null);
+        return companyStructureService.lambdaQuery()
+                .eq(Objects.nonNull(companyID), CompanyStructure::getCompanyId, companyID)
+                .list();
     }
 
 
@@ -93,6 +95,14 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
                 .eq(Objects.nonNull(companyID), CompanyStructure::getCompanyId, companyID)
                 .in(CollUtil.isNotEmpty(name), CompanyStructure::getName, name)
                 .list();
+    }
+
+    @Override
+    public CompanyStructure searchStructure(Long companyID, String name) {
+        return companyStructureService.lambdaQuery()
+                .eq(Objects.nonNull(companyID), CompanyStructure::getCompanyId, companyID)
+                .eq(StringUtils.isNotEmpty(name), CompanyStructure::getName, name)
+                .one();
     }
 
     @Override

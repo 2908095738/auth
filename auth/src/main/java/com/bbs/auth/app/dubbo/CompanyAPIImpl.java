@@ -37,6 +37,11 @@ public class CompanyAPIImpl implements CompanyAPI {
     }
 
     @Override
+    public CompanyStructure searchStructureNames(Long companyId, String name) {
+        return converter.toCSVO(companyService.searchStructure(companyId, name));
+    }
+
+    @Override
     public List<CompanyStructure> search(Set<Long> structureIds) {
         return converter.toCSVO(companyService.searchStructure(structureIds));
     }

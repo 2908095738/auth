@@ -31,6 +31,5 @@ public interface UserConverter {
     com.bbs.api.auth.User toAPIUser(UserVO vo);
 
     List<com.bbs.api.auth.User> toAPIUser(List<User> entity);
-
-
+    com.bbs.api.auth.User toAPIUser(User entity);
 }

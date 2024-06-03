@@ -15,4 +15,6 @@ public interface CompanyConverter {
     List<com.bbs.vo.Company> toVO(List<Company> entity);
 
     List<CompanyStructure> toCSVO(List<com.bbs.auth.entity.CompanyStructure> companyStructures);
+
+    CompanyStructure toCSVO(com.bbs.auth.entity.CompanyStructure companyStructure);
 }

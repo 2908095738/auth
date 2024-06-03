@@ -64,4 +64,9 @@ public class UserAPIImpl implements UserAPI {
         List<com.bbs.auth.entity.User> users = userService.searchByUserOrSave(companyId, userList);
         return BeanUtils.toBean(users, User.class);
     }
+
+    @Override
+    public User getUserByName(String userName) {
+        return converter.toAPIUser(userService.lambdaQuery().eq(com.bbs.auth.entity.User::getName, userName).one());
+    }
 }

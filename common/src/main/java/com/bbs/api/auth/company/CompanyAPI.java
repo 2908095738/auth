@@ -13,5 +13,7 @@ public interface CompanyAPI {
 
     List<CompanyStructure> searchStructureNames(Long companyId, Collection<String> name);
 
+    CompanyStructure searchStructureNames(Long companyId, String name);
+
     List<CompanyStructure> search(Set<Long> structureIds);
 }
