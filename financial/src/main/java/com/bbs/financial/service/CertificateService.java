@@ -3,6 +3,8 @@ package com.bbs.financial.service;
 import com.bbs.financial.entity.Certificate;
 import com.github.yulichang.extension.mapping.base.MPJDeepService;
 
+import java.util.List;
+
 
 /**
  * 记账凭证Service接口
@@ -11,5 +13,5 @@ import com.github.yulichang.extension.mapping.base.MPJDeepService;
  */
 public interface CertificateService extends MPJDeepService<Certificate> {
 
-    Certificate selectByNowDepreciation();
+    List<Certificate> selectByDepreciation();
 }

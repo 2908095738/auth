@@ -1,6 +1,5 @@
 package com.bbs.financial.service.impl;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import com.bbs.financial.entity.Certificate;
 import com.bbs.financial.entity.CertificateAbstract;
@@ -11,8 +10,6 @@ import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
-import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 
 /**
  * 记账凭证Service业务层处理
@@ -28,17 +25,13 @@ public class CertificateServiceImpl extends MPJBaseServiceImpl<CertificateMapper
      * @return
      */
     @Override
-    public Certificate selectByNowDepreciation() {
-        List<Certificate> list =selectJoinList(Certificate.class, new MPJLambdaWrapper<Certificate>()
+    public List<Certificate> selectByDepreciation() {
+        return selectJoinList(Certificate.class, new MPJLambdaWrapper<Certificate>()
                 .selectAll(Certificate.class)
                 .selectCollection(CertificateAbstract.class, Certificate::getAbstracts)
                 .leftJoin(CertificateAbstract.class, CertificateAbstract::getCertificateId, Certificate::getId)
-                .eq(Certificate::getType,INTEGER_ONE)
+                .eq(Certificate::getType, 5)
                 .between(Certificate::getCreateTime, DateUtil.format(DateUtil.beginOfMonth(DateUtil.date()), "yyyy-MM-dd"), DateUtil.date())
         );
-        if(CollUtil.isNotEmpty(list)){
-            return list.get(0);
-        }
-        return null;
     }
 }

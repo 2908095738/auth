@@ -27,6 +27,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 
@@ -87,7 +88,7 @@ public class AddAssetCertificate {
             if(CollUtil.isNotEmpty(assets)){
                 List<CertificateAbstract> certificateAbstracts = new ArrayList<>();
                 // 凭证号
-                long no = db.lambdaQuery().eq(Certificate::getCompanyId, param.getCompanyId())
+                Long no = db.lambdaQuery().eq(Certificate::getCompanyId, param.getCompanyId())
                         .ge(Certificate::getCreateTime, DateUtil.beginOfMonth(new Date()))
                         .lt(Certificate::getCreateTime, DateUtil.beginOfMonth(DateUtil.offsetMonth(new Date(), INTEGER_ONE)))
                         .count() + INTEGER_ONE;
@@ -98,9 +99,13 @@ public class AddAssetCertificate {
                     certificate.setNo(no);
                     certificate.setDate(param.date);
                     certificate.setCreateBy(LoginUser.getId());
+                    certificate.setType(param.certificateType);
                     db.save(certificate);
 
                     AssetAccountCertificate assetAccountCertificate = asset.getAssetAccountCertificate();
+                    if(Objects.isNull(assetAccountCertificate)){
+                        return Result.failed("资产账户信息不能为空");
+                    }
                     //借
                     CertificateAbstract borrow = new CertificateAbstract();
                     borrow.setCertificateId(certificate.getId());
@@ -113,6 +118,9 @@ public class AddAssetCertificate {
                     switch (param.certificateType){
                         case 1:
                             //购入凭证
+                            if(Objects.isNull(assetAccountCertificate.getFixedAssetsAccountId())||Objects.isNull(assetAccountCertificate.getPurchaseAssetsOtherPartAccountId())){
+                                return Result.failed("购入凭证必须填写固定资产科目和购入其他科目");
+                            }
                             borrow.setCertificateAbstract("购入"+asset.getName());
                             borrow.setAccountId(assetAccountCertificate.getFixedAssetsAccountId());
                             borrow.setBorrowMoney(asset.getOriginalValue());
@@ -122,12 +130,14 @@ public class AddAssetCertificate {
                             break;
                         case 2:
                             //折旧凭证
+                            if(Objects.isNull(assetAccountCertificate.getDepreciationAccountId())||Objects.isNull(assetAccountCertificate.getDepreciationCostAccountId())){
+                                return Result.failed("折旧凭证必须填写折旧科目和折旧成本科目");
+                            }
                             long money = 0L;
                             Integer depreciationMethod = asset.getDepreciationMethod();//折旧方法
                             if(depreciationMethod == 1){
                                 //平均年限法
                                 money = asset.getDepreciationMonthValue();//平均月折旧额
-
                             }else if(depreciationMethod == 2){
                             //TODO  money =
                             }
@@ -140,6 +150,9 @@ public class AddAssetCertificate {
                             break;
                         case 3:
                             //减值凭证
+                            if(Objects.isNull(assetAccountCertificate.getImpairmentAccountId())||Objects.isNull(assetAccountCertificate.getImpairmentOtherPartAccountId())){
+                                return Result.failed("减值凭证必须填写减值科目和减值其他科目");
+                            }
                             borrow.setCertificateAbstract("减值"+asset.getName());
                             borrow.setAccountId(assetAccountCertificate.getImpairmentOtherPartAccountId());
 
@@ -152,6 +165,9 @@ public class AddAssetCertificate {
                             break;
                         case 4:
                             //清理凭证
+                            if(Objects.isNull(assetAccountCertificate.getAssetsCleanAccountId())||Objects.isNull(assetAccountCertificate.getFixedAssetsAccountId())){
+                                return Result.failed("清理凭证必须填写清理科目和固定资产科目");
+                            }
                             borrow.setCertificateAbstract("清理"+asset.getName());
                             borrow.setAccountId(assetAccountCertificate.getAssetsCleanAccountId());
                             borrow.setBorrowMoney(asset.getOriginalValue());
