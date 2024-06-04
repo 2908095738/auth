@@ -31,17 +31,10 @@ public class AssetNumUnit implements Serializable {
     @TableField(value = "name")
     private String name;
 
-    /**
-     * 公司ID
-     */
-    @TableField(value = "company_id")
-    private Long companyId;
-
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
-    public AssetNumUnit(String name, Long companyId) {
+    public AssetNumUnit(String name) {
         this.name = name;
-        this.companyId = companyId;
     }
 }

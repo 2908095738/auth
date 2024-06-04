@@ -176,7 +176,7 @@ public class ImportAssetFile {
             fillUseUser(asset);
             fillCreateUser(asset);
             fillUpdateUser(asset);
-            fillNumUnit(asset, companyId);
+            fillNumUnit(asset);
         });
     }
 
@@ -232,14 +232,9 @@ public class ImportAssetFile {
         }
     }
 
-    private void fillNumUnit(Asset asset, Long companyId) {
+    private void fillNumUnit(Asset asset) {
         if(isNotBlank(asset.getNumUnitName())) {
             AssetNumUnit unit = assetNumUnitService.lambdaQuery()
-                    .and(wrapper -> wrapper
-                            .eq(AssetNumUnit::getCompanyId, INTEGER_ZERO)
-                            .or()
-                            .eq(AssetNumUnit::getCompanyId, companyId)
-                    )
                     .eq(AssetNumUnit::getName, asset.getNumUnitName())
                     .one();
             if(nonNull(unit)) asset.setNumUnitId(unit.getId());
