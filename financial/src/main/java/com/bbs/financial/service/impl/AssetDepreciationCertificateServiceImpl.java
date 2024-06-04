@@ -6,6 +6,9 @@ import com.bbs.financial.service.AssetDepreciationCertificateService;
 import com.bbs.financial.mapper.AssetDepreciationCertificateMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  *
  */
@@ -13,6 +16,12 @@ import org.springframework.stereotype.Service;
 public class AssetDepreciationCertificateServiceImpl extends ServiceImpl<AssetDepreciationCertificateMapper, AssetDepreciationCertificate>
     implements AssetDepreciationCertificateService{
 
+    @Override
+    public List<AssetDepreciationCertificate> selectList(Long id) {
+
+
+        return Collections.emptyList();
+    }
 }
 
 

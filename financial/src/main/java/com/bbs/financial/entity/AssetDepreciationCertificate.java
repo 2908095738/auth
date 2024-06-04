@@ -1,5 +1,6 @@
 package com.bbs.financial.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -22,7 +23,7 @@ public class AssetDepreciationCertificate implements Serializable {
     /**
      * 
      */
-    @TableId(value = "id")
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
@@ -43,15 +44,24 @@ public class AssetDepreciationCertificate implements Serializable {
     @TableField(value = "month")
     private Date month;
 
+    /**
+     * 折旧金额
+     */
+    @TableField(value = "money")
+    private Long money;
+
     @TableField(exist = false)
     private Certificate certificate;
+
+    public AssetDepreciationCertificate(Long assetId, Long depreciationCertificateId, Date month, Long money) {
+        this.assetId = assetId;
+        this.depreciationCertificateId = depreciationCertificateId;
+        this.month = month;
+        this.money = money;
+    }
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
-    public AssetDepreciationCertificate(Long assetId, Long depreciationCertificateId, Date month) {
-        this.assetId = assetId;
-        this.depreciationCertificateId = depreciationCertificateId;
-        this.month = month;
-    }
+
 }

@@ -5,7 +5,6 @@ import cn.hutool.core.date.DateUtil;
 import com.bbs.Result;
 import com.bbs.enums.financial.CertificateWordEnum;
 import com.bbs.financial.entity.Asset;
-import com.bbs.financial.entity.AssetAccountCertificate;
 import com.bbs.financial.entity.Certificate;
 import com.bbs.financial.entity.CertificateAbstract;
 import com.bbs.financial.service.AssetService;
@@ -105,19 +104,18 @@ public class AddAssetDepreciationCertificate {
                     }else if(depreciationMethod == 2){
 //                      TODO  money =
                     }
-                    AssetAccountCertificate assetAccountCertificate = asset.getAssetAccountCertificate();
                     //借
                     CertificateAbstract borrow = new CertificateAbstract();
                     borrow.setCertificateId(certificate.getId());
                     borrow.setCertificateAbstract(param.digest);
-                    borrow.setAccountId(assetAccountCertificate.getDepreciationAccountId());
+                    borrow.setAccountId(asset.getDepreciationAccountId());
                     borrow.setBorrowMoney(money);
                     borrow.setLoansMoney(0L);
                     //贷
                     CertificateAbstract loan = new CertificateAbstract();
                     loan.setCertificateId(certificate.getId());
                     loan.setCertificateAbstract(param.digest);
-                    loan.setAccountId(assetAccountCertificate.getDepreciationCostAccountId());
+                    loan.setAccountId(asset.getDepreciationCostAccountId());
                     loan.setBorrowMoney(0L);
                     loan.setLoansMoney(money);
                     certificateAbstractsBorrow.add(borrow);

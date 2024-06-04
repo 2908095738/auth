@@ -1,7 +1,6 @@
 package com.bbs.financial.service.impl;
 
 import com.bbs.financial.entity.Asset;
-import com.bbs.financial.entity.AssetAccountCertificate;
 import com.bbs.financial.mapper.AssetMapper;
 import com.bbs.financial.service.AssetService;
 import com.github.yulichang.base.MPJBaseServiceImpl;
@@ -28,8 +27,6 @@ public class AssetServiceImpl extends MPJBaseServiceImpl<AssetMapper, Asset>
     public List<Asset> selectNowJoinList() {
         return selectJoinList(Asset.class, new MPJLambdaWrapper<Asset>()
                 .selectAll(Asset.class)
-                .selectAssociation(AssetAccountCertificate.class,Asset::getAssetAccountCertificate)
-                .leftJoin(AssetAccountCertificate.class, AssetAccountCertificate::getAssetId, Asset::getId)
                 .eq(Asset::getIsDeleted, 0)
                 .ne(Asset::getDepreciationMethod, 3)//排除折旧方法为不计提折旧的资产
                 .lt(Asset::getStartDate,new Date())//开始使用日期月份比当前月份小
@@ -40,8 +37,6 @@ public class AssetServiceImpl extends MPJBaseServiceImpl<AssetMapper, Asset>
     public List<Asset> selectJoinList(List<Long> assetIds) {
         return selectJoinList(Asset.class, new MPJLambdaWrapper<Asset>()
                 .selectAll(Asset.class)
-                .selectAssociation(AssetAccountCertificate.class,Asset::getAssetAccountCertificate)
-                .leftJoin(AssetAccountCertificate.class, AssetAccountCertificate::getAssetId, Asset::getId)
                 .eq(Asset::getIsDeleted, 0)
                 .in(Asset::getId, assetIds)
         );
