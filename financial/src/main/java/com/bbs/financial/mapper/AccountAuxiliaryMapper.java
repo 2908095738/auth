@@ -1,7 +1,7 @@
 package com.bbs.financial.mapper;
 
 import com.bbs.financial.entity.AccountAuxiliary;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 
 /**
 * @author 路晨霖
@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2024-05-17 22:13:11
 * @Entity com.bbs.financial.entity.AccountAuxiliary
 */
-public interface AccountAuxiliaryMapper extends BaseMapper<AccountAuxiliary> {
+public interface AccountAuxiliaryMapper extends MPJBaseMapper<AccountAuxiliary> {
 
 }
 
