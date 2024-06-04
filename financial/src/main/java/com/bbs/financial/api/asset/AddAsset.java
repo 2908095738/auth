@@ -189,11 +189,6 @@ public class AddAsset {
         private Long purchaseAssetsOtherPartAccountId;
 
         /**
-         * 资产凭证id
-         */
-        private Long assetsCertificateId;
-
-        /**
          * 税金科目
          */
         private Long taxesAccountId;
@@ -209,19 +204,10 @@ public class AddAsset {
         private Long depreciationCostAccountId;
 
         /**
-         * 当月折旧凭证id
-         */
-        private Long depreciationCertificateId;
-
-        /**
          * 资产清理科目
          */
         private Long assetsCleanAccountId;
 
-        /**
-         * 资产清理凭证id
-         */
-        private Long assetsCleanCertificateId;
 
         /**
          * 清理月份
@@ -238,15 +224,6 @@ public class AddAsset {
          */
         private Long impairmentOtherPartAccountId;
 
-        /**
-         * 减值凭证id
-         */
-        private Long impairmentCertificateId;
-
-        /**
-         * 其他凭证id
-         */
-        private Long otherCertificateId;
     }
 
     private static final Pattern NUMBER_PATTERN = Pattern.compile("-?\\d+(\\.\\d+)?");

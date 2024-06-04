@@ -5,8 +5,9 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
 import lombok.Data;
+
+import java.io.Serializable;
 
 /**
  * 资产关联的科目和凭证表
@@ -91,12 +92,6 @@ public class AssetAccountCertificate implements Serializable {
     private Long assetsCertificateId;
 
     /**
-     * 当月折旧凭证id
-     */
-    @TableField(value = "depreciation_certificate_id")
-    private Long depreciationCertificateId;
-
-    /**
      * 资产清理凭证id
      */
     @TableField(value = "assets_clean_certificate_id")
@@ -176,13 +171,6 @@ public class AssetAccountCertificate implements Serializable {
     @TableField(exist = false)
     @Alias(value = "资产凭证")
     private String assetsCertificateName;
-
-    @TableField(exist = false)
-    private Certificate depreciationCertificate;
-
-    @TableField(exist = false)
-    @Alias(value = "当月折旧凭证")
-    private String depreciationCertificateName;
 
     @TableField(exist = false)
     private Certificate assetsCleanCertificate;
