@@ -6,7 +6,6 @@ import cn.hutool.core.io.IoUtil;
 import cn.hutool.poi.excel.ExcelUtil;
 import cn.hutool.poi.excel.ExcelWriter;
 import com.bbs.financial.entity.Asset;
-import com.bbs.financial.entity.AssetAccountCertificate;
 import com.bbs.financial.service.AssetService;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.AllArgsConstructor;
@@ -27,7 +26,6 @@ import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
@@ -75,9 +73,6 @@ public class ExportAsset {
         Date finalEndDate = endDate;
         List<Asset> assets = db.selectJoinList(Asset.class, new MPJLambdaWrapper<Asset>()
                 .selectAll(Asset.class)
-                .leftJoin(AssetAccountCertificate.class, AssetAccountCertificate::getAssetId, Asset::getId, ext -> ext
-                        .selectAssociation(AssetAccountCertificate.class, Asset::getAssetAccountCertificate)
-                )
                 .eq(Asset::getCompanyId, companyId)
                 .or(nonNull(startDate), wrapper -> wrapper
                         .ge(Asset::getCreateTime, nonNull(finalStartDate) ? DateUtil.beginOfMonth(finalStartDate) : null)
