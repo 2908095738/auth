@@ -80,7 +80,7 @@ tianditu:
     search: /geocoder
     timeout: 10000
 dfs:
-  host: 192.168.0.7:8082
+  host: 192.168.0.100:9040
   api:
     deleteList: /batch
     timeout: 10000
@@ -99,3 +99,7 @@ dubbo:
     port: -1
   registry:
     address: zookeeper://${apache.zookeeper.connect-url}?blockUntilConnectedWait=100000&timeout=100000
+asset:
+  import:
+    template:
+      path: D:\project\jiyuan-chamber-of-commerce-end\financial\src\main\resources\asset\import\template
