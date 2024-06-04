@@ -6,9 +6,11 @@ import com.bbs.Result;
 import com.bbs.enums.financial.CertificateWordEnum;
 import com.bbs.financial.entity.Asset;
 import com.bbs.financial.entity.AssetAccountCertificate;
+import com.bbs.financial.entity.AssetDepreciationCertificate;
 import com.bbs.financial.entity.Certificate;
 import com.bbs.financial.entity.CertificateAbstract;
 import com.bbs.financial.service.AssetAccountCertificateService;
+import com.bbs.financial.service.AssetDepreciationCertificateService;
 import com.bbs.financial.service.AssetService;
 import com.bbs.financial.service.CertificateAbstractService;
 import com.bbs.financial.service.CertificateService;
@@ -46,6 +48,8 @@ public class AddAssetCertificate {
     private AssetService assetService;
     @Resource
     private AssetAccountCertificateService assetAccountCertificateService;
+    @Resource
+    private AssetDepreciationCertificateService assetDepreciationCertificateService;
 
     @Data
     @NoArgsConstructor
@@ -127,6 +131,9 @@ public class AddAssetCertificate {
                             loan.setCertificateAbstract("购入"+asset.getName());
                             loan.setAccountId(assetAccountCertificate.getPurchaseAssetsOtherPartAccountId());
                             loan.setLoansMoney(asset.getOriginalValue());
+
+                            assetAccountCertificate.setAssetsCertificateId(certificate.getId());
+                            assetAccountCertificateService.save(assetAccountCertificate);
                             break;
                         case 2:
                             //折旧凭证
@@ -147,6 +154,8 @@ public class AddAssetCertificate {
                             loan.setCertificateAbstract("折旧"+asset.getName());
                             loan.setAccountId(assetAccountCertificate.getDepreciationAccountId());
                             loan.setLoansMoney(money);
+
+                            assetDepreciationCertificateService.save(new AssetDepreciationCertificate(asset.getId(),certificate.getId(),new Date()));
                             break;
                         case 3:
                             //减值凭证
@@ -162,6 +171,9 @@ public class AddAssetCertificate {
                             //TODO 减值金额
                             borrow.setBorrowMoney(asset.getOriginalValue());
                             loan.setLoansMoney(asset.getOriginalValue());
+
+                            assetAccountCertificate.setImpairmentCertificateId(certificate.getId());
+                            assetAccountCertificateService.save(assetAccountCertificate);
                             break;
                         case 4:
                             //清理凭证
@@ -174,20 +186,28 @@ public class AddAssetCertificate {
                             loan.setCertificateAbstract("清理"+asset.getName());
                             loan.setAccountId(assetAccountCertificate.getFixedAssetsAccountId());
                             loan.setLoansMoney(asset.getOriginalValue());
+                            assetAccountCertificate.setAssetsCleanCertificateId(certificate.getId());
+                            assetAccountCertificateService.save(assetAccountCertificate);
                             break;
                         case 5:
                             //其他凭证
                             borrow.setCertificateAbstract("其他"+asset.getName());
+                            assetAccountCertificate.setOtherCertificateId(certificate.getId());
+                            assetAccountCertificateService.save(assetAccountCertificate);
                             break;
                         default:
                             throw new RuntimeException("凭证类型错误");
                     }
+
+
+
                     certificateAbstracts.add(borrow);
                     certificateAbstracts.add(loan);
-                    no += INTEGER_ONE;
 
-                    assetAccountCertificate.setAssetsCertificateId(certificate.getId());
-                    assetAccountCertificateService.save(assetAccountCertificate);
+
+
+
+                    no += INTEGER_ONE;
                 }
                 certificateAbstractService.saveBatch(certificateAbstracts);
             }

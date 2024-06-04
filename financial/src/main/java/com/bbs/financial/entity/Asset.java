@@ -4,15 +4,16 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
-import java.util.Date;
-
 import com.bbs.api.auth.User;
 import com.bbs.vo.CompanyStructure;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+
+import java.io.Serializable;
+import java.util.Date;
+import java.util.List;
 
 /**
  * 资产表
@@ -299,4 +300,7 @@ public class Asset implements Serializable {
 
     @TableField(exist = false)
     private User updateUser;
+    @TableField(exist = false)
+    private List<AssetDepreciationCertificate> certificatesDepreciationList;
+
 }

@@ -1,11 +1,16 @@
 package com.bbs.financial.entity;
 
+import cn.hutool.core.lang.TypeReference;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
 import lombok.Data;
+
+import java.io.Serializable;
+import java.util.List;
 
 /**
  * 资产关联的科目和凭证表
@@ -15,7 +20,7 @@ import lombok.Data;
 @Data
 public class AssetAccountCertificate implements Serializable {
     /**
-     * 主键
+     *
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
@@ -66,7 +71,7 @@ public class AssetAccountCertificate implements Serializable {
      * 当月折旧凭证id
      */
     @TableField(value = "depreciation_certificate_id")
-    private Long depreciationCertificateId;
+    private String depreciationCertificateId;
 
     /**
      * 资产清理科目
@@ -115,6 +120,15 @@ public class AssetAccountCertificate implements Serializable {
      */
     @TableField(value = "is_deleted")
     private Integer isDeleted;
+
+
+    public List<Long> getDepreciationCertificateIdList() {
+        if (StrUtil.isBlank(depreciationCertificateId)) {
+            return null;
+        }
+        return JSONUtil.toBean(depreciationCertificateId, new TypeReference<List<Long>>() {}, true);
+    }
+
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
