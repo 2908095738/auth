@@ -1,5 +1,6 @@
 package com.bbs.financial.entity;
 
+import cn.hutool.core.annotation.Alias;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -25,7 +26,7 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants
 public class Asset implements Serializable {
     /**
-     * 
+     * 主键
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
@@ -39,24 +40,28 @@ public class Asset implements Serializable {
     /**
      * 资产编码
      */
+    @Alias(value = "资产编码")
     @TableField(value = "no")
     private String no;
 
     /**
      * 资产名称
      */
+    @Alias(value = "资产名称")
     @TableField(value = "name")
     private String name;
 
     /**
      * 资产类别
      */
+    @Alias(value = "资产类别")
     @TableField(value = "asset_type_id")
     private Long assetTypeId;
 
     /**
      * 资产类别
      */
+    @Alias(value = "资产类别")
     @TableField(exist = false)
     private String assetTypeName;
 
@@ -69,18 +74,21 @@ public class Asset implements Serializable {
     /**
      * 部门名称
      */
+    @Alias(value = "部门")
     @TableField(exist = false)
     private String structureName;
 
     /**
      * 开始使用日期
      */
+    @Alias(value = "开始使用日期")
     @TableField(value = "start_date")
     private Date startDate;
 
     /**
      * 数量
      */
+    @Alias(value = "数量")
     @TableField(value = "num")
     private Long num;
 
@@ -93,18 +101,21 @@ public class Asset implements Serializable {
     /**
      * 数量单位名称
      */
+    @Alias(value = "数量单位")
     @TableField(exist = false)
     private String numUnitName;
 
     /**
      * 规格型号
      */
+    @Alias(value = "规格型号")
     @TableField(value = "spec")
     private String spec;
 
     /**
      * 存放地点
      */
+    @Alias(value = "存放地点")
     @TableField(value = "storage_place")
     private String storagePlace;
 
@@ -117,6 +128,7 @@ public class Asset implements Serializable {
     /**
      * 使用人名称
      */
+    @Alias(value = "使用人")
     @TableField(exist = false)
     private String useUserName;
 
@@ -127,98 +139,121 @@ public class Asset implements Serializable {
     private Integer depreciationMethod;
 
     /**
+     * 折旧方法
+     */
+    @Alias(value = "折旧方法")
+    @TableField(exist = false)
+    private Integer depreciationMethodName;
+
+    /**
      * 使用月数
      */
+    @Alias(value = "使用月数")
     @TableField(value = "durable_months")
     private Integer durableMonths;
 
     /**
      * 原值
      */
+    @Alias(value = "原值")
     @TableField(value = "original_value")
     private Long originalValue;
 
     /**
      * 税额
      */
+    @Alias(value = "税额")
     @TableField(value = "amount_tax_paid")
     private Long amountTaxPaid;
 
     /**
      * 残值率
      */
+    @Alias(value = "残值率")
     @TableField(value = "ratio_remaining")
     private Long ratioRemaining;
 
     /**
      * 预计残值
      */
+    @Alias(value = "预计残值")
     @TableField(value = "ratio_remaining_value")
     private Long ratioRemainingValue;
 
     /**
      * 减值准备
      */
+    @Alias(value = "减值准备")
     @TableField(value = "Impairment")
     private Long impairment;
 
     /**
      * 已折旧月数
      */
+    @Alias(value = "已折旧月数")
     @TableField(value = "depreciation_months")
     private Integer depreciationMonths;
 
     /**
      * 期初净值=原值-期初累计折旧
      */
+    @Alias(value = "期初净值")
     @TableField(value = "begin_period")
     private Long beginPeriod;
 
     /**
      * 期初累计折旧
      */
+    @Alias(value = "期初累计折旧")
     @TableField(value = "begin_depreciation_accumulated")
     private Long beginDepreciationAccumulated;
 
     /**
      * 平均月折旧额
      */
+    @Alias(value = "平均月折旧额")
     @TableField(value = "depreciation_month_value")
     private Long depreciationMonthValue;
 
     /**
      * 当月折旧额
      */
+    @Alias(value = "当月折旧额")
     @TableField(value = "depreciation_now_month_value")
     private Long depreciationNowMonthValue;
 
     /**
      * 本年折旧额
      */
+    @Alias(value = "本年折旧额")
     @TableField(value = "depreciation_year_value")
     private Long depreciationYearValue;
 
     /**
      * 期末累计折旧
      */
+    @Alias(value = "期末累计折旧")
     @TableField(value = "after_depreciation_accumulated")
     private Long afterDepreciationAccumulated;
 
     /**
      * 期末净值
      */
+    @Alias(value = "期末净值")
     @TableField(value = "after_period")
     private Long afterPeriod;
 
     /**
      * 期末减值准备
      */
+    @Alias(value = "期末减值准备")
     @TableField(value = "after_Impairment")
     private Long afterImpairment;
 
     /**
      * 清理月份
      */
+    @Alias(value = "清理月份")
     @TableField(value = "assets_clean_month")
     private String assetsCleanMonth;
 
@@ -229,14 +264,23 @@ public class Asset implements Serializable {
     private Integer status;
 
     /**
+     * 状态名称:正常 清理
+     */
+    @Alias(value = "状态")
+    @TableField(exist = false)
+    private Integer statusName;
+
+    /**
      * 备注
      */
+    @Alias(value = "备注")
     @TableField(value = "remark")
     private String remark;
 
     /**
      * 创建时间
      */
+    @Alias(value = "创建时间")
     @TableField(value = "create_time")
     private Date createTime;
 
@@ -249,12 +293,14 @@ public class Asset implements Serializable {
     /**
      * 信息创建人名称
      */
+    @Alias(value = "信息创建人")
     @TableField(exist = false)
     private String createUserName;
 
     /**
      * 修改时间
      */
+    @Alias(value = "修改时间")
     @TableField(value = "update_time")
     private Date updateTime;
 
@@ -267,6 +313,7 @@ public class Asset implements Serializable {
     /**
      * 信息修改人名称
      */
+    @Alias(value = "信息修改人")
     @TableField(exist = false)
     private String updateUserName;
 
