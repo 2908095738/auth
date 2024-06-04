@@ -4,6 +4,8 @@ import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
+import com.bbs.api.auth.User;
+import com.bbs.api.auth.UserAPI;
 import com.bbs.financial.dto.BaseMoneyByCashierDto;
 import com.bbs.financial.dto.ConfirmTotalDto;
 import com.bbs.financial.dto.IOTotalDto;
@@ -13,6 +15,7 @@ import com.bbs.financial.service.*;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,6 +41,9 @@ import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 @RequestMapping("/cashier")
 public class CashierController {
 
+    @DubboReference
+    private UserAPI userAPI;
+
     @Resource
     private AccountService accountService;
 
@@ -49,6 +55,75 @@ public class CashierController {
 
     @Resource
     private PriceTypeService priceTypeService;
+
+    /**
+     * 查询日记账
+     *
+     * @param current   页码
+     * @param size      条数
+     * @param companyId 公司id
+     * @param zhangHuId 账户id
+     * @param date      时间戳字符串
+     * @return
+     */
+    @GetMapping("/listCertificate")
+    public Result<Page<Certificate>> listCertificate(
+            @RequestParam(defaultValue = "1") Integer current,
+            @RequestParam(defaultValue = "10") Integer size,
+            Long companyId, Long zhangHuId, String date) {
+
+        //TODO L SQL合一
+
+        //SQL待使用凭证id列表
+        List<Long> inCertId = zhService.selectJoinList(Long.class,
+                new MPJLambdaWrapper<ZhangHu>()
+                        .select(CertificateAbstract::getCertificateId)
+                        .eq(!ObjectUtils.isEmpty(zhangHuId) && zhangHuId > 0, ZhangHu::getId, zhangHuId)
+                        .leftJoin(CertificateAbstract.class, CertificateAbstract::getAccountId, ZhangHu::getSubjectsId));
+
+        //获取凭证分页
+        Date date2DB = nonNull(date) ? new Date(Long.parseLong(date)) : new Date();
+        Page<Certificate> certificatePage = certificateService.pageDeep(
+                new Page<>(current, size),
+                Wrappers.<Certificate>lambdaQuery()
+                        .eq(Certificate::getCompanyId, companyId)
+                        .in(Certificate::getId, inCertId)
+                        .ge(Certificate::getDate, DateUtil.beginOfMonth(date2DB))
+                        .lt(Certificate::getDate, DateUtil.beginOfMonth(DateUtil.offsetMonth(date2DB, INTEGER_ONE)))
+                , conf -> conf.loop(true)
+        );
+
+        // 获取【创建用户】&&【审核用户】的 userId Set
+        Set<Long> userIds = filterUserIds(certificatePage);
+        // 查询用户信息
+        Map<Long, User> map = searchIdUserMap(userIds);
+        // 回填用户信息
+        fillUser(certificatePage, map);
+
+        return Result.success(certificatePage);
+    }
+
+    private Set<Long> filterUserIds(Page<Certificate> certificatePage) {
+        Set<Long> userIds = new HashSet<>();
+        certificatePage.getRecords().forEach(certificate -> {
+            userIds.add(certificate.getCreateBy());
+            Long authUserId = certificate.getAuthBy();
+            if (nonNull(authUserId)) userIds.add(authUserId);
+        });
+        return userIds;
+    }
+
+    private Map<Long, User> searchIdUserMap(Set<Long> userIds) {
+        return userAPI.getUserList(userIds).stream().collect(Collectors.toMap(User::getId, user -> user));
+    }
+
+    private void fillUser(Page<Certificate> certificatePage, Map<Long, User> map) {
+        certificatePage.getRecords().forEach(certificate -> {
+            certificate.setCreateUser(map.get(certificate.getCreateBy()));
+            Long authUserId = certificate.getAuthBy();
+            if (nonNull(authUserId)) certificate.setAuthUser(map.get(certificate.getAuthBy()));
+        });
+    }
 
     /**
      * 查询入账科目列表
@@ -71,13 +146,14 @@ public class CashierController {
      * 获取期初余额
      *
      * @param companyId 公司id
-     * @param dateStr   时间字符串
+     * @param zhangHuId 账户id
+     * @param date      时间戳字符串
      * @return
      */
     @GetMapping("/cert/oriMoney")
-    public Result<Long> getOriMoney(@RequestParam Long companyId, @RequestParam(name = "date", required = false) String dateStr) {
+    public Result<Long> getOriMoney(@RequestParam Long companyId, Long zhangHuId, @RequestParam(name = "date", required = false) String date) {
         //计算期初余额
-        List<Certificate> tmpList = getCertListByBefore(companyId, dateStr);
+        List<Certificate> tmpList = getCertListByBefore(companyId, zhangHuId, date);
         Long oriMoeny = 0L;
         for (Certificate cert : tmpList) {
             List<CertificateAbstract> abstList = cert.getAbstracts();
@@ -99,14 +175,26 @@ public class CashierController {
      * 获取当月前的凭证列表
      *
      * @param companyId 公司
-     * @param dateStr   时间字符串
+     * @param zhangHuId 账户id，传入[null]、[0]不报错
+     * @param date      时间戳字符串
      * @return
      */
-    private List<Certificate> getCertListByBefore(Long companyId, String dateStr) {
-        Date date = nonNull(dateStr) ? new Date(Long.parseLong(dateStr)) : new Date();
+    private List<Certificate> getCertListByBefore(Long companyId, Long zhangHuId, String date) {
+
+        //TODO L SQL合并
+
+        //SQL待使用凭证id列表
+        List<Long> inCertId = zhService.selectJoinList(Long.class,
+                new MPJLambdaWrapper<ZhangHu>()
+                        .select(CertificateAbstract::getCertificateId)
+                        .eq(!ObjectUtils.isEmpty(zhangHuId) && zhangHuId > 0, ZhangHu::getId, zhangHuId)
+                        .leftJoin(CertificateAbstract.class, CertificateAbstract::getAccountId, ZhangHu::getSubjectsId));
+
+        Date date2DB = nonNull(date) ? new Date(Long.parseLong(date)) : new Date();
         return certificateService.listDeep(Wrappers.<Certificate>lambdaQuery()
                 .eq(Certificate::getCompanyId, companyId)
-                .lt(Certificate::getDate, DateUtil.beginOfMonth(date))
+                .in(Certificate::getId, inCertId)
+                .lt(Certificate::getDate, DateUtil.beginOfMonth(date2DB))
                 .orderByDesc(Certificate::getDate)
         );
     }
@@ -128,7 +216,7 @@ public class CashierController {
         subjMap.values().forEach(d -> initMoneyByNow(Collections.singletonList(d)));
 
         //期初余额计算
-        initMoney(getCertListByBefore(companyId, dateStr), sId -> subjMap.containsKey(sId), sId -> Collections.singletonList(subjMap.get(sId)), false);
+        initMoney(getCertListByBefore(companyId, 0L, dateStr), sId -> subjMap.containsKey(sId), sId -> Collections.singletonList(subjMap.get(sId)), false);
 
         //收入、支出计算
         initMoney(getCertListByNow(companyId, dateStr), sId -> subjMap.containsKey(sId), sId -> Collections.singletonList(subjMap.get(sId)), true);
@@ -340,7 +428,7 @@ public class CashierController {
         List<Long> subjIds = page.getRecords().stream().map(ConfirmTotalDto::getSubj).map(ConfirmTotalDto.SubjDto::getSubjectsId).collect(Collectors.toList());
 
         //不同时间区间的凭证列表
-        List<Certificate> certsByBefore = getCertListByBefore(companyId, msecStr);
+        List<Certificate> certsByBefore = getCertListByBefore(companyId, 0L, msecStr);
         List<Certificate> certsByBeNow = getCertListByNow(companyId, msecStr);
 
         //初始化科目实例
