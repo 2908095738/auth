@@ -10,7 +10,7 @@ import com.bbs.financial.converter.AssetConverter;
 import com.bbs.financial.entity.Asset;
 import com.bbs.financial.entity.AssetNumUnit;
 import com.bbs.financial.entity.AssetType;
-import com.bbs.financial.service.AssetService;
+import com.bbs.financial.mapper.AssetMapper;
 import com.bbs.vo.CompanyStructure;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.AllArgsConstructor;
@@ -18,7 +18,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -161,7 +160,7 @@ public class SearchAssetList {
         /**
          * 清理月份
          */
-        private String assetsCleanMonth;
+        private String assetsCleanTime;
 
         /**
          * 状态:正常 清理
@@ -206,10 +205,10 @@ public class SearchAssetList {
 
     @Resource
     private AssetConverter converter;
-    @Resource
-    private AssetService db;
     @DubboReference
     private CompanyAPI companyAPI;
+    @Resource
+    private AssetMapper assetMapper;
 
     @DubboReference
     private UserAPI userAPI;
@@ -219,7 +218,7 @@ public class SearchAssetList {
         Asset entity = converter.toEntity(param);
 
         Date createTime = converter(param.getCreateTimeLong());
-        Page<Asset> result = db.selectJoinListPage(new Page<>(param.getCurrent(), param.getSize()), Asset.class, new MPJLambdaWrapper<>(entity)
+        Page<Asset> result = assetMapper.selectJoinPage(new Page<>(param.getCurrent(), param.getSize()), Asset.class, new MPJLambdaWrapper<>(entity)
                 .selectAll(Asset.class)
                 .leftJoin(AssetNumUnit.class, AssetNumUnit::getId, Asset::getNumUnitId, ext -> ext
                         .selectAssociation(AssetNumUnit.class, Asset::getNumUnit)

@@ -1,9 +1,9 @@
 package com.bbs.financial.service.impl;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.financial.entity.AssetNumUnit;
 import com.bbs.financial.service.AssetNumUnitService;
 import com.bbs.financial.mapper.AssetNumUnitMapper;
+import com.github.yulichang.base.MPJBaseServiceImpl;
 import org.springframework.stereotype.Service;
 
 /**
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 * @createDate 2024-05-30 04:50:09
 */
 @Service
-public class AssetNumUnitServiceImpl extends ServiceImpl<AssetNumUnitMapper, AssetNumUnit>
+public class AssetNumUnitServiceImpl extends MPJBaseServiceImpl<AssetNumUnitMapper, AssetNumUnit>
     implements AssetNumUnitService{
 
 }

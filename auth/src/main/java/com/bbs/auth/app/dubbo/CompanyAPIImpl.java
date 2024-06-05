@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -44,6 +45,11 @@ public class CompanyAPIImpl implements CompanyAPI {
     @Override
     public List<CompanyStructure> search(Set<Long> structureIds) {
         return converter.toCSVO(companyService.searchStructure(structureIds));
+    }
+
+    @Override
+    public Map<Long, CompanyStructure> searchIdMap(Set<Long> structureIds) {
+        return search(structureIds).stream().collect(Collectors.toMap(CompanyStructure::getId, structure -> structure));
     }
 
 }

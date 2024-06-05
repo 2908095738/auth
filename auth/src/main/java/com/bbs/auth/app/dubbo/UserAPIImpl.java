@@ -13,7 +13,9 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -68,5 +70,10 @@ public class UserAPIImpl implements UserAPI {
     @Override
     public User getUserByName(String userName) {
         return converter.toAPIUser(userService.lambdaQuery().eq(com.bbs.auth.entity.User::getName, userName).one());
+    }
+
+    @Override
+    public Map<Long, User> getUserIdMap(Set<Long> ids) {
+        return getUserList(ids).stream().collect(Collectors.toMap(User::getId, user -> user));
     }
 }

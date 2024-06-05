@@ -1,6 +1,7 @@
 package com.bbs.api.auth;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public interface UserAPI {
@@ -18,4 +19,6 @@ public interface UserAPI {
     List<User> searchByUserOrSave(Long companyId, List<User> userList);
 
     User getUserByName(String userName);
+
+    Map<Long, User> getUserIdMap(Set<Long> ids);
 }

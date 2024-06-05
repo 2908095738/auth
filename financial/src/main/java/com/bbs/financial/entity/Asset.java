@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.bbs.api.auth.User;
 import com.bbs.vo.CompanyStructure;
+import com.github.yulichang.annotation.EntityMapping;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -85,9 +86,13 @@ public class Asset implements Serializable {
     /**
      * 开始使用日期
      */
-    @Alias(value = "开始使用日期")
+    @PropIgnore
     @TableField(value = "start_date")
     private Date startDate;
+
+    @Alias(value = "开始使用日期")
+    @TableField(exist = false)
+    private String startDateStr;
 
     /**
      * 数量
@@ -353,6 +358,7 @@ public class Asset implements Serializable {
 
     @PropIgnore
     @TableField(exist = false)
+    @EntityMapping(thisField = Fields.fixedAssetsAccountId, joinField = Account.Fields.id)
     private Account fixedAssetsAccount;
 
     @Alias(value = "固定资产科目")
@@ -361,6 +367,7 @@ public class Asset implements Serializable {
 
     @PropIgnore
     @TableField(exist = false)
+    @EntityMapping(thisField = Fields.purchaseAssetsOtherPartAccountId, joinField = Account.Fields.id)
     private Account purchaseAssetsOtherPartAccount; // 资产购入对方科目名称或详情
 
     @TableField(exist = false)
@@ -369,6 +376,7 @@ public class Asset implements Serializable {
 
     @PropIgnore
     @TableField(exist = false)
+    @EntityMapping(thisField = Fields.taxesAccountId, joinField = Account.Fields.id)
     private Account taxesAccount; // 税金科目名称或详情
 
     @TableField(exist = false)
@@ -377,6 +385,7 @@ public class Asset implements Serializable {
 
     @PropIgnore
     @TableField(exist = false)
+    @EntityMapping(thisField = Fields.depreciationAccountId, joinField = Account.Fields.id)
     private Account depreciationAccount; // 折旧科目名称或详情
 
     @TableField(exist = false)
@@ -385,6 +394,7 @@ public class Asset implements Serializable {
 
     @PropIgnore
     @TableField(exist = false)
+    @EntityMapping(thisField = Fields.depreciationCostAccountId, joinField = Account.Fields.id)
     private Account depreciationCostAccount; // 折旧费用科目名称或详情
 
     @TableField(exist = false)
@@ -393,6 +403,7 @@ public class Asset implements Serializable {
 
     @PropIgnore
     @TableField(exist = false)
+    @EntityMapping(thisField = Fields.assetsCleanAccountId, joinField = Account.Fields.id)
     private Account assetsCleanAccount; // 资产清理科目名称或详情
 
     @TableField(exist = false)
@@ -401,6 +412,7 @@ public class Asset implements Serializable {
 
     @PropIgnore
     @TableField(exist = false)
+    @EntityMapping(thisField = Fields.impairmentAccountId, joinField = Account.Fields.id)
     private Account impairmentAccount; // 减值准备科目名称或详情
 
     @TableField(exist = false)
@@ -409,6 +421,7 @@ public class Asset implements Serializable {
 
     @PropIgnore
     @TableField(exist = false)
+    @EntityMapping(thisField = Fields.impairmentOtherPartAccountId, joinField = Account.Fields.id)
     private Account impairmentOtherPartAccount; // 减值准备对方科目名称或详情
 
     @TableField(exist = false)
@@ -417,6 +430,7 @@ public class Asset implements Serializable {
 
     @PropIgnore
     @TableField(exist = false)
+    @EntityMapping(thisField = Fields.assetsCertificateId, joinField = Certificate.Fields.id)
     private Certificate assetsCertificate;
 
     @TableField(exist = false)
@@ -425,6 +439,7 @@ public class Asset implements Serializable {
 
     @PropIgnore
     @TableField(exist = false)
+    @EntityMapping(thisField = Fields.assetsCleanCertificateId, joinField = Certificate.Fields.id)
     private Certificate assetsCleanCertificate;
 
     @TableField(exist = false)
@@ -433,6 +448,7 @@ public class Asset implements Serializable {
 
     @PropIgnore
     @TableField(exist = false)
+    @EntityMapping(thisField = Fields.impairmentCertificateId, joinField = Certificate.Fields.id)
     private Certificate impairmentCertificate; // 减值凭证名称或详情
 
     @TableField(exist = false)
@@ -441,6 +457,7 @@ public class Asset implements Serializable {
 
     @PropIgnore
     @TableField(exist = false)
+    @EntityMapping(thisField = Fields.otherCertificateId, joinField = Certificate.Fields.id)
     private Certificate otherCertificate; // 其他凭证名称或详情
 
     @TableField(exist = false)
@@ -471,9 +488,13 @@ public class Asset implements Serializable {
     /**
      * 创建时间
      */
-    @Alias(value = "创建时间")
+    @PropIgnore
     @TableField(value = "create_time")
     private Date createTime;
+
+    @Alias(value = "创建时间")
+    @TableField(exist = false)
+    private String createTimeStr;
 
     /**
      * 信息创建人
@@ -492,9 +513,13 @@ public class Asset implements Serializable {
     /**
      * 修改时间
      */
-    @Alias(value = "修改时间")
+    @PropIgnore
     @TableField(value = "update_time")
     private Date updateTime;
+
+    @Alias(value = "修改时间")
+    @TableField(exist = false)
+    private String updateTimeStr;
 
     /**
      * 信息修改人
@@ -522,10 +547,12 @@ public class Asset implements Serializable {
 
     @PropIgnore
     @TableField(exist = false)
+    @EntityMapping(thisField = Fields.numUnitId, joinField = AssetNumUnit.Fields.id)
     private AssetNumUnit numUnit;
 
     @PropIgnore
     @TableField(exist = false)
+    @EntityMapping(thisField = Fields.assetTypeId, joinField = AssetType.Fields.id)
     private AssetType assetType;
 
     @PropIgnore

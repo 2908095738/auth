@@ -9,10 +9,14 @@ import com.bbs.financial.entity.Asset;
 import com.bbs.financial.entity.AssetDepreciationCertificate;
 import com.bbs.financial.entity.AssetType;
 import com.bbs.financial.entity.Certificate;
+import com.bbs.financial.mapper.AssetMapper;
 import com.bbs.financial.service.AssetService;
 import com.bbs.vo.BaseParam;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -42,13 +46,17 @@ public class AssetController {
     private CompanyAPI companyAPI;
     @DubboReference
     private UserAPI userAPI;
+    @Resource
+    private AssetMapper assetMapper;
 
 
     @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @EqualsAndHashCode(callSuper = true)
     private static class Param extends BaseParam {
 
         private Long companyId;
-
     }
 
     /**
@@ -56,7 +64,7 @@ public class AssetController {
      */
     @GetMapping("/asset/depreciation/debt")
     public Result<Page<Asset>> debt(Param param){
-        Page<Asset> page = assetService.selectJoinListPage(param.toPage(),Asset.class, new MPJLambdaWrapper<Asset>()
+        Page<Asset> page = assetMapper.selectJoinPage(param.toPage(), Asset.class, new MPJLambdaWrapper<Asset>()
                 .selectAll(Asset.class)
                 .selectAssociation(AssetType.class,Asset::getAssetTypeName,t->t.result(AssetType::getName))
                 .leftJoin(AssetType.class, AssetType::getId, Asset::getAssetTypeId)

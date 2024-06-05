@@ -1,7 +1,7 @@
 package com.bbs.financial.mapper;
 
 import com.bbs.financial.entity.AssetNumUnit;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 
 /**
 * @author 路晨霖
@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2024-05-30 04:50:09
 * @Entity com.bbs.financial.entity.AssetNumUnit
 */
-public interface AssetNumUnitMapper extends BaseMapper<AssetNumUnit> {
+public interface AssetNumUnitMapper extends MPJBaseMapper<AssetNumUnit> {
 
 }
 
