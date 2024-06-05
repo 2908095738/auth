@@ -71,15 +71,32 @@ public class AssetController {
         return success(page);
     }
 
+    @GetMapping(value = "/asset/{id}")
+    public Result<Asset> getInfo(@PathVariable("id") Long id) {
+        return success(assetService.getById(id));
+    }
+
 
     /**
      * 获取资产详细信息
      */
-    @GetMapping(value = "/asset/{id}")
-    public Result<Asset> getInfo(@PathVariable("id") Long id)
-    {
-        return success(assetService.getById(id));
+    @GetMapping(value = "/asset/schedule")
+    public Result<Page<Asset>> getSchedule(Param param){
+
+        return success(assetService.page(param.toPage(), new QueryWrapper<>()));
     }
+
+
+
+    /**
+     * 获取资产详细信息
+     */
+    @GetMapping(value = "/asset/summary")
+    public Result<Page<Asset>> getSummary(Param param){
+
+        return success(assetService.page(param.toPage(), new QueryWrapper<>()));
+    }
+
 
 
     /**

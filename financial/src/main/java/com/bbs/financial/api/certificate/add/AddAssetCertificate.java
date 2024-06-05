@@ -105,11 +105,9 @@ public class AddAssetCertificate {
                     //借
                     CertificateAbstract borrow = new CertificateAbstract();
                     borrow.setCertificateId(certificate.getId());
-                    borrow.setLoansMoney(0L);
                     //贷
                     CertificateAbstract loan = new CertificateAbstract();
                     loan.setCertificateId(certificate.getId());
-                    loan.setBorrowMoney(0L);
 
                     switch (param.certificateType){
                         case 1:
@@ -125,7 +123,6 @@ public class AddAssetCertificate {
                             loan.setLoansMoney(asset.getOriginalValue());
 
                             asset.setAssetsCertificateId(certificate.getId());
-                            assetService.save(asset);
                             break;
                         case 2:
                             //折旧凭证
@@ -135,29 +132,57 @@ public class AddAssetCertificate {
                             if(Objects.isNull(asset.getDepreciationAccountId())||Objects.isNull(asset.getDepreciationCostAccountId())){
                                 return Result.failed("折旧凭证必须填写折旧科目和折旧成本科目");
                             }
-                            long money = 0L;
+                            Long money = 0L;
+                            Long yearMoney = 0L;
+                            List<AssetDepreciationCertificate> assetDepreciationCertificateList = assetDepreciationCertificateService.selectList(asset.getId());
                             Integer depreciationMethod = asset.getDepreciationMethod();//折旧方法
-                            if(depreciationMethod == 1){
-                                //平均年限法
-                                money = asset.getDepreciationMonthValue();//平均月折旧额
-                            }else if(depreciationMethod == 2){
-                                Long originalValue = asset.getOriginalValue();//原值
-                                Integer durableMonths = asset.getDurableMonths();//使用月数
-                                int durableYears = durableMonths / 12; //使用年数
-                                List<AssetDepreciationCertificate> assetDepreciationCertificateList = assetDepreciationCertificateService.selectList(asset.getId());
-                                if(CollUtil.isEmpty(assetDepreciationCertificateList)){
-                                    long yearMoney = originalValue / durableYears;//年折旧额
+                            if(CollUtil.isEmpty(assetDepreciationCertificateList)){
+                                if(depreciationMethod == 0){
+                                    //平均年限法
+                                    money = asset.getDepreciationMonthValue();//平均月折旧额
+                                }else if(depreciationMethod == 1){
+                                    Long originalValue = asset.getOriginalValue();//原值 10000
+                                    Integer durableMonths = asset.getDurableMonths();//使用月数 60
+                                    int durableYears = durableMonths / 12; //使用年数 5
+                                    yearMoney = originalValue / durableYears*2;//年折旧额 333
                                     money = yearMoney/12;//月折旧额
-                                }else {
-
-
-
-
-//                                    for (AssetDepreciationCertificate assetDepreciationCertificate : assetDepreciationCertificateList) {
-//                                        money += assetDepreciationCertificate.getMoney();
-//                                    }
                                 }
+                                asset.setDepreciationMonths(1);//已折旧月数
+                            }else {
+                                if(depreciationMethod == 0){
+                                    //平均年限法
+                                    money = asset.getDepreciationMonthValue();//平均月折旧额
 
+                                }else if(depreciationMethod == 1){
+                                    Long originalValue = asset.getOriginalValue();//原值
+                                    Integer durableMonths = asset.getDurableMonths();//使用月数
+                                    int durableYears = durableMonths / 12; //使用年数
+                                    Integer depreciationMonths = asset.getDepreciationMonths()+1;//已折旧月数 +1表示加上当月
+
+                                    Long alreadyDepreciation = 0L;//已折旧
+                                    for (AssetDepreciationCertificate assetDepreciationCertificate : assetDepreciationCertificateList) {
+                                        alreadyDepreciation += assetDepreciationCertificate.getMoney();
+                                    }
+                                    int noDepreciationMonths = durableMonths - depreciationMonths;//未折旧月数
+                                    //如果noDepreciationMonths大于24个月
+                                    if(noDepreciationMonths>24){//当月不是最后两年
+                                        yearMoney = (originalValue-alreadyDepreciation) / durableYears*2;//年折旧额
+                                        money = yearMoney/12;//月折旧额
+                                    }
+                                    //如果noDepreciationMonths小于等于24个月
+                                    if (noDepreciationMonths<=24){//当月为最后两年
+                                        Long ratioRemainingValue = asset.getRatioRemainingValue();//预计残值
+                                        yearMoney = (originalValue-alreadyDepreciation-ratioRemainingValue) / durableYears*2;//年折旧额
+                                        money = yearMoney/12;
+                                    }
+                                    //如果noDepreciationMonths小于12个月
+                                    if (noDepreciationMonths<12){//当月为最后一年
+                                        //获取assetDepreciationCertificate的最后一个月的折旧额
+                                        AssetDepreciationCertificate assetDepreciationCertificate = assetDepreciationCertificateList.get(assetDepreciationCertificateList.size()-1);
+                                        money = assetDepreciationCertificate.getMoney();
+                                    }
+                                }
+                                asset.setDepreciationMonths(asset.getDepreciationMonths()+1);//已折旧月数
                             }
                             borrow.setCertificateAbstract("折旧"+asset.getName());
                             borrow.setAccountId(asset.getDepreciationCostAccountId());
@@ -165,6 +190,13 @@ public class AddAssetCertificate {
                             loan.setCertificateAbstract("折旧"+asset.getName());
                             loan.setAccountId(asset.getDepreciationAccountId());
                             loan.setLoansMoney(money);
+
+
+                            asset.setDepreciationNowMonthValue(money);//本月折旧额
+                            asset.setDepreciationYearValue(yearMoney);//本年折旧额
+                            asset.setAfterDepreciationAccumulated(asset.getDepreciationMonths()*money);//期末累计折旧:已折旧月数*平均月折旧额
+//                            asset.setAfterImpairment();//期末减值准备
+                            asset.setAfterPeriod(asset.getOriginalValue()-asset.getAfterDepreciationAccumulated());//期末净值:原值-期末累计折旧
 
                             assetDepreciationCertificateService.save(new AssetDepreciationCertificate(asset.getId(),certificate.getId(),new Date(),money));
                             break;
@@ -179,12 +211,11 @@ public class AddAssetCertificate {
                             loan.setCertificateAbstract("减值"+asset.getName());
                             loan.setAccountId(asset.getImpairmentAccountId());
 
-                            //TODO 减值金额
+                            //TODO wmy 减值金额
                             borrow.setBorrowMoney(asset.getOriginalValue());
                             loan.setLoansMoney(asset.getOriginalValue());
 
                             asset.setImpairmentCertificateId(certificate.getId());
-                            assetService.save(asset);
                             break;
                         case 4:
                             //清理凭证
@@ -198,13 +229,11 @@ public class AddAssetCertificate {
                             loan.setAccountId(asset.getFixedAssetsAccountId());
                             loan.setLoansMoney(asset.getOriginalValue());
                             asset.setAssetsCleanCertificateId(certificate.getId());
-                            assetService.save(asset);
                             break;
                         case 5:
                             //其他凭证
                             borrow.setCertificateAbstract("其他"+asset.getName());
                             asset.setOtherCertificateId(certificate.getId());
-                            assetService.save(asset);
                             break;
                         default:
                             throw new RuntimeException("凭证类型错误");
@@ -212,7 +241,7 @@ public class AddAssetCertificate {
 
                     certificateAbstracts.add(borrow);
                     certificateAbstracts.add(loan);
-
+                    assetService.updateById(asset);
                     no += INTEGER_ONE;
                 }
                 certificateAbstractService.saveBatch(certificateAbstracts);

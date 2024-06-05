@@ -18,7 +18,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -161,7 +160,7 @@ public class SearchAssetList {
         /**
          * 清理月份
          */
-        private String assetsCleanMonth;
+        private Date assetsCleanTime;
 
         /**
          * 状态:正常 清理

@@ -45,7 +45,7 @@ public class AssetDepreciationCertificate implements Serializable {
     private Date month;
 
     /**
-     * 折旧金额
+     * 折旧金额月
      */
     @TableField(value = "money")
     private Long money;
@@ -53,7 +53,7 @@ public class AssetDepreciationCertificate implements Serializable {
     @TableField(exist = false)
     private Certificate certificate;
 
-    public AssetDepreciationCertificate(Long assetId, Long depreciationCertificateId, Date month, Long money) {
+    public AssetDepreciationCertificate(Long assetId, Long depreciationCertificateId, Date month,Long money) {
         this.assetId = assetId;
         this.depreciationCertificateId = depreciationCertificateId;
         this.month = month;
