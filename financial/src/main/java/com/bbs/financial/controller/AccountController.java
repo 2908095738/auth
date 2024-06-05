@@ -15,11 +15,11 @@ import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.bbs.Result.failed;
 import static com.bbs.Result.success;
@@ -116,6 +116,7 @@ public class AccountController
     }
 
     @GetMapping("/account/list/join")
+    @Cacheable(cacheNames = "account:list:join")
     public Result<Page<Account>> list(
             @RequestParam(required = false) String no,
             @RequestParam(required = false) String name,

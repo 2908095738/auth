@@ -7,17 +7,13 @@ import com.bbs.Result;
 import com.bbs.api.auth.User;
 import com.bbs.api.auth.UserAPI;
 import com.bbs.api.auth.company.CompanyAPI;
-import com.bbs.financial.entity.Asset;
-import com.bbs.financial.entity.AssetImportRecord;
-import com.bbs.financial.entity.AssetNumUnit;
-import com.bbs.financial.entity.AssetType;
-import com.bbs.financial.service.AssetImportRecordService;
-import com.bbs.financial.service.AssetNumUnitService;
-import com.bbs.financial.service.AssetService;
-import com.bbs.financial.service.AssetTypeService;
+import com.bbs.enums.financial.CertificateWordEnum;
+import com.bbs.financial.entity.*;
+import com.bbs.financial.service.*;
 import com.bbs.financial.util.LoginUser;
 import com.bbs.vo.CompanyStructure;
 import com.google.common.base.Preconditions;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -77,6 +73,10 @@ public class ImportAssetFile {
         put("信息修改人", "updateUserName"); //临时字段，需要修改到其他字段
     }};
 
+    private static final String COMPOSITE_LIFE_Method = "平均年限法";
+
+    private static final String DOUBLE_DECLINING_BALANCE_METHOD = "双倍余额递减法";
+
     @Resource
     private AssetService assetService;
     @Resource
@@ -93,6 +93,10 @@ public class ImportAssetFile {
     private TransactionDefinition transactionDefinition;
     @Resource
     private DataSourceTransactionManager transactionManager;
+    @Resource
+    private AccountService accountService;
+    @Resource
+    private CertificateService certificateService;
 
     private static final String PARSE_ERROR_MSG = "文件解析失败，请检查内容是否与模板一致";
 
@@ -168,16 +172,181 @@ public class ImportAssetFile {
 
     private void fillProperty(List<Asset> assets, Long companyId) {
         assets.forEach(asset -> {
-            fillAssetType(asset);
+            asset.setCompanyId(companyId);
             // 如果未设置编码，则使用【公司ID + 日期 + 已有资产数量（去重）】当作默认编码
             fillNo(asset, companyId);
-            fillAssetTypeName(asset);
+            fillAssetType(asset);
             fillStructure(asset, companyId);
+            fillNumUnit(asset);
             fillUseUser(asset);
+
+            fillFixedAssetsAccount(asset);
+            fillPurchaseAssetsOtherPartAccount(asset);
+            fillTaxesAccount(asset);
+            fillDepreciationAccount(asset);
+            fillAssetsCleanAccount(asset);
+            fillImpairmentAccount(asset);
+            fillImpairmentOtherPartAccount(asset);
+
+            fillAssetsCertificate(asset);
+            fillAssetsCleanCertificate(asset);
+            fillImpairmentCertificate(asset);
+
+            fillDepreciationMethod(asset);
+            fillFixedAssetsAccount(asset);
             fillCreateUser(asset);
             fillUpdateUser(asset);
-            fillNumUnit(asset);
+            fillStatus(asset);
         });
+    }
+
+    private void fillStatus(Asset asset) {
+        String status = asset.getStatusName();
+        if(StringUtils.isNotBlank(status)) {
+            if("正常".equals(status)) {
+                asset.setStatus(INTEGER_ZERO);
+            } else {
+                asset.setStatus(INTEGER_ONE);
+            }
+        }
+    }
+
+    private void fillAssetsCertificate(Asset asset) {
+        String assetsCertificateName = asset.getAssetsCertificateName();
+        if(StringUtils.isNotBlank(assetsCertificateName)) {
+            Date assetsCleanTime = asset.getAssetsCleanTime();
+            String[] certificateNameSplit = assetsCertificateName.split("-");
+            String certificateWord = certificateNameSplit[INTEGER_ZERO];
+            String number = certificateNameSplit[INTEGER_ONE];
+            Certificate certificate = certificateService.lambdaQuery()
+                    .ge(Certificate::getCreateTime, DateUtil.beginOfMonth(assetsCleanTime))
+                    .lt(Certificate::getCreateTime, DateUtil.beginOfMonth(DateUtil.offsetMonth(assetsCleanTime, INTEGER_ONE)))
+                    .eq(Certificate::getCertificateWord, CertificateWordEnum.valueOf(certificateWord))
+                    .eq(Certificate::getNo, Long.valueOf(number))
+                    .one();
+            if(nonNull(certificate)) {
+                asset.setAssetsCertificateId(certificate.getId());
+            }
+        }
+    }
+
+    private void fillAssetsCleanCertificate(Asset asset) {
+        String assetsCleanCertificateName = asset.getAssetsCleanCertificateName();
+        if(StringUtils.isNotBlank(assetsCleanCertificateName)) {
+            Date assetsCleanTime = asset.getAssetsCleanTime();
+            String[] certificateNameSplit = assetsCleanCertificateName.split("-");
+            String certificateWord = certificateNameSplit[INTEGER_ZERO];
+            String number = certificateNameSplit[INTEGER_ONE];
+            Certificate certificate = certificateService.lambdaQuery()
+                    .ge(Certificate::getCreateTime, DateUtil.beginOfMonth(assetsCleanTime))
+                    .lt(Certificate::getCreateTime, DateUtil.beginOfMonth(DateUtil.offsetMonth(assetsCleanTime, INTEGER_ONE)))
+                    .eq(Certificate::getCertificateWord, CertificateWordEnum.valueOf(certificateWord))
+                    .eq(Certificate::getNo, Long.valueOf(number))
+                    .one();
+            if(nonNull(certificate)) {
+                asset.setAssetsCleanCertificateId(certificate.getId());
+            }
+        }
+    }
+
+    private void fillImpairmentCertificate(Asset asset) {
+        String impairmentCertificateName = asset.getImpairmentCertificateName();
+        if(StringUtils.isNotBlank(impairmentCertificateName)) {
+            Date assetsCleanTime = asset.getAssetsCleanTime();
+            String[] certificateNameSplit = impairmentCertificateName.split("-");
+            String certificateWord = certificateNameSplit[INTEGER_ZERO];
+            String number = certificateNameSplit[INTEGER_ONE];
+            Certificate certificate = certificateService.lambdaQuery()
+                    .ge(Certificate::getCreateTime, DateUtil.beginOfMonth(assetsCleanTime))
+                    .lt(Certificate::getCreateTime, DateUtil.beginOfMonth(DateUtil.offsetMonth(assetsCleanTime, INTEGER_ONE)))
+                    .eq(Certificate::getCertificateWord, CertificateWordEnum.valueOf(certificateWord))
+                    .eq(Certificate::getNo, Long.valueOf(number))
+                    .one();
+            if(nonNull(certificate)) {
+                asset.setImpairmentCertificateId(certificate.getId());
+            }
+        }
+    }
+
+    private void fillFixedAssetsAccount(Asset asset) {
+        String fixedAssetsAccountName = asset.getFixedAssetsAccountName();
+        if(StringUtils.isNotBlank(fixedAssetsAccountName)) {
+            Account account = accountService.lambdaQuery().eq(Account::getName, fixedAssetsAccountName).one();
+            if(nonNull(account)) {
+                asset.setFixedAssetsAccountId(account.getId());
+            }
+        }
+    }
+
+    private void fillPurchaseAssetsOtherPartAccount(Asset asset) {
+        String purchaseAssetsOtherPartAccountName = asset.getPurchaseAssetsOtherPartAccountName();
+        if(StringUtils.isNotBlank(purchaseAssetsOtherPartAccountName)) {
+            Account account = accountService.lambdaQuery().eq(Account::getName, purchaseAssetsOtherPartAccountName).one();
+            if(nonNull(account)) {
+                asset.setPurchaseAssetsOtherPartAccountId(account.getId());
+            }
+        }
+    }
+
+    private void fillTaxesAccount(Asset asset) {
+        String taxesAccountName = asset.getTaxesAccountName();
+        if(StringUtils.isNotBlank(taxesAccountName)) {
+            Account account = accountService.lambdaQuery().eq(Account::getName, taxesAccountName).one();
+            if(nonNull(account)) {
+                asset.setTaxesAccountId(account.getId());
+            }
+        }
+    }
+
+    private void fillDepreciationAccount(Asset asset) {
+        String depreciationAccountName = asset.getDepreciationAccountName();
+        if(StringUtils.isNotBlank(depreciationAccountName)) {
+            Account account = accountService.lambdaQuery().eq(Account::getName, depreciationAccountName).one();
+            if(nonNull(account)) {
+                asset.setDepreciationAccountId(account.getId());
+            }
+        }
+    }
+
+    private void fillAssetsCleanAccount(Asset asset) {
+        String assetsCleanAccountName = asset.getAssetsCleanAccountName();
+        if(StringUtils.isNotBlank(assetsCleanAccountName)) {
+            Account account = accountService.lambdaQuery().eq(Account::getName, assetsCleanAccountName).one();
+            if(nonNull(account)) {
+                asset.setAssetsCleanAccountId(account.getId());
+            }
+        }
+    }
+
+    private void fillImpairmentAccount(Asset asset) {
+        String impairmentAccountName = asset.getImpairmentAccountName();
+        if(StringUtils.isNotBlank(impairmentAccountName)) {
+            Account account = accountService.lambdaQuery().eq(Account::getName, impairmentAccountName).one();
+            if(nonNull(account)) {
+                asset.setImpairmentAccountId(account.getId());
+            }
+        }
+    }
+
+    private void fillImpairmentOtherPartAccount(Asset asset) {
+        String impairmentOtherPartAccountName = asset.getImpairmentOtherPartAccountName();
+        if(StringUtils.isNotBlank(impairmentOtherPartAccountName)) {
+            Account account = accountService.lambdaQuery().eq(Account::getName, impairmentOtherPartAccountName).one();
+            if(nonNull(account)) {
+                asset.setImpairmentOtherPartAccountId(account.getId());
+            }
+        }
+    }
+
+    private void fillDepreciationMethod(Asset asset) {
+        String depreciationMethodName = asset.getDepreciationMethodName();
+        if(StringUtils.isNotBlank(depreciationMethodName)) {
+            if(COMPOSITE_LIFE_Method.equals(depreciationMethodName)) {
+                asset.setDepreciationMethod(INTEGER_ZERO);
+            } else if (DOUBLE_DECLINING_BALANCE_METHOD.equals(depreciationMethodName)) {
+                asset.setDepreciationMethod(INTEGER_ONE);
+            }
+        }
     }
 
 
@@ -195,13 +364,6 @@ public class ImportAssetFile {
                             DateUtil.format(new Date(), "yyyyMMdd") +
                             (Objects.equals(count, LONG_ZERO) ? LONG_ONE : count)
             );
-        }
-    }
-
-    private void fillAssetTypeName(Asset asset) {
-        if(isNotBlank(asset.getAssetTypeName())) {
-            AssetType assetType = assetTypeService.lambdaQuery().eq(AssetType::getName, asset.getAssetTypeName()).one();
-            if(nonNull(assetType)) asset.setAssetTypeId(assetType.getId());
         }
     }
 

@@ -459,7 +459,7 @@ public class Asset implements Serializable {
      */
     @Alias(value = "状态")
     @TableField(exist = false)
-    private Integer statusName;
+    private String statusName;
 
     /**
      * 备注
