@@ -160,7 +160,7 @@ public class SearchAssetList {
         /**
          * 清理月份
          */
-        private String assetsCleanTime;
+        private Date assetsCleanTime;
 
         /**
          * 状态:正常 清理
