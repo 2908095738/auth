@@ -1,5 +1,6 @@
 package com.bbs.financial.controller;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
@@ -24,9 +25,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.bbs.Result.success;
+import static java.util.Objects.nonNull;
 
 /**
  * 资产Controller
@@ -48,6 +53,8 @@ public class AssetController {
     private static class Param extends BaseParam {
 
         private Long companyId;
+
+        private String entryMonth;
 
     }
 
@@ -82,8 +89,11 @@ public class AssetController {
      */
     @GetMapping(value = "/asset/schedule")
     public Result<Page<Asset>> getSchedule(Param param){
-
-        return success(assetService.page(param.toPage(), new QueryWrapper<>()));
+        return success(assetService.lambdaQuery()
+                .eq(Asset::getIsDeleted, 0)
+                .eq(Asset::getCompanyId, param.getCompanyId())
+                .like(nonNull(param.entryMonth),Asset::getUpdateTime, param.entryMonth)
+                .page(param.toPage()));
     }
 
 
@@ -92,9 +102,45 @@ public class AssetController {
      * 获取资产详细信息
      */
     @GetMapping(value = "/asset/summary")
-    public Result<Page<Asset>> getSummary(Param param){
+    public Result<List<Asset>> getSummary(Param param){
+        List<Asset> resultSummary = new ArrayList<>();
+        List<Asset> list = assetService.lambdaQuery()
+                .eq(Asset::getIsDeleted, 0)
+                .eq(Asset::getCompanyId, param.getCompanyId())
+                .like(nonNull(param.entryMonth),Asset::getUpdateTime, param.entryMonth)
+                .list();
+        if (CollUtil.isNotEmpty(list)){
+            //使用stream按类别和部门，合并原值、当月折旧、本年折旧额、期初累计折旧、期末累计折旧、期末减值准备、期末净值
+            Map<Long, List<Asset>> collect = list.stream().collect(Collectors.groupingBy(Asset::getAssetTypeId));
 
-        return success(assetService.page(param.toPage(), new QueryWrapper<>()));
+            collect.keySet().forEach(assetTypeId -> {
+                List<Asset> assets = collect.get(assetTypeId).stream().collect(Collectors.toMap(Asset::getStructureId, a -> a, (o1, o2) -> {
+                    o1.setOriginalValue(o1.getOriginalValue() + o2.getOriginalValue());
+                    if(nonNull(o1.getDepreciationMonthValue())&&nonNull(o2.getDepreciationMonthValue())){
+                        o1.setDepreciationNowMonthValue(o1.getDepreciationMonthValue()+ o2.getDepreciationMonthValue());
+                    }
+                    if(nonNull(o1.getDepreciationYearValue())&&nonNull(o2.getDepreciationYearValue())){
+                        o1.setDepreciationYearValue(o1.getDepreciationYearValue()+ o2.getDepreciationYearValue());
+                    }
+                    if(nonNull(o1.getBeginDepreciationAccumulated())&&nonNull(o2.getBeginDepreciationAccumulated())){
+                        o1.setBeginDepreciationAccumulated(o1.getBeginDepreciationAccumulated()+ o2.getBeginDepreciationAccumulated());
+                    }
+                    if(nonNull(o1.getAfterDepreciationAccumulated())&&nonNull(o2.getAfterDepreciationAccumulated())){
+                        o1.setAfterDepreciationAccumulated(o1.getAfterDepreciationAccumulated()+ o2.getAfterDepreciationAccumulated());
+                    }
+                    if(nonNull(o1.getAfterPeriod())&&nonNull(o2.getAfterPeriod())){
+                        o1.setAfterPeriod(o1.getAfterPeriod()+ o2.getAfterPeriod());
+                    }
+                    if(nonNull(o1.getAfterImpairment())&&nonNull(o2.getAfterImpairment())){
+                        o1.setAfterImpairment(o1.getAfterImpairment()+ o2.getAfterImpairment());
+                    }
+                    return o1;
+                })).values().stream().collect(Collectors.toList());
+
+                resultSummary.addAll(assets);
+            });
+        }
+        return success(resultSummary);
     }
 
 
