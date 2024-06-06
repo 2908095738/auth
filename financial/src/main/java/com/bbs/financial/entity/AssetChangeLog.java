@@ -82,13 +82,14 @@ public class AssetChangeLog implements Serializable {
     @TableField(value = "is_deleted")
     private Integer isDeleted;
 
-    public AssetChangeLog(Long companyId, String no, String name, String changeItem, String changeBeforValue, String changeAfterValue) {
+    public AssetChangeLog(Long companyId, String no, String name, String changeItem, String changeBeforValue, String changeAfterValue, Long createBy) {
         this.companyId = companyId;
         this.no = no;
         this.name = name;
         this.changeItem = changeItem;
         this.changeBeforValue = changeBeforValue;
         this.changeAfterValue = changeAfterValue;
+        this.createBy = createBy;
     }
 
     @TableField(exist = false)

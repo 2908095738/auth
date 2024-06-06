@@ -5,6 +5,7 @@ import cn.hutool.core.util.ReflectUtil;
 import com.bbs.Result;
 import com.bbs.financial.entity.Asset;
 import com.bbs.financial.entity.AssetChangeLog;
+import com.bbs.financial.enums.ChangeItemEnum;
 import com.bbs.financial.service.AssetChangeLogService;
 import com.bbs.financial.service.AssetService;
 import com.bbs.financial.util.LoginUser;
@@ -24,6 +25,7 @@ import java.util.Objects;
 
 import static com.bbs.Result.success;
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.math.NumberUtils.LONG_ONE;
 import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
@@ -40,6 +42,7 @@ public class AddAsset {
     private TransactionDefinition transactionDefinition;
     @Resource
     private DataSourceTransactionManager transactionManager;
+
 
     /**
      * 新增资产
@@ -62,12 +65,24 @@ public class AddAsset {
                 Field[] fields = ReflectUtil.getFields(Asset.class);// 获取所有字段
                 for (Field field : fields) {
                     field.setAccessible(true);
-                    Object value = field.get(asset);
+                    String name = ChangeItemEnum.getName(field.getName());
                     Object beforValue = field.get(dbAsset);
+                    Object value = field.get(asset);
+
                     // 如果有值，并且值跟旧值不一样，则更新
-                    if (Objects.nonNull(value) && !value.equals(beforValue)) {
+                    if (nonNull(value) && !value.equals(beforValue)&& nonNull(name)) {
+                        // 原值、减值准备、残值率、期初累计折旧
+                        if(ChangeItemEnum.ASSET_VALUE.getName().equals(name)
+                                ||ChangeItemEnum.DEPRECIATION_PREPARATION.getName().equals(name)
+                                ||ChangeItemEnum.RESIDUAL_VALUE_RATE.getName().equals(name)
+                                ||ChangeItemEnum.ACCUMULATED_DEPRECIATION.getName().equals(name)) {
+                            beforValue = Long.valueOf(beforValue.toString())/100;
+                            value = Long.valueOf(value.toString())/100;
+                        }
+
+
                         assetChangeLogs.add(new AssetChangeLog(dbAsset.getCompanyId(), dbAsset.getNo(), dbAsset.getName(),
-                                "变动"+field.getName(),beforValue.toString(), value.toString()));
+                                "变动 "+name,beforValue.toString(), value.toString(),LoginUser.getId()));
                     }
                 }
                 assetChangeLogService.saveBatch(assetChangeLogs);
@@ -102,7 +117,7 @@ public class AddAsset {
         asset.setNo(
                 asset.getCompanyId() +
                         DateUtil.format(new Date(), "yyyyMMdd") +
-                        (Objects.equals(count, LONG_ZERO) ? LONG_ONE : count)
+                        (Objects.equals(count, LONG_ZERO) ? LONG_ONE : count+LONG_ONE)
         );
     }
 

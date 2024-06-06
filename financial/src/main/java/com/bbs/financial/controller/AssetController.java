@@ -98,11 +98,13 @@ public class AssetController {
      */
     @GetMapping(value = "/asset/schedule")
     public Result<Page<Asset>> getSchedule(Param param){
-        return success(assetService.lambdaQuery()
+        return success(assetMapper.selectJoinPage(param.toPage(),Asset.class, new MPJLambdaWrapper<Asset>()
+                .selectAssociation(AssetType.class,Asset::getAssetTypeName,t->t.result(AssetType::getName))
+                .leftJoin(AssetType.class, AssetType::getId, Asset::getAssetTypeId)
                 .eq(Asset::getIsDeleted, 0)
                 .eq(Asset::getCompanyId, param.getCompanyId())
                 .like(nonNull(param.entryMonth),Asset::getUpdateTime, param.entryMonth)
-                .page(param.toPage()));
+                ));
     }
 
 
@@ -113,11 +115,13 @@ public class AssetController {
     @GetMapping(value = "/asset/summary")
     public Result<List<Asset>> getSummary(Param param){
         List<Asset> resultSummary = new ArrayList<>();
-        List<Asset> list = assetService.lambdaQuery()
+        List<Asset> list = assetMapper.selectJoinList(Asset.class, new MPJLambdaWrapper<Asset>()
+                .selectAssociation(AssetType.class,Asset::getAssetTypeName,t->t.result(AssetType::getName))
+                .leftJoin(AssetType.class, AssetType::getId, Asset::getAssetTypeId)
                 .eq(Asset::getIsDeleted, 0)
                 .eq(Asset::getCompanyId, param.getCompanyId())
                 .like(nonNull(param.entryMonth),Asset::getUpdateTime, param.entryMonth)
-                .list();
+        );
         if (CollUtil.isNotEmpty(list)){
             //使用stream按类别和部门，合并原值、当月折旧、本年折旧额、期初累计折旧、期末累计折旧、期末减值准备、期末净值
             Map<Long, List<Asset>> collect = list.stream().collect(Collectors.groupingBy(Asset::getAssetTypeId));
@@ -125,20 +129,38 @@ public class AssetController {
             collect.keySet().forEach(assetTypeId -> {
                 List<Asset> assets = new ArrayList<>(collect.get(assetTypeId).stream().collect(Collectors.toMap(Asset::getStructureId, a -> a, (o1, o2) -> {
                     o1.setOriginalValue(o1.getOriginalValue() + o2.getOriginalValue());
-                    if (nonNull(o1.getDepreciationMonthValue()) && nonNull(o2.getDepreciationMonthValue())) {
-                        o1.setDepreciationNowMonthValue(o1.getDepreciationMonthValue() + o2.getDepreciationMonthValue());
+                    if(nonNull(o2.getDepreciationNowMonthValue())){
+                        o1.setAfterPeriod(o2.getDepreciationNowMonthValue());
+                    }
+                    if (nonNull(o1.getDepreciationNowMonthValue()) && nonNull(o2.getDepreciationNowMonthValue())) {
+                        o1.setDepreciationNowMonthValue(o1.getDepreciationNowMonthValue() + o2.getDepreciationNowMonthValue());
+                    }
+                    if(nonNull(o2.getDepreciationYearValue())){
+                        o1.setAfterPeriod(o2.getDepreciationYearValue());
                     }
                     if (nonNull(o1.getDepreciationYearValue()) && nonNull(o2.getDepreciationYearValue())) {
                         o1.setDepreciationYearValue(o1.getDepreciationYearValue() + o2.getDepreciationYearValue());
                     }
+                    if(nonNull(o2.getBeginDepreciationAccumulated())){
+                        o1.setAfterPeriod(o2.getBeginDepreciationAccumulated());
+                    }
                     if (nonNull(o1.getBeginDepreciationAccumulated()) && nonNull(o2.getBeginDepreciationAccumulated())) {
                         o1.setBeginDepreciationAccumulated(o1.getBeginDepreciationAccumulated() + o2.getBeginDepreciationAccumulated());
+                    }
+                    if(nonNull(o2.getAfterDepreciationAccumulated())){
+                        o1.setAfterPeriod(o2.getAfterDepreciationAccumulated());
                     }
                     if (nonNull(o1.getAfterDepreciationAccumulated()) && nonNull(o2.getAfterDepreciationAccumulated())) {
                         o1.setAfterDepreciationAccumulated(o1.getAfterDepreciationAccumulated() + o2.getAfterDepreciationAccumulated());
                     }
-                    if (nonNull(o1.getAfterPeriod()) && nonNull(o2.getAfterPeriod())) {
+                    if(nonNull(o2.getAfterPeriod())){
+                        o1.setAfterPeriod(o2.getAfterPeriod());
+                    }
+                    if (nonNull(o1.getAfterPeriod())&&nonNull(o2.getAfterPeriod())) {
                         o1.setAfterPeriod(o1.getAfterPeriod() + o2.getAfterPeriod());
+                    }
+                    if(nonNull(o2.getAfterImpairment())){
+                        o1.setAfterPeriod(o2.getAfterImpairment());
                     }
                     if (nonNull(o1.getAfterImpairment()) && nonNull(o2.getAfterImpairment())) {
                         o1.setAfterImpairment(o1.getAfterImpairment() + o2.getAfterImpairment());
