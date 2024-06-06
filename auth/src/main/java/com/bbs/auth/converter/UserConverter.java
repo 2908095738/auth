@@ -4,7 +4,7 @@ import com.bbs.auth.app.register.Register;
 import com.bbs.auth.app.user.Search;
 import com.bbs.auth.app.user.Info;
 import com.bbs.auth.app.user.Me;
-import com.bbs.entity.UserVO;
+import com.bbs.vo.UserVO;
 import com.bbs.auth.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

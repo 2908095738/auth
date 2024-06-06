@@ -18,7 +18,7 @@ import com.bbs.auth.service.CompanyStructureService;
 import com.bbs.auth.service.TokenService;
 import com.bbs.auth.service.UserCompanyService;
 import com.bbs.auth.service.UserService;
-import com.bbs.entity.UserVO;
+import com.bbs.vo.UserVO;
 import com.bbs.enums.UserStateEnum;
 import com.bbs.exception.BusinessException;
 import com.bbs.exception.ReLoginException;

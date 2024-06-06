@@ -8,7 +8,7 @@ import com.bbs.auth.entity.Fan;
 import com.bbs.auth.service.FanService;
 import com.bbs.auth.service.UserService;
 import com.bbs.auth.util.MQUtil;
-import com.bbs.entity.UserVO;
+import com.bbs.vo.UserVO;
 import lombok.Data;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;

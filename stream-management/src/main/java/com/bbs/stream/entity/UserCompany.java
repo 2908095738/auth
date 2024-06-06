@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.bbs.entity.UserVO;
+import com.bbs.vo.UserVO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -94,11 +94,4 @@ public class UserCompany implements Serializable {
 
     @TableField(exist = false)
     private CompanyStructure structure;
-
-    public UserCompany(Long userID, Long companyID, Long structureID, Long loginUID) {
-        this.userId = userID;
-        this.companyId = companyID;
-        this.structureId = structureID;
-        this.createBy = loginUID;
-    }
 }

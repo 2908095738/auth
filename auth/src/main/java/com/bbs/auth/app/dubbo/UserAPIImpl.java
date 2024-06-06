@@ -5,7 +5,7 @@ import com.bbs.api.auth.UserAPI;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.service.TokenService;
 import com.bbs.auth.service.UserService;
-import com.bbs.entity.UserVO;
+import com.bbs.vo.UserVO;
 import com.bbs.util.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboService;
@@ -32,23 +32,9 @@ public class UserAPIImpl implements UserAPI {
     private TokenService tokenService;
 
     @Override
-    public User getLoginUser() {
-        UserVO vo = userService.loginUser();
-        return converter.toAPIUser(vo);
-    }
-
-    @Override
     public User getUserByToken(String token) {
         UserVO vo = tokenService.verify(token);
         return converter.toAPIUser(vo);
-    }
-
-    @Override
-    public List<User> getUserList(String token, List<Long> ids) {
-        if(tokenService.verifyToken(token)) {
-            return converter.toAPIUser(userService.search(ids));
-        }
-        return null;
     }
 
     @Override

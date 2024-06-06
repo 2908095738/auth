@@ -9,7 +9,7 @@ import com.bbs.auth.entity.Fan;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.service.FanService;
 import com.bbs.auth.service.UserService;
-import com.bbs.entity.UserVO;
+import com.bbs.vo.UserVO;
 import com.bbs.exception.ReLoginException;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.AllArgsConstructor;

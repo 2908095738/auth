@@ -160,7 +160,7 @@ public class SearchAssetList {
         /**
          * 清理月份
          */
-        private Date assetsCleanTime;
+        private Long assetsCleanTime;
 
         /**
          * 状态:正常 清理
@@ -218,6 +218,7 @@ public class SearchAssetList {
         Asset entity = converter.toEntity(param);
 
         Date createTime = converter(param.getCreateTimeLong());
+        Date assetsCleanTime = converter(param.getAssetsCleanTime());
         Page<Asset> result = assetMapper.selectJoinPage(new Page<>(param.getCurrent(), param.getSize()), Asset.class, new MPJLambdaWrapper<>(entity)
                 .selectAll(Asset.class)
                 .leftJoin(AssetNumUnit.class, AssetNumUnit::getId, Asset::getNumUnitId, ext -> ext
@@ -227,9 +228,13 @@ public class SearchAssetList {
                         .selectAssociation(AssetType.class, Asset::getAssetType)
                 )
                 .eq(Asset::getStatus, INTEGER_ZERO)
-                .or(nonNull(createTime), wrapper -> wrapper
+                .and(nonNull(createTime), wrapper -> wrapper
                         .ge(Asset::getCreateTime, nonNull(createTime) ? DateUtil.beginOfMonth(createTime) : null)
                         .lt(Asset::getCreateTime, nonNull(createTime) ? DateUtil.offsetMonth(createTime, INTEGER_ONE) : null)
+                )
+                .and(nonNull(assetsCleanTime), wrapper -> wrapper
+                        .ge(Asset::getAssetsCleanTime, nonNull(assetsCleanTime) ? DateUtil.beginOfMonth(assetsCleanTime) : null)
+                        .lt(Asset::getAssetsCleanTime, nonNull(assetsCleanTime) ? DateUtil.offsetMonth(assetsCleanTime, INTEGER_ONE) : null)
                 )
         );
         Set<Long> companyStructureIds = new HashSet<>();

@@ -1,4 +1,4 @@
-package com.bbs.entity;
+package com.bbs.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

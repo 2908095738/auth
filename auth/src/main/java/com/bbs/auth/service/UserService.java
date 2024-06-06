@@ -4,7 +4,7 @@ import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.param.UserParam;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
-import com.bbs.entity.UserVO;
+import com.bbs.vo.UserVO;
 import com.bbs.exception.ReLoginException;
 import com.github.yulichang.base.MPJBaseService;
 

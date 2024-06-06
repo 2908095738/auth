@@ -8,7 +8,7 @@ import com.bbs.auth.api.vx.GetSecret;
 import com.bbs.auth.api.vx.VXLoginAuthAPI;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.UserBind;
-import com.bbs.entity.UserVO;
+import com.bbs.vo.UserVO;
 import com.bbs.auth.enums.ZookeeperNodePaths;
 import com.bbs.auth.service.UserBindService;
 import com.bbs.auth.service.UserService;

@@ -6,7 +6,7 @@ import com.bbs.auth.mapper.UserGroupMapper;
 import com.bbs.auth.service.PermissionService;
 import com.bbs.auth.enums.RoleCodeEnum;
 import com.bbs.auth.service.UserService;
-import com.bbs.entity.UserVO;
+import com.bbs.vo.UserVO;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

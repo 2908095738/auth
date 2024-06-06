@@ -9,7 +9,7 @@ import com.bbs.auth.entity.User;
 import com.bbs.auth.service.TokenService;
 import com.bbs.enums.CodeEnum;
 import com.bbs.exception.ReLoginException;
-import com.bbs.entity.UserVO;
+import com.bbs.vo.UserVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;

@@ -3,7 +3,7 @@ package com.bbs.auth.app.login;
 import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.entity.User;
-import com.bbs.entity.UserVO;
+import com.bbs.vo.UserVO;
 import com.bbs.auth.enums.ResourceNames;
 import com.bbs.auth.service.ResourceService;
 import com.bbs.auth.service.TokenService;
