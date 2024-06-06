@@ -219,7 +219,7 @@ public class SearchAssetList {
 
         Date createTime = converter(param.getCreateTimeLong());
         Date assetsCleanTime = converter(param.getAssetsCleanTime());
-        Page<Asset> result = assetMapper.selectJoinPage(new Page<>(param.getCurrent(), param.getSize()), Asset.class, new MPJLambdaWrapper<>(entity)
+        Page<Asset> result = assetMapper.selectJoinPage(new Page<>(param.getCurrent(), param.getSize()), Asset.class, new MPJLambdaWrapper<Asset>()
                 .selectAll(Asset.class)
                 .leftJoin(AssetNumUnit.class, AssetNumUnit::getId, Asset::getNumUnitId, ext -> ext
                         .selectAssociation(AssetNumUnit.class, Asset::getNumUnit)
@@ -227,6 +227,7 @@ public class SearchAssetList {
                 .leftJoin(AssetType.class, AssetType::getId, Asset::getAssetTypeId, ext -> ext
                         .selectAssociation(AssetType.class, Asset::getAssetType)
                 )
+                .eq(Asset::getCompanyId, entity.getCompanyId())
                 .eq(Asset::getStatus, INTEGER_ZERO)
                 .and(nonNull(createTime), wrapper -> wrapper
                         .ge(Asset::getCreateTime, nonNull(createTime) ? DateUtil.beginOfMonth(createTime) : null)
