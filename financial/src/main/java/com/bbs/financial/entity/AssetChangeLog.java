@@ -4,7 +4,10 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -15,6 +18,8 @@ import java.util.Date;
  */
 @TableName(value ="asset_change_log")
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class AssetChangeLog implements Serializable {
     /**
      * 
@@ -27,12 +32,6 @@ public class AssetChangeLog implements Serializable {
      */
     @TableField(value = "company_id")
     private Long companyId;
-
-    /**
-     * 录入月份
-     */
-    @TableField(value = "entry_month")
-    private String entryMonth;
 
     /**
      * 资产编码
@@ -64,11 +63,6 @@ public class AssetChangeLog implements Serializable {
     @TableField(value = "change_after_value")
     private String changeAfterValue;
 
-    /**
-     * 变动月份
-     */
-    @TableField(value = "change_month")
-    private String changeMonth;
 
     /**
      * 创建时间
@@ -87,6 +81,15 @@ public class AssetChangeLog implements Serializable {
      */
     @TableField(value = "is_deleted")
     private Integer isDeleted;
+
+    public AssetChangeLog(Long companyId, String no, String name, String changeItem, String changeBeforValue, String changeAfterValue) {
+        this.companyId = companyId;
+        this.no = no;
+        this.name = name;
+        this.changeItem = changeItem;
+        this.changeBeforValue = changeBeforValue;
+        this.changeAfterValue = changeAfterValue;
+    }
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
