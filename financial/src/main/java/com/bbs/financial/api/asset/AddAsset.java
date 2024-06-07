@@ -3,12 +3,19 @@ package com.bbs.financial.api.asset;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ReflectUtil;
 import com.bbs.Result;
+import com.bbs.api.auth.company.CompanyAPI;
 import com.bbs.financial.entity.Asset;
 import com.bbs.financial.entity.AssetChangeLog;
+import com.bbs.financial.entity.AssetType;
 import com.bbs.financial.enums.ChangeItemEnum;
+import com.bbs.financial.enums.DepreciationMethod;
 import com.bbs.financial.service.AssetChangeLogService;
 import com.bbs.financial.service.AssetService;
+import com.bbs.financial.service.AssetTypeService;
 import com.bbs.financial.util.LoginUser;
+import com.bbs.vo.CompanyStructure;
+import org.apache.commons.compress.utils.Sets;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -21,7 +28,9 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static com.bbs.Result.success;
 import static java.util.Objects.isNull;
@@ -34,10 +43,14 @@ import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
 @RestController
 public class AddAsset {
 
+    @DubboReference
+    private CompanyAPI companyAPI;
     @Resource
     private AssetService assetService;
     @Resource
     private AssetChangeLogService assetChangeLogService;
+    @Resource
+    private AssetTypeService assetTypeService;
     @Resource
     private TransactionDefinition transactionDefinition;
     @Resource
@@ -76,11 +89,26 @@ public class AddAsset {
                                 ||ChangeItemEnum.DEPRECIATION_PREPARATION.getName().equals(name)
                                 ||ChangeItemEnum.RESIDUAL_VALUE_RATE.getName().equals(name)
                                 ||ChangeItemEnum.ACCUMULATED_DEPRECIATION.getName().equals(name)) {
-                            beforValue = Long.valueOf(beforValue.toString())/100;
-                            value = Long.valueOf(value.toString())/100;
+                            beforValue = Long.parseLong(beforValue.toString())/100;
+                            value = Long.parseLong(value.toString())/100;
                         }
-
-
+                        //折旧方法
+                        if(ChangeItemEnum.DEPRECIATION_METHOD.getName().equals(name)) {
+                            beforValue = DepreciationMethod.getValueByKey((int) beforValue);
+                            value =  DepreciationMethod.getValueByKey((int) value);
+                        }
+                        //部门
+                        if(ChangeItemEnum.USE_DEPARTMENT.getName().equals(name)) {
+                            Map<Long, CompanyStructure> structureMap = companyAPI.searchIdMap(Sets.newHashSet(Long.parseLong(beforValue.toString()),Long.parseLong(value.toString())));
+                            beforValue = structureMap.get((long)beforValue).getName();
+                            value = structureMap.get((long)value).getName();
+                        }
+                        //资产类别
+                        if(ChangeItemEnum.ASSET_CATEGORY.getName().equals(name)) {
+                            Map<Long, AssetType> assetTypeMap = assetTypeService.listByIds(Sets.newHashSet(Long.parseLong(beforValue.toString()), Long.parseLong(value.toString()))).stream().collect(Collectors.toMap(AssetType::getId, structure -> structure));;
+                            beforValue = assetTypeMap.get((long)beforValue).getName();
+                            value = assetTypeMap.get((long)value).getName();
+                        }
                         assetChangeLogs.add(new AssetChangeLog(dbAsset.getCompanyId(), dbAsset.getNo(), dbAsset.getName(),
                                 "变动 "+name,beforValue.toString(), value.toString(),LoginUser.getId()));
                     }
