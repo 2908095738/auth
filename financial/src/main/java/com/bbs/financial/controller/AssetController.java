@@ -30,12 +30,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.bbs.Result.success;
@@ -94,7 +89,29 @@ public class AssetController {
 
     @GetMapping(value = "/asset/{id}")
     public Result<Asset> getInfo(@PathVariable("id") Long id) {
-        return success(assetService.getById(id));
+        Asset asset = assetService.getByIdDeep(id);
+
+        Set<Long> userIds = new HashSet<>();
+        if(nonNull(asset.getUseUserId())) userIds.add(asset.getUseUserId());
+        if(nonNull(asset.getCreateBy())) userIds.add(asset.getCreateBy());
+        if(nonNull(asset.getUpdateBy())) userIds.add(asset.getUpdateBy());
+        Set<Long> structureIds = new HashSet<>();
+        if(nonNull(asset.getStructureId())) structureIds.add(asset.getStructureId());
+        if(userIds.size() > INTEGER_ZERO) {
+            Map<Long, User> userIdMap = userAPI.getUserIdMap(userIds);
+            if(userIdMap.size() > INTEGER_ZERO) {
+                if(nonNull(asset.getUseUserId())) asset.setUseUser(userIdMap.get(asset.getUseUserId()));
+                if(nonNull(asset.getCreateBy())) asset.setCreateUser(userIdMap.get(asset.getCreateBy()));
+                if(nonNull(asset.getUpdateBy())) asset.setUpdateUser(userIdMap.get(asset.getUpdateBy()));
+            }
+        }
+        if(structureIds.size() > INTEGER_ZERO) {
+            Map<Long, CompanyStructure> map = companyAPI.searchIdMap(structureIds);
+            if(map.size() > INTEGER_ZERO) {
+                asset.setCompanyStructure(map.get(asset.getStructureId()));
+            }
+        }
+        return success(assetService.getByIdDeep(id));
     }
 
 

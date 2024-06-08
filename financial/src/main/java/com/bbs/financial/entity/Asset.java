@@ -14,6 +14,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 
+import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
@@ -52,6 +53,7 @@ public class Asset implements Serializable {
     /**
      * 资产名称
      */
+    @NotBlank
     @Alias(value = "资产名称")
     @TableField(value = "name")
     private String name;

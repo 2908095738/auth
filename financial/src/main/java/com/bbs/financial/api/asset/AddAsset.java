@@ -15,6 +15,7 @@ import com.bbs.financial.service.AssetTypeService;
 import com.bbs.financial.util.LoginUser;
 import com.bbs.vo.CompanyStructure;
 import org.apache.commons.compress.utils.Sets;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.validation.Valid;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
@@ -61,7 +63,7 @@ public class AddAsset {
      * 新增资产
      */
     @PutMapping("/asset")
-    public Result<Long> add(@RequestBody Asset asset) {
+    public Result<Long> add(@Valid @RequestBody Asset asset) {
 
         boolean isCreate = isCreate(asset);
 
@@ -83,7 +85,7 @@ public class AddAsset {
                     Object value = field.get(asset);
 
                     // 如果有值，并且值跟旧值不一样，则更新
-                    if (nonNull(value) && !value.equals(beforValue)&& nonNull(name)) {
+                    if (nonNull(value) && nonNull(beforValue) &&!value.equals(beforValue)&& nonNull(name)) {
                         // 原值、减值准备、残值率、期初累计折旧
                         if(ChangeItemEnum.ASSET_VALUE.getName().equals(name)
                                 ||ChangeItemEnum.DEPRECIATION_PREPARATION.getName().equals(name)
@@ -99,18 +101,18 @@ public class AddAsset {
                         }
                         //部门
                         if(ChangeItemEnum.USE_DEPARTMENT.getName().equals(name)) {
-                            Map<Long, CompanyStructure> structureMap = companyAPI.searchIdMap(Sets.newHashSet(Long.parseLong(beforValue.toString()),Long.parseLong(value.toString())));
-                            beforValue = structureMap.get((long)beforValue).getName();
-                            value = structureMap.get((long)value).getName();
+                            Map<Long, CompanyStructure> structureMap = companyAPI.searchIdMap(Sets.newHashSet(Long.parseLong(String.valueOf(beforValue)),Long.parseLong(String.valueOf(value))));
+                            beforValue = structureMap.get((long) beforValue).getName();
+                            value = structureMap.get((long) value).getName();
                         }
                         //资产类别
                         if(ChangeItemEnum.ASSET_CATEGORY.getName().equals(name)) {
-                            Map<Long, AssetType> assetTypeMap = assetTypeService.listByIds(Sets.newHashSet(Long.parseLong(beforValue.toString()), Long.parseLong(value.toString()))).stream().collect(Collectors.toMap(AssetType::getId, structure -> structure));;
-                            beforValue = assetTypeMap.get((long)beforValue).getName();
-                            value = assetTypeMap.get((long)value).getName();
+                            Map<Long, AssetType> assetTypeMap = assetTypeService.listByIds(Sets.newHashSet(Long.parseLong(String.valueOf(beforValue)), Long.parseLong(String.valueOf(value)))).stream().collect(Collectors.toMap(AssetType::getId, structure -> structure));;
+                            beforValue = assetTypeMap.get((long) beforValue).getName();
+                            value = assetTypeMap.get((long) value).getName();
                         }
                         assetChangeLogs.add(new AssetChangeLog(dbAsset.getCompanyId(), dbAsset.getNo(), dbAsset.getName(),
-                                "变动 "+name,beforValue.toString(), value.toString(),LoginUser.getId()));
+                                "变动 "+name,String.valueOf(beforValue), String.valueOf(value),LoginUser.getId()));
                     }
                 }
                 assetChangeLogService.saveBatch(assetChangeLogs);
