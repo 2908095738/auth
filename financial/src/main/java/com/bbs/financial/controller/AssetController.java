@@ -13,6 +13,7 @@ import com.bbs.financial.entity.Certificate;
 import com.bbs.financial.mapper.AssetMapper;
 import com.bbs.financial.service.AssetService;
 import com.bbs.vo.BaseParam;
+import com.bbs.vo.CompanyStructure;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,12 +31,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.bbs.Result.success;
 import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 /**
  * 资产Controller
@@ -94,37 +99,64 @@ public class AssetController {
 
 
     /**
-     * 获取资产详细信息
+     * 获取资产明细列表
      */
     @GetMapping(value = "/asset/schedule")
     public Result<Page<Asset>> getSchedule(Param param){
-        return success(assetMapper.selectJoinPage(param.toPage(),Asset.class, new MPJLambdaWrapper<Asset>()
-                .selectAssociation(AssetType.class,Asset::getAssetTypeName,t->t.result(AssetType::getName))
+        Page<Asset> page = assetMapper.selectJoinPage(param.toPage(), Asset.class, new MPJLambdaWrapper<Asset>()
+                .selectAssociation(AssetType.class, Asset::getAssetTypeName, t -> t.result(AssetType::getName))
                 .leftJoin(AssetType.class, AssetType::getId, Asset::getAssetTypeId)
+                .leftJoin(AssetDepreciationCertificate.class, AssetDepreciationCertificate::getAssetId, Asset::getId)
                 .eq(Asset::getIsDeleted, 0)
+                .ne(AssetDepreciationCertificate::getAssetId, 0)
                 .eq(Asset::getCompanyId, param.getCompanyId())
-                .like(nonNull(param.entryMonth),Asset::getUpdateTime, param.entryMonth)
-                ));
+                .like(nonNull(param.entryMonth), Asset::getUpdateTime, param.entryMonth)
+        );
+
+        Set<Long> companyStructureIds = new HashSet<>();
+        page.getRecords().forEach(asset -> {
+            if(nonNull(asset.getStructureId())) companyStructureIds.add(asset.getStructureId());
+        });
+
+        // 查询并填充所属部门
+        Map<Long, CompanyStructure> companyStructureIdMap = new HashMap<>();
+        if(companyStructureIds.size() > INTEGER_ZERO) {
+            companyStructureIdMap = companyAPI
+                    .search(companyStructureIds).stream()
+                    .collect(Collectors.toMap(CompanyStructure::getId, companyStructure -> companyStructure));
+        }
+
+        for (Asset asset : page.getRecords()) {
+            if(nonNull(asset.getCompanyId())) {
+                //部门
+                asset.setStructureName(companyStructureIdMap.getOrDefault(asset.getStructureId(), new CompanyStructure().setName("全部")).getName());
+            }
+        }
+        return success(page);
     }
 
 
 
     /**
-     * 获取资产详细信息
+     * 获取资产汇总列表
      */
     @GetMapping(value = "/asset/summary")
     public Result<List<Asset>> getSummary(Param param){
         List<Asset> resultSummary = new ArrayList<>();
         List<Asset> list = assetMapper.selectJoinList(Asset.class, new MPJLambdaWrapper<Asset>()
                 .selectAssociation(AssetType.class,Asset::getAssetTypeName,t->t.result(AssetType::getName))
+                .leftJoin(AssetDepreciationCertificate.class, AssetDepreciationCertificate::getAssetId, Asset::getId)
                 .leftJoin(AssetType.class, AssetType::getId, Asset::getAssetTypeId)
                 .eq(Asset::getIsDeleted, 0)
+                .ne(AssetDepreciationCertificate::getAssetId, 0)
                 .eq(Asset::getCompanyId, param.getCompanyId())
                 .like(nonNull(param.entryMonth),Asset::getUpdateTime, param.entryMonth)
         );
         if (CollUtil.isNotEmpty(list)){
             //使用stream按类别和部门，合并原值、当月折旧、本年折旧额、期初累计折旧、期末累计折旧、期末减值准备、期末净值
             Map<Long, List<Asset>> collect = list.stream().collect(Collectors.groupingBy(Asset::getAssetTypeId));
+
+            Set<Long> companyStructureIds = new HashSet<>();
 
             collect.keySet().forEach(assetTypeId -> {
                 List<Asset> assets = new ArrayList<>(collect.get(assetTypeId).stream().collect(Collectors.toMap(Asset::getStructureId, a -> a, (o1, o2) -> {
@@ -165,11 +197,27 @@ public class AssetController {
                     if (nonNull(o1.getAfterImpairment()) && nonNull(o2.getAfterImpairment())) {
                         o1.setAfterImpairment(o1.getAfterImpairment() + o2.getAfterImpairment());
                     }
+                    if(nonNull(o1.getStructureId())) companyStructureIds.add(o1.getStructureId());
                     return o1;
                 })).values());
-
                 resultSummary.addAll(assets);
             });
+
+            // 查询并填充所属部门
+            Map<Long, CompanyStructure> companyStructureIdMap = new HashMap<>();
+            if(companyStructureIds.size() > INTEGER_ZERO) {
+                companyStructureIdMap = companyAPI
+                        .search(companyStructureIds).stream()
+                        .collect(Collectors.toMap(CompanyStructure::getId, companyStructure -> companyStructure));
+            }
+
+            for (Asset asset : resultSummary) {
+                if(nonNull(asset.getCompanyId())) {
+                    //部门
+                    asset.setStructureName(companyStructureIdMap.getOrDefault(asset.getStructureId(), new CompanyStructure().setName("全部")).getName());
+                }
+            }
+
         }
         return success(resultSummary);
     }

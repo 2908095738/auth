@@ -47,7 +47,7 @@ public class AssetDepreciationCertificate implements Serializable {
     /**
      * 折旧金额月
      */
-    @TableField(value = "money")
+    @TableField(value = "month_money")
     private Long money;
 
     @TableField(exist = false)

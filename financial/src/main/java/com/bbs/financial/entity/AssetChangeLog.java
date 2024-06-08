@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.bbs.api.auth.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -76,6 +77,8 @@ public class AssetChangeLog implements Serializable {
     @TableField(value = "create_by")
     private Long createBy;
 
+    @TableField(exist = false)
+    private User createUser;
     /**
      * 0表示未删除，1表示已删除
      */
