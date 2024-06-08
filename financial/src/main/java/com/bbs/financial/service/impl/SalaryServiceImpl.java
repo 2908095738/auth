@@ -1,6 +1,8 @@
 package com.bbs.financial.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.financial.controller.SalaryController;
 import com.bbs.financial.entity.AuxiliaryCalculation;
@@ -16,6 +18,7 @@ import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -78,7 +81,11 @@ public class SalaryServiceImpl extends MPJBaseServiceImpl<SalaryMapper, Salary>
 
     @Override
     public List<Long> countMoneyByTemplate(Long salaryId, Long useField, Integer salaryType, String useEmployee) {
-        List<String> useEmployeeList = Arrays.asList(useEmployee.split(","));
+        List<String> list = new ArrayList<>();
+        if(ObjUtil.isNotEmpty(useEmployee)&& StrUtil.isNotBlank(useEmployee)){
+            list = Arrays.asList(useEmployee.split(","));
+        }
+
         return selectJoinList(Long.class,new MPJLambdaWrapper<Salary>()
                 .select(EmployeeItemExtend::getContent)
                 .leftJoin(EmployeeSalary.class,EmployeeSalary::getSalaryId,Salary::getId)
@@ -88,7 +95,7 @@ public class SalaryServiceImpl extends MPJBaseServiceImpl<SalaryMapper, Salary>
                 )
                 .eq(Salary::getId,salaryId)
                 .eq(EmployeeItemExtend::getItemTypeId,useField)
-                .in(CollUtil.isNotEmpty(useEmployeeList),EmployeeItemExtend::getEmployeeId,useEmployeeList)
+                .in(CollUtil.isNotEmpty(list),EmployeeItemExtend::getEmployeeId,list)
 //                .in(EmployeeItemExtend::getSalaryType,salaryType)
         );
     }
