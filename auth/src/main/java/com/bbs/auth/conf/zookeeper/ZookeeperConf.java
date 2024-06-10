@@ -4,6 +4,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,8 +16,6 @@ import javax.annotation.Resource;
  */
 @Configuration
 public class ZookeeperConf {
-
-    private static final long serialVersionUID = -9025878246972668136L;
 
     // 服务器连接地址，集群模式则使用逗号分隔如：ip1:host,ip2:host
     @Value("${apache.zookeeper.connect-url}")

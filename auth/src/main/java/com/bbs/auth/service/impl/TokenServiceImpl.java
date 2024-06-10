@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +32,7 @@ import static org.apache.commons.lang3.math.NumberUtils.*;
 
 @Slf4j
 @Service
+@RefreshScope
 public class TokenServiceImpl implements TokenService {
 
 
