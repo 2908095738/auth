@@ -1,5 +1,6 @@
 package com.bbs.financial.api.certificate.add;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import com.bbs.Result;
 import com.bbs.enums.financial.CertificateWordEnum;
@@ -83,7 +84,7 @@ public class AddSalaryCertificate {
     public Result<Boolean> add(@RequestBody Param param) {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         List<CertificateTemplate> template = certificateTemplateService.getJoinTemplate(param.companyId, param.templateNames);
-        if (template == null) {
+        if (CollUtil.isEmpty(template)) {
             return Result.failed("模板不存在");
         }
         long no = db.lambdaQuery().eq(Certificate::getCompanyId, param.getCompanyId())
@@ -112,10 +113,8 @@ public class AddSalaryCertificate {
                     Long money = salaryService.countMoneyByTemplate(param.salaryId,useField,salaryType,useEmployee).stream().mapToLong(Long::longValue).sum();
                     if(Objects.equals(certificateAbstract.getBorrowOrLoansType(), BorrowOrLoansType.BORROW.getKey())){
                         entity.setBorrowMoney(money);
-                        entity.setLoansMoney(0L);
                     } else if (Objects.equals(certificateAbstract.getBorrowOrLoansType(), BorrowOrLoansType.LOANS.getKey())) {
                         entity.setLoansMoney(money);
-                        entity.setBorrowMoney(0L);
                     }
                     return entity;
                 }).collect(Collectors.toList()));
