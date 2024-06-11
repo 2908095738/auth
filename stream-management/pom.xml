@@ -19,13 +19,6 @@
     </properties>
 
     <dependencies>
-        <!-- 依赖模块 -->
-        <dependency>
-            <groupId>com.bbs</groupId>
-            <artifactId>auth-sdk</artifactId>
-            <version>1.0</version>
-        </dependency>
-
         <!-- Boot -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

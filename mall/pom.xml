@@ -23,11 +23,6 @@
     <dependencies>
         <dependency>
             <groupId>com.bbs</groupId>
-            <artifactId>auth-sdk</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.bbs</groupId>
             <artifactId>auth</artifactId>
             <version>1.0</version>
             <scope>compile</scope>
@@ -41,18 +36,15 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-            <version>${spring-boot.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>${mybatis-push.version}</version>
         </dependency>
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-extension</artifactId>
-            <version>${mybatis-push.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.yulichang</groupId>
@@ -70,7 +62,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
-            <version>${spring-boot.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.session</groupId>
@@ -108,12 +99,10 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter</artifactId>
-                <version>${spring-boot.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-autoconfigure</artifactId>
-                <version>${spring-boot.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
