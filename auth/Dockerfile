@@ -9,4 +9,4 @@ ADD target/auth-1.0.jar app.jar
 # 设置暴露的端口号
 EXPOSE 8515
 # 在镜像运行为容器后执行的命令
-ENTRYPOINT ["java","-jar","javaapp.jar","-XX:+UnlockExperimentalVMOptions","XX:+UseCGroupMemoryLimitForHeap"]
+ENTRYPOINT ["java","-jar","app.jar","-XX:+UnlockExperimentalVMOptions","XX:+UseCGroupMemoryLimitForHeap"]
