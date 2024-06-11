@@ -174,23 +174,10 @@
             <version>1.5.2.Final</version>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.bbs</groupId>-->
-<!--            <artifactId>auth-sdk</artifactId>-->
-<!--            <version>1.0</version>-->
-<!--        </dependency>-->
-
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
         </dependency>
-
-<!--        <dependency>-->
-<!--            <groupId>com.bbs</groupId>-->
-<!--            <artifactId>auth</artifactId>-->
-<!--            <version>1.0</version>-->
-<!--            <scope>compile</scope>-->
-<!--        </dependency>-->
 
         <dependency>
             <groupId>org.jetbrains</groupId>

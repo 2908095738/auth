@@ -18,14 +18,8 @@
     <modules>
         <module>auth</module>
         <module>common</module>
-        <module>content-server</module>
         <module>dfs-server</module>
-        <module>monitoring-server</module>
         <module>log-server</module>
-        <module>chat</module>
-        <module>store-management</module>
-        <!--        <module>mall</module>-->
-        <module>stream-management</module>
         <module>financial</module>
     </modules>
 
