@@ -169,7 +169,7 @@
                 </executions>
                 <configuration>
                     <includeSystemScope>true</includeSystemScope>
-                    <mainClass>com.bbs.auth.Auth</mainClass>
+                    <mainClass>com.bbs.financial.Financial</mainClass>
                 </configuration>
             </plugin>
         </plugins>
