@@ -7,7 +7,6 @@ import com.bbs.auth.cache.TokenCache;
 import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.service.TokenService;
-import com.bbs.enums.CodeEnum;
 import com.bbs.exception.ReLoginException;
 import com.bbs.vo.UserVO;
 import lombok.extern.slf4j.Slf4j;
@@ -132,11 +131,11 @@ public class TokenServiceImpl implements TokenService {
                     User user = userCache.search(id);
                     return new UserVO(user.getId(), user.getName(), user.getEmail(), user.getPhone().toString());
                 } catch (InterruptedException e) {
-                    throw new ReLoginException(CodeEnum.FAILED_USER_INFO_DUPLICATION);
+                    throw new ReLoginException();
                 }
             }
         }
-        throw new ReLoginException(CodeEnum.FAILED_USER_INFO_DUPLICATION);
+        throw new ReLoginException();
     }
 
     @Override
