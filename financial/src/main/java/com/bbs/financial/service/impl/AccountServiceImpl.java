@@ -8,8 +8,10 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.financial.entity.Account;
 import com.bbs.financial.entity.AccountRemark;
-import com.bbs.financial.service.AccountService;
+import com.bbs.financial.entity.Certificate;
+import com.bbs.financial.entity.CertificateAbstract;
 import com.bbs.financial.mapper.AccountMapper;
+import com.bbs.financial.service.AccountService;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
@@ -141,5 +143,17 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
                 .or()
                 .like(StringUtils.isNotBlank(name), Account::getName, name)
         );
+    }
+
+    @Override
+    public List<Tree<Long>> selectTree(Long companyId, String certificateCreateTime) {
+        List<Account> accountList = selectJoinList(Account.class, new MPJLambdaWrapper<Account>()
+                .selectAll(Account.class)
+                .rightJoin(CertificateAbstract.class, CertificateAbstract::getAccountId, Account::getId)
+                .rightJoin(Certificate.class, Certificate::getId, CertificateAbstract::getCertificateId)
+                .eq(Certificate::getCompanyId,companyId)
+                .like(Certificate::getCreateTime,certificateCreateTime)
+        );
+        return tree(accountList);
     }
 }

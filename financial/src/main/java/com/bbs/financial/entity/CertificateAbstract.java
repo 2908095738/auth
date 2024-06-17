@@ -4,13 +4,13 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
-
 import com.github.yulichang.annotation.EntityMapping;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+
+import java.io.Serializable;
 
 /**
  * 记账凭证摘要
@@ -57,6 +57,12 @@ public class CertificateAbstract implements Serializable {
      */
     @TableField(value = "loans_money")
     private Long loansMoney;
+
+    /**
+     * 余额
+     */
+    @TableField(exist = false)
+    private Long surplusMoney;
 
     /**
      * 权重
