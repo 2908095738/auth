@@ -9,13 +9,11 @@ import com.bbs.auth.entity.UserCompany;
 import com.bbs.auth.service.CompanyService;
 import com.bbs.auth.service.UserService;
 import com.bbs.auth.util.RedisUtil;
-import com.bbs.auth.util.ZKUtil;
 import com.bbs.Result;
 import com.bbs.auth.cache.code.PhoneCodeCache;
 import com.bbs.auth.entity.User;
 import com.bbs.enums.LoginType;
 import com.bbs.enums.UserStateEnum;
-import com.bbs.auth.enums.ZookeeperNodePaths;
 import com.bbs.auth.service.TokenService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -65,10 +63,6 @@ public class Login {
 
     @Resource
     private RedissonClient redisson;
-
-    @Resource
-    private ZKUtil zkUtil;
-
     @Resource
     private UserDao db;
     @Resource
@@ -195,8 +189,8 @@ public class Login {
             },
             () -> failed(500, new VO(), "无法获取登录锁，详情请联系客服"),
                 redisson.getSpinLock(USER_LOGIN_PHONE.LOCK.key(param.phone)),
-                zkUtil.getIntForPath(ZookeeperNodePaths.LockConf.UserCache.WAIT),
-                zkUtil.getIntForPath(ZookeeperNodePaths.LockConf.UserCache.LEASE),
+                50000,
+                50000,
                 MILLISECONDS
         );
     }

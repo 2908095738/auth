@@ -6,7 +6,6 @@ import com.aliyun.auth.credentials.provider.StaticCredentialProvider;
 import com.aliyun.sdk.service.dysmsapi20170525.AsyncClient;
 import com.aliyun.sdk.service.dysmsapi20170525.models.SendSmsRequest;
 import com.aliyun.sdk.service.dysmsapi20170525.models.SendSmsResponse;
-import com.bbs.auth.enums.ZookeeperNodePaths;
 import com.bbs.exception.BusinessException;
 import com.google.gson.Gson;
 import darabonba.core.client.ClientOverrideConfiguration;
@@ -33,15 +32,15 @@ public class ALiYunCaptcha extends CaptchaUtil {
     private static final String REGION = "cn-hangzhou";
 
     private String accessKey() {
-        return zkUtil.getForPath(ZookeeperNodePaths.Captcha.Alibaba.ACCESS_KEY);
+        return "";
     }
 
     private String accessKeySecret() {
-        return zkUtil.getForPath(ZookeeperNodePaths.Captcha.Alibaba.ACCESS_KEY_SECRET);
+        return "";
     }
 
     private String endpoint() {
-        return zkUtil.getForPath(ZookeeperNodePaths.Captcha.Alibaba.ENDPOINT);
+        return "";
     }
 
     @Data
