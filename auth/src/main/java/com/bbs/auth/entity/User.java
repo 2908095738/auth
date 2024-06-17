@@ -28,16 +28,16 @@ public class User implements Serializable {
     private Long id;
 
     /**
-     * 邮箱
-     */
-    @TableField(value = "email")
-    private String email;
-
-    /**
      * 用户名称
      */
     @TableField(value = "name")
     private String name;
+
+    /**
+     * 邮箱
+     */
+    @TableField(value = "email")
+    private String email;
 
     /**
      * 性别
@@ -83,7 +83,7 @@ public class User implements Serializable {
 
 
     /**
-     * 账号状态： 0：冻结1：正常 -1：封禁 2：离职
+     * 账号状态： 1：冻结0：正常 -1：封禁 2：离职
      */
     @TableField(value = "state")
     private Integer state;

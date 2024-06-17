@@ -3,9 +3,7 @@ package com.bbs.auth.cache.impl;
 import cn.hutool.core.util.RandomUtil;
 import com.bbs.auth.cache.TokenCache;
 import com.bbs.auth.util.RedisUtil;
-import com.bbs.auth.util.ZKUtil;
 import com.bbs.auth.enums.RedisKeys;
-import com.bbs.auth.enums.ZookeeperNodePaths;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -19,16 +17,13 @@ public class TokenCacheImpl implements TokenCache {
     @Resource
     private RedisUtil redis;
 
-    @Resource
-    private ZKUtil zkUtil;
-
     private String key(Long uid) {
         return RedisKeys.USER_UID_AND_TOKEN_MAP.key(uid);
     }
 
-    private Integer getTokenTimeOutMax() { return Integer.valueOf(zkUtil.getForPath(ZookeeperNodePaths.CacheConf.Token.TIMEOUT_MAX)); }
+    private Integer getTokenTimeOutMax() { return 10080; }
 
-    private Integer getTokenTimeOutMin() { return Integer.valueOf(zkUtil.getForPath(ZookeeperNodePaths.CacheConf.Token.TIMEOUT_MIN)); }
+    private Integer getTokenTimeOutMin() { return 8640; }
 
     @Override
     public void setToken(Long uid, String token) {

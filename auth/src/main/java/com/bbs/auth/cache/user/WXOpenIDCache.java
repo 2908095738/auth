@@ -6,10 +6,8 @@ import com.bbs.auth.dao.UserDao;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.UserBind;
 import com.bbs.auth.entity.VXUser;
-import com.bbs.auth.enums.ZookeeperNodePaths;
 import com.bbs.auth.service.UserBindService;
 import com.bbs.auth.util.RedisUtil;
-import com.bbs.auth.util.ZKUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
 import org.springframework.context.annotation.Lazy;
@@ -55,9 +53,6 @@ public class WXOpenIDCache {
     private RedissonClient redisson;
 
     @Resource
-    private ZKUtil zkUtil;
-
-    @Resource
     private UserDao db;
 
     @Resource
@@ -100,8 +95,8 @@ public class WXOpenIDCache {
                     }
                 },
                 redisson.getSpinLock(USER.LOCK.key(openid)),
-                zkUtil.getIntForPath(ZookeeperNodePaths.LockConf.UserCache.WAIT),
-                zkUtil.getIntForPath(ZookeeperNodePaths.LockConf.UserCache.LEASE),
+                50000,
+                50000,
                 MILLISECONDS
         );
     }

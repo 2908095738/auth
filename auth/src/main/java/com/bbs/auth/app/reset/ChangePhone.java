@@ -7,9 +7,7 @@ import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.dao.UserDao;
 import com.bbs.auth.service.UserService;
 import com.bbs.auth.util.RedisUtil;
-import com.bbs.auth.util.ZKUtil;
 import com.bbs.auth.entity.User;
-import com.bbs.auth.enums.ZookeeperNodePaths;
 import com.bbs.Result;
 import com.bbs.exception.BusinessException;
 import com.google.common.base.Preconditions;
@@ -47,9 +45,6 @@ public class ChangePhone {
 
     @Resource
     private RedissonClient redisson;
-
-    @Resource
-    private ZKUtil zkUtil;
 
     @Lazy
     @Resource
@@ -97,8 +92,8 @@ public class ChangePhone {
                     throw new BusinessException("修改用户手机号失败");
                 },
                 redisson.getSpinLock(USER.LOCK.key(param.uid)),
-                zkUtil.getIntForPath(ZookeeperNodePaths.LockConf.UserCache.WAIT),
-                zkUtil.getIntForPath(ZookeeperNodePaths.LockConf.UserCache.LEASE),
+                50000,
+                50000,
                 MILLISECONDS
         );
     }
@@ -143,8 +138,8 @@ public class ChangePhone {
                 },
                 () -> failed(500, null, "无法获取登录锁，详情请联系客服"),
                 redisson.getSpinLock(USER_LOGIN_PHONE.LOCK.key(param.phone)),
-                zkUtil.getIntForPath(ZookeeperNodePaths.LockConf.UserCache.WAIT),
-                zkUtil.getIntForPath(ZookeeperNodePaths.LockConf.UserCache.LEASE),
+                50000,
+                50000,
                 MILLISECONDS
         );
     }

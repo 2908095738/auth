@@ -1,12 +1,8 @@
 package com.bbs.auth.conf;
 
 import com.bbs.auth.entity.UserBind;
-import com.bbs.auth.enums.ZookeeperNodePaths;
-import com.bbs.auth.util.ZKUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
 
 import static com.bbs.auth.enums.RedisKeys.*;
 
@@ -16,9 +12,6 @@ import static com.bbs.auth.enums.RedisKeys.*;
 @Slf4j
 @Component
 public class UserCacheConf {
-
-    @Resource
-    private ZKUtil zkUtil;
 
     public String key(com.bbs.auth.entity.User user) {
         return key(user.getId());
@@ -32,27 +25,27 @@ public class UserCacheConf {
      * 用户信息缓存：最小过期时间
      */
     public Integer minTimeout() {
-        return Integer.parseInt(zkUtil.getForPath(ZookeeperNodePaths.CacheConf.User.TIMEOUT_MIN));
+        return 5;
     }
     /**
      * 用户信息缓存：最大过期时间
      */
     public Integer maxTimeout() {
-        return zkUtil.getIntForPath(ZookeeperNodePaths.CacheConf.User.TIMEOUT_MAX);
+        return 7;
     }
 
     /**
      * 与用户 UID 关联的其他 Map 缓存（Map<关联ID, UID>）：最小过期时间
      */
     public Integer associationMapMinTimeout() {
-        return zkUtil.getIntForPath(ZookeeperNodePaths.CacheConf.User.UID_MAP_TIMEOUT_MIN);
+        return 5;
     }
 
     /**
      * 与用户 UID 关联的其他 Map 缓存（Map<关联ID, UID>）：最大过期时间
      */
     public Integer associationMapMaxTimeout() {
-        return zkUtil.getIntForPath(ZookeeperNodePaths.CacheConf.User.UID_MAP_TIMEOUT_MAX);
+        return 7;
     }
 
 

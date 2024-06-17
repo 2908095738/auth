@@ -1,6 +1,5 @@
 package com.bbs.auth.event.mq;
 
-import com.bbs.auth.app.follow.DelFollow;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
