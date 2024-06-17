@@ -22,10 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.bbs.Result.success;
@@ -256,8 +253,10 @@ public class SearchAssetList {
         // 查询并填充所属用户、创建用户、修改用户
         Map<Long, User> userIdMap = null;
         if(userIds.size() > INTEGER_ZERO) {
-            userIdMap = userAPI.getUserList(userIds)
-                    .stream().collect(Collectors.toMap(User::getId, user -> user));
+            List<User> userList = userAPI.getUserList(userIds);
+            if(nonNull(userList) && userList.size() > INTEGER_ZERO) {
+                userIdMap = userList.stream().collect(Collectors.toMap(User::getId, user -> user));
+            }
         }
         boolean companyStructureIdMapIsNull = nonNull(companyStructureIdMap);
         boolean userIdMapIsNull = nonNull(userIdMap);

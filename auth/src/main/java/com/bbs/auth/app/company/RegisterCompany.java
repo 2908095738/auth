@@ -89,7 +89,7 @@ public class RegisterCompany {
             userCompanyService.save(new UserCompany()
                     .setUserId(loginUserID)
                     .setCompanyId(company.getId())
-                    .setPosition(param.getPosition())
+                    .setPositionName(param.getPosition())
                     .setCreateBy(loginUserID)
             );
             transactionManager.commit(transaction);

@@ -3,6 +3,8 @@ package com.bbs.auth.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.TypeReference;
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.entity.Company;
@@ -108,9 +110,9 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
     @Override
     public Company searchCompanyStaff(Long companyID, Page<UserCompany> page) {
         Company company = getById(companyID);
-        Page<UserCompany> userCompanyPage = userCompanyService.lambdaQuery()
-                .eq(UserCompany::getCompanyId, companyID)
-                .page(page);
+        Page<UserCompany> userCompanyPage = userCompanyService.page(page, new LambdaQueryWrapper<UserCompany>()
+                        .eq(UserCompany::getCompanyId, companyID)
+        );
         fillUserToUserCompanyPage(userCompanyPage); //填充用户信息
         company.setStaffList(userCompanyPage);
         return company;
@@ -131,11 +133,11 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
                 Long uid = userCompany.getUserId();
                 indexMap.put(uid, index);
                 ids.add(uid);
-
                 Long structureId = userCompany.getStructureId();
-                structureCacheKeys.add(COMPANY_STRUCTURE.key(structureId));
-
-                structureIds.add(structureId);
+                if(nonNull(structureId)) {
+                    structureCacheKeys.add(COMPANY_STRUCTURE.key(structureId));
+                    structureIds.add(structureId);
+                }
             }
             List<String> structureStrList = redisUtil.multiGet(structureCacheKeys);
             List<Long> cacheEmptyStructureIds = new ArrayList<>();
