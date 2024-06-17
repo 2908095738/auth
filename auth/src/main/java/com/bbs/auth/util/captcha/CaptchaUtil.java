@@ -1,9 +1,9 @@
 package com.bbs.auth.util.captcha;
 
 import com.bbs.auth.cache.code.PhoneCodeCache;
-import com.bbs.auth.enums.ZookeeperNodePaths;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.annotation.Resource;
 
@@ -14,6 +14,13 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public abstract class CaptchaUtil {
+
+
+    @Value("${code.alibaba.sign}")
+    private String signName;
+
+    @Value("${code.alibaba.template}")
+    private String templateCode;
 
     @Resource
     protected PhoneCodeCache cache;
@@ -38,21 +45,13 @@ public abstract class CaptchaUtil {
         cache.checkIsCanSendCode(phone);
         Integer code = createCode();
         try {
-            send(phone, signName(), templateCode(),  "{code:" + code + "}");
+            send(phone, signName, templateCode,  "{code:" + code + "}");
             cache.setCode(phone, code);
             return true;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
-    }
-
-    private String signName() {
-        return "";
-    }
-
-    private String templateCode() {
-        return "";
     }
 
     private Integer createCode() {
