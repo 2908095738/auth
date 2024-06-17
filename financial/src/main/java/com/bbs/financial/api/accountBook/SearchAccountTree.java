@@ -27,13 +27,9 @@ public class SearchAccountTree {
         return Result.success(list);
     }
 
-    @GetMapping("/certificate/abstract")
-    public Result<Page<CertificateAbstract>> accountAbstractTree(Long companyId, String certificateCreateTime, Long accountId, Integer current, Integer size) {
+    @GetMapping("/certificate/account/abstract")
+    public Result<Page<CertificateAbstract>> accountAbstract(Long companyId, String certificateCreateTime, Long accountId, Integer current, Integer size) {
         Page<CertificateAbstract> list = certificateAbstractService.selectPage(companyId, certificateCreateTime, accountId, current, size);
-
-
-
-
 
         return Result.success(list);
     }
