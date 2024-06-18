@@ -1,5 +1,6 @@
 package com.bbs.financial.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.financial.entity.CertificateAbstract;
 import com.github.yulichang.base.MPJBaseService;
 
@@ -10,4 +11,5 @@ import com.github.yulichang.base.MPJBaseService;
 */
 public interface CertificateAbstractService extends MPJBaseService<CertificateAbstract> {
 
+    Page<CertificateAbstract> selectPage(Long companyId, String certificateCreateTime, Long accountId, Integer current, Integer size);
 }

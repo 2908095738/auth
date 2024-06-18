@@ -56,14 +56,14 @@ public class UserCompany implements Serializable {
     /**
      * 职位名称
      */
-    @TableField(value = "position")
-    private String position;
+    @TableField(value = "position_name")
+    private String positionName;
 
     /**
      * 上级领导
      */
-    @TableField(value = "lead")
-    private Long lead;
+    @TableField(value = "lead_id")
+    private Long leadId;
 
     /**
      * 创建时间

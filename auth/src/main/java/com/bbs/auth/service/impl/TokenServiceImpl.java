@@ -130,7 +130,7 @@ public class TokenServiceImpl implements TokenService {
                 try {
                     User user = userCache.search(id);
                     return new UserVO(user.getId(), user.getName(), user.getEmail(), user.getPhone().toString());
-                } catch (InterruptedException e) {
+                } catch (InterruptedException | IllegalArgumentException e) {
                     throw new ReLoginException();
                 }
             }

@@ -5,6 +5,7 @@ import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.UserGroup;
 import com.bbs.auth.service.UserGroupService;
 import com.bbs.Result;
+import com.bbs.exception.ReLoginException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -42,15 +43,14 @@ public class GetUserConfig {
     }
 
     @GetMapping("/user/admin")
-    public Result<UserConfigVO> getUserConfig(@Valid @NotNull Long id) {
+    public Result<UserConfigVO> getUserConfig(@Valid @NotNull Long id) throws ReLoginException {
         try {
             User user = cache.search(id);
             UserGroup one = userGroupService.lambdaQuery().eq(UserGroup::getUserId, id).one();
             Long groupId = nonNull(one) ? one.getGroupId() : null;
             return success(new UserConfigVO(user.getExpirationTime(), groupId));
         } catch (Exception e) {
-            e.printStackTrace();
-            return failed(e.getMessage());
+            throw new ReLoginException();
         }
     }
 }

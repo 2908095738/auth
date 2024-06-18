@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,17 +32,14 @@ public class ALiYunCaptcha extends CaptchaUtil {
 
     private static final String REGION = "cn-hangzhou";
 
-    private String accessKey() {
-        return "";
-    }
+    @Value("${code.alibaba.access.key}")
+    private String accessKey;
 
-    private String accessKeySecret() {
-        return "";
-    }
+    @Value("${code.alibaba.access.secret}")
+    private String accessKeySecret;
 
-    private String endpoint() {
-        return "";
-    }
+    @Value("${code.alibaba.endpoint}")
+    private String endpoint;
 
     @Data
     @NoArgsConstructor
@@ -74,7 +72,6 @@ public class ALiYunCaptcha extends CaptchaUtil {
 
     @Override
     public void send(String phoneNumber, String signName, String templateCode, String templateParam) throws Exception {
-        String accessKey = accessKey(), accessKeySecret = accessKeySecret(), endpoint = endpoint();
         log.debug("阿里云短信-{}发送短信: signName={}; templateCode={}; templateParam={}", phoneNumber, signName, templateCode, templateParam);
         StaticCredentialProvider provider = StaticCredentialProvider.create(Credential.builder()
                 .accessKeyId(accessKey)
