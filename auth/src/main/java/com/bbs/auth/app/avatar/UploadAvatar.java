@@ -3,7 +3,7 @@ package com.bbs.auth.app.avatar;
 import com.bbs.Result;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.service.UserService;
-import com.bbs.entity.UserVO;
+import com.bbs.vo.UserVO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

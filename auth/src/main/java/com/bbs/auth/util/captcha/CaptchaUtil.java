@@ -1,7 +1,6 @@
 package com.bbs.auth.util.captcha;
 
 import com.bbs.auth.cache.code.PhoneCodeCache;
-import com.bbs.auth.util.ZKUtil;
 import com.bbs.auth.enums.ZookeeperNodePaths;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -15,9 +14,6 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public abstract class CaptchaUtil {
-
-    @Resource
-    protected ZKUtil zkUtil;
 
     @Resource
     protected PhoneCodeCache cache;
@@ -52,11 +48,11 @@ public abstract class CaptchaUtil {
     }
 
     private String signName() {
-        return zkUtil.getForPath(ZookeeperNodePaths.Captcha.Alibaba.SIGN_NAME);
+        return "";
     }
 
     private String templateCode() {
-        return zkUtil.getForPath(ZookeeperNodePaths.Captcha.Alibaba.TEMPLATE_CODE);
+        return "";
     }
 
     private Integer createCode() {

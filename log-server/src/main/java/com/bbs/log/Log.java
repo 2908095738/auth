@@ -1,8 +1,12 @@
 package com.bbs.log;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
+@EnableScheduling
+@MapperScan({"com.bbs.log.mapper"})
 @SpringBootApplication
 public class Log {
     public static void main(String[] args) {

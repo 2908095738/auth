@@ -82,6 +82,12 @@ public class Comment implements Serializable {
     @TableField(value = "status")
     private Integer status;
 
+    /**
+     * 删除状态：0未删除  1已删除
+     */
+    @TableField(value = "delete_flag")
+    private Integer deleteFlag;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

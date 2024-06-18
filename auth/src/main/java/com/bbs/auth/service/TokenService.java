@@ -1,7 +1,7 @@
 package com.bbs.auth.service;
 
 import com.bbs.auth.entity.User;
-import com.bbs.entity.UserVO;
+import com.bbs.vo.UserVO;
 import com.bbs.exception.ReLoginException;
 
 import javax.servlet.http.HttpServletRequest;

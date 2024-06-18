@@ -12,12 +12,12 @@ public class FanDto {
     /**
      * 新增关注用户id
      */
-    private Integer fanUid;
+    private Long fanUid;
 
     /**
      * 新增关注呢称
      */
-    private String nickName;
+    private String name;
 
     /**
      * 新增关注像路径

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 public class UserCompanyServiceImpl extends MPJBaseServiceImpl<UserCompanyMapper, UserCompany>
     implements UserCompanyService{
 
+
 }
 
 

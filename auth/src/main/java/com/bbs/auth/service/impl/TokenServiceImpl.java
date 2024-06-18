@@ -7,13 +7,13 @@ import com.bbs.auth.cache.TokenCache;
 import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.service.TokenService;
-import com.bbs.enums.CodeEnum;
 import com.bbs.exception.ReLoginException;
-import com.bbs.entity.UserVO;
+import com.bbs.vo.UserVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -27,9 +27,11 @@ import java.util.concurrent.TimeUnit;
 import static cn.hutool.core.bean.BeanUtil.toBean;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.math.NumberUtils.*;
 
 @Slf4j
 @Service
+@RefreshScope
 public class TokenServiceImpl implements TokenService {
 
 
@@ -115,20 +117,25 @@ public class TokenServiceImpl implements TokenService {
         return LOGIN_TOKEN_PREFIX + uid;
     }
 
+    private static final String TOKEN_PREFIX = " ";
+
     @Override
     public UserVO verify(String token) throws ReLoginException {
-        if(verifyToken(token)) {
-            Long id = parseToken(token).getId();
+        String[] arr = token.split(TOKEN_PREFIX);
+        // 前端 token 可能以【前缀 token】的格式，这里以空格为分隔符，尝试判断获取实际的 token 部分
+        String tokenPart = arr.length == INTEGER_TWO ? arr[INTEGER_ONE] : arr[INTEGER_ZERO];
+        if(verifyToken(tokenPart)) {
+            Long id = parseToken(tokenPart).getId();
             if(nonNull(getLoginFlag(id))) {
                 try {
                     User user = userCache.search(id);
                     return new UserVO(user.getId(), user.getName(), user.getEmail(), user.getPhone().toString());
                 } catch (InterruptedException e) {
-                    throw new ReLoginException(CodeEnum.FAILED_USER_INFO_DUPLICATION);
+                    throw new ReLoginException();
                 }
             }
         }
-        throw new ReLoginException(CodeEnum.FAILED_USER_INFO_DUPLICATION);
+        throw new ReLoginException();
     }
 
     @Override

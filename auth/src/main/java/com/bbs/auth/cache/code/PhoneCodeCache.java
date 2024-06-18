@@ -4,7 +4,6 @@ import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
 import com.bbs.auth.util.RedisUtil;
-import com.bbs.auth.util.ZKUtil;
 import com.bbs.auth.enums.ZookeeperNodePaths;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -28,11 +27,8 @@ public class PhoneCodeCache {
     @Resource
     protected RedisUtil redisUtil;
 
-    @Resource
-    protected ZKUtil zkUtil;
-
     public Integer timeout() {
-        return zkUtil.getIntForPath(ZookeeperNodePaths.Captcha.CODE_TIMEOUT);
+        return 50000;
     }
 
     public Boolean checkCode(Long phone, Integer code) {
@@ -108,8 +104,7 @@ public class PhoneCodeCache {
         checkArgument(nonNull(phone), "验证码未发送或已过期，请重新发送");
         Val val = get(phone);
         if(nonNull(val)) {
-            Integer sendInterval = zkUtil.getIntForPath(ZookeeperNodePaths.Captcha.CODE_SEND_INTERVAL);
-            checkArgument(DateUtil.between(val.getSendTime(), new Date(), DateUnit.SECOND) >= sendInterval, "频繁发送验证码，请等待");
+            checkArgument(DateUtil.between(val.getSendTime(), new Date(), DateUnit.SECOND) >= 60, "频繁发送验证码，请等待");
         }
     }
 }

@@ -2,14 +2,18 @@ package com.bbs.file.util.minio;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FastByteArrayOutputStream;
-import com.bbs.enums.dfs.FileType;
-import com.bbs.enums.dfs.ResourceType;
 import com.bbs.file.conf.MinioConf;
 import com.bbs.file.util.RedisUtil;
-import io.minio.*;
-import io.minio.http.Method;
+import io.minio.GetObjectArgs;
+import io.minio.GetObjectResponse;
+import io.minio.ListObjectsArgs;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
+import io.minio.Result;
 import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,11 +37,14 @@ public class FileOpt {
     @Resource
     private RedisUtil redisUtil;
 
+    @Value("${minio.endpoint}")
+    private String url;
+
     private static final String FILE_INCR_NUM = "dfs:file:num:incr:";
 
-    private static final String resource_id_prefix = "dfs";
-
     private static final String TIME_FORMAT = "yyyyMMddHHmm";
+
+    private static final String TMP_BUCKET = "tmp";
 
     private Long incr(String time) {
         return redisUtil.incr(FILE_INCR_NUM + time);
@@ -54,38 +61,60 @@ public class FileOpt {
      */
     public String resourceID(String businessCode, Integer resourceType, Integer fileType) {
         String nowTime = DateUtil.format(new Date(), TIME_FORMAT);
-        return resource_id_prefix + businessCode + resourceType + fileType + nowTime + incr(nowTime);
+        return businessCode + resourceType + fileType + nowTime + incr(nowTime);
     }
 
     /**
      * 文件上传
      * @param file 文件
      */
-    public void upload(String resourceID, MultipartFile file, String contentType) {
+    public String upload(String resourceID, MultipartFile file, String contentType) {
+        String bucketName = prop.getBucketName();
         try {
-            PutObjectArgs objectArgs = PutObjectArgs.builder().bucket(prop.getBucketName()).object(resourceID)
+            PutObjectArgs args = PutObjectArgs.builder().bucket(bucketName).object(resourceID)
                     .stream(file.getInputStream(), file.getSize(), -1).contentType(contentType).build();
             //文件名称相同会覆盖
-            minioClient.putObject(objectArgs);
+            minioClient.putObject(args);
+            log.debug("[FileOpt::upload] resourceID={}; bucket={}; contentType={}; fileSize={};", resourceID, bucketName, contentType, file.getSize());
+            return url + "/" + bucketName + "/" + resourceID;
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
+        }
+    }
+
+    public String uploadTheSameDayBucket(String resourceID, MultipartFile file, String contentType) {
+        try {
+            PutObjectArgs args = PutObjectArgs.builder().bucket(TMP_BUCKET).object(resourceID)
+                    .stream(file.getInputStream(), file.getSize(), -1).contentType(contentType).build();
+            //文件名称相同会覆盖
+            minioClient.putObject(args);
+            return url + "/" + TMP_BUCKET + "/" + resourceID;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
     }
 
     /**
-     * 预览图片
-     * @param resourceID 资源ID
-     * @return 预览 URL
+     * 文件上传
      */
-    public String preview(String resourceID){
-        // 查看文件地址
-        GetPresignedObjectUrlArgs build = new GetPresignedObjectUrlArgs().builder().bucket(prop.getBucketName()).object(resourceID).method(Method.GET).build();
+    public List<String> upload(List<MultipartFile> files) {
+        List<String> urls = new ArrayList<>(files.size());
         try {
-            return minioClient.getPresignedObjectUrl(build);
+            for (MultipartFile file: files) {
+                minioClient.putObject(PutObjectArgs.builder()
+                        .bucket(prop.getBucketName())
+                        .object(file.getName())
+                        .stream(file.getInputStream(), file.getSize(), -1)
+                        .contentType(file.getContentType()).build());
+                urls.add("/" + prop.getBucketName() + "/" + file.getName());
+            }
+            return urls;
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
-        return null;
     }
 
     /**
@@ -144,6 +173,20 @@ public class FileOpt {
     public boolean remove(String resourceID){
         try {
             minioClient.removeObject( RemoveObjectArgs.builder().bucket(prop.getBucketName()).object(resourceID).build());
+        }catch (Exception e){
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 批量删除
+     */
+    public boolean removeList(List<String> resourceIds){
+        try {
+            for (String resourceId : resourceIds) {
+                minioClient.removeObject(RemoveObjectArgs.builder().bucket(prop.getBucketName()).object(resourceId).build());
+            }
         }catch (Exception e){
             return false;
         }

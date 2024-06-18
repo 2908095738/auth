@@ -4,17 +4,17 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
-import java.util.Date;
-
-import com.bbs.entity.UserVO;
+import com.bbs.vo.UserVO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+import java.io.Serializable;
+import java.util.Date;
+
 /**
- * 用户 & 公司关系表
+ * 用户 & 公司关系表（职位）
  * @TableName user_company
  */
 @TableName(value ="user_company")
@@ -40,6 +40,12 @@ public class UserCompany implements Serializable {
      */
     @TableField(value = "company_id")
     private Long companyId;
+
+    /**
+     * 工号
+     */
+    @TableField(value = "job_card")
+    private String jobCard;
 
     /**
      * 部门ID（公司结构ID）
@@ -100,5 +106,12 @@ public class UserCompany implements Serializable {
         this.companyId = companyID;
         this.structureId = structureID;
         this.createBy = loginUID;
+    }
+
+    public UserCompany(Long userId, Long companyId, String jobCard, Long structureId) {
+        this.userId = userId;
+        this.companyId = companyId;
+        this.jobCard = jobCard;
+        this.structureId = structureId;
     }
 }

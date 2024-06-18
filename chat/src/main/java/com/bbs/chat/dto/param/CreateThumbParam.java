@@ -2,34 +2,42 @@ package com.bbs.chat.dto.param;
 
 import lombok.Data;
 
-import java.util.Date;
+import javax.validation.constraints.NotNull;
 
 @Data
 public class CreateThumbParam {
+    /**
+     * 话题id
+     */
+    @NotNull(message = "内容id不能为空！")
+    private Long newId;
 
     /**
-     * 话题或评论id
+     * 评论id
      */
-    private Long tcId;
+    private Long commentId;
+
 
     /**
      * 点赞类型：1文章2文章下的评论
      */
+    @NotNull(message = "点赞类型不能为空！")
     private Integer type;
 
     /**
-     * 发布话题或评论的用户id
+     * 发布内容用户id
      */
+    @NotNull(message = "发布内容用户id不能为空！")
     private Long postUserId;
 
     /**
-     * 话题或评论点赞的用户id
+     * 点赞用户id
      */
+    @NotNull(message = "点赞用户id不能为空！")
     private Long userId;
 
-    private Date createTime;
-
-    private Date updateTime;
-
+    /**
+     * 点赞内容摘要
+     */
     private String tcSummary;
 }

@@ -26,6 +26,17 @@
             <version>${spring-boot.version}</version>
         </dependency>
 
+<!--        spring 监控-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.codecentric</groupId>
+            <artifactId>spring-boot-admin-starter-client</artifactId>
+            <version>2.6.11</version>
+        </dependency>
+
 
         <dependency>
             <groupId>com.baomidou</groupId>
@@ -74,6 +85,21 @@
             <version>2.6.0</version>
         </dependency>
         <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson-spring-data-26</artifactId>
+            <version>3.23.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>3.25.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson-spring-boot-starter</artifactId>
+            <version>3.25.2</version>
+        </dependency>
+        <dependency>
             <groupId>io.protostuff</groupId>
             <artifactId>protostuff-runtime</artifactId>
             <version>1.8.0</version>
@@ -101,13 +127,6 @@
             <artifactId>mapstruct</artifactId>
             <version>1.5.2.Final</version>
         </dependency>
-
-        <dependency>
-            <groupId>com.bbs</groupId>
-            <artifactId>auth-sdk</artifactId>
-            <version>1.0</version>
-        </dependency>
-
 
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -187,13 +206,6 @@
             <artifactId>aspose-words</artifactId>
             <version>23.1</version>
         </dependency>
-        <dependency>
-            <groupId>com.bbs</groupId>
-            <artifactId>auth</artifactId>
-            <version>1.0</version>
-            <scope>compile</scope>
-        </dependency>
-
 
         <dependency>
             <groupId>org.jetbrains</groupId>
@@ -222,6 +234,25 @@
             <groupId>org.bytedeco</groupId>
             <artifactId>ffmpeg-platform</artifactId>
             <version>4.4-1.5.6</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+
+<!--        web socket-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-boot-starter</artifactId>
+            <version>3.0.0</version>
         </dependency>
     </dependencies>
 

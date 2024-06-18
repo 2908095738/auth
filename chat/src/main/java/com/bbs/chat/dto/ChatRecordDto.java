@@ -1,24 +1,29 @@
 package com.bbs.chat.dto;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
 /**
  * 聊天记录
  */
+@ApiModel("聊天记录")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ChatRecordDto {
-    @TableId(value = "id", type = IdType.AUTO)
+    @ApiModelProperty(value = "id", allowableValues = "[1,infinity]", example = "1")
     private Long id;
 
     /**
      * 发送消息的用户id；-1表示我发给对方
+     * TODO -1使用地方待查找
      */
-    @TableField(exist = false)
+    @ApiModelProperty(value = "发送消息的用户id", allowableValues = "[1,infinity]", example = "1")
     private Long chatUid;
 
     /**
@@ -28,24 +33,35 @@ public class ChatRecordDto {
      * 2.图片消息
      * 3.视频消息
      */
-    @TableField(value = "content_type")
+    @ApiModelProperty(value = "消息类型: 1.文本消息;2.图片消息;3.视频消息", allowableValues = "[1,3]", example = "1")
     private Integer contentType;
 
     /**
      * 消息内容
      */
-    @TableField(value = "content")
+    @ApiModelProperty(value = "消息内容", example = "Resp Msg Content")
     private String content;
 
     /**
      * 消息发送方
      * 1.我发给对方
-     * 2.对方发给我
-     * TODO 方便前端区分是谁发送的消息，但因为其不是表中的字段,涉及暂不会的子查询故使用[chatUid]代替
+     * 0.对方发给我
+     * TODO 标识符查看哪里使用
      */
-//    @TableField(exist = false)
-//    private Integer type;
+    @ApiModelProperty(value = "消息发送方")
+    private Integer type;
 
-    @TableField(value = "time")
+    //TODO 时间实际返回格式待查找
+    @ApiModelProperty(value = "时间")
     private Date time;
+
+    /**
+     * 头像地址
+     */
+    @ApiModelProperty(value = "头像地址", example = "D:\\111.png")
+    private String avatar;
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
 }

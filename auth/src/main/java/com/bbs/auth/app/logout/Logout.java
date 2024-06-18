@@ -1,8 +1,8 @@
 package com.bbs.auth.app.logout;
 
 import com.bbs.Result;
-import com.bbs.entity.UserVO;
 import com.bbs.auth.service.TokenService;
+import com.bbs.vo.UserVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;

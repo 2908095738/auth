@@ -2,14 +2,12 @@ package com.bbs.auth.app.register.vx;
 
 import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.util.RedisUtil;
-import com.bbs.auth.util.ZKUtil;
 import com.bbs.auth.api.vx.GetAppID;
 import com.bbs.auth.api.vx.GetSecret;
 import com.bbs.auth.api.vx.VXLoginAuthAPI;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.UserBind;
-import com.bbs.entity.UserVO;
-import com.bbs.auth.enums.ZookeeperNodePaths;
+import com.bbs.vo.UserVO;
 import com.bbs.auth.service.UserBindService;
 import com.bbs.auth.service.UserService;
 import com.bbs.Result;
@@ -44,10 +42,6 @@ public class VXProgramRegister {
 
     @Resource
     private RedissonClient redisson;
-
-    @Resource
-    private ZKUtil zkUtil;
-
     @Resource
     private GetAppID getAppID;
 
@@ -102,8 +96,8 @@ public class VXProgramRegister {
                     return success(user);
                 },
                 redisson.getSpinLock(USER_PHONE_REGISTER.LOCK.key(param.phone)),
-                zkUtil.getIntForPath(ZookeeperNodePaths.LockConf.UserCache.WAIT),
-                zkUtil.getIntForPath(ZookeeperNodePaths.LockConf.UserCache.LEASE),
+                50000,
+                50000,
                 MILLISECONDS
         );
     }

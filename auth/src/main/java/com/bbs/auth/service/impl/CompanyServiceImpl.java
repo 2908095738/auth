@@ -1,11 +1,13 @@
 package com.bbs.auth.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.TypeReference;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.entity.Company;
 import com.bbs.auth.entity.CompanyStructure;
+import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.UserCompany;
 import com.bbs.auth.service.CompanyService;
 import com.bbs.auth.mapper.CompanyMapper;
@@ -76,8 +78,11 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
 
     @Override
     public List<CompanyStructure> searchStructure(Long companyID) {
-        return searchStructure(companyID, null);
+        return companyStructureService.lambdaQuery()
+                .eq(Objects.nonNull(companyID), CompanyStructure::getCompanyId, companyID)
+                .list();
     }
+
 
     @Override
     public List<CompanyStructure> searchStructure() {
@@ -85,11 +90,19 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
     }
 
     @Override
-    public List<CompanyStructure> searchStructure(Long companyID, String name) {
+    public List<CompanyStructure> searchStructure(Long companyID, List<String> name) {
         return companyStructureService.lambdaQuery()
-                .eq(CompanyStructure::getCompanyId, companyID)
-                .like(StringUtils.isNotBlank(name), CompanyStructure::getName, name)
+                .eq(Objects.nonNull(companyID), CompanyStructure::getCompanyId, companyID)
+                .in(CollUtil.isNotEmpty(name), CompanyStructure::getName, name)
                 .list();
+    }
+
+    @Override
+    public CompanyStructure searchStructure(Long companyID, String name) {
+        return companyStructureService.lambdaQuery()
+                .eq(Objects.nonNull(companyID), CompanyStructure::getCompanyId, companyID)
+                .eq(StringUtils.isNotEmpty(name), CompanyStructure::getName, name)
+                .one();
     }
 
     @Override
@@ -112,7 +125,7 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
 
             List<String> structureCacheKeys = new ArrayList<>();
             List<Long> structureIds = new ArrayList<>();
-            Map<Long, Integer> structureIdAndIndexMap = new HashMap<>();
+
             for (int index = INTEGER_ZERO; index < userCompanyList.size(); index++) {
                 UserCompany userCompany = userCompanyList.get(index);
                 Long uid = userCompany.getUserId();
@@ -120,34 +133,34 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
                 ids.add(uid);
 
                 Long structureId = userCompany.getStructureId();
-                structureIdAndIndexMap.put(structureId, index);
                 structureCacheKeys.add(COMPANY_STRUCTURE.key(structureId));
 
                 structureIds.add(structureId);
             }
             List<String> structureStrList = redisUtil.multiGet(structureCacheKeys);
-            List<Long> cacheEmptyIds = new ArrayList<>();
-            Map<Long, Integer> cacheEmptyIdAndIndexMap = new HashMap<>();
+            List<Long> cacheEmptyStructureIds = new ArrayList<>();
+            Map<Long, Integer> cacheEmptyStructureIdAndIndexMap = new HashMap<>();
+
             for (int index = 0; index < structureStrList.size(); index++) {
                 String structureStr = structureStrList.get(index);
                 if(StringUtils.isNotBlank(structureStr)) {
                     CompanyStructure companyStructure = JSONUtil.toBean(structureStr, CompanyStructure.class);
-                    Integer userCompanyListIndex = structureIdAndIndexMap.get(companyStructure.getId());
-                    UserCompany userCompany = userCompanyList.get(userCompanyListIndex);
-                    userCompany.setStructure(companyStructure);
+                    UserCompany userCompany = userCompanyList.get(index);
+                    userCompany.setStructure(companyStructure); //填充用户的部门信息 1
                 } else {
                     Long emptyStructureID = structureIds.get(index);
-                    cacheEmptyIds.add(emptyStructureID);
-                    cacheEmptyIdAndIndexMap.put(emptyStructureID, index);
+                    cacheEmptyStructureIds.add(emptyStructureID);
+                    cacheEmptyStructureIdAndIndexMap.put(emptyStructureID, index);
                 }
             }
-            if(cacheEmptyIds.size() > INTEGER_ZERO) {
+
+            if(cacheEmptyStructureIds.size() > INTEGER_ZERO) {
                 Map<String, String> cacheEmptyStructureCache = new HashMap<>();
-                companyStructureService.listByIds(cacheEmptyIds).forEach(structure -> {
+                companyStructureService.listByIds(cacheEmptyStructureIds).forEach(structure -> {
                     Long cacheEmptyStructureId = structure.getId();
                     cacheEmptyStructureCache.put(COMPANY_STRUCTURE.key(cacheEmptyStructureId), JSONUtil.toJsonPrettyStr(structure));
-                    Integer cacheEmptyStructureIndex = cacheEmptyIdAndIndexMap.get(cacheEmptyStructureId);
-                    userCompanyList.get(cacheEmptyStructureIndex).setStructure(structure);
+                    Integer cacheEmptyStructureIndex = cacheEmptyStructureIdAndIndexMap.get(cacheEmptyStructureId);
+                    userCompanyList.get(cacheEmptyStructureIndex).setStructure(structure);  //填充用户的部门信息 2
                 });
                 redisUtil.multiSet(cacheEmptyStructureCache);
             }
@@ -176,14 +189,6 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
             companies = JSONUtil.toBean(str, new TypeReference<List<UserCompany>>() {}, true);
         }
         return companies;
-    }
-
-    @Override
-    public void searchUserPosition(Long uid, Long companyID) {
-         userCompanyService.lambdaQuery()
-                 .eq(UserCompany::getCompanyId, companyID)
-                 .eq(UserCompany::getUserId, uid)
-                 .list();
     }
 
     @Override
@@ -216,6 +221,32 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
             transactionManager.rollback(transaction);
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public CompanyStructure searchUserCompanyStructure(Long uid, Long companyID) {
+        return companyStructureService.selectJoinOne(CompanyStructure.class, new MPJLambdaWrapper<CompanyStructure>()
+                .selectAll(CompanyStructure.class)
+                .rightJoin(UserCompany.class, UserCompany::getStructureId, CompanyStructure::getId, ext -> ext
+                        .eq(UserCompany::getUserId, uid)
+                        .eq(UserCompany::getCompanyId, companyID)
+                )
+        );
+    }
+
+    @Override
+    public List<User> searchStructureStaff(Set<Long> structureIds) {
+        return userService.selectJoinList(User.class, new MPJLambdaWrapper<User>()
+                .selectAll(User.class)
+                .rightJoin(UserCompany.class, UserCompany::getUserId, User::getId, ext -> ext
+                        .in(UserCompany::getStructureId, structureIds)
+                )
+        );
+    }
+
+    @Override
+    public List<CompanyStructure> searchStructure(Set<Long> structureIds) {
+        return companyStructureService.listByIds(structureIds);
     }
 }
 

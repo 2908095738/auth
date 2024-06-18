@@ -5,10 +5,8 @@ import cn.hutool.json.JSONUtil;
 import com.bbs.auth.conf.UserCacheConf;
 import com.bbs.auth.dao.UserDao;
 import com.bbs.auth.entity.User;
-import com.bbs.auth.enums.ZookeeperNodePaths;
 import com.bbs.auth.service.UserService;
 import com.bbs.auth.util.RedisUtil;
-import com.bbs.auth.util.ZKUtil;
 import com.bbs.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
@@ -22,6 +20,7 @@ import org.springframework.web.client.RestClientException;
 import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -47,9 +46,6 @@ public class UserCache {
 
     @Resource
     private RedissonClient redisson;
-
-    @Resource
-    private ZKUtil zkUtil;
 
     @Resource
     private UserService service;
@@ -85,7 +81,7 @@ public class UserCache {
     }
 
     public List<User> get(List<Long> ids) {
-        List<String> idStrList = ids.stream().map(USER::key).collect(Collectors.toList());
+        List<String> idStrList = ids.stream().filter(Objects::nonNull).map(USER::key).collect(Collectors.toList());
         return redis.multiGet(idStrList)
                 .stream().map(str -> nonNull(str) ? JSONUtil.toBean(str, User.class) : null)
                 .collect(Collectors.toList());
@@ -207,8 +203,8 @@ public class UserCache {
                     return user;
                 },
                 redisson.getSpinLock(USER_PHONE_AND_ID_MAP.LOCK.key(phone)),
-                zkUtil.getIntForPath(ZookeeperNodePaths.LockConf.UserCache.WAIT),
-                zkUtil.getIntForPath(ZookeeperNodePaths.LockConf.UserCache.LEASE),
+                50000,
+                50000,
                 MILLISECONDS
         );
     }

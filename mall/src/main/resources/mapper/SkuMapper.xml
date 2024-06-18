@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bbs.mall.mapper.SkuMapper">
+    <update id="releaseStock">
+        UPDATE sku
+        SET
+        lock_stock = CASE id
+        <foreach collection="items" item="item">
+            WHEN #{item.prodSkuId} THEN lock_stock - #{item.prodQuantity}
+        </foreach>
+        END
+        WHERE
+        id IN
+        <foreach collection="items" item="item" separator="," open="(" close=")">
+            #{item.prodSkuId}
+        </foreach>
+    </update>
+
+    <update id="updateStock">
+        UPDATE sku
+        SET
+        stock = CASE id
+        <foreach collection="stocks" item="item">
+            WHEN #{item.prodSkuId} THEN stock - #{item.prodQuantity}
+        </foreach>
+        END,
+        lock_stock = CASE id
+        <foreach collection="stocks" item="item">
+            WHEN #{item.prodSkuId} THEN lock_stock - #{item.prodQuantity}
+        </foreach>
+        END
+        WHERE
+        id IN
+        <foreach collection="stocks" item="item" separator="," open="(" close=")">
+            #{item.prodSkuId}
+        </foreach>
+    </update>
+</mapper>

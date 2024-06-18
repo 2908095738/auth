@@ -1,10 +1,12 @@
 spring:
   application:
     name: dfs
+  main:
+    allow-bean-definition-overriding: true
   boot:
     admin:
       client:
-        url: http://localhost:7003
+        url: http://192.168.0.100:7008
         instance:
           prefer-ip: true
   redis:
@@ -20,6 +22,10 @@ spring:
     virtual-host: bthost
     publisher-returns: true
     publisher-confirm-type: correlated
+  servlet:
+      multipart:
+        max-file-size: 1024MB        # 设置单个文件最大大小
+        max-request-size: 1024MB
 server:
   port: 8082
 logging:
