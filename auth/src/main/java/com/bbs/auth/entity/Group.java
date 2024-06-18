@@ -13,7 +13,7 @@ import java.io.Serializable;
  * 组
  * @TableName group
  */
-@TableName(value ="pan_back.group")
+@TableName(value ="`group`")
 @Data
 @Accessors(chain = true)
 public class Group implements Serializable {

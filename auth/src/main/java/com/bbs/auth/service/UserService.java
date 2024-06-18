@@ -1,19 +1,22 @@
 package com.bbs.auth.service;
 
+import com.bbs.auth.entity.User;
+import com.bbs.auth.entity.param.UserParam;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.bbs.Result;
 import com.bbs.entity.UserVO;
 import com.bbs.exception.ReLoginException;
-import com.bbs.auth.entity.User;
-import com.bbs.auth.entity.param.UserParam;
+import com.github.yulichang.base.MPJBaseService;
+
+import java.util.List;
+import java.util.Set;
 
 /**
 * @author Lenovo
 * @description 针对表【user】的数据库操作Service
 * @createDate 2023-07-11 14:46:11
 */
-public interface UserService extends IService<User> {
+public interface UserService extends MPJBaseService<User> {
 
     Result<Page<User>> search(UserParam param);
 
@@ -72,4 +75,26 @@ public interface UserService extends IService<User> {
      * @throws IllegalArgumentException 手机号已被注册
      */
     User registerByPhoneNoLockAndNoLoadCache(Long phone) throws IllegalArgumentException;
+
+
+    String encryptPassword(User user);
+
+    String encryptPassword(String pwd, Integer salt);
+
+    Boolean updatePasswordByID(String password, Long id);
+
+    User searchByPhone(String phone);
+
+    User search(Long id);
+
+    /**
+     * 批量查询
+     * @param ids ID
+     * @return 存在，则占位为 null
+     */
+    List<User> search(List<Long> ids);
+
+    List<User> search(Set<Long> ids);
+
+    Boolean isLogin();
 }

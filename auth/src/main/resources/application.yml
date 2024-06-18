@@ -1,14 +1,39 @@
 server:
   port: 9999
+  error:
+    include-message: always
 spring:
+  application:
+    name: auth
+  main:
+    allow-bean-definition-overriding: true
+  boot:
+    admin:
+      client:
+        url: http://192.168.0.100:7008
+        instance:
+          prefer-ip: true
   datasource:
-    url: jdbc:mysql://192.168.100.8:3306/pan_back?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://47.105.39.255:13306/ml_auth?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
   redis:
-      host: 192.168.100.6
-      port: 6379
+    host: 192.168.0.100
+    port: 6379
+    password: shenbimaliang
+  rabbitmq:
+    username: admin
+    password: shenbimaliang
+    addresses: 192.168.0.100:5672
+    virtual-host: bthost
+    connection-timeout: 15000
+    listener:
+      simple:
+        concurrency: 5 #并发
+        max-concurrency: 10 #最大并发
+        prefetch: 1 #每次发送一条消息
+        acknowledge-mode: manual #手动回复ack
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.log4j2.Log4j2Impl
@@ -17,17 +42,17 @@ logging:
     com.bbs.auth: debug
     com.baomidou: debug
   file:
-    path: logs/
+    path: logs/auth
   config: classpath:logback-spring.xml
 jwt:
 #  token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9
-  name: token
+  name: Authorization
   token: 123456
   expireTime: 7
 apache:
   zookeeper:
     # 服务器连接地址，集群模式则使用逗号分隔如：ip1:host,ip2:host
-    connect-url: 192.168.100.6:2181
+    connect-url: 192.168.0.100:2181
     # 会话超时时间：单位ms
     session-timeout: 10000
     # 连接超时时间：单位ms
@@ -44,5 +69,13 @@ apache:
     max-retries: 5
     # 最大重试间隔时间
     max-sleep: 30000
-
-
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+    logfile:
+      external-file: logs/auth
+  endpoint:
+    health:
+      show-details: always

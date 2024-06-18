@@ -1,9 +1,8 @@
 package com.bbs.auth.service;
 
+import com.bbs.auth.entity.User;
 import com.bbs.entity.UserVO;
 import com.bbs.exception.ReLoginException;
-import com.bbs.auth.entity.User;
-import com.bbs.auth.entity.VXUser;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -13,18 +12,12 @@ public interface TokenService {
 
     UserVO verify(String token) throws ReLoginException;
 
-    Boolean verifyToken(String token);
+    Boolean verifyToken(String token) throws ReLoginException;
 
     UserVO parseToken(String token);
 
-    void extendLoginTime(UserVO user);
-
-    void extendLoginTime(User user);
 
     String createToken(User user);
-
-    String createToken(VXUser user);
-
     /**
      * 设置登录标识
      * @param uid 用户 ID（主键）
@@ -39,5 +32,7 @@ public interface TokenService {
      */
     void clearLoginFlag(Long uid);
 
-    String getToken(HttpServletRequest request);
+    String getToken(HttpServletRequest request) throws ReLoginException;
+
+    String verifyAndExpireToken(User user);
 }

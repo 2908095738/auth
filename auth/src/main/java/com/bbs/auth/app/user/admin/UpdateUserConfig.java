@@ -1,15 +1,15 @@
 package com.bbs.auth.app.user.admin;
 
-import com.bbs.auth.app.register.RegisterUser;
-import com.bbs.auth.cache.UserCache;
-import com.bbs.exception.BusinessException;
 import com.bbs.auth.entity.UserGroup;
 import com.bbs.auth.service.UserGroupService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.Result;
+import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.mapper.UserMapper;
 import com.bbs.auth.service.PermissionService;
+import com.bbs.auth.service.UserService;
+import com.bbs.exception.BusinessException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -40,7 +40,7 @@ public class UpdateUserConfig extends ServiceImpl<UserMapper, User> {
     private PermissionService permissionService;
 
     @Resource
-    private RegisterUser registerUser;
+    private UserService service;
 
     @Resource
     private UserGroupService userGroupService;
@@ -70,7 +70,7 @@ public class UpdateUserConfig extends ServiceImpl<UserMapper, User> {
 
     /**
      * 修改（由管理员执行）
-     * @param param User ID
+     * @param param Info ID
      * @return 重置结果
      */
     @PostMapping("/user/admin")
@@ -125,7 +125,7 @@ public class UpdateUserConfig extends ServiceImpl<UserMapper, User> {
     }
 
     private void update(User user, String email, String password) throws BusinessException, InterruptedException {
-        String newPassword = registerUser.encryptPassword(password, user.getSalt());
+        String newPassword = service.encryptPassword(password, user.getSalt());
         if(isNotBlank(email)) user.setEmail(email);
         if(isNotBlank(password)) user.setPassword(newPassword);
         cache.updateByID(user);

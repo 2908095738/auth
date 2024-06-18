@@ -8,7 +8,7 @@ import lombok.Getter;
 public enum RoleCodeEnum {
 
     ADMIN("管理员", "Admin"),
-    USER("用户", "User"),
+    USER("用户", "Info"),
     CASUAL_USER("用户组（试用）", "CasualUser")
     ;
 

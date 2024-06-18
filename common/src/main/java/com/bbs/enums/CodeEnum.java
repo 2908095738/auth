@@ -14,16 +14,32 @@ public enum CodeEnum {
 
     FAILED_PARAM_NOT_AVAILABLE(400, "参数不可用"),
 
+    FAILED_USER_CODE_NOT_AVAILABLE(400, "用户验证码错误"),
+
     FAILED_USER_INFO_DUPLICATION(400, "用户信息重复"),
 
     FAILED_USER_NOT_LOGIN(401, "用户未登录"),
 
     SUCCESS_USER_LOGIN(200,"用户登录成功"),
 
-    FAILED_USER_LOGIN_EXPIRE(401, "请重新登录！");
+    FAILED_USER_LOGIN_EXPIRE(401, "请重新登录！"),
+
+    FAILED_AUTH_PHONE_CODE_NOT_AVAILABLE(400, "短信验证码不可用"),
+
+    // Login
+    //-----------------------------------------------------------------------------------------------------------------
+    FAILED_LOGIN_TYPE_NOT_AVAILABLE(400, "登录类型不可用"),
+    FAILED_LOGIN_USER_NOT_EXISTS(400, "账户或密码错误"),   //账号不存在
+    FAILED_LOGIN_PWD_ERROR(400, "账户或密码错误"),
+    FAILED_LOGIN_USER_STATUS_ERROR(400, "账户状态异常，请联系客服");
 
 
     private final Integer code;
 
     private final String msg;
+
+    @Override
+    public String toString() {
+        return msg;
+    }
 }

@@ -100,6 +100,9 @@ public class RedisUtil {
     public void multiSet(Map<String, String> map) {
         redis.opsForValue().multiSet(map);
     }
+    public List<String> multiGet(List<String> keys) {
+        return redis.opsForValue().multiGet(keys);
+    }
 
     /**
      * set
