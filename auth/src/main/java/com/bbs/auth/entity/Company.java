@@ -65,6 +65,12 @@ public class Company implements Serializable {
     @TableField(value = "norm_industry_id")
     private Long normIndustryId;
 
+    @TableField(value = "admin_id")
+    private Long adminId;
+
+    @TableField(value = "expiration")
+    private Date expiration;
+
     /**
      * 状态
      */
@@ -83,6 +89,9 @@ public class Company implements Serializable {
     @TableField(value = "create_by")
     private Long createBy;
 
+    @TableField(exist = false)
+    private User createUser;
+
     /**
      * 修改时间
      */
@@ -96,10 +105,20 @@ public class Company implements Serializable {
     private Long updateBy;
 
     @TableField(exist = false)
+    private User updateUser;
+
+    @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
     @TableField(exist = false)
     private Page<UserCompany> staffList;
+
+    @TableField(exist = false)
+    private User admin;
+
+
+    @TableField(exist = false)
+    private Integer staffNum;
 
     /**
      * 是否设置了公司结构
