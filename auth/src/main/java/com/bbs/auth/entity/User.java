@@ -11,6 +11,9 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
+
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 
 /**
  * 用户表
@@ -130,6 +133,9 @@ public class User implements Serializable {
     @TableField(value = "background_image")
     private String backgroundImage;
 
+    @TableField(value = "is_admin")
+    private Integer isAdmin;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
@@ -155,5 +161,9 @@ public class User implements Serializable {
         this.createTime = createTime;
         this.updateTime = updateTime;
         this.userGroupList = userGroupList;
+    }
+
+    public Boolean isSupperAdmin() {
+        return Objects.equals(isAdmin, INTEGER_ONE);
     }
 }

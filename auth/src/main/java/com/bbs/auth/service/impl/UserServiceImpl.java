@@ -118,6 +118,12 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
     }
 
     @Override
+    public User loginEntityUser() throws ReLoginException {
+        UserVO loginUser = loginUser();
+        return getById(loginUser.getId());
+    }
+
+    @Override
     public User registerByPhoneNoLockNoLoad(Long phone) throws IllegalArgumentException {
         return registerByPhoneNoLockAndNoLoadCache(phone);
     }

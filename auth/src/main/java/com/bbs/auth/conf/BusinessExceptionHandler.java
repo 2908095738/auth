@@ -36,7 +36,6 @@ public class BusinessExceptionHandler {
     @ExceptionHandler(value = IllegalArgumentException.class)
     public void errorHandler(IllegalArgumentException exception) throws IOException {
         String message = exception.getMessage();
-        exception.printStackTrace();
         log.debug("[ExceptionHandler::IllegalArgumentException] error={}", message);
         response.sendError(400, message);
     }

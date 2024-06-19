@@ -58,6 +58,8 @@ public interface UserService extends MPJBaseService<User> {
      */
     UserVO loginUser() throws ReLoginException;
 
+    User loginEntityUser() throws ReLoginException;
+
     /**
      * 通过手机号注册用户（无锁、无事务）
      * @param phone 手机号
