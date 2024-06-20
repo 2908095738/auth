@@ -157,26 +157,34 @@ public class Login {
                         user = userCache.searchByPhoneNoLockNoLoad(phone);
 
                         checkArgument(nonNull(user), FAILED_LOGIN_USER_NOT_EXISTS);
-                        checkArgument(UserStateEnum.STATUS_NORMAL.getCode().equals(user.getState()), FAILED_LOGIN_USER_STATUS_ERROR);
+                        checkUserState(user);
 
                     } else if (LoginType.WX.getCode().equals(param.loginType)) {
                         throw new IllegalArgumentException("微信登录未开通");
 
-                    } else {
-                        checkPhoneFormat(phone);
-                        checkArgument(StringUtils.isNoneBlank(param.password));
-                        user = userCache.searchByPhoneNoLockNoLoad(phone);
-                        if(isNull(user)) user = db.selectByPhone(param.getPhone());
+                    } else if(LoginType.PASSWORD.getCode().equals(param.loginType)) {
+                        checkPhoneAndPWDFormat(param);
+                        user = searchUser(phone);
                         checkArgument(nonNull(user), FAILED_LOGIN_USER_NOT_EXISTS);
-                        checkArgument(UserStateEnum.STATUS_NORMAL.getCode().equals(user.getState()), FAILED_LOGIN_USER_STATUS_ERROR);
-                        String encryptPassword = service.encryptPassword(param.password, user.getSalt());
-                        checkArgument(user.getPassword().equals(encryptPassword), FAILED_LOGIN_PWD_ERROR);
+                        checkUserState(user);
+                        checkUserPWD(param, user);
+                    } else if(LoginType.PASSWORD_CREATE.getCode().equals(param.loginType)) {
+                        checkPhoneAndPWDFormat(param);
+                        user = searchUser(phone);
+                        if(nonNull(user)) {
+                            // 用户已注册
+                            checkUserState(user);
+                            checkUserPWD(param, user);
+                        } else {
+                            // 用户未注册
+                            return failed(FAILED_LOGIN_USER_NEED_REGISTER);
+                        }
+                    } else {
+                        return failed(FAILED_LOGIN_TYPE_NOT_AVAILABLE);
                     }
-                    List<UserCompany> userCompanyList = null;
-                    if(param.searchCompany != null && param.searchCompany) {
-                        userCompanyList = searchUserCompany(user.getId());
-                        searchIsSetCompanyStructure(param.checkCompanyStructure, userCompanyList);
-                    }
+                    List<UserCompany> userCompanyList = searchUserCompany(user.getId());
+                    searchIsSetCompanyStructure(param.checkCompanyStructure, userCompanyList);
+
                     String token = tokenService.createToken(user);
                     tokenService.setLoginFlag(user.getId());
                     userCache.expireUserAndPhoneMap(user);
@@ -193,6 +201,26 @@ public class Login {
                 50000,
                 MILLISECONDS
         );
+    }
+
+    private void checkPhoneAndPWDFormat(Param param) {
+        checkPhoneFormat(param.phone);
+        checkArgument(StringUtils.isNoneBlank(param.password));
+    }
+
+    private void checkUserPWD(Param param, User user) throws IllegalArgumentException {
+        String encryptPassword = service.encryptPassword(param.password, user.getSalt());
+        checkArgument(user.getPassword().equals(encryptPassword), FAILED_LOGIN_PWD_ERROR);
+    }
+
+    private void checkUserState(User user) throws IllegalArgumentException {
+        checkArgument(UserStateEnum.STATUS_NORMAL.getCode().equals(user.getState()), FAILED_LOGIN_USER_STATUS_ERROR);
+    }
+
+    private User searchUser(String phone) {
+        User user = userCache.searchByPhoneNoLockNoLoad(phone);
+        if(isNull(user)) user = db.selectByPhone(phone);
+        return user;
     }
 
     private static final String LOG_DEQUE_KEY = "LOG:LOGIN";

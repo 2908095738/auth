@@ -109,11 +109,17 @@ public class User implements Serializable {
     @TableField(value = "create_time")
     private Date createTime;
 
+    @TableField(value = "create_by")
+    private Long createBy;
+
     /**
      * 修改时间
      */
     @TableField(value = "update_time")
     private Date updateTime;
+
+    @TableField(value = "update_by")
+    private Long updateBy;
 
     /**
      * 图片 URL 地址

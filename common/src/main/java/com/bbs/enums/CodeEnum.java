@@ -31,7 +31,9 @@ public enum CodeEnum {
     FAILED_LOGIN_TYPE_NOT_AVAILABLE(400, "登录类型不可用"),
     FAILED_LOGIN_USER_NOT_EXISTS(400, "账户或密码错误"),   //账号不存在
     FAILED_LOGIN_PWD_ERROR(400, "账户或密码错误"),
-    FAILED_LOGIN_USER_STATUS_ERROR(400, "账户状态异常，请联系客服");
+    FAILED_LOGIN_USER_STATUS_ERROR(400, "账户状态异常，请联系客服"),
+
+    FAILED_LOGIN_USER_NEED_REGISTER(401, "用户不存在，需要验证短信验证码，并注册");
 
 
     private final Integer code;
