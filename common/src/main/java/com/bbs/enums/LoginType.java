@@ -11,7 +11,8 @@ public enum LoginType {
 
     PHONE(0, "手机号"),
     PASSWORD(1, "密码"),
-    WX(2, "微信");
+    WX(2, "微信"),
+    PASSWORD_CREATE(3, "手机号（未注册则直接注册）");
 
     private final Integer code;
 
@@ -23,6 +24,6 @@ public enum LoginType {
      * @return 格式是否正确
      */
     public static Boolean checkFormat(Integer type) {
-        return nonNull(type) && type >= 0 && type <= 2;
+        return nonNull(type) && type >= 0 && type <= 3;
     }
 }

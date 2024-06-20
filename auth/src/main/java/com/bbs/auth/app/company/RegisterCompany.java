@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 
 @RestController
 @RequestMapping
@@ -55,25 +54,21 @@ public class RegisterCompany {
         /**
          * 所属地区三级联动 ID
          */
-        @NotNull(message = "公司所属地区不能为空")
         private Long attributionID;
 
         /**
          * 注册地址
          */
-        @NotBlank(message = "公司注册地址 ID 不能为空")
         private String registeredAddress;
 
         /**
          * 行业（国标码）
          */
-        @NotNull(message = "必须选择行业")
         private Long normIndustryId;
 
         /**
          * 当前用户在该公司的职位
          */
-        @NotBlank(message = "职位不能为空")
         private String position;
     }
 
@@ -83,6 +78,7 @@ public class RegisterCompany {
         Preconditions.checkArgument(service.notExists(company), "注册信息对应公司已存在，无法注册");
         Long loginUserID = userService.loginUser().getId();
         company.setCreateBy(loginUserID);
+        company.setAdminId(loginUserID);
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             service.save(company);

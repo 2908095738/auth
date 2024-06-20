@@ -1,5 +1,6 @@
 package com.bbs.auth.app.register;
 
+import com.bbs.auth.app.login.Login;
 import com.bbs.auth.cache.code.PhoneCodeCache;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.Result;
@@ -7,6 +8,7 @@ import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.dao.UserDao;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.mapper.UserMapper;
+import com.bbs.auth.service.TokenService;
 import com.bbs.auth.service.UserService;
 import com.bbs.enums.UserStateEnum;
 import lombok.Data;
@@ -31,6 +33,7 @@ import static com.bbs.Result.success;
 import static com.bbs.enums.CodeEnum.FAILED_USER_CODE_NOT_AVAILABLE;
 import static com.bbs.enums.CodeEnum.FAILED_USER_INFO_DUPLICATION;
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
 
 @RestController
 @RequestMapping
@@ -49,6 +52,8 @@ public class Register extends ServiceImpl<UserMapper, User> {
     private PhoneCodeCache phoneCodeCache;
     @Resource
     private UserService service;
+    @Resource
+    private TokenService tokenService;
     @Data
     public static class Param {
 
@@ -81,24 +86,28 @@ public class Register extends ServiceImpl<UserMapper, User> {
      * @return 注册是否成功
      */
     @PutMapping("/user")
-    public Result<User> register(@Valid @RequestBody Param param){
+    public Result<Login.VO> register(@Valid @RequestBody Param param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         User user = converter.toEntity(param);
         try {
             checkArgument(phoneCodeCache.checkCode(param.phone, param.code), FAILED_USER_CODE_NOT_AVAILABLE);
             checkArgument(dao.notExists(user), FAILED_USER_INFO_DUPLICATION);
 
-            if(StringUtils.isNoneBlank(user.getPassword())) {
+            if(StringUtils.isNotBlank(user.getPassword())) {
                 user.setSalt(createSalt());
                 user.setPassword(service.encryptPassword(user));
                 user.setState(UserStateEnum.STATUS_NORMAL.getCode());
+                user.setCreateBy(LONG_ZERO);
+            }
 
+            if(StringUtils.isNotBlank(user.getName())) {
+                user.setName(user.getPhone().toString());
             }
 
             saveUser(user);
 
             transactionManager.commit(transaction);
-            return success(user);
+            return success(new Login.VO(user.getId(), user.getName(), tokenService.createToken(user), null));
         } catch (Exception e) {
             e.printStackTrace();
             transactionManager.rollback(transaction);
