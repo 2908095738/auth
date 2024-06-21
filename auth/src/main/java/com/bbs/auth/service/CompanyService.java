@@ -56,4 +56,6 @@ public interface CompanyService extends MPJBaseService<Company> {
     List<User> searchStructureStaff(Set<Long> structureIds);
 
     List<CompanyStructure> searchStructure(Set<Long> structureIds);
+
+    void deleteAllCompanyByUserId(Long userId);
 }
