@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -117,11 +118,13 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
             treeNodeConfig.setChildrenKey("children");
 
             return TreeUtil.build(accounts, LONG_ZERO, treeNodeConfig, (account, tree) -> {
-                tree.setId(account.getId());
-                tree.setParentId(account.getParentId());
-                tree.putExtra("label", account.getNo() + " " + account.getName());
-                tree.putExtra("accountSort", account.getAccountSort());
-                tree.putExtra("direction", account.getDirection());
+                if(account!=null){
+                    tree.setId(account.getId());
+                    tree.setParentId(account.getParentId());
+                    tree.putExtra("label", account.getNo() + " " + account.getName());
+                    tree.putExtra("accountSort", account.getAccountSort());
+                    tree.putExtra("direction", account.getDirection());
+                }
             });
         }
         return new ArrayList<>();
@@ -149,11 +152,32 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
     public List<Tree<Long>> selectTree(Long companyId, String certificateCreateTime) {
         List<Account> accountList = selectJoinList(Account.class, new MPJLambdaWrapper<Account>()
                 .selectAll(Account.class)
-                .rightJoin(CertificateAbstract.class, CertificateAbstract::getAccountId, Account::getId)
-                .rightJoin(Certificate.class, Certificate::getId, CertificateAbstract::getCertificateId)
+                .leftJoin(CertificateAbstract.class, CertificateAbstract::getAccountId, Account::getId)
+                .leftJoin(Certificate.class, Certificate::getId, CertificateAbstract::getCertificateId)
                 .eq(Certificate::getCompanyId,companyId)
                 .like(Certificate::getCreateTime,certificateCreateTime)
         );
-        return tree(accountList);
+        List<Account> result = accountList;
+        if (accountList.size() > INTEGER_ZERO) {
+            //去重
+            accountList = accountList.stream().distinct().collect(Collectors.toList());
+            //根据每个科目的父级id及层级，查出所有管联数据
+            for (Account account : accountList) {
+                if(account.getLevel()>0){
+                    //当前数据的所有同类别科目
+                    List<Account> list = list(Wrappers.lambdaQuery(Account.class)
+                            .eq(Account::getNo, account.getNo())
+                    );
+                    //过滤出小于当前层级的数据
+                    result.addAll(list.stream().filter(account1 -> account1.getLevel() < account.getLevel()).collect(Collectors.toList()));
+                }
+            }
+        }
+        log.debug("accountTree:{}"+result);
+        return tree(result);
     }
+
+
+
+
 }
