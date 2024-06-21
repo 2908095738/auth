@@ -13,6 +13,4 @@ public interface CertificateAbstractService extends MPJBaseService<CertificateAb
 
     Page<CertificateAbstract> selectPage(Long companyId, String certificateCreateTime, Long accountId, Integer current, Integer size);
 
-
-    Page<CertificateAbstract> selectPage(Long companyId, String certificateCreateTime, Integer current, Integer size);
 }

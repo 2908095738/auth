@@ -27,24 +27,16 @@ public class CertificateAbstractServiceImpl extends MPJBaseServiceImpl<Certifica
                 .selectAll(CertificateAbstract.class)
                 .selectAssociation(Certificate.class, CertificateAbstract::getCertificate)
                 .rightJoin(Certificate.class, Certificate::getId, CertificateAbstract::getCertificateId)
+                .selectAssociation(Account.class, CertificateAbstract::getAccount)
+                .rightJoin(Account.class, Account::getId, CertificateAbstract::getAccountId)
                 .eq(Objects.nonNull(accountId),CertificateAbstract::getAccountId,accountId)
                 .eq(Certificate::getCompanyId,companyId)
                 .like(Certificate::getCreateTime,certificateCreateTime)
+                .orderByDesc(Certificate::getCreateTime)
         );
     }
 
-    @Override
-    public Page<CertificateAbstract> selectPage(Long companyId, String certificateCreateTime, Integer current, Integer size) {
-        return selectJoinListPage(new Page<>(current, size), CertificateAbstract.class, new MPJLambdaWrapper<CertificateAbstract>()
-                .selectAll(CertificateAbstract.class)
-                .selectAssociation(Certificate.class, CertificateAbstract::getCertificate)
-                .rightJoin(Certificate.class, Certificate::getId, CertificateAbstract::getCertificateId)
-                .selectAssociation(Account.class, CertificateAbstract::getAccount)
-                .rightJoin(Account.class, Account::getId, CertificateAbstract::getAccountId)
-                .eq(Certificate::getCompanyId,companyId)
-                .like(Certificate::getCreateTime,certificateCreateTime)
-        );
-    }
+
 }
 
 
