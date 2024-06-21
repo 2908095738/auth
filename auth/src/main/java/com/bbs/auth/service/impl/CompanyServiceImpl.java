@@ -4,7 +4,6 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.TypeReference;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.entity.Company;
@@ -28,9 +27,9 @@ import org.springframework.transaction.TransactionStatus;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
-import static com.bbs.auth.enums.RedisKeys.COMPANY_STRUCTURE;
-import static com.bbs.auth.enums.RedisKeys.USER_COMPANY;
+import static com.bbs.auth.enums.RedisKeys.*;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
@@ -249,6 +248,17 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
     @Override
     public List<CompanyStructure> searchStructure(Set<Long> structureIds) {
         return companyStructureService.listByIds(structureIds);
+    }
+
+    @Override
+    public void deleteAllCompanyByUserId(Long userId) {
+        List<Company> companies = lambdaQuery().eq(Company::getAdminId, userId).list();
+        if(companies.size() > INTEGER_ZERO) {
+            List<Long> ids = companies.stream().map(Company::getId).collect(Collectors.toList());
+            removeByIds(ids);
+            userCompanyService.lambdaUpdate().like(UserCompany::getCompanyId, ids).remove();
+            companyStructureService.lambdaUpdate().like(CompanyStructure::getCompanyId, ids).remove();
+        }
     }
 }
 

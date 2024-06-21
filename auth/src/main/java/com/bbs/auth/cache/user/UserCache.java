@@ -76,6 +76,10 @@ public class UserCache {
         redis.set(USER.key(user.getId()), toJsonPrettyStr(user), RandomUtil.randomInt(1, 5), TimeUnit.MINUTES);
     }
 
+    public void remove(Long userId) {
+        redis.delete(USER.key(userId));
+    }
+
     public User get(Long uid) {
         return redis.get(USER.key(uid), User.class);
     }

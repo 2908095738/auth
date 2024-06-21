@@ -64,4 +64,8 @@ public class PhoneCache {
 
         return true;
     }
+
+    public void remove(String phone) {
+        redis.delete(USER_PHONE_AND_ID_MAP.key(phone));
+    }
 }
