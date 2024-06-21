@@ -12,4 +12,7 @@ import com.github.yulichang.base.MPJBaseService;
 public interface CertificateAbstractService extends MPJBaseService<CertificateAbstract> {
 
     Page<CertificateAbstract> selectPage(Long companyId, String certificateCreateTime, Long accountId, Integer current, Integer size);
+
+
+    Page<CertificateAbstract> selectPage(Long companyId, String certificateCreateTime, Integer current, Integer size);
 }
