@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.validation.constraints.NotBlank;
+import java.util.List;
 
 @RestController
 @RequestMapping
@@ -73,7 +74,7 @@ public class RegisterCompany {
     }
 
     @PutMapping("/company")
-    public Result<Boolean> register(@RequestBody Param param) {
+    public Result<List<UserCompany>> register(@RequestBody Param param) {
         Company company = converter.toEntity(param);
         Preconditions.checkArgument(service.notExists(company), "注册信息对应公司已存在，无法注册");
         Long loginUserID = userService.loginUser().getId();
@@ -89,7 +90,7 @@ public class RegisterCompany {
                     .setCreateBy(loginUserID)
             );
             transactionManager.commit(transaction);
-            return Result.success();
+            return Result.success(service.searchCompany(loginUserID));
         } catch (Exception e) {
             transactionManager.rollback(transaction);
             throw new RuntimeException(e);

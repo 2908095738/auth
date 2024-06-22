@@ -118,6 +118,20 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
     }
 
     @Override
+    public Boolean checkRegister(Long phone) {
+        try {
+            Long uid = phoneCache.get(phone);
+            if(nonNull(uid)) {
+                return true;
+            } else {
+                return nonNull(db.selectByPhone(phone));
+            }
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
     public User loginEntityUser() throws ReLoginException {
         UserVO loginUser = loginUser();
         return getById(loginUser.getId());
