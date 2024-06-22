@@ -97,12 +97,13 @@ public class Register extends ServiceImpl<UserMapper, User> {
                 user.setSalt(createSalt());
                 user.setPassword(service.encryptPassword(user));
                 user.setState(UserStateEnum.STATUS_NORMAL.getCode());
-                user.setCreateBy(LONG_ZERO);
             }
 
             if(StringUtils.isNotBlank(user.getName())) {
                 user.setName(user.getPhone().toString());
             }
+
+            user.setCreateBy(LONG_ZERO);
 
             saveUser(user);
 

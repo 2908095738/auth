@@ -58,6 +58,8 @@ public interface UserService extends MPJBaseService<User> {
      */
     UserVO loginUser() throws ReLoginException;
 
+    Boolean checkRegister(Long phone);
+
     User loginEntityUser() throws ReLoginException;
 
     /**
