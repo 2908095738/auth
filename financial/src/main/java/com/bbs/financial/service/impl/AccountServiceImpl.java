@@ -173,7 +173,6 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
                 }
             }
         }
-        log.debug("accountTree:{}"+result);
         return tree(result);
     }
 
