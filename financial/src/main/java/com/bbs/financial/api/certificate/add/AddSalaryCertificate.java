@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
@@ -126,6 +127,16 @@ public class AddSalaryCertificate {
                     .setJCertificateId(certificateTypeAndId.getOrDefault(CertificateType.ACCRUED_SALARY.getValue(),null));
             salaryService.updateById(salary);
             transactionManager.commit(transaction);
+
+            Set<String> collect = template.stream().map(certificateTemplate -> {
+                if (!param.templateNames.contains(certificateTemplate.getType())) {
+                    return certificateTemplate.getType();
+                }
+                return null;
+            }).collect(Collectors.toSet());
+            if (CollUtil.isNotEmpty(collect)) {
+                return Result.failed(String.join(",", collect) + "模板不存在");
+            }
             return Result.success();
         } catch (Exception e) {
             transactionManager.rollback(transaction);
