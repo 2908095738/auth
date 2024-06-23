@@ -8,8 +8,12 @@ import com.bbs.Result;
 import com.bbs.api.auth.User;
 import com.bbs.api.auth.UserAPI;
 import com.bbs.enums.financial.CertificateWordEnum;
+import com.bbs.financial.entity.Account;
 import com.bbs.financial.entity.Certificate;
+import com.bbs.financial.entity.CertificateAbstract;
+import com.bbs.financial.entity.CertificateFile;
 import com.bbs.financial.service.CertificateService;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,7 +43,26 @@ public class SearchCertificate {
     @GetMapping("/certificate")
     public Result<Certificate> search(@RequestParam Long id) {
         return Result.success(
-                certificateService.getOneDeep(Wrappers.<Certificate>lambdaQuery().eq(Certificate::getId, id), conf -> conf.loop(true))
+                certificateService.selectJoinOne(Certificate.class, new MPJLambdaWrapper<Certificate>()
+                        .selectAll(Certificate.class)
+
+                        // left join 凭证科目表
+                        .leftJoin(CertificateAbstract.class, CertificateAbstract::getCertificateId, Certificate::getId, ext -> ext
+                                .selectCollection(CertificateAbstract.class, Certificate::getAbstracts)
+
+                                // left join 科目表
+                                .leftJoin(Account.class, Account::getId, CertificateAbstract::getAccountId, ext2 -> ext2
+                                        .selectAssociation(Account.class, CertificateAbstract::getAccount)
+                                )
+                        )
+
+                        // left join 附件表
+                        .leftJoin(CertificateFile.class, CertificateFile::getCertificateId, Certificate::getId, ext -> ext
+                                .selectCollection(CertificateFile.class, Certificate::getFiles)
+                        )
+
+                        .eq(Certificate::getId, id)
+                )
         );
     }
 
@@ -54,16 +77,24 @@ public class SearchCertificate {
             @RequestParam(name = "date", required = false) String dateStr
     ) {
         Date date = nonNull(dateStr) ? new Date(Long.parseLong(dateStr)) : new Date();
-        Page<Certificate> certificatePage = certificateService.pageDeep(
-                new Page<>(current, size),
-                Wrappers.<Certificate>lambdaQuery()
-                        .eq(Certificate::getCompanyId, companyId)
-                        .in(nonNull(words) && words.size() > INTEGER_ZERO, Certificate::getCertificateWord, words)
-                        .in(nonNull(createUserIds) && createUserIds.size() > INTEGER_ZERO, Certificate::getCreateBy)
-                        .in(nonNull(authUserIds) && authUserIds.size() > INTEGER_ZERO, Certificate::getAuthBy)
-                        .ge(Certificate::getDate, DateUtil.beginOfMonth(date))
-                        .lt(Certificate::getDate, DateUtil.beginOfMonth(DateUtil.offsetMonth(date, INTEGER_ONE)))
-                , conf -> conf.loop(true)
+        Page<Certificate> certificatePage = certificateService.selectJoinListPage(new Page<>(current, size), Certificate.class, new MPJLambdaWrapper<Certificate>()
+                .selectAll(Certificate.class)
+
+                .selectCollection(CertificateAbstract.class, Certificate::getAbstracts, ext -> ext
+                        .association(Account.class, CertificateAbstract::getAccount)
+                )
+                .selectCollection(CertificateFile.class, Certificate::getFiles)
+
+                .leftJoin(CertificateAbstract.class, CertificateAbstract::getCertificateId, Certificate::getId)
+                .leftJoin(Account.class, Account::getId, CertificateAbstract::getAccountId)
+                .leftJoin(CertificateFile.class, CertificateFile::getCertificateId, Certificate::getId)
+
+                .eq(Certificate::getCompanyId, companyId)
+                .in(nonNull(words) && words.size() > INTEGER_ZERO, Certificate::getCertificateWord, words)
+                .in(nonNull(createUserIds) && createUserIds.size() > INTEGER_ZERO, Certificate::getCreateBy)
+                .in(nonNull(authUserIds) && authUserIds.size() > INTEGER_ZERO, Certificate::getAuthBy)
+                .ge(Certificate::getDate, DateUtil.beginOfMonth(date))
+                .lt(Certificate::getDate, DateUtil.beginOfMonth(DateUtil.offsetMonth(date, INTEGER_ONE)))
         );
         // 获取【创建用户】&&【审核用户】的 userId Set
         Set<Long> userIds = filterUserIds(certificatePage);

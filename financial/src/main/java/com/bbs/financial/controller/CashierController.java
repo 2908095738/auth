@@ -83,14 +83,28 @@ public class CashierController {
 
         //获取凭证分页
         Date date2DB = nonNull(date) ? new Date(Long.parseLong(date)) : new Date();
-        Page<Certificate> certificatePage = certificateService.pageDeep(
-                new Page<>(current, size),
-                Wrappers.<Certificate>lambdaQuery()
-                        .eq(Certificate::getCompanyId, companyId)
-                        .in(Certificate::getId, inCertId)
-                        .ge(Certificate::getDate, DateUtil.beginOfMonth(date2DB))
-                        .lt(Certificate::getDate, DateUtil.beginOfMonth(DateUtil.offsetMonth(date2DB, INTEGER_ONE)))
-                , conf -> conf.loop(true)
+        Page<Certificate> certificatePage = certificateService.selectJoinListPage(new Page<>(current, size), Certificate.class, new MPJLambdaWrapper<Certificate>()
+                .selectAll(Certificate.class)
+
+                // left join 凭证科目表
+                .leftJoin(CertificateAbstract.class, CertificateAbstract::getCertificateId, Certificate::getId, ext -> ext
+                        .selectCollection(CertificateAbstract.class, Certificate::getAbstracts)
+
+                        // left join 科目表
+                        .leftJoin(Account.class, Account::getId, CertificateAbstract::getAccountId, ext2 -> ext2
+                                .selectAssociation(Account.class, CertificateAbstract::getAccount)
+                        )
+                )
+
+                // left join 附件表
+                .leftJoin(CertificateFile.class, CertificateFile::getCertificateId, Certificate::getId, ext -> ext
+                        .selectCollection(CertificateFile.class, Certificate::getFiles)
+                )
+
+                .eq(Certificate::getCompanyId, companyId)
+                .in(Certificate::getId, inCertId)
+                .ge(Certificate::getDate, DateUtil.beginOfMonth(date2DB))
+                .lt(Certificate::getDate, DateUtil.beginOfMonth(DateUtil.offsetMonth(date2DB, INTEGER_ONE)))
         );
 
         // 获取【创建用户】&&【审核用户】的 userId Set
@@ -191,7 +205,24 @@ public class CashierController {
                         .leftJoin(CertificateAbstract.class, CertificateAbstract::getAccountId, ZhangHu::getSubjectsId));
 
         Date date2DB = nonNull(date) ? new Date(Long.parseLong(date)) : new Date();
-        return certificateService.listDeep(Wrappers.<Certificate>lambdaQuery()
+        return certificateService.selectJoinList(Certificate.class, new MPJLambdaWrapper<Certificate>()
+                .selectAll(Certificate.class)
+
+                // left join 凭证科目表
+                .leftJoin(CertificateAbstract.class, CertificateAbstract::getCertificateId, Certificate::getId, ext -> ext
+                        .selectCollection(CertificateAbstract.class, Certificate::getAbstracts)
+
+                        // left join 科目表
+                        .leftJoin(Account.class, Account::getId, CertificateAbstract::getAccountId, ext2 -> ext2
+                                .selectAssociation(Account.class, CertificateAbstract::getAccount)
+                        )
+                )
+
+                // left join 附件表
+                .leftJoin(CertificateFile.class, CertificateFile::getCertificateId, Certificate::getId, ext -> ext
+                        .selectCollection(CertificateFile.class, Certificate::getFiles)
+                )
+
                 .eq(Certificate::getCompanyId, companyId)
                 .in(Certificate::getId, inCertId)
                 .lt(Certificate::getDate, DateUtil.beginOfMonth(date2DB))
@@ -347,11 +378,27 @@ public class CashierController {
      *
      * @param companyId 公司id
      * @param dateStr   时间字符串
-     * @return
      */
     private List<Certificate> getCertListByNow(Long companyId, String dateStr) {
         Date date = nonNull(dateStr) ? new Date(Long.parseLong(dateStr)) : new Date();
-        return certificateService.listDeep(Wrappers.<Certificate>lambdaQuery()
+        return certificateService.selectJoinList(Certificate.class, new MPJLambdaWrapper<Certificate>()
+                .selectAll(Certificate.class)
+
+                // left join 凭证科目表
+                .leftJoin(CertificateAbstract.class, CertificateAbstract::getCertificateId, Certificate::getId, ext -> ext
+                        .selectCollection(CertificateAbstract.class, Certificate::getAbstracts)
+
+                        // left join 科目表
+                        .leftJoin(Account.class, Account::getId, CertificateAbstract::getAccountId, ext2 -> ext2
+                                .selectAssociation(Account.class, CertificateAbstract::getAccount)
+                        )
+                )
+
+                // left join 附件表
+                .leftJoin(CertificateFile.class, CertificateFile::getCertificateId, Certificate::getId, ext -> ext
+                        .selectCollection(CertificateFile.class, Certificate::getFiles)
+                )
+
                 .eq(Certificate::getCompanyId, companyId)
                 .ge(Certificate::getDate, DateUtil.beginOfMonth(date))
                 .lt(Certificate::getDate, DateUtil.beginOfMonth(DateUtil.offsetMonth(date, INTEGER_ONE)))

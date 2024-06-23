@@ -23,9 +23,11 @@ import javax.annotation.Resource;
 import javax.validation.constraints.NotBlank;
 import java.util.List;
 
+import static java.util.Objects.nonNull;
+
 @RestController
 @RequestMapping
-public class RegisterCompany {
+public class RegisterOrJoinCompany {
 
     @Resource
     private CompanyService service;
@@ -46,6 +48,10 @@ public class RegisterCompany {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Param {
+        /**
+         * 公司ID（新增则为空）
+         */
+        private Long companyId;
         /**
          * 名称
          */
@@ -74,26 +80,37 @@ public class RegisterCompany {
     }
 
     @PutMapping("/company")
-    public Result<List<UserCompany>> register(@RequestBody Param param) {
-        Company company = converter.toEntity(param);
-        Preconditions.checkArgument(service.notExists(company), "注册信息对应公司已存在，无法注册");
+    public Result<List<UserCompany>> registerOrJoin(@RequestBody Param param) {
         Long loginUserID = userService.loginUser().getId();
-        company.setCreateBy(loginUserID);
-        company.setAdminId(loginUserID);
-        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-        try {
-            service.save(company);
+        // 通过判断是否传入公司 ID，决定是新增公司还是加入公司
+        if(nonNull(param.companyId)) {
             userCompanyService.save(new UserCompany()
                     .setUserId(loginUserID)
-                    .setCompanyId(company.getId())
+                    .setCompanyId(param.getCompanyId())
                     .setPositionName(param.getPosition())
                     .setCreateBy(loginUserID)
             );
-            transactionManager.commit(transaction);
-            return Result.success(service.searchCompany(loginUserID));
-        } catch (Exception e) {
-            transactionManager.rollback(transaction);
-            throw new RuntimeException(e);
+        } else {
+            Company company = converter.toEntity(param);
+            Preconditions.checkArgument(service.notExists(company), "注册信息对应公司已存在，无法注册");
+            company.setCreateBy(loginUserID);
+            company.setAdminId(loginUserID);
+            TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
+            try {
+                service.save(company);
+                userCompanyService.save(new UserCompany()
+                        .setUserId(loginUserID)
+                        .setCompanyId(company.getId())
+                        .setPositionName(param.getPosition())
+                        .setCreateBy(loginUserID)
+                );
+                transactionManager.commit(transaction);
+            } catch (Exception e) {
+                assert transactionManager != null;
+                transactionManager.rollback(transaction);
+                throw new RuntimeException(e);
+            }
         }
+        return Result.success(service.searchCompany(loginUserID));
     }
 }
