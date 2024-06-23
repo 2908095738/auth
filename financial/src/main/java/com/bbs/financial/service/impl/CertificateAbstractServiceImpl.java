@@ -32,7 +32,7 @@ public class CertificateAbstractServiceImpl extends MPJBaseServiceImpl<Certifica
                 .eq(Objects.nonNull(accountId),CertificateAbstract::getAccountId,accountId)
                 .eq(Certificate::getCompanyId,companyId)
                 .like(Certificate::getCreateTime,certificateCreateTime)
-                .orderByDesc(Certificate::getCreateTime)
+                .orderByAsc(Certificate::getCreateTime)
         );
     }
 
