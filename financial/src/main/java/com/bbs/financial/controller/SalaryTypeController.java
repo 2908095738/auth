@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.financial.entity.SalaryType;
 import com.bbs.financial.service.SalaryTypeService;
+import lombok.Data;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,13 +41,20 @@ public class SalaryTypeController {
         return success(salaryTypeService.page(new Page<>(current, size), new QueryWrapper<>(salaryType)));
     }
 
+
+
+    @Data
+    private static class ListParam extends SalaryType {
+
+    }
+
     /**
      * 新增工资类型
      */
     @PostMapping("/type")
-    public Result<Boolean> add(@RequestBody String typeName,Long companyId)
+    public Result<Boolean> add(@RequestBody ListParam param)
     {
-        salaryTypeService.save(new SalaryType().setTypeName(typeName).setCompanyId(companyId));
+        salaryTypeService.save(new SalaryType().setTypeName(param.getTypeName()).setCompanyId(param.getCompanyId()));
         return success();
     }
 
