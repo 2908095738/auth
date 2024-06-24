@@ -122,4 +122,7 @@ public class Certificate implements Serializable {
 
     @TableField(exist = false)
     private Company company;
+
+    @TableField(exist = false)
+    private Account account;
 }
