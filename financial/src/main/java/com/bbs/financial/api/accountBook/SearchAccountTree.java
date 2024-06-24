@@ -81,7 +81,8 @@ public class SearchAccountTree {
                         borrowMoney = certificateAbstract.getBorrowMoney()!=null?certificateAbstract.getBorrowMoney():0L;
                         LoansMoney = certificateAbstract.getLoansMoney()!=null?certificateAbstract.getLoansMoney():0L;
                         certificateAbstract.setSurplusMoney(borrowMoney-LoansMoney);
-                    }else if(i == abstractListSorted.size()-1){
+                    }
+                    if(i == abstractListSorted.size()-1){
                         CertificateAbstract certificateAbstract = abstractListSorted.get(i);
                         borrowMoney = borrowMoney+(certificateAbstract.getBorrowMoney()!=null?certificateAbstract.getBorrowMoney():0L);
                         LoansMoney = LoansMoney+(certificateAbstract.getLoansMoney()!=null?certificateAbstract.getLoansMoney():0L);
