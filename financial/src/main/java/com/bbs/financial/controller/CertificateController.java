@@ -11,6 +11,9 @@ import com.bbs.financial.service.CertificateAbstractService;
 import com.bbs.financial.service.CertificateService;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.dubbo.config.annotation.DubboReference;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -37,12 +40,16 @@ public class CertificateController {
 
     @DubboReference
     private UserAPI userAPI;
+    @Resource
+    private TransactionDefinition transactionDefinition;
+    @Resource
+    private DataSourceTransactionManager transactionManager;
 
     /**
      * 查询记账凭证列表
      */
 //    @GetMapping("/certificate/list")
-    public Result<Page<Certificate>> list(Certificate param, @RequestParam Integer current, @RequestParam Integer size) {
+    public Result<Page<Certificate>> list(@RequestParam Integer current, @RequestParam Integer size) {
         Page<Certificate> page = certificateService.page(new Page<>(current, size), new MPJLambdaWrapper<Certificate>()
                 .selectAll(Certificate.class)
                 .leftJoin(CertificateAbstract.class, CertificateAbstract::getCertificateId, Certificate::getId, ext -> ext
@@ -78,11 +85,21 @@ public class CertificateController {
     /**
      * 删除记账凭证
      */
-    @DeleteMapping("/certificate/{ids}")
-    public Result<Boolean> remove(@PathVariable List<Long> ids)
+    @DeleteMapping("/certificate/{id}")
+    public Result<Boolean> remove(@PathVariable Long id)
     {
-        certificateService.getBaseMapper().deleteBatchIds(ids);
-        return success();
+        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
+        try {
+            certificateService.removeById(id);
+            certificateAbstractService.lambdaUpdate()
+                    .eq(CertificateAbstract::getCertificateId, id)
+                    .remove();
+            transactionManager.commit(transaction);
+            return Result.success();
+        } catch (Exception e) {
+            transactionManager.rollback(transaction);
+            return Result.failed(e.getMessage());
+        }
     }
 
     @Resource

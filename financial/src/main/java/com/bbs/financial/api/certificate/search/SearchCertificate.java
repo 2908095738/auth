@@ -2,7 +2,6 @@ package com.bbs.financial.api.certificate.search;
 
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.api.auth.User;
@@ -42,28 +41,26 @@ public class SearchCertificate {
 
     @GetMapping("/certificate")
     public Result<Certificate> search(@RequestParam Long id) {
-        return Result.success(
-                certificateService.selectJoinOne(Certificate.class, new MPJLambdaWrapper<Certificate>()
-                        .selectAll(Certificate.class)
-
-                        // left join 凭证科目表
-                        .leftJoin(CertificateAbstract.class, CertificateAbstract::getCertificateId, Certificate::getId, ext -> ext
-                                .selectCollection(CertificateAbstract.class, Certificate::getAbstracts)
-
-                                // left join 科目表
-                                .leftJoin(Account.class, Account::getId, CertificateAbstract::getAccountId, ext2 -> ext2
-                                        .selectAssociation(Account.class, CertificateAbstract::getAccount)
-                                )
-                        )
-
-                        // left join 附件表
-                        .leftJoin(CertificateFile.class, CertificateFile::getCertificateId, Certificate::getId, ext -> ext
-                                .selectCollection(CertificateFile.class, Certificate::getFiles)
-                        )
-
-                        .eq(Certificate::getId, id)
+        Certificate certificate = certificateService.selectJoinOne(Certificate.class, new MPJLambdaWrapper<Certificate>()
+                .selectAll(Certificate.class)
+                .selectCollection(CertificateAbstract.class, Certificate::getAbstracts, ext -> ext
+                        .association(Account.class, CertificateAbstract::getAccount)
                 )
+                .selectCollection(CertificateFile.class, Certificate::getFiles)
+
+                // left join 凭证科目表
+                .leftJoin(CertificateAbstract.class, CertificateAbstract::getCertificateId, Certificate::getId)
+                // left join 科目表
+                .leftJoin(Account.class, Account::getId, CertificateAbstract::getAccountId)
+                // left join 附件表
+                .leftJoin(CertificateFile.class, CertificateFile::getCertificateId, Certificate::getId)
+
+                .eq(Certificate::getId, id)
         );
+        if(nonNull(certificate)) {
+            certificate.setCreateUser(userAPI.getUserList(Collections.singletonList(certificate.getCreateBy())).get(INTEGER_ZERO));
+        }
+        return Result.success(certificate);
     }
 
     @GetMapping("/certificate/list")

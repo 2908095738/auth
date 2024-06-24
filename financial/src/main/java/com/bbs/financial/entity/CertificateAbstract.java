@@ -70,6 +70,12 @@ public class CertificateAbstract implements Serializable {
     @TableField(value = "weight")
     private Integer weight;
 
+    /**
+     * 辅助核算
+     */
+    @TableField(value = "auxiliary")
+    private String auxiliary;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
