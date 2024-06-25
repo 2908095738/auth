@@ -1,13 +1,17 @@
 package com.bbs.financial.dto;
 
 import io.swagger.annotations.ApiModel;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 科目名称
  */
 @Data
 @ApiModel("科目名称")
+@NoArgsConstructor
+@AllArgsConstructor
 public class SubjectsNameDto {
 
     /**
@@ -21,7 +25,7 @@ public class SubjectsNameDto {
     private String no;
 
     /**
-     * 会计科目名称
+     * 名称
      */
-    private String accountName;
+    private String name;
 }
