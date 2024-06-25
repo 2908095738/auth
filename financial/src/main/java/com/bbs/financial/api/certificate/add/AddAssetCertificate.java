@@ -178,7 +178,7 @@ public class AddAssetCertificate {
             return Result.success();
         } catch (Exception e) {
             transactionManager.rollback(transaction);
-            throw new RuntimeException(e);
+            return Result.failed(e.getMessage());
         }
     }
 
