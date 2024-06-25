@@ -53,12 +53,14 @@ public class AssetDepreciationCertificate implements Serializable {
     @TableField(exist = false)
     private Certificate certificate;
 
-    public AssetDepreciationCertificate(Long assetId, Long depreciationCertificateId, Date month,Long money) {
+    public AssetDepreciationCertificate(Long id, Long assetId, Long depreciationCertificateId, Date month, Long money) {
+        this.id = id;
         this.assetId = assetId;
         this.depreciationCertificateId = depreciationCertificateId;
         this.month = month;
         this.money = money;
     }
+
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
