@@ -1,15 +1,12 @@
-package com.bbs.financial.api.asset.close;
+package com.bbs.financial.service.impl;
 
-import com.bbs.Result;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.bbs.financial.entity.Close;
 import com.bbs.financial.entity.CloseType;
+import com.bbs.financial.service.CloseService;
+import com.bbs.financial.mapper.AssetCloseMapper;
 import com.bbs.financial.service.CloseTypeService;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.Arrays;
@@ -17,35 +14,20 @@ import java.util.List;
 
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.math.NumberUtils.*;
+import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
 
-@RestController
-@RequestMapping
-public class SearchCloseTypeList {
+/**
+* @author 路晨霖
+* @description 针对表【asset_close(结账)】的数据库操作Service实现
+* @createDate 2024-06-25 17:10:57
+*/
+@Service
+public class CloseServiceImpl extends ServiceImpl<AssetCloseMapper, Close>
+    implements CloseService {
 
     @Resource
     private CloseTypeService closeTypeService;
-    @Resource
-    private TransactionDefinition transactionDefinition;
-    @Resource
-    private DataSourceTransactionManager transactionManager;
-
-    @GetMapping("/close/type/list")
-    public Result<List<CloseType>> search(@RequestParam Long companyId) {
-        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-        try {
-            List<CloseType> assetCloseTypeList = searchCloseType(companyId);
-            transactionManager.commit(transaction);
-            return Result.success(assetCloseTypeList);
-        } catch (Exception e) {
-            transactionManager.rollback(transaction);
-            e.printStackTrace();
-            return Result.failed(e.getMessage());
-        }
-    }
-
-    /**
-     * 查询结账类型配置
-     */
+    @Override
     public List<CloseType> searchCloseType(Long companyId) {
         List<CloseType> closeTypeList = closeTypeService.lambdaQuery()
                 .eq(CloseType::getCompanyId, companyId)
@@ -55,7 +37,6 @@ public class SearchCloseTypeList {
         }
         return closeTypeList;
     }
-
     /**
      * 通过默认结账类型配置，设置当前公司的结账类型配置
      */
@@ -80,11 +61,11 @@ public class SearchCloseTypeList {
                 .list();
         if(isNull(defaultCloseTypeList) || defaultCloseTypeList.size() == INTEGER_ZERO) {
             closeTypeService.saveBatch(Arrays.asList(
-                    new CloseType(LONG_ZERO, "计提折旧", LONG_ZERO, INTEGER_ONE, INTEGER_ZERO),
-                    new CloseType(LONG_ZERO, "转出未交增值税", LONG_ZERO, INTEGER_ZERO, INTEGER_ONE),
-                    new CloseType(LONG_ZERO, "计提附加税", LONG_ZERO, INTEGER_ZERO, INTEGER_TWO),
-                    new CloseType(LONG_ZERO, "结转销售成本", LONG_ZERO, INTEGER_ONE, 3),
-                    new CloseType(LONG_ZERO, "结转损益", LONG_ZERO, INTEGER_ONE, 4)
+                    new CloseType(LONG_ZERO, "asset_depreciation", "计提折旧", LONG_ZERO, INTEGER_ONE, INTEGER_ZERO),
+                    new CloseType(LONG_ZERO, "transfer_out_unpaid_vat", "转出未交增值税", LONG_ZERO, INTEGER_ZERO, INTEGER_ONE),
+                    new CloseType(LONG_ZERO, "provision_of_additional_taxes", "计提附加税", LONG_ZERO, INTEGER_ZERO, INTEGER_TWO),
+                    new CloseType(LONG_ZERO, "cost_of_sales_carried_forward", "结转销售成本", LONG_ZERO, INTEGER_ONE, 3),
+                    new CloseType(LONG_ZERO, "loss_and_gain_brought_forward", "结转损益", LONG_ZERO, INTEGER_ONE, 4)
             ));
             defaultCloseTypeList = closeTypeService.lambdaQuery()
                     .eq(CloseType::getCompanyId, LONG_ZERO)
@@ -93,3 +74,7 @@ public class SearchCloseTypeList {
         return defaultCloseTypeList;
     }
 }
+
+
+
+

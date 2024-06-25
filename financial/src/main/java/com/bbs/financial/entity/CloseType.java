@@ -32,6 +32,12 @@ public class CloseType implements Serializable {
     private Long companyId;
 
     /**
+     * 结账项编码
+     */
+    @TableField(value = "type_code")
+    private String typeCode;
+
+    /**
      * 结账项名称
      */
     @TableField(value = "type_name")
@@ -55,8 +61,9 @@ public class CloseType implements Serializable {
     @TableField(value = "weight")
     private Integer weight;
 
-    public CloseType(Long companyId, String typeName, Long money, Integer isGenerateCertificate, Integer weight) {
+    public CloseType(Long companyId, String typeCode, String typeName, Long money, Integer isGenerateCertificate, Integer weight) {
         this.companyId = companyId;
+        this.typeCode = typeCode;
         this.typeName = typeName;
         this.money = money;
         this.isGenerateCertificate = isGenerateCertificate;
