@@ -9,6 +9,7 @@ import com.bbs.financial.service.CertificateTemplateService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -129,8 +130,12 @@ public class UpdateTemplate {
             certificateTemplateAbstractService.updateBatchById(param.abstractList.stream().map(templateAbstract -> {
                 CertificateTemplateAbstract entity = new CertificateTemplateAbstract();
                 BeanUtil.copyProperties(templateAbstract, entity);
-                entity.setBorrowMoney(Long.valueOf(templateAbstract.getBorrowMoney().replace(",", "")));
-                entity.setLoansMoney(Long.valueOf(templateAbstract.getLoansMoney().replace(",", "")));
+                if(StringUtils.isNotBlank(templateAbstract.getBorrowMoney())) {
+                    entity.setBorrowMoney(Long.valueOf(templateAbstract.getBorrowMoney().replace(",", "")));
+                }
+                if(StringUtils.isNotBlank(templateAbstract.getLoansMoney())) {
+                    entity.setLoansMoney(Long.valueOf(templateAbstract.getLoansMoney().replace(",", "")));
+                }
                 return entity;
             }).collect(Collectors.toList()));
             transactionManager.commit(transaction);
