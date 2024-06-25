@@ -1,27 +1,36 @@
 package com.bbs.financial.controller;
 
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import cn.hutool.core.io.IoUtil;
+import cn.hutool.poi.excel.ExcelUtil;
+import cn.hutool.poi.excel.ExcelWriter;
+import cn.hutool.poi.excel.StyleSet;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.api.auth.User;
 import com.bbs.api.auth.UserAPI;
-import com.bbs.financial.dto.BaseMoneyByCashierDto;
-import com.bbs.financial.dto.ConfirmTotalDto;
-import com.bbs.financial.dto.IOTotalDto;
-import com.bbs.financial.dto.SubjectsNameDto;
+import com.bbs.financial.dto.*;
 import com.bbs.financial.entity.*;
 import com.bbs.financial.service.*;
+import com.bbs.financial.util.LoginUser;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.dubbo.common.utils.Holder;
 import org.apache.dubbo.config.annotation.DubboReference;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.DataFormat;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -30,8 +39,8 @@ import java.util.stream.Collectors;
 
 import static com.bbs.Result.success;
 import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
-import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
+import static com.bbs.financial.util.ExcelUtil.setResponseHeader;
+import static org.apache.commons.lang3.math.NumberUtils.*;
 
 /**
  * 出纳控制器
@@ -56,6 +65,12 @@ public class CashierController {
     @Resource
     private PriceTypeService priceTypeService;
 
+    @Resource
+    private CashierService cashierService;
+
+    @Resource
+    private CertificateAbstractService certificateAbstractService;
+
     /**
      * 查询日记账
      *
@@ -72,40 +87,8 @@ public class CashierController {
             @RequestParam(defaultValue = "10") Integer size,
             Long companyId, Long zhangHuId, String date) {
 
-        //TODO L SQL合一
-
-        //SQL待使用凭证id列表
-        List<Long> inCertId = zhService.selectJoinList(Long.class,
-                new MPJLambdaWrapper<ZhangHu>()
-                        .select(CertificateAbstract::getCertificateId)
-                        .eq(!ObjectUtils.isEmpty(zhangHuId) && zhangHuId > 0, ZhangHu::getId, zhangHuId)
-                        .leftJoin(CertificateAbstract.class, CertificateAbstract::getAccountId, ZhangHu::getSubjectsId));
-
         //获取凭证分页
-        Date date2DB = nonNull(date) ? new Date(Long.parseLong(date)) : new Date();
-        Page<Certificate> certificatePage = certificateService.selectJoinListPage(new Page<>(current, size), Certificate.class, new MPJLambdaWrapper<Certificate>()
-                .selectAll(Certificate.class)
-
-                // left join 凭证科目表
-                .leftJoin(CertificateAbstract.class, CertificateAbstract::getCertificateId, Certificate::getId, ext -> ext
-                        .selectCollection(CertificateAbstract.class, Certificate::getAbstracts)
-
-                        // left join 科目表
-                        .leftJoin(Account.class, Account::getId, CertificateAbstract::getAccountId, ext2 -> ext2
-                                .selectAssociation(Account.class, CertificateAbstract::getAccount)
-                        )
-                )
-
-                // left join 附件表
-                .leftJoin(CertificateFile.class, CertificateFile::getCertificateId, Certificate::getId, ext -> ext
-                        .selectCollection(CertificateFile.class, Certificate::getFiles)
-                )
-
-                .eq(Certificate::getCompanyId, companyId)
-                .in(Certificate::getId, inCertId)
-                .ge(Certificate::getDate, DateUtil.beginOfMonth(date2DB))
-                .lt(Certificate::getDate, DateUtil.beginOfMonth(DateUtil.offsetMonth(date2DB, INTEGER_ONE)))
-        );
+        Page<Certificate> certificatePage = cashierService.listCertificate(current, size, companyId, zhangHuId, date, Boolean.TRUE, Boolean.TRUE);
 
         // 获取【创建用户】&&【审核用户】的 userId Set
         Set<Long> userIds = filterUserIds(certificatePage);
@@ -145,7 +128,7 @@ public class CashierController {
     @GetMapping("/listSubjects")
     public Result<Page<SubjectsNameDto>> listSubjects(Long companyId, @RequestParam Integer current, @RequestParam Integer size) {
         Page<SubjectsNameDto> page = accountService.selectJoinListPage(new Page<>(current, size), SubjectsNameDto.class, new MPJLambdaWrapper<Account>()
-                .select(Account::getId, Account::getNo, Account::getAccountName)
+                .select(Account::getId, Account::getNo, Account::getName)
                 .eq(Account::getCompanyId, INTEGER_ZERO)
                 .or().eq(nonNull(companyId), Account::getCompanyId, companyId)
         );
@@ -167,7 +150,7 @@ public class CashierController {
     @GetMapping("/cert/oriMoney")
     public Result<Long> getOriMoney(@RequestParam Long companyId, Long zhangHuId, @RequestParam(name = "date", required = false) String date) {
         //计算期初余额
-        List<Certificate> tmpList = getCertListByBefore(companyId, zhangHuId, date);
+        List<Certificate> tmpList = cashierService.listCertificate(INTEGER_ZERO, INTEGER_ZERO, companyId, zhangHuId, date, Boolean.FALSE, Boolean.FALSE).getRecords();
         Long oriMoeny = 0L;
         for (Certificate cert : tmpList) {
             List<CertificateAbstract> abstList = cert.getAbstracts();
@@ -186,50 +169,345 @@ public class CashierController {
     }
 
     /**
-     * 获取当月前的凭证列表
+     * 导出凭证
      *
-     * @param companyId 公司
-     * @param zhangHuId 账户id，传入[null]、[0]不报错
+     * @param resp      响应
+     * @param companyId 公司id
+     * @param zhangHuId 账户id
      * @param date      时间戳字符串
-     * @return
      */
-    private List<Certificate> getCertListByBefore(Long companyId, Long zhangHuId, String date) {
+    @GetMapping("/exportCert")
+    public void exportCert(HttpServletRequest req, HttpServletResponse resp,
+                           @RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size,
+                           Long companyId, Long zhangHuId, String date) {
+        List<Certificate> oriData = listCertificate(current, size, companyId, zhangHuId, date).getData().getRecords();
 
-        //TODO L SQL合并
+        Function<List<Certificate>, List<ExcelNoteDto>> initExcelDataFunc = d -> {
+            List<ExcelNoteDto> datas = getExcelDatasByNote(d);
+            initZhByNote(datas, companyId);
+            return datas;
+        };
 
-        //SQL待使用凭证id列表
-        List<Long> inCertId = zhService.selectJoinList(Long.class,
-                new MPJLambdaWrapper<ZhangHu>()
-                        .select(CertificateAbstract::getCertificateId)
-                        .eq(!ObjectUtils.isEmpty(zhangHuId) && zhangHuId > 0, ZhangHu::getId, zhangHuId)
-                        .leftJoin(CertificateAbstract.class, CertificateAbstract::getAccountId, ZhangHu::getSubjectsId));
+        Consumer<ExcelWriter> initSubTitleFunc = w -> initSubTitleByNote(w, LoginUser.get().getName(),
+                getZhByNote(zhangHuId), getMonthRange(new Date(Long.parseLong(date))));
 
-        Date date2DB = nonNull(date) ? new Date(Long.parseLong(date)) : new Date();
-        return certificateService.selectJoinList(Certificate.class, new MPJLambdaWrapper<Certificate>()
-                .selectAll(Certificate.class)
+        exportCore(req, resp, oriData, initExcelDataFunc, 7, "日记账", this::excelMapByNote, initSubTitleFunc);
+    }
 
-                // left join 凭证科目表
-                .leftJoin(CertificateAbstract.class, CertificateAbstract::getCertificateId, Certificate::getId, ext -> ext
-                        .selectCollection(CertificateAbstract.class, Certificate::getAbstracts)
+    /**
+     * 导出
+     *
+     * @param oriData           原始表格数据列表
+     * @param initExcelDataFunc 初始化表格数据接口
+     * @param titileWidth       标题所占单元格长度
+     * @param excelName         表格名称
+     * @param excelMapFunc      表格-实体类映射接口
+     * @param initSubTitleFunc  初始化子标题接口
+     * @param <T>               原始表格数据
+     * @param <R>               最终表格数据
+     */
+    private <T, R> void exportCore(HttpServletRequest req, HttpServletResponse resp,
+                                   List<T> oriData, Function<List<T>, List<R>> initExcelDataFunc,
+                                   int titileWidth, String excelName, Consumer<ExcelWriter> excelMapFunc, Consumer<ExcelWriter> initSubTitleFunc) {
+        OutputStream out = null;
+        ExcelWriter writer = ExcelUtil.getWriter(new String(getExcelName("export").getBytes(StandardCharsets.UTF_8)));
+        try {
+            out = resp.getOutputStream();
+            setResponseHeader(req, resp, getExcelName(excelName));
 
-                        // left join 科目表
-                        .leftJoin(Account.class, Account::getId, CertificateAbstract::getAccountId, ext2 -> ext2
-                                .selectAssociation(Account.class, CertificateAbstract::getAccount)
-                        )
-                )
+            initExcel(writer, titileWidth, excelName, initSubTitleFunc, excelMapFunc, initExcelDataFunc.apply(oriData));
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            writer.flush(out, true);
+            writer.close();
+            IoUtil.close(out);
+        }
+    }
 
-                // left join 附件表
-                .leftJoin(CertificateFile.class, CertificateFile::getCertificateId, Certificate::getId, ext -> ext
-                        .selectCollection(CertificateFile.class, Certificate::getFiles)
-                )
-
-                .eq(Certificate::getCompanyId, companyId)
-                .in(Certificate::getId, inCertId)
-                .lt(Certificate::getDate, DateUtil.beginOfMonth(date2DB))
-                .orderByDesc(Certificate::getDate)
+    private String getExcelName(String title) {
+        DateTime now = DateTime.now();
+        return String.format("%d%d%d_%d%d%d_%s.xlsx",
+                now.year(), now.monthBaseOne(), now.dayOfMonth(),
+                now.hour(true), now.minute(), now.second(),
+                title
         );
     }
 
+    /**
+     * 获取表格数据
+     *
+     * @param certList 凭证列表
+     * @return
+     */
+    private List<ExcelNoteDto> getExcelDatasByNote(List<Certificate> certList) {
+        List<ExcelNoteDto> result = new ArrayList<>();
+
+        //当前余额
+        BigDecimal nowLess = new BigDecimal(0);
+
+        for (Certificate cert : certList) {
+            //可重用实例域值
+            String dateStr = DateTime.of(cert.getDate()).toDateStr();
+            String certStr = cert.getCertificateWord().getMsg() + cert.getNo();
+
+            String makeName = cert.getCreateUser().getName();
+
+            List<CertificateAbstract> abstList = cert.getAbstracts();
+            for (CertificateAbstract abst : abstList) {
+                ExcelNoteDto obj = getPartDataByNote(dateStr, certStr, makeName, abst);
+
+                //部分金额赋值
+                initMoneyByNow(Collections.singletonList(obj));
+                initMoneyByOne(Collections.singletonList(abst), obj, true);
+
+                //余额赋值
+                if (obj.getBorrowMoney().doubleValue() != 0)
+                    nowLess = nowLess.add(obj.getBorrowMoney());
+                else if (obj.getLoansMoney().doubleValue() != 0)
+                    nowLess = nowLess.subtract(obj.getLoansMoney());
+                obj.setLessMoney(nowLess);
+
+                result.add(obj);
+            }
+        }
+
+        initFlagNoteByExcel(result);
+
+        return result;
+    }
+
+    /**
+     * 获取日记账表格数据[可直接赋值的实例域]
+     *
+     * @param dateStr  日期字符串
+     * @param certStr  凭证
+     * @param makeName 制单人
+     * @param abst     凭证摘要列表
+     * @return
+     */
+    private ExcelNoteDto getPartDataByNote(String dateStr, String certStr, String makeName, CertificateAbstract abst) {
+        ExcelNoteDto obj = new ExcelNoteDto();
+        obj.setDateStr(dateStr);
+        obj.setCert(certStr);
+        obj.setMakeName(makeName);
+
+        obj.setCertificateAbstract(abst.getCertificateAbstract());
+        obj.setSubjId(abst.getAccountId());
+
+        return obj;
+    }
+
+    /**
+     * 初始化起始、结束日记账标识符
+     *
+     * @param dataList 日记账表格数据列表
+     */
+    private void initFlagNoteByExcel(List<ExcelNoteDto> dataList) {
+        //合计数据计算
+        BigDecimal borrowTotal = dataList.stream().map(ExcelNoteDto::getBorrowMoney).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal loansTotal = dataList.stream().map(ExcelNoteDto::getLoansMoney).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal lessTotal = borrowTotal.subtract(loansTotal);
+
+        //合计数据赋值
+        ExcelNoteDto endTotal = new ExcelNoteDto();
+        endTotal.setBorrowMoney(borrowTotal);
+        endTotal.setLoansMoney(loansTotal);
+        endTotal.setLessMoney(lessTotal);
+        endTotal.setCertificateAbstract("合计");
+
+        dataList.add(endTotal);
+
+        //起始标识符赋值
+        ExcelNoteDto startData = new ExcelNoteDto();
+        startData.setCertificateAbstract("初始余额");
+        dataList.add(0, startData);
+    }
+
+    /**
+     * 获取当月起始、结束日
+     *
+     * @param inDate
+     */
+    private static String getMonthRange(Date inDate) {
+        DateTime leftMonth = DateUtil.beginOfMonth(inDate);
+        DateTime rightMonth = DateUtil.endOfMonth(inDate);
+        return String.format("%s 至 %s", leftMonth.toDateStr(), rightMonth.toDateStr());
+    }
+
+    /**
+     * 日记账表格数据列表的账户账户赋值
+     *
+     * @param dataList  日记账表格数据列表
+     * @param companyId 公司id
+     */
+    private void initZhByNote(List<ExcelNoteDto> dataList, Long companyId) {
+        List<Long> subjIdList = dataList.stream()
+                .filter(n -> !ObjectUtils.isEmpty(n.getSubjId()))
+                .map(ExcelNoteDto::getSubjId)
+                .collect(Collectors.toList());
+
+        if (subjIdList.size() == INTEGER_ZERO)
+            return;
+
+        //TODO L 可能存在的map-key重复报错源头
+        List<ZhangHu> tmpList = zhService.selectJoinList(ZhangHu.class,
+                new MPJLambdaWrapper<ZhangHu>()
+                        .select(ZhangHu::getSubjectsId, ZhangHu::getZhangHuCode)
+                        .eq(ZhangHu::getCompanyId, companyId)
+                        .in(ZhangHu::getSubjectsId, subjIdList)
+        );
+
+        //科目id-账户账号映射
+        Map<Long, String> zhCodeBySubjId = new HashMap<>();
+        tmpList.forEach(z -> zhCodeBySubjId.put(z.getSubjectsId(), z.getZhangHuCode()));
+
+        //实例域赋值
+        dataList.forEach(n -> {
+            String zhCode = zhCodeBySubjId.get(n.getSubjId());
+            n.setHeZhCode(zhCode);
+        });
+    }
+
+    /**
+     * 获取日记账表格标题的账户信息
+     *
+     * @param zhId 账户id
+     */
+    private String getZhByNote(Long zhId) {
+        if (ObjectUtils.isEmpty(zhId) || (zhId == LONG_ZERO)) {
+            return "全部账户";
+        }
+
+        ZhangHu zhangHu = zhService.selectJoinOne(ZhangHu.class,
+                new MPJLambdaWrapper<ZhangHu>()
+                        .select(ZhangHu::getZhangHuCode, ZhangHu::getName)
+                        .eq(ZhangHu::getId, zhId)
+        );
+
+        StringBuilder zhBuilder = new StringBuilder();
+        boolean isCode = !ObjectUtils.isEmpty(zhangHu.getZhangHuCode());
+        boolean isName = !ObjectUtils.isEmpty(zhangHu.getName());
+        if (isCode && isName)
+            zhBuilder.append(zhangHu.getZhangHuCode()).append(" - ");
+        if (isName)
+            zhBuilder.append(zhangHu.getName());
+
+        return zhBuilder.toString();
+    }
+
+    /**
+     * 表格-实体类映射[日记账]
+     *
+     * @param writer
+     */
+    private void excelMapByNote(ExcelWriter writer) {
+        writer.addHeaderAlias("dateStr", "日期");
+        writer.addHeaderAlias("certificateAbstract", "摘要");
+        writer.addHeaderAlias("heZhCode", "对方账户");
+        writer.addHeaderAlias("borrowMoney", "收入");
+        writer.addHeaderAlias("loansMoney", "支出");
+        writer.addHeaderAlias("lessMoney", "余额");
+        writer.addHeaderAlias("cert", "凭证");
+        writer.addHeaderAlias("makeName", "制单人");
+    }
+
+    /**
+     * 初始化[日记账]的表格子标题
+     *
+     * @param userName     用户名
+     * @param zhName       账户名称
+     * @param dateRangeStr 当月起始、结束日区间字符串
+     */
+    private void initSubTitleByNote(ExcelWriter writer, String userName, String zhName, String dateRangeStr) {
+        writer.merge(1, 1, 0, 2, userName, false);
+        writer.merge(1, 1, 3, 5, zhName, false);
+        writer.merge(1, 1, 6, 7, dateRangeStr, false);
+    }
+
+    /**
+     * 初始化表格
+     *
+     * @param titleWidth       标题所占单元格长度
+     * @param initSubTitleFunc 初始化表格子标题
+     * @param excelTitle       表格标题
+     * @param excelMapFunc     表格-实体类映射接口
+     * @param excelDatas       表格数据列表
+     * @
+     */
+    private <T> void initExcel(ExcelWriter writer, int titleWidth,
+                               String excelTitle, Consumer<ExcelWriter> initSubTitleFunc, Consumer<ExcelWriter> excelMapFunc, List<T> excelDatas) {
+        //标题
+        writer.merge(0, 0, 0, titleWidth, excelTitle, false);
+        initSubTitleFunc.accept(writer);
+
+        //当月起始、结束表格宽度
+        writer.setColumnWidth(0, 14);
+        writer.setColumnWidth(1, 16);
+        writer.setColumnWidth(6, 13);
+        writer.setColumnWidth(7, 11);
+
+        //设置实际输出数据起始行
+        writer.setCurrentRow(2);
+
+        excelMapFunc.accept(writer);
+        //未映射实例域不输出
+        writer.setOnlyAlias(true);
+
+        writer.write(excelDatas, true);
+
+        //获取整个Excel的样式，设置单元格格式为文本
+        StyleSet styleSet = writer.getStyleSet();
+        CellStyle cellStyle = styleSet.getCellStyleForNumber();
+        DataFormat format = writer.getWorkbook().createDataFormat();
+        cellStyle.setDataFormat(format.getFormat("@"));
+        writer.setStyleSet(styleSet);
+    }
+
+    /**
+     * 删除记录凭证摘要
+     *
+     * @param companyId 公司id
+     * @param msecStr   时间戳字符串
+     * @param ids
+     * @return
+     */
+    @DeleteMapping("/certAbst/{companyId}/{msecStr}/{ids}")
+    public Result<Boolean> removeAbst(@PathVariable Long companyId, @PathVariable String msecStr, @PathVariable List<Long> ids) {
+        //凭证id列表
+        List<Long> certIds = certificateAbstractService.selectJoinList(Long.class,
+                new MPJLambdaWrapper<CertificateAbstract>()
+                        .select(CertificateAbstract::getCertificateId)
+                        .in(CertificateAbstract::getId, ids)
+        );
+
+        //凭证列表
+        List<Certificate> certList = cashierService.listCertificate(INTEGER_ZERO, INTEGER_ZERO, companyId, LONG_ZERO, msecStr, Boolean.TRUE, Boolean.FALSE).getRecords();
+
+        //待删除凭证
+        certIds.clear();
+        certList.forEach(c -> {
+            List<CertificateAbstract> abstList = c.getAbstracts();
+            boolean isOne = abstList.size() == INTEGER_ONE;
+            if (isOne)//只有一条凭证摘要，说明这条摘要就是当前要删的摘要，则连带删除凭证本身。
+                certIds.add(c.getId());
+        });
+        if (certIds.size() > 0)
+            certificateService.getBaseMapper().deleteBatchIds(certIds);
+
+        certificateAbstractService.getBaseMapper().deleteBatchIds(ids);
+        return success();
+    }
+
+    /**
+     * 获取收支汇总数据列表
+     *
+     * @param current   页码
+     * @param size      条数
+     * @param companyId 公司id
+     * @param dateStr   时间戳字符串
+     * @param zhId      账户id
+     */
     @GetMapping("/cert/iototal")
     public Result<Page<IOTotalDto>> listIOTotal(
             @RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size,
@@ -237,29 +515,69 @@ public class CashierController {
             @RequestParam(name = "date", required = false) String dateStr, @RequestParam(name = "zhId", required = false) Long zhId) {
         Result result = Result.success();
 
+        //TODO L 性能待优化
+
         Page<IOTotalDto> page = getTotalByPart(current, size, companyId, zhId);
-        result = fixTotalList(page.getRecords());
-        if (result.getCode() == 500)
-            return result;
 
-        //科目id与汇总表的映射
-        Map<Long, IOTotalDto> subjMap = page.getRecords().stream().collect(Collectors.toMap(IOTotalDto::getSubjectsId, d -> d));
-        subjMap.values().forEach(d -> initMoneyByNow(Collections.singletonList(d)));
+        //可变类型封装的页码
+        Holder<Integer> currentPro = new Holder<>();
+        currentPro.set(current);
 
-        //期初余额计算
-        initMoney(getCertListByBefore(companyId, 0L, dateStr), sId -> subjMap.containsKey(sId), sId -> Collections.singletonList(subjMap.get(sId)), false);
+        Predicate<Page<IOTotalDto>> isDataLessFunc = p -> p.getRecords().size() < size;//分页数据少于请求条数
 
-        //收入、支出计算
-        initMoney(getCertListByNow(companyId, dateStr), sId -> subjMap.containsKey(sId), sId -> Collections.singletonList(subjMap.get(sId)), true);
+        boolean isOne = page.getCurrent() == INTEGER_ONE;//是否查询第一页
+        //从DB查询的数据，需要后端处理才能得知是否有效。例如出现第一页数据均无效，但后续页的数据有效，就可以借此获取其他页数据塞到第一页。
+        boolean plus2One = (page.getTotal() > page.getSize()) && isOne;
+        do {
+            boolean isPlus = isPlusRecord(plus2One, isDataLessFunc.test(page), currentPro, size, page.getTotal());
+            if (isPlus) {
+                current = currentPro.get();
+                page.getRecords().addAll(getTotalByPart(currentPro.get(), size, companyId, zhId).getRecords());
+            } else
+                break;
 
-        //期末余额计算
-        subjMap.values().forEach(d -> initEndMoney(Collections.singletonList(d)));
+            result = fixTotalList(page.getRecords());
+            if (result.getCode() == 500)
+                return result;
 
-        //初始化币别名称
-        result = initPriceTypeName(subjMap.values(), companyId);
-        if (result.getCode() == 500)
-            return result;
+            //科目id与汇总表的映射
+            Map<Long, IOTotalDto> subjMap = page.getRecords().stream().collect(Collectors.toMap(IOTotalDto::getSubjectsId, d -> d));
+            subjMap.values().forEach(d -> initMoneyByNow(Collections.singletonList(d)));
 
+            //期初余额计算
+            List<Certificate> certs2Ori = cashierService.listCertificate(current, size, companyId, 0L, dateStr, Boolean.FALSE, Boolean.TRUE).getRecords();
+            initMoney(certs2Ori, sId -> subjMap.containsKey(sId), sId -> Collections.singletonList(subjMap.get(sId)), false);
+
+            //收入、支出计算
+            List<Certificate> certs2IO = getCert2Cal(zhId, current, size, companyId, dateStr, certs2Ori, page.getRecords());
+            initMoney(certs2IO, sId -> subjMap.containsKey(sId), sId -> Collections.singletonList(subjMap.get(sId)), true);
+
+            //期末余额计算
+            subjMap.values().forEach(d -> initEndMoney(Collections.singletonList(d)));
+
+            //初始化币别名称
+            result = initPriceTypeName(subjMap.values(), companyId);
+            if (result.getCode() == 500)
+                return result;
+
+            /**
+             * TODO L BUG： 返回给前端的数据，从DB查出来后，需要在后端进行处理才能得知数据是否有效。
+             *  -   但如果不把后续页的数据也进行处理，也不知道这些数据是否有效，但处理这些额外数据又太冗余。
+             *  -   所以暂时仅第一页的数据删除无效数据，后续页不管。
+             */
+            if (isOne)
+                removeInvalidByTotalOfOne(page.getRecords());
+
+            //可能会出现使用后续页填充第一页，但处理后留下的数据大于条数，就截取满足
+            if (plus2One && (page.getRecords().size() > size))
+                page.setRecords(page.getRecords().subList(0, size));
+        } while (plus2One && isDataLessFunc.test(page));
+
+        //重置分页数据
+        boolean isDoneDataLess = (page.getTotal() > size) && isDataLessFunc.test(page);//是否实际有效数据少于DB返回的total
+        boolean isZhIdSelect = !ObjectUtils.isEmpty(zhId) && (zhId > LONG_ZERO);//是否指定账户id查询
+        if (isDoneDataLess || isZhIdSelect)
+            page.setTotal(page.getRecords().size());
         result.setData(page);
 
         return result;
@@ -288,6 +606,25 @@ public class CashierController {
     }
 
     /**
+     * 是否补充分页数据
+     *
+     * @param plus2One   是否第一页需要补充分页数据
+     * @param isDataLess 是否分页数据少于请求条数
+     * @param currentPro 页码
+     * @param size       条数
+     * @param total      DB返回的总条数
+     */
+    private boolean isPlusRecord(boolean plus2One, boolean isDataLess, Holder<Integer> currentPro, Integer size, long total) {
+        if (plus2One && isDataLess) {
+            if (currentPro.get() * size >= total)
+                return false;
+
+            currentPro.set(currentPro.get() + 1);
+        }
+        return true;
+    }
+
+    /**
      * 获取正确的收支汇总列表
      *
      * @param toFixList 待修复列表
@@ -308,6 +645,30 @@ public class CashierController {
             toFixList.add(nowList.get(0));
 
         return Result.success();
+    }
+
+    /**
+     * 获取计算收入、支出的凭证列表
+     *
+     * @param zhId         账户id
+     * @param current      页码
+     * @param size         条数
+     * @param companyId    公司id
+     * @param dateStr      时间戳字符串
+     * @param certs2Ori    期初余额计算使用的凭证列表
+     * @param totalsByPage 分页中的数据列表
+     * @return
+     */
+    private List<Certificate> getCert2Cal(long zhId, Integer current, Integer size, Long companyId, String dateStr, List<Certificate> certs2Ori, List<IOTotalDto> totalsByPage) {
+        List<Certificate> result;
+        if (zhId != INTEGER_ZERO) {
+            result = cashierService.listCertificate(current, size, companyId, zhId, dateStr, Boolean.TRUE, Boolean.TRUE).getRecords();
+            if (result.isEmpty() && certs2Ori.isEmpty())
+                totalsByPage.clear();
+        } else
+            result = getCertListByNow(companyId, dateStr);
+
+        return result;
     }
 
     /**
@@ -378,26 +739,26 @@ public class CashierController {
      *
      * @param companyId 公司id
      * @param dateStr   时间字符串
+     * @return
      */
     private List<Certificate> getCertListByNow(Long companyId, String dateStr) {
+        //TODO L 待修正调用注释的方法
+        //        return cashierService.listCertificate(INTEGER_ZERO, INTEGER_ZERO, companyId, LONG_ZERO, dateStr, Boolean.TRUE, Boolean.FALSE).getRecords();
+
         Date date = nonNull(dateStr) ? new Date(Long.parseLong(dateStr)) : new Date();
         return certificateService.selectJoinList(Certificate.class, new MPJLambdaWrapper<Certificate>()
                 .selectAll(Certificate.class)
+                .selectCollection(CertificateAbstract.class, Certificate::getAbstracts, ext -> ext
+                        .association(Account.class, CertificateAbstract::getAccount)
+                )
+                .selectCollection(CertificateFile.class, Certificate::getFiles)
 
                 // left join 凭证科目表
-                .leftJoin(CertificateAbstract.class, CertificateAbstract::getCertificateId, Certificate::getId, ext -> ext
-                        .selectCollection(CertificateAbstract.class, Certificate::getAbstracts)
-
-                        // left join 科目表
-                        .leftJoin(Account.class, Account::getId, CertificateAbstract::getAccountId, ext2 -> ext2
-                                .selectAssociation(Account.class, CertificateAbstract::getAccount)
-                        )
-                )
-
+                .leftJoin(CertificateAbstract.class, CertificateAbstract::getCertificateId, Certificate::getId)
+                // left join 科目表
+                .leftJoin(Account.class, Account::getId, CertificateAbstract::getAccountId)
                 // left join 附件表
-                .leftJoin(CertificateFile.class, CertificateFile::getCertificateId, Certificate::getId, ext -> ext
-                        .selectCollection(CertificateFile.class, Certificate::getFiles)
-                )
+                .leftJoin(CertificateFile.class, CertificateFile::getCertificateId, Certificate::getId)
 
                 .eq(Certificate::getCompanyId, companyId)
                 .ge(Certificate::getDate, DateUtil.beginOfMonth(date))
@@ -447,6 +808,82 @@ public class CashierController {
     }
 
     /**
+     * 移除第一页不符合要求的收支汇总数据
+     *
+     * @param totalList 收支汇总列表
+     */
+    private void removeInvalidByTotalOfOne(List<IOTotalDto> totalList) {
+        totalList.removeIf(this::hasMoney);
+    }
+
+    /**
+     * 出纳基础金额的值是否是有效值
+     *
+     * @param moneyImpl 出纳基础金额实现
+     * @return
+     */
+    private boolean hasMoney(BaseMoneyByCashierDto moneyImpl) {
+        BigDecimal zero = new BigDecimal(INTEGER_ZERO);
+        boolean nonOri = moneyImpl.getOriMoney().compareTo(zero) == 0;
+        boolean nonBorr = moneyImpl.getBorrowMoney().compareTo(zero) == 0;
+        boolean nonLoan = moneyImpl.getLoansMoney().compareTo(zero) == 0;
+        boolean nonEnd = moneyImpl.getEndMoney().compareTo(zero) == 0;
+
+        if (nonOri && nonBorr && nonLoan && nonEnd)
+            return true;
+        return false;
+    }
+
+    /**
+     * 导出收支汇总表
+     *
+     * @param current   页码
+     * @param size      条数
+     * @param companyId 公司id
+     * @param zhangHuId 账户id
+     * @param date      时间戳字符串
+     */
+    @GetMapping("/exportTotal")
+    public void exportTotal(HttpServletRequest req, HttpServletResponse resp,
+                            @RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size,
+                            Long companyId, Long zhangHuId, String date) {
+        List<IOTotalDto> oriData = listIOTotal(current, size, companyId, date, zhangHuId).getData().getRecords();
+
+        Consumer<ExcelWriter> initSubTitleFunc = w -> initSubTitleByTotal(w,
+                LoginUser.get().getName(),
+                getMonthRange(new Date(Long.parseLong(date))));
+
+        exportCore(req, resp,
+                oriData, Function.identity(), 6, "收支汇总表", this::excelMapByTotal, initSubTitleFunc);
+    }
+
+    /**
+     * 表格-实体类映射[收支汇总表]
+     *
+     * @param writer
+     */
+    private void excelMapByTotal(ExcelWriter writer) {
+        writer.addHeaderAlias("zhCode", "账户编码");
+        writer.addHeaderAlias("zhName", "账户名称");
+        writer.addHeaderAlias("mTypeName", "币别名称");
+        writer.addHeaderAlias("oriMoney", "期初余额");
+        writer.addHeaderAlias("borrowMoney", "收入");
+        writer.addHeaderAlias("loansMoney", "支出");
+        writer.addHeaderAlias("endMoney", "期末余额");
+    }
+
+    /**
+     * 初始化[收支汇总表]表格的子标题
+     *
+     * @param userName     用户名称
+     * @param dateRangeStr 当月起始、结束日区间字符串
+     */
+    private void initSubTitleByTotal(ExcelWriter writer, String userName, String dateRangeStr) {
+        writer.merge(1, 1, 0, 2, userName, false);
+        writer.merge(1, 1, 3, 6, dateRangeStr, false);
+    }
+
+    /**
      * 获取核对总账列表
      *
      * @param current   页码
@@ -462,20 +899,38 @@ public class CashierController {
             @RequestParam(name = "msecStr", required = false) String msecStr) {
         Result result = Result.success();
 
+        //TODO L 性能待优化
+
         Page<ConfirmTotalDto> page = initConfrimPage(current, size, companyId);
+
+        //可变类型封装的页码
+        Holder<Integer> currentPro = new Holder<>();
+        currentPro.set(current);
+
+        Predicate<Page<ConfirmTotalDto>> isDataLessFunc = p -> p.getRecords().size() < size;//分页数据少于请求条数
+
+        boolean isOne = page.getCurrent() == INTEGER_ONE;//是否查询第一页
+        //从DB查询的数据，需要后端处理才能得知是否有效。例如出现第一页数据均无效，但后续页的数据有效，就可以借此获取其他页数据塞到第一页。
+        boolean plus2One = (page.getTotal() > page.getSize()) && isOne;
+//        do {
+//            boolean isPlus = isPlusRecord(plus2One, isDataLessFunc.test(page), currentPro, size, page.getTotal());
+//            if (isPlus)
+//                current = currentPro.get();
+//            else
+//                break;
 
         //科目id和核对总账的映射
         Map<Long, ConfirmTotalDto> subjMap = page.getRecords().stream()
                 .filter(c -> !ObjectUtils.isEmpty(c.getSubj()))
                 .collect(Collectors.toMap(c -> c.getSubj().getSubjectsId(), d -> d));
-        if (ObjectUtils.isEmpty(subjMap))
-            return Result.failed("zhanghu need have kemu");
+//            if (ObjectUtils.isEmpty(subjMap))
+//                continue;
 
         //科目id列表
         List<Long> subjIds = page.getRecords().stream().map(ConfirmTotalDto::getSubj).map(ConfirmTotalDto.SubjDto::getSubjectsId).collect(Collectors.toList());
 
         //不同时间区间的凭证列表
-        List<Certificate> certsByBefore = getCertListByBefore(companyId, 0L, msecStr);
+        List<Certificate> certsByBefore = cashierService.listCertificate(current, size, companyId, 0L, msecStr, Boolean.FALSE, Boolean.TRUE).getRecords();
         List<Certificate> certsByBeNow = getCertListByNow(companyId, msecStr);
 
         //初始化科目实例
@@ -488,6 +943,23 @@ public class CashierController {
         //初始化差额实例
         initEndMoney(subjMap.values());
 
+        /**
+         * TODO L BUG： 返回给前端的数据，从DB查出来后，需要在后端进行处理才能得知数据是否有效。
+         *  -   但如果不把后续页的数据也进行处理，也不知道这些数据是否有效，但处理这些额外数据又太冗余。
+         *  -   所以暂时仅第一页的数据删除无效数据，后续页不管。
+         */
+//            if (isOne)
+//                removeInvalidByConfirmOfOne(page.getRecords());
+
+        //可能会出现使用后续页填充第一页，但处理后留下的数据大于条数，就截取满足
+//            if (plus2One && (page.getRecords().size() > size))
+//                page.setRecords(page.getRecords().subList(0, size));
+//        } while (plus2One && isDataLessFunc.test(page));
+
+        //重置分页数据
+//        boolean isDoneDataLess = (page.getTotal() > size) && isDataLessFunc.test(page);//是否实际有效数据少于DB返回的total
+//        if (isDoneDataLess)
+//            page.setTotal(page.getRecords().size());
         result.setData(page);
 
         return result;
@@ -572,13 +1044,13 @@ public class CashierController {
     private void initSubjName(List<Long> subjIds, Map<Long, ConfirmTotalDto> subjMap) {
         List<SubjectsNameDto> subjs = accountService.selectJoinList(SubjectsNameDto.class,
                 new MPJLambdaWrapper<Account>()
-                        .select(Account::getId, Account::getNo, Account::getAccountName)
+                        .select(Account::getId, Account::getNo, Account::getName)
                         .in(Account::getId, subjIds)
         );
         subjs.forEach(s -> {
             ConfirmTotalDto.SubjDto subj = subjMap.get(s.getId()).getSubj();
             subj.setNo(s.getNo());
-            subj.setProjName(s.getAccountName());
+            subj.setProjName(s.getName());
         });
     }
 
@@ -591,17 +1063,18 @@ public class CashierController {
      * @param certsByBefore 当月前的凭证列表
      * @param certsByBeNow  当月凭证列表
      */
-    private void initDownSubj
-    (List<Long> subjIds, List<ConfirmTotalDto> upSubjList, Map<Long, ConfirmTotalDto> subjMap, List<Certificate> certsByBefore, List<Certificate> certsByBeNow) {
+    private void initDownSubj(List<Long> subjIds, List<ConfirmTotalDto> upSubjList, Map<Long, ConfirmTotalDto> subjMap, List<Certificate> certsByBefore, List<Certificate> certsByBeNow) {
         initDownSubjByBase(subjIds, upSubjList);
-        subjMap.values().forEach(c -> {
-            List<ConfirmTotalDto.BaseTotalDto> zhTotals = c.getDownSubj();
+        for (ConfirmTotalDto dto : subjMap.values()) {
+            List<ConfirmTotalDto.BaseTotalDto> zhTotals = dto.getDownSubj();
+            if (ObjectUtils.isEmpty(zhTotals))//子科目为空说明，该科目没有子科目
+                continue;
 
             //科目总账id[父]和子科目总账的映射
             Map<Long, List<ConfirmTotalDto.BaseTotalDto>> subjForZh = zhTotals.stream().collect(Collectors.groupingBy(ConfirmTotalDto.BaseTotalDto::getSubjectsId));
 
             initTotalByConfirm(subjForZh, certsByBefore, certsByBeNow, z -> z);
-        });
+        }
     }
 
     /**
@@ -613,11 +1086,15 @@ public class CashierController {
     private void initDownSubjByBase(List<Long> subjIds, List<ConfirmTotalDto> dtos) {
         Map<Long, List<Account>> zhMap = getDownSubj(subjIds);
 
-        dtos.forEach(c -> {
+        for (ConfirmTotalDto dto : dtos) {
+            //列表无该科目id，说明其没有子科目
+            if (!subjIds.contains(dto.getSubj().getSubjectsId()))
+                break;
+
             List<ConfirmTotalDto.BaseTotalDto> zhTotals = new ArrayList<>();
 
             //初始化子科目
-            Long subjId = c.getSubj().getSubjectsId();//科目id
+            Long subjId = dto.getSubj().getSubjectsId();//科目id
             List<Account> zhList = zhMap.get(subjId);
             zhList.forEach(z -> {
                 ConfirmTotalDto.BaseTotalDto zhTotal = new ConfirmTotalDto.BaseTotalDto();
@@ -626,8 +1103,8 @@ public class CashierController {
                 zhTotals.add(zhTotal);
             });
 
-            c.setDownSubj(zhTotals);
-        });
+            dto.setDownSubj(zhTotals);
+        }
     }
 
     /**
@@ -643,7 +1120,12 @@ public class CashierController {
                         .in(Account::getParentId, subjIds)
                         .orderByAsc(Account::getWeight)
         );
-        return tmpZhs.stream().collect(Collectors.groupingBy(Account::getParentId));
+        Map<Long, List<Account>> result = tmpZhs.stream().collect(Collectors.groupingBy(Account::getParentId));
+
+        //移除没有子科目的科目
+        subjIds.removeIf(s -> !result.containsKey(s));
+
+        return result;
     }
 
     /**
@@ -713,5 +1195,93 @@ public class CashierController {
                 lessMoneySet.accept(lessMoney.add(subjMoney));
                 break;
         }
+    }
+
+    /**
+     * 移除第一页不符合要求的核对总账
+     *
+     * @param totalList 核对总账列表
+     */
+    private void removeInvalidByConfirmOfOne(List<ConfirmTotalDto> totalList) {
+        List<Boolean> tmpList = new ArrayList<>();
+        totalList.removeIf(t -> {
+            tmpList.clear();
+
+            tmpList.add(hasMoney(t.getSubj()));
+            if (!ObjectUtils.isEmpty(t.getDownSubj()))
+                t.getDownSubj().forEach(d -> tmpList.add(hasMoney(d)));
+            tmpList.add(hasMoney(t.getLessTotal()));
+
+            tmpList.removeIf(Boolean::booleanValue);
+            if (tmpList.size() == INTEGER_ZERO)
+                return true;
+            else
+                return false;
+        });
+    }
+
+    /**
+     * 导出核对总账
+     *
+     * @param current   页码
+     * @param size      条数
+     * @param companyId 公司id
+     * @param date      时间戳字符串
+     */
+    @GetMapping("/exportConfirm")
+    public void exportConfirm(HttpServletRequest req, HttpServletResponse resp,
+                              @RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size,
+                              Long companyId, String date) {
+        List<ConfirmTotalDto> oriData = listConfirm(current, size, companyId, date).getData().getRecords();
+
+        Consumer<ExcelWriter> initSubTitleFunc = w -> initSubTitleByConfirm(w,
+                LoginUser.get().getName(),
+                getMonthRange(new Date(Long.parseLong(date))));
+
+        exportCore(req, resp,
+                oriData, this::getExcelDatasByConfirm, 4, "核对总账", this::excelMapByConfirm, initSubTitleFunc);
+    }
+
+    /**
+     * 获取[核对总账]的表格数据
+     *
+     * @param oriData 原始数据
+     * @return
+     */
+    private List<ConfirmTotalDto.BaseTotalDto> getExcelDatasByConfirm(List<ConfirmTotalDto> oriData) {
+        List<ConfirmTotalDto.BaseTotalDto> result = new ArrayList<>();
+
+        oriData.forEach(c -> {
+            result.add(c.getSubj());
+
+            if (!ObjectUtils.isEmpty(c.getDownSubj()))
+                c.getDownSubj().forEach(result::add);
+
+            result.add(c.getLessTotal());
+        });
+
+        return result;
+    }
+
+    /**
+     * 表格-实体类映射[核对总账]
+     */
+    private void excelMapByConfirm(ExcelWriter writer) {
+        writer.addHeaderAlias("projName", "项目");
+        writer.addHeaderAlias("oriMoney", "期初余额");
+        writer.addHeaderAlias("borrowMoney", "收入");
+        writer.addHeaderAlias("loansMoney", "支出");
+        writer.addHeaderAlias("endMoney", "期末余额");
+    }
+
+    /**
+     * 初始化[核对总账]表格的子标题
+     *
+     * @param userName     用户名称
+     * @param dateRangeStr 当月起始、结束日区间字符串
+     */
+    private void initSubTitleByConfirm(ExcelWriter writer, String userName, String dateRangeStr) {
+        writer.merge(1, 1, 0, 1, userName, false);
+        writer.merge(1, 1, 2, 4, dateRangeStr, false);
     }
 }
