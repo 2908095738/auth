@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 
+import static java.util.Objects.nonNull;
+
 @RestController("searchStaff")
 @RequestMapping
 public class Search {
@@ -35,26 +37,43 @@ public class Search {
     }
 
     @GetMapping("/company/staff/list")
-    public Result<Page<UserCompany>> searchList(
+    public Result<Object> searchList(
             @RequestParam(required = false) String val,
             @RequestParam Long companyId,
-            @RequestParam("current") Integer current,
-            @RequestParam("size") Integer size
+            @RequestParam(value = "current", required = false) Integer current,
+            @RequestParam(value = "size", required = false) Integer size
     ) {
-        return Result.success(userCompanyService.selectJoinListPage(
-                new Page<>(current, size),
-                UserCompany.class,
-                new MPJLambdaWrapper<UserCompany>()
-                        .selectAll(UserCompany.class)
-                        .leftJoin(User.class, User::getId, UserCompany::getUserId, ext -> ext
-                                .selectAssociation(User.class, UserCompany::getUser)
-                        )
-                        .eq(UserCompany::getCompanyId, companyId)
-                        .and(StringUtils.isNotBlank(val), wrapper -> wrapper
-                                .like(User::getName, val)
-                                .or()
-                                .like(User::getPhone, val)
-                        )
-        ));
+        if(nonNull(current) && nonNull(size)) {
+            return Result.success(userCompanyService.selectJoinListPage(
+                    new Page<>(current, size),
+                    UserCompany.class,
+                    new MPJLambdaWrapper<UserCompany>()
+                            .selectAll(UserCompany.class)
+                            .leftJoin(User.class, User::getId, UserCompany::getUserId, ext -> ext
+                                    .selectAssociation(User.class, UserCompany::getUser)
+                            )
+                            .eq(UserCompany::getCompanyId, companyId)
+                            .and(StringUtils.isNotBlank(val), wrapper -> wrapper
+                                    .like(User::getName, val)
+                                    .or()
+                                    .like(User::getPhone, val)
+                            )
+            ));
+        } else {
+            return Result.success(userCompanyService.selectJoinList(
+                    UserCompany.class,
+                    new MPJLambdaWrapper<UserCompany>()
+                            .selectAll(UserCompany.class)
+                            .leftJoin(User.class, User::getId, UserCompany::getUserId, ext -> ext
+                                    .selectAssociation(User.class, UserCompany::getUser)
+                            )
+                            .eq(UserCompany::getCompanyId, companyId)
+                            .and(StringUtils.isNotBlank(val), wrapper -> wrapper
+                                    .like(User::getName, val)
+                                    .or()
+                                    .like(User::getPhone, val)
+                            )
+            ));
+        }
     }
 }

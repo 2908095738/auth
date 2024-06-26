@@ -1,6 +1,5 @@
 package com.bbs.financial.api.certificate.search;
 
-import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
@@ -13,7 +12,6 @@ import com.bbs.financial.entity.CertificateAbstract;
 import com.bbs.financial.entity.CertificateFile;
 import com.bbs.financial.service.CertificateService;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,7 +24,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 @RequestMapping
@@ -71,9 +69,9 @@ public class SearchCertificate {
             @RequestParam(name = "words", required = false) List<String> words,
             @RequestParam(name = "createUserIds", required = false) List<Long> createUserIds,
             @RequestParam(name = "authUserIds", required = false) List<Long> authUserIds,
-            @RequestParam(name = "date", required = false) String dateStr
+            @RequestParam(name = "startDate", required = false) Long startDateLong,
+            @RequestParam(name = "endDate", required = false) Long endDateLong
     ) {
-        Date date = nonNull(dateStr) ? new Date(Long.parseLong(dateStr)) : new Date();
         Page<Certificate> certificatePage = certificateService.selectJoinListPage(new Page<>(current, size), Certificate.class, new MPJLambdaWrapper<Certificate>()
                 .selectAll(Certificate.class)
 
@@ -90,8 +88,10 @@ public class SearchCertificate {
                 .in(nonNull(words) && words.size() > INTEGER_ZERO, Certificate::getCertificateWord, words)
                 .in(nonNull(createUserIds) && createUserIds.size() > INTEGER_ZERO, Certificate::getCreateBy)
                 .in(nonNull(authUserIds) && authUserIds.size() > INTEGER_ZERO, Certificate::getAuthBy)
-                .ge(Certificate::getDate, DateUtil.beginOfMonth(date))
-                .lt(Certificate::getDate, DateUtil.beginOfMonth(DateUtil.offsetMonth(date, INTEGER_ONE)))
+                .and(nonNull(startDateLong), ext -> ext
+                        .ge(Certificate::getDate, new Date(startDateLong))
+                        .lt(nonNull(endDateLong), Certificate::getDate, new Date(endDateLong))
+                )
         );
         // 获取【创建用户】&&【审核用户】的 userId Set
         Set<Long> userIds = filterUserIds(certificatePage);
@@ -143,57 +143,9 @@ public class SearchCertificate {
 
         Stream<CertificateWordEnum.Item> stream = wordObjs.stream()
                 .map(obj -> new CertificateWordEnum.Item(CertificateWordEnum.enumMap.get(Integer.valueOf((String) obj))));
-        if(StringUtils.isNotBlank(word)) {
+        if(isNotBlank(word)) {
             stream = stream.filter(item -> item.getMsg().indexOf(word) >= INTEGER_ZERO);
         }
         return Result.success(stream.collect(Collectors.toList()));
-    }
-
-    @GetMapping("/certificate/create/list")
-    public Result<List<User>> searchCreateName(
-            @RequestParam(required = false) String createUserName,
-            @RequestParam Long companyId
-    ) {
-        List<Long> createUserIds = certificateService.listObjs(new LambdaQueryWrapper<Certificate>()
-                .select(Certificate::getCreateBy)
-                .eq(Certificate::getCompanyId, companyId)
-                .isNotNull(Certificate::getCreateBy)
-                .groupBy(Certificate::getCreateBy)
-        );
-
-        List<User> userList = new ArrayList<>(createUserIds.size());
-        if(createUserIds.size() > INTEGER_ZERO) {
-            userList = userAPI.getUserList(createUserIds);
-            if(StringUtils.isNotBlank(createUserName)) {
-                userList = userList.stream()
-                        .filter(user -> user.getName().indexOf(createUserName) >= INTEGER_ZERO)
-                        .collect(Collectors.toList());
-            }
-        }
-        return Result.success(userList);
-    }
-
-    @GetMapping("/certificate/auth/list")
-    public Result<List<User>> searchAuthName(
-            @RequestParam(required = false) String authUserName,
-            @RequestParam Long companyId
-    ) {
-        List<Long> authUserIds = certificateService.listObjs(new LambdaQueryWrapper<Certificate>()
-                .select(Certificate::getAuthBy)
-                .eq(Certificate::getCompanyId, companyId)
-                .isNotNull(Certificate::getAuthBy)
-                .groupBy(Certificate::getAuthBy)
-        );
-
-        List<User> userList = new ArrayList<>(authUserIds.size());
-        if(authUserIds.size() > INTEGER_ZERO) {
-            userList = userAPI.getUserList(authUserIds);
-            if(StringUtils.isNotBlank(authUserName)) {
-                userList = userList.stream()
-                        .filter(user -> user.getName().indexOf(authUserName) >= INTEGER_ZERO)
-                        .collect(Collectors.toList());
-            }
-        }
-        return Result.success(userList);
     }
 }
