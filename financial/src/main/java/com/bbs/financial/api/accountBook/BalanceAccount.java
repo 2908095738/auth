@@ -1,10 +1,13 @@
 package com.bbs.financial.api.accountBook;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.financial.entity.CertificateAbstract;
+import com.bbs.financial.enums.BorrowOrLoansType;
 import com.bbs.financial.service.CertificateAbstractService;
 import lombok.Data;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,7 +34,7 @@ public class BalanceAccount {
         List<Vo> result = new ArrayList<>();
 
         if(CollUtil.isNotEmpty(list.getRecords())){
-
+            certificateAbstractService.initData(list);
             Map<Long, List<CertificateAbstract>> collect = list.getRecords().stream().collect(Collectors.groupingBy(CertificateAbstract::getAccountId));
             for (Long accountId : collect.keySet()) {
                 CertificateAbstract certificateAbstract = collect.get(accountId).get(0);
@@ -42,19 +45,48 @@ public class BalanceAccount {
                 vo.setParentId(certificateAbstract.getAccount().getParentId());
 
 
-                Long initialBalanceLoansMoney = vo.getInitialBalanceLoansMoney();//期初贷款余额
-                Long initialBalanceBorrowMoney = vo.getInitialBalanceBorrowMoney();//期初借方余额
-                Long currentPeriodLoansMoney = vo.getCurrentPeriodLoansMoney();//本期贷款余额
-                Long currentPeriodBorrowMoney = vo.getCurrentPeriodBorrowMoney();//本期借方余额
-                Long incurredYearLoansMoney = vo.getIncurredYearLoansMoney();//本年贷款余额
-                Long incurredYearBorrowMoney = vo.getIncurredYearBorrowMoney();//本年借方余额
-                Long endingBalanceLoansMoney = vo.getEndingBalanceLoansMoney();//期末贷款余额
-                Long endingBalanceBorrowMoney = vo.getEndingBalanceBorrowMoney();//期末借方余额
+                Long initialBalanceLoansMoney = 0L;//期初贷款余额
+                Long initialBalanceBorrowMoney = 0L;//期初借方余额
+                Long currentPeriodLoansMoney = 0L;//本期贷款余额
+                Long currentPeriodBorrowMoney = 0L;//本期借方余额
+                Long incurredYearLoansMoney = 0L;//本年贷款余额
+                Long incurredYearBorrowMoney = 0L;//本年借方余额
+
+                Long endingBalanceLoansMoney = 0L;//期末贷款余额
+                Long endingBalanceBorrowMoney = 0L;//期末借方余额
 
                 for (CertificateAbstract anAbstract : collect.get(accountId)) {
-
-
+                    if(StrUtil.isNotBlank(anAbstract.getCertificateAbstract())){
+                        if(anAbstract.getCertificateAbstract().equals("期初余额")){
+                            initialBalanceLoansMoney=anAbstract.getLoansMoney();
+                            initialBalanceBorrowMoney=anAbstract.getBorrowMoney();
+                        }
+                        if(anAbstract.getCertificateAbstract().equals("本期合计")){
+                            currentPeriodLoansMoney=anAbstract.getLoansMoney();
+                            currentPeriodBorrowMoney=anAbstract.getBorrowMoney();
+                            //期末
+                            if(ObjUtil.isNotEmpty(anAbstract.getAccount())){
+                                if(StrUtil.isBlank(anAbstract.getAccount().getDirection())||anAbstract.getAccount().getDirection().equals(BorrowOrLoansType.BORROW.getValue())){//借
+                                    endingBalanceLoansMoney=anAbstract.getLoansMoney()-anAbstract.getBorrowMoney();
+                                }else{//贷
+                                    endingBalanceBorrowMoney=anAbstract.getBorrowMoney()-anAbstract.getLoansMoney();
+                                }
+                            }
+                        }
+                        if(anAbstract.getCertificateAbstract().equals("本年累计")){
+                            incurredYearLoansMoney=anAbstract.getLoansMoney();
+                            incurredYearBorrowMoney=anAbstract.getBorrowMoney();
+                        }
+                    }
                 }
+                vo.setInitialBalanceLoansMoney(initialBalanceLoansMoney);
+                vo.setInitialBalanceBorrowMoney(initialBalanceBorrowMoney);
+                vo.setCurrentPeriodLoansMoney(currentPeriodLoansMoney);
+                vo.setCurrentPeriodBorrowMoney(currentPeriodBorrowMoney);
+                vo.setIncurredYearLoansMoney(incurredYearLoansMoney);
+                vo.setIncurredYearBorrowMoney(incurredYearBorrowMoney);
+                vo.setEndingBalanceLoansMoney(endingBalanceLoansMoney);
+                vo.setEndingBalanceBorrowMoney(endingBalanceBorrowMoney);
                 result.add(vo);
             }
         }
