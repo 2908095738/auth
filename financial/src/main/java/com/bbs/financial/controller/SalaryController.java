@@ -1,5 +1,6 @@
 package com.bbs.financial.controller;
 
+import cn.hutool.core.annotation.Alias;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.poi.excel.ExcelReader;
@@ -41,12 +42,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.constraints.NotBlank;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -251,23 +254,142 @@ public class SalaryController {
             }
         }
     }
+    @Data
+    private static class Template{
+        @NotBlank
+        @Alias(value = "工号")
+        private String jobId;
 
+        @NotBlank
+        @Alias(value = "姓名")
+        private String name;
+
+        @NotBlank
+        @Alias(value = "部门")
+        private String groupName;
+
+        @NotBlank
+        @Alias(value = "身份证号")
+        private String idCard;
+
+        @NotBlank
+        @Alias(value = "手机号")
+        private String phone;
+
+        @NotBlank
+        @Alias(value = "计薪日")
+        private String payDay;
+
+        @NotBlank
+        @Alias(value = "出勤天数")
+        private Integer attendanceDays;
+
+        @NotBlank
+        @Alias(value = "基本工资")
+        private BigDecimal baseSalary;
+
+        @Alias(value = "出勤工资")
+        private BigDecimal attendanceSalary;
+
+        @Alias(value = "奖金")
+        private BigDecimal bonus;
+
+        @Alias(value = "津贴")
+        private BigDecimal allowance;
+
+        @Alias(value = "补贴")
+        private BigDecimal subsidy;
+
+        @Alias(value = "其他应发1")
+        private BigDecimal otherEarnings1;
+
+        @Alias(value = "其他应发2")
+        private BigDecimal otherEarnings2;
+
+        @NotBlank
+        @Alias(value = "应发工资")
+        private BigDecimal grossPay;
+
+        @Alias(value = "养老保险")
+        private BigDecimal pensionInsurance;
+
+        @Alias(value = "医疗保险")
+        private BigDecimal medicalInsurance;
+
+        @Alias(value = "失业保险")
+        private BigDecimal unemploymentInsurance;
+
+        @Alias(value = "公积金")
+        private BigDecimal housingFund;
+
+        @NotBlank
+        @Alias(value = "累计应发")
+        private BigDecimal totalGross;
+
+        @Alias(value = "累计社保公积金")
+        private BigDecimal totalSocialSecurityAndFund;
+
+        @Alias(value = "累计子女教育")
+        private BigDecimal totalChildEducation;
+
+        @Alias(value = "累计住房贷款利息")
+        private BigDecimal totalHousingLoanInterest;
+
+        @Alias(value = "累计住房租金")
+        private BigDecimal totalRent;
+
+        @Alias(value = "累计赡养父母")
+        private BigDecimal totalParentSupport;
+
+        @Alias(value = "累计继续教育")
+        private BigDecimal totalContinuingEducation;
+
+
+        @Alias(value = "累计婴幼儿照护费用")
+        private BigDecimal totalChildCareExpenses;
+
+
+        @Alias(value = "累计应缴个税")
+        private BigDecimal totalTaxDue;
+
+
+        @Alias(value = "累计已缴个税")
+        private BigDecimal totalTaxPaid;
+
+        @Alias(value = "本月应缴个税")
+        private BigDecimal monthlyTaxDue;
+
+
+        @Alias(value = "个人还款")
+        private BigDecimal personalRepayment;
+
+
+        @Alias(value = "其他扣款1")
+        private BigDecimal otherDeductions1;
+
+
+        @Alias(value = "其他扣款2")
+        private BigDecimal otherDeductions2;
+
+        @NotBlank
+        @Alias(value = "实发工资")
+        private BigDecimal netPay;
+
+
+    }
 
 
     @GetMapping("/salary/temp/export")
     public void export(HttpServletResponse response, @RequestParam("companyId") Long companyId) {
-
-        List<Map<String, Object>> rows = getRows(companyId);//new ArrayList<>();
-
         OutputStream out = null;
         ExcelWriter writer = ExcelUtil.getWriter(new String("工资模板.xlsx".getBytes(StandardCharsets.UTF_8)));
         try {
             out = response.getOutputStream();
-            writer.merge(rows.size() - 1, "资金表");
+//            writer.merge(rows.size() - 1, "资金表");
             writer.setColumnWidth(-1, 20);
-            writer.write(rows, true);
+            writer.write(Collections.singletonList(new Template()), true);
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8");
-            response.setHeader("content-disposition", "attachment;fileName=" + URLEncoder.encode("资金模板.xlsx", "UTF-8"));
+            response.setHeader("content-disposition", "attachment;fileName=" + URLEncoder.encode("工资模板.xlsx", "UTF-8"));
         } catch (IOException e) {
             e.printStackTrace();
         }finally {
@@ -278,151 +400,6 @@ public class SalaryController {
 
 
 
-    }
-
-    private List<Map<String, Object>> getRows(Long companyId) {
-        List<Map<String, Object>> rows = new ArrayList<>();
-
-        new HashMap<String, Object>(){{
-            put("工号", "");
-            put("姓名", "");
-            put("部门", "");
-            put("身份证号码", "");
-            put("计薪日", "");
-            put("出勤天数", "");
-            put("基本工资", "");
-            put("出勤工资", "");
-            put("奖金", "");
-            put("津贴", "");
-            put("补贴", "");
-            put("其他应发1", "");
-            put("其他应发2", "");
-            put("应发工资", "");
-            put("养老保险", "");
-            put("医疗保险", "");
-            put("失业保险", "");
-            put("公积金", "");
-            put("累计应发", "");
-            put("累计社保公积金", "");
-            put("累计子女教育", "");
-            put("累计住房贷款利息", "");
-            put("累计住房租金", "");
-            put("累计赡养父母", "");
-            put("累计继续教育", "");
-            put("累计婴幼儿照护费用", "");
-            put("累计应缴个税", "");
-            put("累计已缴个税", "");
-            put("本月应缴个税", "");
-            put("个人还款", "");
-            put("其他扣款1", "");
-            put("其他扣款2", "");
-            put("实发工资", "");
-        }};
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//            put("其他应发1", "");
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//            put("其他应发2", "");
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        rows.add(new HashMap<String, Object>(){{
-//
-//        }});
-//        SalaryListParam salaryListParam = new SalaryListParam();
-//        salaryListParam.setSize(999);
-//        salaryListParam.setCurrent(1);
-//        List<SalaryVoucherItemVo> salaryVoucherItemVoPage = salaryVoucherItemService.selectjoinPage(salaryListParam.toPage(), companyId, 0).getRecords();
-//        salaryVoucherItemVoPage.forEach(salaryVoucherItemVo -> rows.add(new HashMap<String, Object>(){{
-//            put(salaryVoucherItemVo.getTypeName(), "");
-//        }}));
-//        log.debug("salaryVoucherItemVoPage:{}",salaryVoucherItemVoPage);
-        return rows;
     }
 
 
