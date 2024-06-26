@@ -139,7 +139,7 @@ public class SalaryController {
             reader.setIgnoreEmptyRow(true);
             List<Map<String,Object>> list = reader.read(2,3, Integer.MAX_VALUE);
             if(CollectionUtils.isNotEmpty(list)){
-                Map<Integer, List<SalaryVoucherItemVo>> groupByType = salaryVoucherItemService.selectjoinByIsActive(1L, 1).stream().collect(Collectors.groupingBy(SalaryVoucherItemVo::getType));
+                Map<Integer, List<SalaryVoucherItemVo>> groupByType = salaryVoucherItemService.selectjoinByIsActive(companyId, 1).stream().collect(Collectors.groupingBy(SalaryVoucherItemVo::getType));
                 List<SalaryVoucherItemVo> salaryVoucherItemVoByEmployee = groupByType.get(1);
                 List<SalaryVoucherItemVo> salaryVoucherItemVoBySalary = groupByType.get(0);
                 List<User> userQuery = new ArrayList<>();//待查询用户信息列表
@@ -256,20 +256,11 @@ public class SalaryController {
 
     @GetMapping("/salary/temp/export")
     public void export(HttpServletResponse response, @RequestParam("companyId") Long companyId) {
-        List<Map<String, Object>> rows = new ArrayList<>();
-        Map<String, Object> map = new HashMap<>();
 
-        SalaryListParam salaryListParam = new SalaryListParam();
-        salaryListParam.setSize(999);
-        salaryListParam.setCurrent(1);
-        List<SalaryVoucherItemVo> salaryVoucherItemVoPage = salaryVoucherItemService.selectjoinPage(salaryListParam.toPage(), companyId, null).getRecords();
-        salaryVoucherItemVoPage.forEach(salaryVoucherItemVo -> {
-            map.put(salaryVoucherItemVo.getTypeName(), "");
-            rows.add(map);
-        });
-        log.debug("salaryVoucherItemVoPage:{}",salaryVoucherItemVoPage);
+        List<Map<String, Object>> rows = getRows(companyId);//new ArrayList<>();
+
         OutputStream out = null;
-        ExcelWriter writer = ExcelUtil.getWriter(new String("资金模板.xlsx".getBytes(StandardCharsets.UTF_8)));
+        ExcelWriter writer = ExcelUtil.getWriter(new String("工资模板.xlsx".getBytes(StandardCharsets.UTF_8)));
         try {
             out = response.getOutputStream();
             writer.merge(rows.size() - 1, "资金表");
@@ -287,6 +278,151 @@ public class SalaryController {
 
 
 
+    }
+
+    private List<Map<String, Object>> getRows(Long companyId) {
+        List<Map<String, Object>> rows = new ArrayList<>();
+
+        new HashMap<String, Object>(){{
+            put("工号", "");
+            put("姓名", "");
+            put("部门", "");
+            put("身份证号码", "");
+            put("计薪日", "");
+            put("出勤天数", "");
+            put("基本工资", "");
+            put("出勤工资", "");
+            put("奖金", "");
+            put("津贴", "");
+            put("补贴", "");
+            put("其他应发1", "");
+            put("其他应发2", "");
+            put("应发工资", "");
+            put("养老保险", "");
+            put("医疗保险", "");
+            put("失业保险", "");
+            put("公积金", "");
+            put("累计应发", "");
+            put("累计社保公积金", "");
+            put("累计子女教育", "");
+            put("累计住房贷款利息", "");
+            put("累计住房租金", "");
+            put("累计赡养父母", "");
+            put("累计继续教育", "");
+            put("累计婴幼儿照护费用", "");
+            put("累计应缴个税", "");
+            put("累计已缴个税", "");
+            put("本月应缴个税", "");
+            put("个人还款", "");
+            put("其他扣款1", "");
+            put("其他扣款2", "");
+            put("实发工资", "");
+        }};
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//            put("其他应发1", "");
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//            put("其他应发2", "");
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        rows.add(new HashMap<String, Object>(){{
+//
+//        }});
+//        SalaryListParam salaryListParam = new SalaryListParam();
+//        salaryListParam.setSize(999);
+//        salaryListParam.setCurrent(1);
+//        List<SalaryVoucherItemVo> salaryVoucherItemVoPage = salaryVoucherItemService.selectjoinPage(salaryListParam.toPage(), companyId, 0).getRecords();
+//        salaryVoucherItemVoPage.forEach(salaryVoucherItemVo -> rows.add(new HashMap<String, Object>(){{
+//            put(salaryVoucherItemVo.getTypeName(), "");
+//        }}));
+//        log.debug("salaryVoucherItemVoPage:{}",salaryVoucherItemVoPage);
+        return rows;
     }
 
 
