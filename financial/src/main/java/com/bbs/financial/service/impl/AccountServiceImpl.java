@@ -124,6 +124,7 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
                     tree.putExtra("label", account.getNo() + " " + account.getName());
                     tree.putExtra("accountSort", account.getAccountSort());
                     tree.putExtra("direction", account.getDirection());
+                    tree.putExtra("account", account);
                 }
             });
         }

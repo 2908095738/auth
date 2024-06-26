@@ -47,6 +47,9 @@ public class AccountController
      */
     @GetMapping("/account/list")
     public Result<Page<Account>> list(Account param, @RequestParam Integer current, @RequestParam Integer size) {
+        if(Objects.equals(param.getAccountSort(), "全部")) {
+            param.setAccountSort(null);
+        }
         return success(accountService.page(new Page<>(current, size),
                 param.getAccountSort(),
                 param.getCompanyId(),
@@ -89,6 +92,10 @@ public class AccountController
         if(isSearchNo) {
             split = no.split("-");
             param.setNo(split[INTEGER_ZERO]);
+        }
+
+        if(Objects.equals(param.getAccountSort(), "全部")) {
+            param.setAccountSort(null);
         }
 
         List<Tree<Long>> tree = accountService.tree(param.getAccountSort(), param.getCompanyId(), param.getName(), param.getNo());

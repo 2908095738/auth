@@ -1,13 +1,10 @@
 package com.bbs.financial.api.close;
 
+import cn.hutool.core.date.DateUtil;
 import com.bbs.Result;
-import com.bbs.financial.entity.Asset;
-import com.bbs.financial.entity.AssetDepreciationCertificate;
-import com.bbs.financial.entity.CloseType;
-import com.bbs.financial.service.AssetDepreciationCertificateService;
-import com.bbs.financial.service.AssetService;
-import com.bbs.financial.service.CloseService;
-import com.bbs.financial.service.CloseTypeService;
+import com.bbs.financial.entity.*;
+import com.bbs.financial.service.*;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -17,13 +14,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
-import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
+import static org.apache.commons.lang3.math.NumberUtils.*;
 
 @RestController
 @RequestMapping
@@ -41,6 +36,8 @@ public class RecomputeMoney {
     private DataSourceTransactionManager transactionManager;
     @Resource
     private CloseTypeService closeTypeService;
+    @Resource
+    private CertificateService certificateService;
 
     @PostMapping("/close/compute")
     public Result<List<CloseType>> recomputeMoney(@RequestParam Long companyId) {
@@ -55,6 +52,22 @@ public class RecomputeMoney {
                             .eq(CloseType::getId, closeType.getId())
                             .set(CloseType::getMoney, allAssetMoney)
                             .update();
+                } else if(closeType.getTypeName().equals("transfer_out_unpaid_vat")) {
+                    // 1. 获取增值税相关科目，当月产生的凭证
+                    Date now = new Date();
+                    List<Certificate> certificates = certificateService.selectJoinList(Certificate.class, new MPJLambdaWrapper<Certificate>()
+                            .selectAll(Certificate.class)
+                            .selectCollection(CertificateAbstract.class, Certificate::getAbstracts)
+                            .leftJoin(CertificateAbstract.class, CertificateAbstract::getCertificateId, Certificate::getId)
+                            .leftJoin(Account.class, Account::getId, CertificateAbstract::getAccountId)
+                            // 筛选公司
+                            .eq(Certificate::getCompanyId, companyId)
+                            // 筛选增值税相关科目
+                            .eq(Account::getNo, 2221)
+                            // 筛选当月数据
+                            .ge(Certificate::getCreateTime, DateUtil.beginOfMonth(now))
+                            .lt(Certificate::getCreateTime, DateUtil.beginOfMonth(DateUtil.offsetMonth(now, INTEGER_ONE)))
+                    );
                 }
             });
             transactionManager.commit(transaction);
@@ -72,29 +85,21 @@ public class RecomputeMoney {
 
         List<AssetDepreciationCertificate> allAssetCertificate = searchAllAssetCertificate(allAsset);
 
-        Map<Long, List<AssetDepreciationCertificate>> assetIdMap = groupCertificateByAssetId(allAssetCertificate);
-
-        return allAsset.stream()
-                .mapToLong(asset -> assetService.computeMoney(asset, getAssetCertificate(asset, assetIdMap)))
-                .sum();
-    }
-
-    private List<AssetDepreciationCertificate> getAssetCertificate(Asset asset, Map<Long, List<AssetDepreciationCertificate>> assetIdMap) {
-        return isNull(assetIdMap) ? null : assetIdMap.get(asset.getId());
-    }
-
-    private Map<Long, List<AssetDepreciationCertificate>> groupCertificateByAssetId(List<AssetDepreciationCertificate> allAssetCertificate) {
         if(allAssetCertificate.size() > INTEGER_ZERO) {
-            return allAssetCertificate.stream()
-                    .collect(Collectors.groupingBy(AssetDepreciationCertificate::getAssetId));
+            return allAssetCertificate.stream().mapToLong(AssetDepreciationCertificate::getMoney).sum();
         }
-        return null;
+        return LONG_ZERO;
     }
 
     private List<AssetDepreciationCertificate> searchAllAssetCertificate(List<Asset> assetList) {
         List<Long> assetIds = assetList.stream().map(Asset::getId).collect(Collectors.toList());
+        Date now = new Date();
         return assetDepreciationCertificateService.lambdaQuery()
                 .in(AssetDepreciationCertificate::getAssetId, assetIds)
+                .and(wrapper -> wrapper
+                        .ge(AssetDepreciationCertificate::getMonth, DateUtil.beginOfMonth(now))
+                        .lt(AssetDepreciationCertificate::getMonth, DateUtil.offsetMonth(now, INTEGER_ONE))
+                )
                 .list();
     }
 
