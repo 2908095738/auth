@@ -60,16 +60,23 @@ public class SalaryVoucherItemController {
 //    {
 //        return success(salaryVoucherItemService.getById(id));
 //    }
+    @Data
+    private static class AddParam {
+
+        private String name;
+        private Long companyId;
+
+    }
 
     /**
      * 新增当前公司核算凭证
      */
     @PostMapping("/item")
-    public Result<Boolean> add(@RequestBody String name, Long companyId)
+    public Result<Boolean> add(@RequestBody AddParam addParam)
     {
-        AuxiliaryCalculation salaryAccountingItemType = new AuxiliaryCalculation().setName(name).setCompanyId(companyId);
+        AuxiliaryCalculation salaryAccountingItemType = new AuxiliaryCalculation().setName(addParam.name).setCompanyId(addParam.companyId);
         salaryAccountingItemTypeService.save(salaryAccountingItemType);
-        salaryVoucherItemService.save(new SalaryVoucherItem().setAccountingItemTypeId(salaryAccountingItemType.getId()).setCompanyId(companyId).setIsActive(true));
+        salaryVoucherItemService.save(new SalaryVoucherItem().setAccountingItemTypeId(salaryAccountingItemType.getId()).setCompanyId(addParam.companyId).setIsActive(true));
         return success();
     }
 
