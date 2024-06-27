@@ -24,6 +24,7 @@ import com.bbs.exception.BusinessException;
 import com.bbs.exception.ReLoginException;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -263,6 +264,12 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
             result.add(user1);
         }
         return result;
+    }
+
+    @Override
+    public void loginUserIsAdmin() throws IllegalArgumentException, ReLoginException {
+        User user = loginEntityUser();
+        Preconditions.checkArgument(user.isSupperAdmin(), "当前用户非超级管理员");
     }
 
     @Override
