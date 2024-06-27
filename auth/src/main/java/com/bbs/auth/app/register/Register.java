@@ -86,13 +86,12 @@ public class Register extends ServiceImpl<UserMapper, User> {
      * @return 注册是否成功
      */
     @PutMapping("/user")
-    public Result<Login.VO> register(@Valid @RequestBody Param param){
+    public Result<Login.VO> register(@Valid @RequestBody Param param) throws IllegalArgumentException{
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         User user = converter.toEntity(param);
+        checkArgument(phoneCodeCache.checkCode(param.phone, param.code), FAILED_USER_CODE_NOT_AVAILABLE);
+        checkArgument(dao.notExists(user), FAILED_USER_INFO_DUPLICATION);
         try {
-            checkArgument(phoneCodeCache.checkCode(param.phone, param.code), FAILED_USER_CODE_NOT_AVAILABLE);
-            checkArgument(dao.notExists(user), FAILED_USER_INFO_DUPLICATION);
-
             if(StringUtils.isNotBlank(user.getPassword())) {
                 user.setSalt(createSalt());
                 user.setPassword(service.encryptPassword(user));

@@ -14,9 +14,9 @@ public enum CodeEnum {
 
     FAILED_PARAM_NOT_AVAILABLE(400, "参数不可用"),
 
-    FAILED_USER_CODE_NOT_AVAILABLE(400, "用户验证码错误"),
+    FAILED_USER_CODE_NOT_AVAILABLE(400, "验证码错误"),
 
-    FAILED_USER_INFO_DUPLICATION(400, "用户信息重复"),
+    FAILED_USER_INFO_DUPLICATION(400, "手机号已注册"),
 
     FAILED_USER_NOT_LOGIN(401, "用户未登录"),
 
