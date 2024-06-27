@@ -380,7 +380,7 @@ public class SalaryController {
 
 
     @GetMapping("/salary/temp/export")
-    public void export(HttpServletResponse response, @RequestParam("companyId") Long companyId) {
+    public void export(HttpServletResponse response) {
         OutputStream out = null;
         ExcelWriter writer = ExcelUtil.getWriter(new String("工资模板.xlsx".getBytes(StandardCharsets.UTF_8)));
         try {
