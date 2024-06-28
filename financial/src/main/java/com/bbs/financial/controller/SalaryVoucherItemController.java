@@ -6,9 +6,13 @@ import com.bbs.financial.entity.AuxiliaryCalculation;
 import com.bbs.financial.entity.SalaryVoucherItem;
 import com.bbs.financial.service.AuxiliaryCalculationService;
 import com.bbs.financial.service.SalaryVoucherItemService;
+import com.bbs.financial.util.LoginUser;
 import com.bbs.financial.vo.SalaryVoucherItemVo;
 import com.bbs.vo.BaseParam;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,10 +41,11 @@ public class SalaryVoucherItemController {
     private AuxiliaryCalculationService salaryAccountingItemTypeService;
 
     @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @EqualsAndHashCode(callSuper = true)
     public static class ListParam extends BaseParam {
        Integer type;
-
-       Long companyId;
     }
 
     /**
@@ -49,7 +54,7 @@ public class SalaryVoucherItemController {
     @GetMapping("/item/list")
     public Result<Page<SalaryVoucherItemVo>> list(ListParam param)
     {
-        return success(salaryVoucherItemService.selectjoinPage(new Page(param.getCurrent(), param.getSize()),param.getCompanyId(),param.getType()));
+        return success(salaryVoucherItemService.selectjoinPage(new Page(param.getCurrent(), param.getSize()), LoginUser.getCompanyId(),param.getType()));
     }
 
 //    /**
@@ -64,8 +69,6 @@ public class SalaryVoucherItemController {
     private static class AddParam {
 
         private String name;
-        private Long companyId;
-
     }
 
     /**
@@ -74,9 +77,9 @@ public class SalaryVoucherItemController {
     @PostMapping("/item")
     public Result<Boolean> add(@RequestBody AddParam addParam)
     {
-        AuxiliaryCalculation salaryAccountingItemType = new AuxiliaryCalculation().setName(addParam.name).setCompanyId(addParam.companyId);
+        AuxiliaryCalculation salaryAccountingItemType = new AuxiliaryCalculation().setName(addParam.name).setCompanyId(LoginUser.getCompanyId());
         salaryAccountingItemTypeService.save(salaryAccountingItemType);
-        salaryVoucherItemService.save(new SalaryVoucherItem().setAccountingItemTypeId(salaryAccountingItemType.getId()).setCompanyId(addParam.companyId).setIsActive(true));
+        salaryVoucherItemService.save(new SalaryVoucherItem().setAccountingItemTypeId(salaryAccountingItemType.getId()).setCompanyId(LoginUser.getCompanyId()).setIsActive(true));
         return success();
     }
 

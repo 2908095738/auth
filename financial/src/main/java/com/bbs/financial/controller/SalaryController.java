@@ -95,12 +95,6 @@ public class SalaryController {
          * 关联的工资类型
          */
         private Integer typeId;
-
-        /**
-         * 公司id
-         */
-        private Long companyId;
-
     }
 
     /**

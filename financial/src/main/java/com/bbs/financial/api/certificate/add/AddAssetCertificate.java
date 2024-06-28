@@ -53,11 +53,6 @@ public class AddAssetCertificate {
     private static class Param {
 
         /**
-         * 公司ID
-         */
-        private Long companyId;
-
-        /**
          * 日期
          */
         private Date date;
@@ -87,13 +82,13 @@ public class AddAssetCertificate {
             if(CollUtil.isNotEmpty(assets)){
                 List<CertificateAbstract> certificateAbstracts = new ArrayList<>();
                 // 凭证号
-                long no = db.lambdaQuery().eq(Certificate::getCompanyId, param.getCompanyId())
+                long no = db.lambdaQuery().eq(Certificate::getCompanyId, LoginUser.getCompanyId())
                         .ge(Certificate::getCreateTime, DateUtil.beginOfMonth(new Date()))
                         .lt(Certificate::getCreateTime, DateUtil.beginOfMonth(DateUtil.offsetMonth(new Date(), INTEGER_ONE)))
                         .count() + INTEGER_ONE;
                 for (Asset asset : assets) {
                     Certificate certificate = new Certificate();
-                    certificate.setCompanyId(param.companyId);
+                    certificate.setCompanyId(LoginUser.getCompanyId());
                     certificate.setCertificateWord(CertificateWordEnum.RECORD);
                     certificate.setNo(no);
                     certificate.setDate(param.date);

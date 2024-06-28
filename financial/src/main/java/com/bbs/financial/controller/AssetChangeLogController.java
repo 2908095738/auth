@@ -7,6 +7,7 @@ import com.bbs.api.auth.User;
 import com.bbs.api.auth.UserAPI;
 import com.bbs.financial.entity.AssetChangeLog;
 import com.bbs.financial.service.AssetChangeLogService;
+import com.bbs.financial.util.LoginUser;
 import com.bbs.vo.BaseParam;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -53,10 +54,7 @@ public class AssetChangeLogController {
     @EqualsAndHashCode(callSuper = true)
     private static class Param extends BaseParam {
 
-        private Long companyId;
-
         private String createTime;
-
     }
 
 
@@ -68,13 +66,11 @@ public class AssetChangeLogController {
     public Result<Page<AssetChangeLog>> list(Param param)
     {
         Page<AssetChangeLog> page = assetChangeLogService.page(param.toPage(), new QueryWrapper<AssetChangeLog>().lambda()
-                .eq(AssetChangeLog::getCompanyId, param.getCompanyId())
+                .eq(AssetChangeLog::getCompanyId, LoginUser.getCompanyId())
                 .like(Objects.nonNull(param.getCreateTime()), AssetChangeLog::getCreateTime, param.getCreateTime())
                 .orderBy(true, false, AssetChangeLog::getCreateTime));
         Set<Long> userIds = new HashSet<>();
-        page.getRecords().forEach(asset -> {
-            userIds.add(asset.getCreateBy());
-        });
+        page.getRecords().forEach(asset -> userIds.add(asset.getCreateBy()));
         Map<Long, User> userIdMap = null;
         if(userIds.size() > INTEGER_ZERO) {
             userIdMap = userAPI.getUserList(userIds)

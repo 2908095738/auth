@@ -61,11 +61,6 @@ public class AddSalaryCertificate {
     public static class Param {
 
         /**
-         * 公司ID
-         */
-        private Long companyId;
-
-        /**
          * 工资ID
          */
         private Long salaryId;
@@ -84,11 +79,11 @@ public class AddSalaryCertificate {
     @PutMapping("/salary/certificate")
     public Result<Boolean> add(@RequestBody Param param) {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-        List<CertificateTemplate> template = certificateTemplateService.getJoinTemplate(param.companyId, param.templateNames);
+        List<CertificateTemplate> template = certificateTemplateService.getJoinTemplate(LoginUser.getCompanyId(), param.templateNames);
         if (CollUtil.isEmpty(template)) {
             return Result.failed("模板不存在");
         }
-        long no = db.lambdaQuery().eq(Certificate::getCompanyId, param.getCompanyId())
+        long no = db.lambdaQuery().eq(Certificate::getCompanyId, LoginUser.getCompanyId())
                 .ge(Certificate::getCreateTime, DateUtil.beginOfMonth(new Date()))
                 .lt(Certificate::getCreateTime, DateUtil.beginOfMonth(DateUtil.offsetMonth(new Date(), INTEGER_ONE)))
                 .count() + INTEGER_ONE;
@@ -96,7 +91,7 @@ public class AddSalaryCertificate {
         try {
             for (CertificateTemplate certificateTemplate : template) {
                 Certificate certificate = new Certificate();
-                certificate.setCompanyId(param.companyId);
+                certificate.setCompanyId(LoginUser.getCompanyId());
                 certificate.setCertificateWord(CertificateWordEnum.RECORD);
                 certificate.setNo(no);
                 certificate.setDate(new Date());

@@ -6,6 +6,7 @@ import com.bbs.financial.entity.CertificateTemplate;
 import com.bbs.financial.entity.CertificateTemplateAbstract;
 import com.bbs.financial.service.CertificateTemplateAbstractService;
 import com.bbs.financial.service.CertificateTemplateService;
+import com.bbs.financial.util.LoginUser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -55,11 +56,6 @@ public class AddTemplate {
          * 简介
          */
         private String comment;
-
-        /**
-         * 公司ID
-         */
-        private Long companyId;
 
         /**
          * 具体科目摘要
@@ -115,6 +111,7 @@ public class AddTemplate {
     @PutMapping("/certificate/template")
     public Result<Boolean> add(@RequestBody Param param) {
         CertificateTemplate entity = converter.toEntity(param);
+        entity.setCompanyId(LoginUser.getCompanyId());
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             db.save(entity);
