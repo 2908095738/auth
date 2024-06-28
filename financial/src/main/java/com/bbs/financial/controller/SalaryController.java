@@ -1,11 +1,12 @@
 package com.bbs.financial.controller;
 
 import cn.hutool.core.annotation.Alias;
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.io.resource.ClassPathResource;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.poi.excel.ExcelReader;
 import cn.hutool.poi.excel.ExcelUtil;
-import cn.hutool.poi.excel.ExcelWriter;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
@@ -23,20 +24,10 @@ import com.bbs.financial.service.SalaryVoucherItemService;
 import com.bbs.financial.vo.SalaryVo;
 import com.bbs.financial.vo.SalaryVoucherItemVo;
 import com.bbs.vo.BaseParam;
-import com.google.common.collect.Lists;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.common.utils.StringUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.IndexedColors;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.util.CellRangeAddress;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -52,12 +43,10 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotBlank;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -390,87 +379,29 @@ public class SalaryController {
     @GetMapping("/salary/temp/export")
     public void export(HttpServletResponse response) {
         OutputStream out = null;
-        ExcelWriter writer = ExcelUtil.getWriter(new String("工资模板.xlsx".getBytes(StandardCharsets.UTF_8)));
+        String filePath = "template/salary.xlsx";
+
+        ClassPathResource classPathResource = new ClassPathResource(filePath);
+
         try {
+            InputStream in = FileUtil.getInputStream(classPathResource.getFile());
             out = response.getOutputStream();
+            // 文件名应该进行URL编码，以防文件名中存在特殊字符
+            String fileName = "downloaded_salary.xlsx";
+            response.setHeader("Content-Disposition", "attachment;filename=" + fileName);
 
-            //主标题
-            String note = "模板导入说明：\n" +
-                    "1.前三行数据，系统不读取，不需要删除\n" +
-                    "2.工资模板导入时只支持第一个sheet数据导入，导入某月份的工资表时，需要将该月份工资表的sheet移动到第一个sheet位置" +
-                    "4.日期格式：yyyy-mm-dd\n";
-            // 创建总标题行
-            List<String> totalHeader1 = Lists.newArrayList();
-            totalHeader1.add(note);
-            writer.writeHeadRow(totalHeader1); // 写入总标题行，使用默认样式
-            short headerRowHeight = 80 * 20; // 设置行高为30磅
-            Sheet sheet = writer.getSheet();
-            //因为是多行所以要自己控制行高
-            sheet.getRow(0).setHeight(headerRowHeight);
-
-            // 创建样式，建立每一行的样式
-            CellStyle cellStyle1 = createRedRightAlignedCellStyle(writer.getWorkbook());
-            Row row1 = sheet.getRow(0);
-            Cell cell = row1.getCell(0);
-            cell.setCellStyle(cellStyle1);
-
-            // 创建总标题行
-            List<String> totalHeader = Lists.newArrayList();
-            totalHeader.add("工资表导入模板");
-            writer.writeHeadRow(totalHeader); // 写入总标题行
-
-            // 创建样式
-            CellStyle cellStyle2 = createRedRightAlignedCellStyle2(writer.getWorkbook());
-            Row row2 = sheet.getRow(1);
-            Cell cell1 = row2.getCell(0);
-            cell1.setCellStyle(cellStyle2);
-
-            int mergeRowIndex = 0; // 总标题所在行索引
-            int mergeColumnStartIndex = 0; // 起始列索引
-            int mergeColumnEndIndex = 33 ; // 结束列索引
-            //其实上面的这些索引没啥用，下面几行是合并某几行的单元格
-            CellRangeAddress cellRangeAddress = new CellRangeAddress(mergeRowIndex, mergeRowIndex, mergeColumnStartIndex, mergeColumnEndIndex);
-            sheet.addMergedRegion(cellRangeAddress);
-
-            CellRangeAddress cellRangeAddress1 = new CellRangeAddress(1, 1, mergeColumnStartIndex, mergeColumnEndIndex);
-            sheet.addMergedRegion(cellRangeAddress1);
-
-            writer.write(Collections.singletonList(new Template()), true);
-            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8");
-            response.setHeader("content-disposition", "attachment;fileName=" + URLEncoder.encode("工资模板.xlsx", "UTF-8"));
+            // 将文件内容写入响应流
+            IoUtil.copy(in, out);
+            out.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }finally {
-            writer.flush(out, true);
-            writer.close();
             IoUtil.close(out);
         }
 
 
 
     }
-
-
-    private static CellStyle createRedRightAlignedCellStyle(Workbook workbook) {
-        CellStyle cellStyle = workbook.createCellStyle();
-        cellStyle.setWrapText(true);
-        Font font = workbook.createFont();
-        font.setColor(IndexedColors.RED.getIndex());
-        cellStyle.setFont(font);
-        cellStyle.setAlignment(HorizontalAlignment.LEFT);
-        return cellStyle;
-    }
-
-    private static CellStyle createRedRightAlignedCellStyle2(Workbook workbook) {
-        CellStyle cellStyle = workbook.createCellStyle();
-        cellStyle.setWrapText(true);
-        cellStyle.setAlignment(HorizontalAlignment.CENTER);
-        return cellStyle;
-    }
-
-
-
-
 
 
     /**
