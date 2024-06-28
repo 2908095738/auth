@@ -67,8 +67,8 @@ public class Search {
     @GetMapping("/list")
     public Result<Page<VO>> search(
             @RequestParam("val") String val,
-            @RequestParam("current") Integer current,
-            @RequestParam("size") Integer size,
+            @RequestParam(name = "current", required = false) Integer current,
+            @RequestParam(name = "size", required = false) Integer size,
             @RequestParam(name = "fan", required = false, defaultValue = "true") Boolean fan
     ) throws ReLoginException {
         Long numVal = null;

@@ -5,7 +5,6 @@ import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.entity.UserCompany;
 import com.bbs.auth.service.CompanyService;
 import com.bbs.auth.service.TokenService;
-import com.bbs.auth.service.UserCompanyService;
 import com.bbs.auth.service.UserService;
 import com.bbs.exception.ReLoginException;
 import lombok.AllArgsConstructor;
@@ -64,6 +63,10 @@ public class Me {
         private String email;
 
         private String phone;
+
+        private String idCard;
+
+        private Integer sex;
 
         /**
          * 个性签名

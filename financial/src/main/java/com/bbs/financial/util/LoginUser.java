@@ -31,6 +31,10 @@ public class LoginUser {
         return userThreadLocal.get().getId();
     }
 
+    public static Long getCompanyId(){
+        return userThreadLocal.get().getCompanyId();
+    }
+
 
     /**
      * 删除当前登录用户方法  在拦截器方法执行后 移除当前用户对象

@@ -6,6 +6,8 @@ import cn.hutool.core.lang.Opt;
 import cn.hutool.crypto.SecureUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
+import com.bbs.auth.cache.BindLoginCompanyCache;
+import com.bbs.auth.cache.code.PhoneCodeCache;
 import com.bbs.auth.cache.user.PhoneCache;
 import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.dao.UserDao;
@@ -42,6 +44,8 @@ import java.util.Set;
 
 import static com.bbs.Result.success;
 import static com.bbs.auth.cache.user.UserCache.cacheIsExists;
+import static com.bbs.enums.CodeEnum.FAILED_USER_CODE_NOT_AVAILABLE;
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
@@ -73,6 +77,9 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
     @Resource
     private CompanyStructureService structureService;
 
+    @Resource
+    private PhoneCodeCache phoneCodeCache;
+
 
     @Override
     public Boolean userStateIsNormal(User user) { return UserStateEnum.STATUS_NORMAL.getCode().equals(user.getState()); }
@@ -103,6 +110,8 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
     @Lazy
     private TokenService tokenService;
 
+    @Resource
+    private BindLoginCompanyCache bindLoginCompanyCache;
 
     @Override
     public UserVO loginUser() throws ReLoginException {
@@ -110,6 +119,8 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
         String token = tokenService.getToken(request);
         if(StringUtils.isNotBlank(token)) {
             try {
+                UserVO userVO = tokenService.parseToken(token);
+                userVO.setCompanyId(bindLoginCompanyCache.get(userVO.getId()));
                 return tokenService.parseToken(token);
             } catch (Exception e) {
                 throw new ReLoginException();
@@ -270,6 +281,11 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
     public void loginUserIsAdmin() throws IllegalArgumentException, ReLoginException {
         User user = loginEntityUser();
         Preconditions.checkArgument(user.isSupperAdmin(), "当前用户非超级管理员");
+    }
+
+    @Override
+    public void checkPhoneCodeThrow(Long phone, Integer code) throws IllegalArgumentException {
+        checkArgument(phoneCodeCache.checkCode(phone, code), FAILED_USER_CODE_NOT_AVAILABLE);
     }
 
     @Override

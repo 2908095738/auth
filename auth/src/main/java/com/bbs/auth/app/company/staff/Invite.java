@@ -2,6 +2,7 @@ package com.bbs.auth.app.company.staff;
 
 import com.bbs.Result;
 import com.bbs.auth.service.CompanyService;
+import com.bbs.auth.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,10 +21,13 @@ public class Invite {
 
     @Resource
     private CompanyService companyService;
+    @Resource
+    private UserService userService;
 
     @PutMapping("/company/staff/invite")
     public Result<Boolean> invite(@Valid @RequestBody Param param) {
-        companyService.join(param.userID, param.getCompanyID(), param.getStructureID(), param.getIsAdmin());
+        Long companyId = userService.loginUser().getCompanyId();
+        companyService.join(param.userID, companyId, param.getStructureID(), param.getIsAdmin());
         return Result.success();
     }
 
@@ -31,9 +35,6 @@ public class Invite {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Param {
-
-        @NotNull
-        private Long companyID;
 
         @NotNull
         private Long structureID;
