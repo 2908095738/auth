@@ -1,9 +1,9 @@
 package com.bbs.financial.controller;
 
 import cn.hutool.core.annotation.Alias;
-import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.IoUtil;
-import cn.hutool.core.io.resource.ClassPathResource;
+import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.poi.excel.ExcelReader;
 import cn.hutool.poi.excel.ExcelUtil;
@@ -16,17 +16,17 @@ import com.bbs.api.auth.company.CompanyAPI;
 import com.bbs.financial.entity.EmployeeItemExtend;
 import com.bbs.financial.entity.EmployeeSalary;
 import com.bbs.financial.entity.Salary;
-import com.bbs.financial.enums.SalayExeclHeaderEnum;
 import com.bbs.financial.service.EmployeeItemExtendService;
 import com.bbs.financial.service.EmployeeSalaryService;
 import com.bbs.financial.service.SalaryService;
 import com.bbs.financial.service.SalaryVoucherItemService;
 import com.bbs.financial.vo.SalaryVo;
 import com.bbs.financial.vo.SalaryVoucherItemVo;
+import com.bbs.util.BeanUtils;
 import com.bbs.vo.BaseParam;
+import com.bbs.vo.CompanyStructure;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.dubbo.common.utils.StringUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -47,9 +47,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -128,39 +128,38 @@ public class SalaryController {
         List<EmployeeSalary> employeeSalaryArrayList = new ArrayList<>();
         List<EmployeeItemExtend> employeeItemExtends = new ArrayList<>();
 
-
         try {
             ExcelReader reader = ExcelUtil.getReader(file.getInputStream());
             reader.setIgnoreEmptyRow(true);
-            List<Template> list = reader.read(3,4, Integer.MAX_VALUE,Template.class);
+            List<Template> list = reader.read(3,4,Template.class);
             log.debug("list:{}",list);
-//            if(CollectionUtils.isNotEmpty(list)){
-//                Map<Integer, List<SalaryVoucherItemVo>> groupByType = salaryVoucherItemService.selectjoinByIsActive(companyId, 1).stream().collect(Collectors.groupingBy(SalaryVoucherItemVo::getType));
-//                List<SalaryVoucherItemVo> salaryVoucherItemVoByEmployee = groupByType.get(1);
-//                List<SalaryVoucherItemVo> salaryVoucherItemVoBySalary = groupByType.get(0);
-//                List<User> userQuery = new ArrayList<>();//待查询用户信息列表
-//                Set<String> groupNameList = new HashSet<>();//待查询部门名称列表
-//                //循环计算总金额，判断，将员工信息放入待查询用户信息列表中，将部门名称放入待查询部门名称列表中
-//                netAmountCount = initEmployeeSalary(list,netAmountCount,salaryVoucherItemVoByEmployee,userQuery,groupNameList);
-//                //根据部门名称查询部门信息
-//                List<CompanyStructure> companyStructureList = companyAPI.searchStructureNames(companyId,groupNameList);
-//                //查不到部门信息提示手动添加
-//                if(CollectionUtils.isEmpty(companyStructureList)){
-//                    return Result.failed("部门信息未查询到，请手动添加");
-//                }
-//                //根据工号、名称、身份证号、手机号查询员工信息
-//                List<User> users = userAPI.searchByUserOrSave(companyId,userQuery);
-//                if(CollectionUtils.isEmpty(users)){
-//                    return Result.failed("员工信息自动添加失败或未查询到，请手动处理");
-//                }
-//                Salary salary = new Salary().setCompanyId(companyId).setImportDate(importDate).setTypeId(typeId).setNetAmount(netAmountCount).setStaffCount(list.size());
-//                salaryService.save(salary);
-//
-//                initEmployeeSalary(salary.getId(),list,employeeSalaryArrayList,salaryVoucherItemVoBySalary,employeeItemExtends,users);
-//                log.info("{}",list);
-//                employeeSalaryService.saveBatch(employeeSalaryArrayList);
-//                employeeItemExtendService.saveBatch(employeeItemExtends);
-//            }
+            if(CollUtil.isNotEmpty(list)){
+                Map<Integer, List<SalaryVoucherItemVo>> groupByType = salaryVoucherItemService.selectjoinByIsActive(companyId, 1).stream().collect(Collectors.groupingBy(SalaryVoucherItemVo::getType));
+                List<SalaryVoucherItemVo> salaryVoucherItemVoByEmployee = groupByType.get(1);
+                List<SalaryVoucherItemVo> salaryVoucherItemVoBySalary = groupByType.get(0);
+                List<User> userQuery = new ArrayList<>();//待查询用户信息列表
+                Set<String> groupNameList = new HashSet<>();//待查询部门名称列表
+                //循环计算总金额，判断，将员工信息放入待查询用户信息列表中，将部门名称放入待查询部门名称列表中
+                netAmountCount = initEmployeeSalary(list,netAmountCount,salaryVoucherItemVoByEmployee,userQuery,groupNameList);
+                //根据部门名称查询部门信息
+                List<CompanyStructure> companyStructureList = companyAPI.searchStructureNames(companyId,groupNameList);
+                //查不到部门信息提示手动添加
+                if(CollUtil.isEmpty(companyStructureList)){
+                    return Result.failed("部门信息未查询到，请手动添加");
+                }
+                //根据工号、名称、身份证号、手机号查询员工信息
+                List<User> users = userAPI.searchByUserOrSave(companyId,userQuery);
+                if(CollUtil.isEmpty(users)){
+                    return Result.failed("员工信息自动添加失败或未查询到，请手动处理");
+                }
+                Salary salary = new Salary().setCompanyId(companyId).setImportDate(importDate).setTypeId(typeId).setNetAmount(netAmountCount).setStaffCount(list.size());
+                salaryService.save(salary);
+
+                initEmployeeSalary(salary.getId(),list,employeeSalaryArrayList,salaryVoucherItemVoBySalary,employeeItemExtends,users);
+                log.info("{}",list);
+                employeeSalaryService.saveBatch(employeeSalaryArrayList);
+                employeeItemExtendService.saveBatch(employeeItemExtends);
+            }
         }   catch (Exception e) {
             log.error("导入失败",e);
             return Result.failed(e.getMessage());
@@ -170,25 +169,26 @@ public class SalaryController {
 
 
 
-    private Long initEmployeeSalary(List<Map<String, Object>> list, Long netAmountCount, List<SalaryVoucherItemVo> salaryVoucherItemVoByEmployee,List<User> userQuery,Set<String> groupNameList) {
+    private Long initEmployeeSalary(List<Template> list, Long netAmountCount, List<SalaryVoucherItemVo> salaryVoucherItemVoByEmployee,List<User> userQuery,Set<String> groupNameList) {
         for (int i = 0; i < list.size(); i++) {
-            Map<String, Object> employeeSalaryMap = list.get(i);
+            Template employeeSalaryTemplate = list.get(i);
             //如果员工的必填数据为空，则报错
-            for (SalaryVoucherItemVo salaryVoucherItemVo : salaryVoucherItemVoByEmployee) {
-                if (Objects.isNull(employeeSalaryMap.get(salaryVoucherItemVo.getTypeName()))){
-                    throw new RuntimeException("没有员工唯一标识数据");
-                }
-            }
-            String jobId = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.ID.getValue())) ? employeeSalaryMap.get(SalayExeclHeaderEnum.ID.getValue()).toString() : null;//工号
-            String name = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.NAME.getValue())) ? employeeSalaryMap.get(SalayExeclHeaderEnum.NAME.getValue()).toString() : null;//名称
-            String idCard = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.ID_NUMBER.getValue()))?employeeSalaryMap.get(SalayExeclHeaderEnum.ID_NUMBER.getValue()).toString():null;//身份证号
-            Long phone = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.PHONE.getValue()))&&StrUtil.isNotBlank(employeeSalaryMap.get(SalayExeclHeaderEnum.PHONE.getValue()).toString())? Long.valueOf(employeeSalaryMap.get(SalayExeclHeaderEnum.PHONE.getValue()).toString()) :null;//手机号
-            String groupName = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.DEPARTMENT.getValue())) ? employeeSalaryMap.get(SalayExeclHeaderEnum.DEPARTMENT.getValue()).toString() : null;//部门
+//            for (SalaryVoucherItemVo salaryVoucherItemVo : salaryVoucherItemVoByEmployee) {
+//                if (Objects.isNull(employeeSalaryTemplate.get(salaryVoucherItemVo.getTypeName()))){
+//                    throw new RuntimeException("没有员工唯一标识数据");
+//                }
+//            }
+
+            String jobId = StrUtil.isNotBlank(employeeSalaryTemplate.jobId) ? employeeSalaryTemplate.jobId : null;//工号
+            String name = StrUtil.isNotBlank(employeeSalaryTemplate.name) ? employeeSalaryTemplate.name : null;//名称
+            String idCard = StrUtil.isNotBlank(employeeSalaryTemplate.idCard)?employeeSalaryTemplate.idCard:null;//身份证号
+            Long phone = StrUtil.isNotBlank(employeeSalaryTemplate.phone)?Long.valueOf(employeeSalaryTemplate.phone):null;//手机号
+            String groupName = StrUtil.isNotBlank(employeeSalaryTemplate.groupName) ? employeeSalaryTemplate.groupName : null;//部门
 
             userQuery.add(new User(jobId,name,phone,idCard,groupName));
             groupNameList.add(groupName);
 
-            Double netAmount = StringUtils.isNotEmpty(employeeSalaryMap.get(SalayExeclHeaderEnum.NET_SALARY.getValue()).toString())?Double.parseDouble(employeeSalaryMap.get(SalayExeclHeaderEnum.NET_SALARY.getValue()).toString())*100:0;//实发
+            BigDecimal netAmount = ObjUtil.isNotEmpty(employeeSalaryTemplate.netPay)?employeeSalaryTemplate.netPay.multiply(BigDecimal.valueOf(100)):BigDecimal.ZERO;//实发
             netAmountCount=netAmountCount+netAmount.longValue();
         }
         return netAmountCount;
@@ -202,29 +202,26 @@ public class SalaryController {
      * @param employeeItemExtends
      */
     private void initEmployeeSalary(Long salaryId,
-                                    List<Map<String, Object>> list,
+                                    List<Template> list,
                                     List<EmployeeSalary> employeeSalaryArrayList,
                                     List<SalaryVoucherItemVo> salaryVoucherItemVoBySalary,
                                     List<EmployeeItemExtend> employeeItemExtends,
                                     List<User> users) {
 
-
         Map<String, Long> userMap = users.stream().collect(Collectors.toMap(o1 -> o1.getName() + o1.getPhone() + o1.getIdCard() + o1.getJobCard(), User::getId));
 
         for (int i = 0; i < list.size(); i++) {
-            Map<String, Object> employeeSalaryMap = list.get(i);
-
-            Double grossAmount = StringUtils.isNotEmpty(employeeSalaryMap.get(SalayExeclHeaderEnum.TOTAL_INCOME.getValue()).toString()) ?Double.parseDouble(employeeSalaryMap.get(SalayExeclHeaderEnum.TOTAL_INCOME.getValue()).toString())*100:0;//应发
-            Double netAmount = StringUtils.isNotEmpty(employeeSalaryMap.get(SalayExeclHeaderEnum.NET_SALARY.getValue()).toString())?Double.parseDouble(employeeSalaryMap.get(SalayExeclHeaderEnum.NET_SALARY.getValue()).toString())*100:0;//实发
-
-
-            EmployeeSalary employeeSalary = new EmployeeSalary();
+            Template employeeSalaryTemplate = list.get(i);
+//            SalayExeclHeaderEnum
+            BigDecimal grossAmount = ObjUtil.isNotEmpty(employeeSalaryTemplate.grossPay) ? employeeSalaryTemplate.grossPay.multiply(BigDecimal.valueOf(100)):BigDecimal.ZERO;//应发
+            BigDecimal netAmount = ObjUtil.isNotEmpty(employeeSalaryTemplate.netPay)?employeeSalaryTemplate.netPay.multiply(BigDecimal.valueOf(100)):BigDecimal.ZERO;//实发
+            EmployeeSalary employeeSalary = BeanUtils.toBean(employeeSalaryTemplate,EmployeeSalary.class);
             employeeSalary.setSalaryId(salaryId);
 
-            String jobId = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.ID.getValue())) ? employeeSalaryMap.get(SalayExeclHeaderEnum.ID.getValue()).toString() : null;//工号
-            String name = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.NAME.getValue())) ? employeeSalaryMap.get(SalayExeclHeaderEnum.NAME.getValue()).toString() : null;//名称
-            String idCard = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.ID_NUMBER.getValue()))?employeeSalaryMap.get(SalayExeclHeaderEnum.ID_NUMBER.getValue()).toString():null;//身份证号
-            String phone = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.PHONE.getValue()))?employeeSalaryMap.get(SalayExeclHeaderEnum.PHONE.getValue()).toString():null;//手机号
+            String jobId = StrUtil.isNotBlank(employeeSalaryTemplate.jobId) ? employeeSalaryTemplate.jobId : null;//工号
+            String name = StrUtil.isNotBlank(employeeSalaryTemplate.name) ? employeeSalaryTemplate.name : null;//名称
+            String idCard = StrUtil.isNotBlank(employeeSalaryTemplate.idCard)?employeeSalaryTemplate.idCard:null;//身份证号
+            String phone = StrUtil.isNotBlank(employeeSalaryTemplate.phone)?employeeSalaryTemplate.phone:null;//手机号
 
             employeeSalary.setEmployeeId(userMap.get(name + phone + idCard + jobId));
             employeeSalary.setEmployeeName(name);
@@ -232,19 +229,19 @@ public class SalaryController {
             employeeSalary.setJobCard(jobId);
             employeeSalary.setPhone(phone);
 
-            String groupName = Objects.nonNull(employeeSalaryMap.get(SalayExeclHeaderEnum.DEPARTMENT.getValue())) ? employeeSalaryMap.get(SalayExeclHeaderEnum.NAME.getValue()).toString() : null;//部门
+            String groupName = StrUtil.isNotBlank(employeeSalaryTemplate.groupName) ? employeeSalaryTemplate.groupName : null;//部门
             employeeSalary.setCompanyStructureName(groupName);
 
             employeeSalary.setGrossAmount(grossAmount.longValue());
             employeeSalary.setNetAmount(netAmount.longValue());
             employeeSalaryArrayList.add(employeeSalary);
 
-            for (SalaryVoucherItemVo salaryVoucherItemVo:salaryVoucherItemVoBySalary){
-                Double fieldContent =  employeeSalaryMap.get(salaryVoucherItemVo.getTypeName())!=null
-                        && StrUtil.isNotEmpty(employeeSalaryMap.get(salaryVoucherItemVo.getTypeName()).toString())
-                        ?Double.parseDouble(employeeSalaryMap.get(salaryVoucherItemVo.getTypeName()).toString())*100:0;
-                employeeItemExtends.add(new EmployeeItemExtend().setSalaryId(salaryId).setEmployeeId(userMap.get(name + phone + idCard + jobId)).setContent(fieldContent.longValue()).setItemTypeId(salaryVoucherItemVo.getTypeId()));
-            }
+//            for (SalaryVoucherItemVo salaryVoucherItemVo:salaryVoucherItemVoBySalary){
+//                Double fieldContent =  employeeSalaryTemplate.get(salaryVoucherItemVo.getTypeName())!=null
+//                        && StrUtil.isNotEmpty(employeeSalaryTemplate.get(salaryVoucherItemVo.getTypeName()).toString())
+//                        ?Double.parseDouble(employeeSalaryTemplate.get(salaryVoucherItemVo.getTypeName()).toString())*100:0;
+//                employeeItemExtends.add(new EmployeeItemExtend().setSalaryId(salaryId).setEmployeeId(userMap.get(name + phone + idCard + jobId)).setContent(fieldContent.longValue()).setItemTypeId(salaryVoucherItemVo.getTypeId()));
+//            }
         }
     }
     @Data
@@ -271,7 +268,7 @@ public class SalaryController {
 
         @NotBlank
         @Alias(value = "计薪日")
-        private String payDay;
+        private Integer payDay;
 
         @NotBlank
         @Alias(value = "出勤天数")
@@ -279,10 +276,10 @@ public class SalaryController {
 
         @NotBlank
         @Alias(value = "基本工资")
-        private BigDecimal baseSalary;
+        private BigDecimal baseAmount;
 
         @Alias(value = "出勤工资")
-        private BigDecimal attendanceSalary;
+        private BigDecimal attendanceAmount;
 
         @Alias(value = "奖金")
         private BigDecimal bonus;
@@ -377,10 +374,11 @@ public class SalaryController {
         OutputStream out = null;
         String filePath = "template/salary.xlsx";
 
-        ClassPathResource classPathResource = new ClassPathResource(filePath);
-
         try {
-            InputStream in = FileUtil.getInputStream(classPathResource.getFile());
+//            String realPath = getServletContext().getRealPath("/WEB-INF/template/salary.xlsx");
+//            File file = new File(realPath);
+            InputStream in = getClass().getClassLoader().getResourceAsStream(filePath);
+//            InputStream in = FileUtil.getInputStream(classPathResource.getFile());
             out = response.getOutputStream();
             // 文件名应该进行URL编码，以防文件名中存在特殊字符
             String fileName = "downloaded_salary.xlsx";
