@@ -270,7 +270,7 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
                 user1.setJobCard(user.getJobCard());
                 save(user1);
                 CompanyStructure structure = structureService.search(companyId,user.getStructureName());
-                userCompanyService.save(new UserCompany(user1.getId(),companyId,user.getJobCard(),structure.getId()));
+                userCompanyService.save(new UserCompany(user1.getId(),companyId,user.getJobCard(),structure.getId(),user.getId()));
             }
             result.add(user1);
         }
