@@ -57,7 +57,7 @@ public class SalaryServiceImpl extends MPJBaseServiceImpl<SalaryMapper, Salary>
                 .eq(Salary::getIsDeleted,0)
                 .eq(Objects.nonNull(param.getTypeId()),Salary::getTypeId,param.getTypeId())
                 .eq(Objects.nonNull(param.getImportDate()),Salary::getImportDate,param.getImportDate())
-                .eq(Salary::getCompanyId,param.getCompanyId())
+//                .eq(Salary::getCompanyId,param.getCompanyId())
                 .orderBy(true,true,Salary::getImportDate)
         );
     }
