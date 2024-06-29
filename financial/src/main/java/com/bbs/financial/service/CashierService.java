@@ -16,8 +16,10 @@ public interface CashierService {
      * @param companyId 公司id
      * @param zhangHuId 账户id
      * @param dateStr   时间戳字符串
+     * @param startDateLong 起始时间时间戳
+     * @param endDateLong   结束时间时间戳
      * @param isMonth   true：当月；false：当月及之前
      * @param isPage    true：分页；false：不分页
      */
-    Page<Certificate> listCertificate(Integer current, Integer size, Long companyId, Long zhangHuId, String dateStr, boolean isMonth, boolean isPage);
+    Page<Certificate> listCertificate(Integer current, Integer size, Long companyId, Long zhangHuId, String dateStr, Long startDateLong, Long endDateLong, boolean isMonth, boolean isPage);
 }
