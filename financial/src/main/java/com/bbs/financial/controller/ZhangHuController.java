@@ -1,8 +1,8 @@
 package com.bbs.financial.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
+import com.bbs.financial.entity.PriceType;
 import com.bbs.financial.entity.ZhangHu;
 import com.bbs.financial.service.ZhangHuService;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
@@ -40,7 +40,10 @@ public class ZhangHuController {
     @GetMapping("/list")
     public Result<Page<ZhangHu>> list(ZhangHu zhanghu, @RequestParam Integer current, @RequestParam Integer size) {
         //TODO L [导入日记账]暂时会导致重复新建同名账户，故通过Set筛选
-        Page<ZhangHu> zhangHuPage = zhangHuService.page(new Page<>(current, size), new QueryWrapper<>(zhanghu));
+        Page<ZhangHu> zhangHuPage = zhangHuService.selectJoinListPage(new Page<>(current, size), ZhangHu.class, new MPJLambdaWrapper<>(zhanghu)
+                .selectAll(ZhangHu.class)
+                .leftJoin(PriceType.class, PriceType::getId, ZhangHu::getMTypeId, ext -> ext.selectAssociation(PriceType.class, ZhangHu::getPriceType))
+        );
         List<ZhangHu> tmpList = zhangHuPage.getRecords();
 
         List<ZhangHu> doneList = tmpList.stream().collect(
