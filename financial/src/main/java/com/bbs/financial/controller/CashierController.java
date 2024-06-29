@@ -639,7 +639,7 @@ public class CashierController {
         toFixList.clear();
 
         if (ObjectUtils.isEmpty(subjMap))
-            return Result.failed("zhanghu need have kemu");
+            return Result.failed("账户需要设置入账科目!");
 
         for (List<IOTotalDto> nowList : subjMap.values())
             toFixList.add(nowList.get(0));
