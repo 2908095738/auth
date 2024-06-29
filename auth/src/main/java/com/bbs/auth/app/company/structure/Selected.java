@@ -7,6 +7,7 @@ import com.bbs.Result;
 import com.bbs.auth.entity.CompanyStructure;
 import com.bbs.auth.service.CompanyService;
 import com.bbs.auth.service.UserService;
+import com.bbs.vo.UserVO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -51,8 +52,9 @@ public class Selected {
     @PostMapping("/company/structure")
     @CacheRemove(cacheName = "companyStructure")
     public Result<Boolean> create(@Valid @RequestBody Param param) {
-        Long companyID = param.getCompanyID();
-        Long loginUID = userService.loginUser().getId();
+        UserVO loginUser = userService.loginUser();
+        Long loginUID = loginUser.getId();
+        Long companyID = loginUser.getCompanyId();
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             if(param.useDefaultStructure) {
@@ -111,10 +113,6 @@ public class Selected {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Param {
-
-        @NotNull
-        private Long companyID;
-
         @NotNull
         private Boolean useDefaultStructure;
 

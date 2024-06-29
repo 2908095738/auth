@@ -4,6 +4,7 @@ import cn.hutool.core.date.DateUtil;
 import com.bbs.Result;
 import com.bbs.financial.entity.Certificate;
 import com.bbs.financial.service.CertificateService;
+import com.bbs.financial.util.LoginUser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,7 +27,7 @@ public class SearchCertificateNo {
     @GetMapping("/certificate/no")
     public Result<Long> search(Param param) {
         Date date = new Date(param.getDate());
-        return Result.success(db.lambdaQuery().eq(Certificate::getCompanyId, param.getCompanyId())
+        return Result.success(db.lambdaQuery().eq(Certificate::getCompanyId, LoginUser.getCompanyId())
                 .ge(Certificate::getCreateTime, DateUtil.beginOfMonth(date))
                 .lt(Certificate::getCreateTime, DateUtil.beginOfMonth(DateUtil.offsetMonth(date, INTEGER_ONE)))
                 .count() + INTEGER_ONE);
@@ -38,7 +39,5 @@ public class SearchCertificateNo {
     public static class Param {
 
         private Long date;
-
-        private Long companyId;
     }
 }

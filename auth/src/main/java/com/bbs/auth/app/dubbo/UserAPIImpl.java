@@ -2,6 +2,7 @@ package com.bbs.auth.app.dubbo;
 
 import com.bbs.api.auth.User;
 import com.bbs.api.auth.UserAPI;
+import com.bbs.auth.cache.BindLoginCompanyCache;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.service.TokenService;
 import com.bbs.auth.service.UserService;
@@ -30,10 +31,13 @@ public class UserAPIImpl implements UserAPI {
 
     @Resource
     private TokenService tokenService;
+    @Resource
+    private BindLoginCompanyCache bindLoginCompanyCache;
 
     @Override
     public User getUserByToken(String token) {
         UserVO vo = tokenService.verify(token);
+        vo.setCompanyId(bindLoginCompanyCache.get(vo.getId()));
         return converter.toAPIUser(vo);
     }
 

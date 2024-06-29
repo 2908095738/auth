@@ -4,6 +4,7 @@ import com.bbs.auth.app.register.Register;
 import com.bbs.auth.app.user.Search;
 import com.bbs.auth.app.user.Info;
 import com.bbs.auth.app.user.Me;
+import com.bbs.auth.app.user.update.UpdateUser;
 import com.bbs.vo.UserVO;
 import com.bbs.auth.entity.User;
 import org.mapstruct.Mapper;
@@ -16,6 +17,9 @@ public interface UserConverter {
 
     @Mapping(source = "userName", target = "name")
     User toEntity(Register.Param param);
+
+    @Mapping(target = "phone", ignore = true)
+    User toEntity(UpdateUser.Param param);
 
     @Mapping(target = "failureTokenTime", ignore = true)
     UserVO toVO(User entity);

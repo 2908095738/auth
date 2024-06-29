@@ -1,6 +1,7 @@
 package com.bbs.auth.app.logout;
 
 import com.bbs.Result;
+import com.bbs.auth.cache.BindLoginCompanyCache;
 import com.bbs.auth.service.TokenService;
 import com.bbs.vo.UserVO;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,8 @@ public class Logout {
 
     @Resource
     private TokenService tokenService;
+    @Resource
+    private BindLoginCompanyCache bindLoginCompanyCache;
 
     @DeleteMapping
     public Result<Boolean> logout(HttpServletRequest request) {
@@ -27,6 +30,7 @@ public class Logout {
         if(StringUtils.isNotBlank(token) && tokenService.verifyToken(token)) {
             UserVO userVO = tokenService.parseToken(token);
             tokenService.clearLoginFlag(userVO.getId());
+            bindLoginCompanyCache.remove(userVO.getId());
             return Result.success();
         }
         return Result.failed(500, "账号登出失败，请联系客服！");

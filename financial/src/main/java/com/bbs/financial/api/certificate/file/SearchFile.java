@@ -4,6 +4,7 @@ import cn.hutool.core.date.DateUtil;
 import com.bbs.Result;
 import com.bbs.financial.entity.CertificateFile;
 import com.bbs.financial.service.CertificateFileService;
+import com.bbs.financial.util.LoginUser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,10 +27,6 @@ public class SearchFile {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Param {
-        /**
-         * 公司ID
-         */
-        private Long companyId;
         /**
          * 凭证字
          */
@@ -55,7 +52,7 @@ public class SearchFile {
     ) {
         Date date = new Date(Long.parseLong(param.date));
         return Result.success(db.lambdaQuery()
-                .eq(CertificateFile::getCompanyId, param.getCompanyId())
+                .eq(CertificateFile::getCompanyId, LoginUser.getCompanyId())
                 .eq(CertificateFile::getCertificateWord, param.certificateWord)
                 .eq(CertificateFile::getNo, param.no)
                 .ge(CertificateFile::getDate, DateUtil.beginOfMonth(date))

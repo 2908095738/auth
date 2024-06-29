@@ -7,6 +7,7 @@ import com.bbs.auth.entity.UserCompany;
 import com.bbs.auth.service.CompanyService;
 import com.bbs.auth.service.UserCompanyService;
 import com.bbs.auth.service.UserService;
+import com.bbs.vo.UserVO;
 import com.google.common.base.Preconditions;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -49,10 +50,6 @@ public class RegisterOrJoinCompany {
     @AllArgsConstructor
     public static class Param {
         /**
-         * 公司ID（新增则为空）
-         */
-        private Long companyId;
-        /**
          * 名称
          */
         @NotBlank(message = "公司名称不能为空")
@@ -81,12 +78,14 @@ public class RegisterOrJoinCompany {
 
     @PutMapping("/company")
     public Result<List<UserCompany>> registerOrJoin(@RequestBody Param param) {
-        Long loginUserID = userService.loginUser().getId();
+        UserVO loginUser = userService.loginUser();
+        Long loginUserID = loginUser.getId();
+        Long companyId = loginUser.getCompanyId();
         // 通过判断是否传入公司 ID，决定是新增公司还是加入公司
-        if(nonNull(param.companyId)) {
+        if(nonNull(companyId)) {
             userCompanyService.save(new UserCompany()
                     .setUserId(loginUserID)
-                    .setCompanyId(param.getCompanyId())
+                    .setCompanyId(companyId)
                     .setPositionName(param.getPosition())
                     .setCreateBy(loginUserID)
             );

@@ -11,6 +11,7 @@ import com.bbs.financial.entity.Asset;
 import com.bbs.financial.entity.AssetNumUnit;
 import com.bbs.financial.entity.AssetType;
 import com.bbs.financial.mapper.AssetMapper;
+import com.bbs.financial.util.LoginUser;
 import com.bbs.vo.CompanyStructure;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.AllArgsConstructor;
@@ -43,11 +44,6 @@ public class SearchAssetList {
          *
          */
         private Long id;
-
-        /**
-         * 公司主键
-         */
-        private Long companyId;
 
         /**
          * 资产编码
@@ -213,6 +209,8 @@ public class SearchAssetList {
     @GetMapping("/asset/list")
     public Result<Page<Asset>> list(Param param) {
         Asset entity = converter.toEntity(param);
+
+        entity.setCompanyId(LoginUser.getCompanyId());
 
         Date createTime = converter(param.getCreateTimeLong());
         Date assetsCleanTime = converter(param.getAssetsCleanTime());

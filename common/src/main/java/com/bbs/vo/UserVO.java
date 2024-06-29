@@ -23,6 +23,12 @@ public class UserVO {
 
     private Long failureTokenTime;
 
+    private Integer sex;
+
+    private String idCard;
+
+    private Long companyId;
+
     /**
      * 图片 URL 地址
      */

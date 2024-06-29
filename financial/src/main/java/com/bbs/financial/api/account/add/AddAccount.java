@@ -44,11 +44,6 @@ public class AddAccount {
         private Long parentId;
 
         /**
-         * 公司ID
-         */
-        private Long companyId;
-
-        /**
          * 科目类别
          */
         private String accountSort;
@@ -165,7 +160,7 @@ public class AddAccount {
                 return accountAuxiliary;
             }).collect(Collectors.toList()));
             accountCurrencyService.saveBatch(param.getCurrencyList().stream().peek(currency -> {
-                currency.setCompanyId(param.companyId);
+                currency.setCompanyId(LoginUser.getCompanyId());
                 currency.setCreateBy(LoginUser.getId());
             }).collect(Collectors.toList()));
             transactionManager.commit(transaction);

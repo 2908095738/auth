@@ -1,7 +1,6 @@
 package com.bbs.auth.app.register;
 
 import com.bbs.auth.app.login.Login;
-import com.bbs.auth.cache.code.PhoneCodeCache;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.Result;
 import com.bbs.auth.converter.UserConverter;
@@ -30,7 +29,6 @@ import java.util.Random;
 
 import static com.bbs.Result.failed;
 import static com.bbs.Result.success;
-import static com.bbs.enums.CodeEnum.FAILED_USER_CODE_NOT_AVAILABLE;
 import static com.bbs.enums.CodeEnum.FAILED_USER_INFO_DUPLICATION;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
@@ -48,8 +46,6 @@ public class Register extends ServiceImpl<UserMapper, User> {
     private UserConverter converter;
     @Resource
     private UserDao dao;
-    @Resource
-    private PhoneCodeCache phoneCodeCache;
     @Resource
     private UserService service;
     @Resource
@@ -89,7 +85,7 @@ public class Register extends ServiceImpl<UserMapper, User> {
     public Result<Login.VO> register(@Valid @RequestBody Param param) throws IllegalArgumentException{
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         User user = converter.toEntity(param);
-        checkArgument(phoneCodeCache.checkCode(param.phone, param.code), FAILED_USER_CODE_NOT_AVAILABLE);
+        service.checkPhoneCodeThrow(param.phone, param.code);
         checkArgument(dao.notExists(user), FAILED_USER_INFO_DUPLICATION);
         try {
             if(StringUtils.isNotBlank(user.getPassword())) {

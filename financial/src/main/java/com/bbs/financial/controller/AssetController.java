@@ -13,6 +13,7 @@ import com.bbs.financial.entity.AssetType;
 import com.bbs.financial.entity.Certificate;
 import com.bbs.financial.mapper.AssetMapper;
 import com.bbs.financial.service.AssetService;
+import com.bbs.financial.util.LoginUser;
 import com.bbs.vo.BaseParam;
 import com.bbs.vo.CompanyStructure;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
@@ -66,8 +67,6 @@ public class AssetController {
     @AllArgsConstructor
     @EqualsAndHashCode(callSuper = true)
     private static class Param extends BaseParam {
-
-        private Long companyId;
 
         private String entryMonth;
 
@@ -132,7 +131,7 @@ public class AssetController {
                 .leftJoin(AssetDepreciationCertificate.class, AssetDepreciationCertificate::getAssetId, Asset::getId)
                 .eq(Asset::getIsDeleted, 0)
                 .ne(AssetDepreciationCertificate::getAssetId, 0)
-                .eq(Asset::getCompanyId, param.getCompanyId())
+                .eq(Asset::getCompanyId, LoginUser.getCompanyId())
                 .like(nonNull(param.entryMonth), Asset::getUpdateTime, param.entryMonth)
         );
 
@@ -172,7 +171,7 @@ public class AssetController {
                 .leftJoin(AssetType.class, AssetType::getId, Asset::getAssetTypeId)
                 .eq(Asset::getIsDeleted, 0)
                 .ne(AssetDepreciationCertificate::getAssetId, 0)
-                .eq(Asset::getCompanyId, param.getCompanyId())
+                .eq(Asset::getCompanyId, LoginUser.getCompanyId())
                 .like(nonNull(param.entryMonth),Asset::getUpdateTime, param.entryMonth)
         );
         if (CollUtil.isNotEmpty(list)){

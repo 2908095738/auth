@@ -43,11 +43,6 @@ public class AddCertificate {
     public static class Param {
 
         /**
-         * 公司ID
-         */
-        private Long companyId;
-
-        /**
          * 凭证字
          */
         private String certificateWord;
@@ -149,7 +144,7 @@ public class AddCertificate {
     private void updateFiles(Param param, Certificate certificate) {
         certificateFileService.lambdaUpdate()
                 .set(CertificateFile::getCertificateId, certificate.getId())
-                .eq(CertificateFile::getCompanyId, param.getCompanyId())
+                .eq(CertificateFile::getCompanyId, LoginUser.getCompanyId())
                 .eq(CertificateFile::getCertificateWord, param.certificateWord)
                 .eq(CertificateFile::getNo, param.no)
                 .ge(CertificateFile::getDate, DateUtil.beginOfMonth(param.date))
