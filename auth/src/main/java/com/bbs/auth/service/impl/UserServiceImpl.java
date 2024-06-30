@@ -121,7 +121,7 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
             try {
                 UserVO userVO = tokenService.parseToken(token);
                 userVO.setCompanyId(bindLoginCompanyCache.get(userVO.getId()));
-                return tokenService.parseToken(token);
+                return userVO;
             } catch (Exception e) {
                 throw new ReLoginException();
             }

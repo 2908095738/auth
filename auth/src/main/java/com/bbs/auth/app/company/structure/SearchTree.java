@@ -6,6 +6,7 @@ import cn.hutool.core.lang.tree.TreeUtil;
 import com.bbs.Result;
 import com.bbs.auth.entity.CompanyStructure;
 import com.bbs.auth.service.CompanyService;
+import com.bbs.auth.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,12 +27,14 @@ public class SearchTree {
 
     @Resource
     private CompanyService companyService;
+    @Resource
+    private UserService userService;
 
 
     @GetMapping("/company/structure/tree")
-//    @Cacheable("companyStructure")
-    public Result<VO> search(@RequestParam(name = "id") Long id) {
-        List<CompanyStructure> companyStructureList = companyService.searchStructure(id);
+    public Result<VO> search() {
+        Long companyId = userService.loginUser().getCompanyId();
+        List<CompanyStructure> companyStructureList = companyService.searchStructure(companyId);
         if(companyStructureList.size() == INTEGER_ZERO) companyStructureList = companyService.searchStructure();
         TreeNodeConfig treeNodeConfig = new TreeNodeConfig();
         treeNodeConfig.setDeep(5);
@@ -51,7 +54,7 @@ public class SearchTree {
                     tree.putExtra("updateTime", companyStructure.getUpdateTime());
                     tree.putExtra("updateBy", companyStructure.getUpdateBy());
         });
-        Boolean isSetCompanyStructure = companyService.searchIsSetCompanyStructure(id);
+        Boolean isSetCompanyStructure = companyService.searchIsSetCompanyStructure(companyId);
         return Result.success(new VO(isSetCompanyStructure, companyStructureTree));
     }
 

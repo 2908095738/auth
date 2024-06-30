@@ -32,11 +32,10 @@ public class Search {
 
     @GetMapping("/company/staff")
     public Result<Company> search(
-            @RequestParam("id") Long id,
             @RequestParam("current") Integer current,
             @RequestParam("size") Integer size
     ) {
-        return Result.success(companyService.searchCompanyStaff(id, new Page<>(current, size)));
+        return Result.success(companyService.searchCompanyStaff(userService.loginUser().getCompanyId(), new Page<>(current, size)));
     }
 
     @GetMapping("/company/staff/list")
