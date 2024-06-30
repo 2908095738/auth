@@ -20,7 +20,6 @@ import com.bbs.financial.service.EmployeeItemExtendService;
 import com.bbs.financial.service.EmployeeSalaryService;
 import com.bbs.financial.service.SalaryService;
 import com.bbs.financial.service.SalaryVoucherItemService;
-import com.bbs.financial.util.LoginUser;
 import com.bbs.financial.vo.SalaryVo;
 import com.bbs.financial.vo.SalaryVoucherItemVo;
 import com.bbs.util.BeanUtils;
@@ -124,17 +123,15 @@ public class SalaryController {
      */
     @Transactional
     @PostMapping("/salary/import")
-    public Result<Boolean> add(@RequestParam("importDate") String importDate, @RequestParam("typeId") Long typeId, @RequestParam("file") MultipartFile file){
+    public Result<Boolean> add(@RequestParam("companyId") Long companyId,@RequestParam("importDate") String importDate,@RequestParam("typeId") Long typeId,@RequestParam("file") MultipartFile file){
         Long netAmountCount = 0L;
         List<EmployeeSalary> employeeSalaryArrayList = new ArrayList<>();
         List<EmployeeItemExtend> employeeItemExtends = new ArrayList<>();
-        Long companyId = LoginUser.getCompanyId();
+
         try {
-            ExcelReader reader = ExcelUtil.getReader(file.getInputStream(),0);
+            ExcelReader reader = ExcelUtil.getReader(file.getInputStream());
             reader.setIgnoreEmptyRow(true);
-            List<Template> list = reader.read(2,3,Template.class );
-            //过滤掉姓名为合计的数据
-            list = list.stream().filter(item->!StrUtil.equals(item.getName(),"合计")).collect(Collectors.toList());
+            List<Template> list = reader.read(3,4,Template.class);
             log.debug("list:{}",list);
             if(CollUtil.isNotEmpty(list)){
                 Map<Integer, List<SalaryVoucherItemVo>> groupByType = salaryVoucherItemService.selectjoinByIsActive(companyId, 1).stream().collect(Collectors.groupingBy(SalaryVoucherItemVo::getType));
@@ -224,7 +221,7 @@ public class SalaryController {
             String jobId = StrUtil.isNotBlank(employeeSalaryTemplate.jobId) ? employeeSalaryTemplate.jobId : null;//工号
             String name = StrUtil.isNotBlank(employeeSalaryTemplate.name) ? employeeSalaryTemplate.name : null;//名称
             String idCard = StrUtil.isNotBlank(employeeSalaryTemplate.idCard)?employeeSalaryTemplate.idCard:null;//身份证号
-            Long phone = StrUtil.isNotBlank(employeeSalaryTemplate.phone)?Long.valueOf(employeeSalaryTemplate.phone):null;//手机号
+            String phone = StrUtil.isNotBlank(employeeSalaryTemplate.phone)?employeeSalaryTemplate.phone:null;//手机号
 
             employeeSalary.setEmployeeId(userMap.get(name + phone + idCard + jobId));
             employeeSalary.setEmployeeName(name);
@@ -235,7 +232,7 @@ public class SalaryController {
             String groupName = StrUtil.isNotBlank(employeeSalaryTemplate.groupName) ? employeeSalaryTemplate.groupName : null;//部门
             employeeSalary.setCompanyStructureName(groupName);
 
-            employeeSalary.setGrossPay(grossAmount.longValue());
+            employeeSalary.setGrossAmount(grossAmount.longValue());
             employeeSalary.setNetAmount(netAmount.longValue());
             employeeSalaryArrayList.add(employeeSalary);
 
@@ -262,7 +259,7 @@ public class SalaryController {
         private String groupName;
 
         @NotBlank
-        @Alias(value = "身份证号码")
+        @Alias(value = "身份证号")
         private String idCard;
 
         @NotBlank

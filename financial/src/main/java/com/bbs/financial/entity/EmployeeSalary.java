@@ -50,8 +50,8 @@ public class EmployeeSalary implements Serializable {
     /**
      * 出勤天数
      */
-    @TableField(value = "attendance_days")
-    private Integer attendanceDays;
+    @TableField(value = "attendance_day")
+    private Integer attendanceDay;
 
     /**
      * 基本工资
@@ -62,8 +62,8 @@ public class EmployeeSalary implements Serializable {
     /**
      * 应发工资
      */
-    @TableField(value = "gross_pay")
-    private Long grossPay;
+    @TableField(value = "gross_amount")
+    private Long grossAmount;
 
     /**
      * 出勤工资
@@ -87,7 +87,7 @@ public class EmployeeSalary implements Serializable {
      * 手机号
      */
     @TableField(value = "phone")
-    private Long phone;
+    private String phone;
 
     /**
      * 身份证号
