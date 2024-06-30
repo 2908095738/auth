@@ -248,6 +248,7 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
     @Override
     public List<User> searchByUserOrSave(Long companyId, List<com.bbs.api.auth.User> userList) {
         List<User> result = new ArrayList<>();
+        log.debug("dsnfffgsdfgsgfsdfsdfsd");
         //userList循环
         for (com.bbs.api.auth.User user : userList) {
              //循环根据用户名，身份证号，手机号，工号查询用户
@@ -269,8 +270,10 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
                 user1.setIdCard(user.getIdCard());
                 user1.setJobCard(user.getJobCard());
                 save(user1);
+                System.out.println("添加用户："+user1);
                 CompanyStructure structure = structureService.search(companyId,user.getStructureName());
-                userCompanyService.save(new UserCompany(user1.getId(),companyId,user.getJobCard(),structure.getId(),user.getId()));
+                UserCompany userCompany = new UserCompany(user1.getId(), companyId, user.getJobCard(), structure.getId());
+                userCompanyService.save(userCompany);
             }
             result.add(user1);
         }

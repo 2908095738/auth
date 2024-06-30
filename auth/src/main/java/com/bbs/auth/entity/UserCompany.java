@@ -108,11 +108,11 @@ public class UserCompany implements Serializable {
         this.createBy = loginUID;
     }
 
-    public UserCompany(Long userId, Long companyId, String jobCard, Long structureId, Long loginUID) {
+    public UserCompany(Long userId, Long companyId, String jobCard, Long structureId) {
         this.userId = userId;
         this.companyId = companyId;
         this.jobCard = jobCard;
         this.structureId = structureId;
-        this.createBy = loginUID;
+        this.createBy = userId;
     }
 }
