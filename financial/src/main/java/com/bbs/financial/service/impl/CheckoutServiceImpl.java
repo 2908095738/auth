@@ -5,6 +5,7 @@ import com.bbs.Result;
 import com.bbs.financial.entity.Checkout;
 import com.bbs.financial.service.CheckoutService;
 import com.bbs.financial.mapper.CheckoutMapper;
+import com.bbs.financial.util.LoginUser;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.stereotype.Service;
@@ -40,10 +41,10 @@ public class CheckoutServiceImpl extends MPJBaseServiceImpl<CheckoutMapper, Chec
     }
 
     @Override
-    public List<Checkout> getCheckByYear(Long companyId, Date oriDateByYear, Date endDateByYear) {
+    public List<Checkout> getCheckByYear(Date oriDateByYear, Date endDateByYear) {
         return selectJoinList(Checkout.class, new MPJLambdaWrapper<Checkout>()
                 .selectAll(Checkout.class)
-                .eq(Checkout::getCompanyId, companyId)
+                .eq(Checkout::getCompanyId, LoginUser.getCompanyId())
                 .ge(Checkout::getDate, oriDateByYear)
                 .lt(Checkout::getDate, endDateByYear)
                 .orderByAsc(Checkout::getDate)
@@ -51,19 +52,16 @@ public class CheckoutServiceImpl extends MPJBaseServiceImpl<CheckoutMapper, Chec
     }
 
     @Override
-    public boolean isCheck(Long companyId, String msecStr) {
+    public boolean isCheck(String msecStr) {
         Date date = nonNull(msecStr) ? new Date(Long.parseLong(msecStr)) : new Date();
         Long id = selectJoinOne(Long.class, new MPJLambdaWrapper<Checkout>()
                 .select(Checkout::getId)
                 .eq(Checkout::getIsCheckout, 1)
-                .eq(Checkout::getCompanyId, companyId)
+                .eq(Checkout::getCompanyId, LoginUser.getCompanyId())
                 .ge(Checkout::getDate, DateUtil.beginOfMonth(date))
                 .lt(Checkout::getDate, DateUtil.beginOfMonth(DateUtil.offsetMonth(date, INTEGER_ONE)))
         );
 
-        if (ObjectUtils.isEmpty(id))
-            return true;
-        else
-            return false;
+        return ObjectUtils.isEmpty(id);
     }
 }

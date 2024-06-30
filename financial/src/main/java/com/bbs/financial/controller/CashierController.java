@@ -76,7 +76,6 @@ public class CashierController {
      *
      * @param current   页码
      * @param size      条数
-     * @param companyId 公司id
      * @param zhangHuId 账户id
      * @param startDateLong 起始时间时间戳
      * @param endDateLong   结束时间时间戳
@@ -84,17 +83,17 @@ public class CashierController {
     @GetMapping("/listCertificate")
     public Result<Page<Certificate>> listCertificate(
             @RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam Long companyId, @RequestParam Long zhangHuId,
+            @RequestParam Long zhangHuId,
             @RequestParam(name = "startDate", required = false) Long startDateLong,
             @RequestParam(name = "endDate", required = false) Long endDateLong) {
 
         //获取凭证分页
-        Page<Certificate> certificatePage = cashierService.listCertificate(current, size, companyId, zhangHuId, null, startDateLong, endDateLong, Boolean.TRUE, Boolean.TRUE);
+        Page<Certificate> certificatePage = cashierService.listCertificate(current, size, LoginUser.getCompanyId(), zhangHuId, null, startDateLong, endDateLong, Boolean.TRUE, Boolean.TRUE);
 
         //凭证摘要列表排序
         sortByAbstList(certificatePage.getRecords());
 
-        Long oriMoney = getOriMoney(companyId, zhangHuId, String.valueOf(startDateLong)).getData();
+        Long oriMoney = getOriMoney(zhangHuId, String.valueOf(startDateLong)).getData();
         initLessMoney(certificatePage.getRecords(), oriMoney);
 
         // 获取【创建用户】&&【审核用户】的 userId Set
@@ -118,12 +117,7 @@ public class CashierController {
                     Long lId = l.getId();
                     Long rId = r.getId();
 
-                    if (lId > rId)
-                        return 1;
-                    else if (lId < rId)
-                        return -1;
-                    else
-                        return 0;
+                    return lId.compareTo(rId);
                 }));
     }
 
@@ -191,16 +185,14 @@ public class CashierController {
     /**
      * 获取期初余额
      *
-     * @param companyId 公司id
      * @param zhangHuId 账户id
      * @param date      时间戳字符串
-     * @return
      */
     @GetMapping("/cert/oriMoney")
-    public Result<Long> getOriMoney(@RequestParam Long companyId, Long zhangHuId, @RequestParam(name = "date", required = false) String date) {
+    public Result<Long> getOriMoney( Long zhangHuId, @RequestParam(name = "date", required = false) String date) {
         //计算期初余额
-        List<Certificate> tmpList = cashierService.listCertificate(INTEGER_ZERO, INTEGER_ZERO, companyId, zhangHuId, date, null, null, Boolean.FALSE, Boolean.FALSE).getRecords();
-        Long oriMoeny = 0L;
+        List<Certificate> tmpList = cashierService.listCertificate(INTEGER_ZERO, INTEGER_ZERO, LoginUser.getCompanyId(), zhangHuId, date, null, null, Boolean.FALSE, Boolean.FALSE).getRecords();
+        long oriMoeny = 0L;
         for (Certificate cert : tmpList) {
             List<CertificateAbstract> abstList = cert.getAbstracts();
             if (!ObjectUtils.isEmpty(abstList)) {
@@ -221,7 +213,6 @@ public class CashierController {
      * 导出凭证
      *
      * @param resp      响应
-     * @param companyId 公司id
      * @param zhangHuId 账户id
      * @param startDateLong 起始时间时间戳
      * @param endDateLong   结束时间时间戳
@@ -229,15 +220,15 @@ public class CashierController {
     @GetMapping("/exportCert")
     public void exportCert(HttpServletRequest req, HttpServletResponse resp,
                            @RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size,
-                           @RequestParam Long companyId, @RequestParam Long zhangHuId,
+                            @RequestParam Long zhangHuId,
                            @RequestParam(name = "startDate", required = false) Long startDateLong,
                            @RequestParam(name = "endDate", required = false) Long endDateLong) {
-        List<Certificate> oriData = listCertificate(current, size, companyId, zhangHuId, startDateLong, endDateLong).getData().getRecords();
+        List<Certificate> oriData = listCertificate(current, size, zhangHuId, startDateLong, endDateLong).getData().getRecords();
 
-        Long oriMoney = getOriMoney(companyId, zhangHuId, String.valueOf(startDateLong)).getData();
+        Long oriMoney = getOriMoney(LoginUser.getCompanyId(), String.valueOf(startDateLong)).getData();
         Function<List<Certificate>, List<ExcelNoteDto>> initExcelDataFunc = d -> {
             List<ExcelNoteDto> datas = getExcelDatasByNote(d, oriMoney);
-            initZhByNote(datas, companyId);
+            initZhByNote(datas, LoginUser.getCompanyId());
             return datas;
         };
 
@@ -338,7 +329,6 @@ public class CashierController {
      * @param certStr  凭证
      * @param makeName 制单人
      * @param abst     凭证摘要列表
-     * @return
      */
     private ExcelNoteDto getPartDataByNote(String dateStr, String certStr, String makeName, CertificateAbstract abst) {
         ExcelNoteDto obj = new ExcelNoteDto();
@@ -399,10 +389,13 @@ public class CashierController {
      * @param companyId 公司id
      */
     private void initZhByNote(List<ExcelNoteDto> dataList, Long companyId) {
-        List<Long> subjIdList = dataList.stream()
-                .filter(n -> !ObjectUtils.isEmpty(n.getSubjId()))
-                .map(ExcelNoteDto::getSubjId)
-                .collect(Collectors.toList());
+        List<Long> subjIdList = new ArrayList<>();
+        for (ExcelNoteDto excelNoteDto : dataList) {
+            Long subjId = excelNoteDto.getSubjId();
+            if (!ObjectUtils.isEmpty(subjId)) {
+                subjIdList.add(subjId);
+            }
+        }
 
         if (subjIdList.size() == INTEGER_ZERO)
             return;
@@ -432,7 +425,7 @@ public class CashierController {
      * @param zhId 账户id
      */
     private String getZhByNote(Long zhId) {
-        if (ObjectUtils.isEmpty(zhId) || (zhId == LONG_ZERO)) {
+        if (ObjectUtils.isEmpty(zhId) || (zhId.equals(LONG_ZERO))) {
             return "全部账户";
         }
 
@@ -455,8 +448,6 @@ public class CashierController {
 
     /**
      * 表格-实体类映射[日记账]
-     *
-     * @param writer
      */
     private void excelMapByNote(ExcelWriter writer) {
         writer.addHeaderAlias("dateStr", "日期");
@@ -539,8 +530,6 @@ public class CashierController {
      *
      * @param companyId 公司id
      * @param msecStr   时间戳字符串
-     * @param ids
-     * @return
      */
     @DeleteMapping("/certAbst/{companyId}/{msecStr}/{ids}")
     public Result<Boolean> removeAbst(@PathVariable Long companyId, @PathVariable String msecStr, @PathVariable List<Long> ids) {
@@ -576,25 +565,24 @@ public class CashierController {
     /**
      * 获取收支汇总数据列表
      *
-     * @param current   页码
-     * @param size      条数
-     * @param companyId 公司id
-     * @param zhId      账户id
+     * @param current       页码
+     * @param size          条数
+     * @param zhId          账户id
      * @param startDateLong 起始时间时间戳
      * @param endDateLong   结束时间时间戳
      */
     @GetMapping("/cert/iototal")
-    public Result<Page<IOTotalDto>> listIOTotal(
+    public Result listIOTotal(
             @RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam Long companyId,
+            
             @RequestParam(name = "zhId", required = false) Long zhId,
             @RequestParam(name = "startDate", required = false) Long startDateLong,
             @RequestParam(name = "endDate", required = false) Long endDateLong) {
-        Result result = Result.success();
+        Result result = success();
 
         //TODO L 性能待优化
 
-        Page<IOTotalDto> page = getTotalByPart(current, size, companyId, zhId);
+        Page<IOTotalDto> page = getTotalByPart(current, size, LoginUser.getCompanyId(), zhId);
 
         //可变类型封装的页码
         Holder<Integer> currentPro = new Holder<>();
@@ -609,7 +597,7 @@ public class CashierController {
             boolean isPlus = isPlusRecord(plus2One, isDataLessFunc.test(page), currentPro, size, page.getTotal());
             if (isPlus) {
                 current = currentPro.get();
-                page.getRecords().addAll(getTotalByPart(currentPro.get(), size, companyId, zhId).getRecords());
+                page.getRecords().addAll(getTotalByPart(currentPro.get(), size, LoginUser.getCompanyId(), zhId).getRecords());
             } else
                 break;
 
@@ -622,18 +610,18 @@ public class CashierController {
             subjMap.values().forEach(d -> initMoneyByNow(Collections.singletonList(d)));
 
             //期初余额计算
-            List<Certificate> certs2Ori = cashierService.listCertificate(current, size, companyId, 0L, null, startDateLong, endDateLong, Boolean.FALSE, Boolean.TRUE).getRecords();
-            initMoney(certs2Ori, sId -> subjMap.containsKey(sId), sId -> Collections.singletonList(subjMap.get(sId)), false);
+            List<Certificate> certs2Ori = cashierService.listCertificate(current, size, LoginUser.getCompanyId(), 0L, null, startDateLong, endDateLong, Boolean.FALSE, Boolean.TRUE).getRecords();
+            initMoney(certs2Ori, subjMap::containsKey, sId -> Collections.singletonList(subjMap.get(sId)), false);
 
             //收入、支出计算
-            List<Certificate> certs2IO = getCert2Cal(zhId, current, size, companyId, startDateLong, endDateLong, certs2Ori, page.getRecords());
-            initMoney(certs2IO, sId -> subjMap.containsKey(sId), sId -> Collections.singletonList(subjMap.get(sId)), true);
+            List<Certificate> certs2IO = getCert2Cal(zhId, current, size, LoginUser.getCompanyId(), startDateLong, endDateLong, certs2Ori, page.getRecords());
+            initMoney(certs2IO, subjMap::containsKey, sId -> Collections.singletonList(subjMap.get(sId)), true);
 
             //期末余额计算
             subjMap.values().forEach(d -> initEndMoney(Collections.singletonList(d)));
 
             //初始化币别名称
-            result = initPriceTypeName(subjMap.values(), companyId);
+            result = initPriceTypeName(subjMap.values(), LoginUser.getCompanyId());
             if (result.getCode() == 500)
                 return result;
 
@@ -667,7 +655,6 @@ public class CashierController {
      * @param size      条数
      * @param companyId 公司id
      * @param zhId      账户id
-     * @return
      */
     private Page<IOTotalDto> getTotalByPart(Integer current, Integer size, Long companyId, Long zhId) {
         return zhService.selectJoinListPage(new Page<>(current, size), IOTotalDto.class,
@@ -693,7 +680,7 @@ public class CashierController {
      */
     private boolean isPlusRecord(boolean plus2One, boolean isDataLess, Holder<Integer> currentPro, Integer size, long total) {
         if (plus2One && isDataLess) {
-            if (currentPro.get() * size >= total)
+            if ((long) currentPro.get() * size >= total)
                 return false;
 
             currentPro.set(currentPro.get() + 1);
@@ -703,10 +690,9 @@ public class CashierController {
 
     /**
      * 获取正确的收支汇总列表
-     *
      * @param toFixList 待修复列表
      */
-    private Result fixTotalList(List<IOTotalDto> toFixList) {
+    private Result<Boolean> fixTotalList(List<IOTotalDto> toFixList) {
         //TODO L SQL待修正，即分组后只取首个
 
         //多账户可能会绑定同一账目，所以收支汇总表仅展示首位账户。
@@ -919,7 +905,6 @@ public class CashierController {
      *
      * @param current   页码
      * @param size      条数
-     * @param companyId 公司id
      * @param zhangHuId 账户id
      * @param startDateLong 起始时间时间戳
      * @param endDateLong   结束时间时间戳
@@ -927,10 +912,10 @@ public class CashierController {
     @GetMapping("/exportTotal")
     public void exportTotal(HttpServletRequest req, HttpServletResponse resp,
                             @RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size,
-                            @RequestParam Long companyId, @RequestParam Long zhangHuId,
+                             @RequestParam Long zhangHuId,
                             @RequestParam(name = "startDate", required = false) Long startDateLong,
                             @RequestParam(name = "endDate", required = false) Long endDateLong) {
-        Result<Page<IOTotalDto>> oriResult = listIOTotal(current, size, companyId, zhangHuId, startDateLong, endDateLong);
+        Result<Page<IOTotalDto>> oriResult = listIOTotal(current, size, zhangHuId, startDateLong, endDateLong);
         if (!oriResult.getCode().equals(Result.success().getCode()))
             return;
 
@@ -974,21 +959,20 @@ public class CashierController {
      *
      * @param current   页码
      * @param size      条数
-     * @param companyId 公司id
      * @param startDateLong 起始时间时间戳
      * @param endDateLong   结束时间时间戳
      */
     @GetMapping("/cert/confirm")
     public Result<Page<ConfirmTotalDto>> listConfirm(
             @RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam Long companyId,
+            
             @RequestParam(name = "startDate", required = false) Long startDateLong,
             @RequestParam(name = "endDate", required = false) Long endDateLong) {
         Result result = Result.success();
 
         //TODO L 性能待优化
 
-        Page<ConfirmTotalDto> page = initConfrimPage(current, size, companyId);
+        Page<ConfirmTotalDto> page = initConfrimPage(current, size, LoginUser.getCompanyId());
 
         //可变类型封装的页码
         Holder<Integer> currentPro = new Holder<>();
@@ -1017,8 +1001,8 @@ public class CashierController {
         List<Long> subjIds = page.getRecords().stream().map(ConfirmTotalDto::getSubj).map(ConfirmTotalDto.SubjDto::getSubjectsId).collect(Collectors.toList());
 
         //不同时间区间的凭证列表
-        List<Certificate> certsByBefore = cashierService.listCertificate(current, size, companyId, 0L, null, startDateLong, endDateLong, Boolean.FALSE, Boolean.TRUE).getRecords();
-        List<Certificate> certsByBeNow = getCertListByNow(companyId, startDateLong, endDateLong);
+        List<Certificate> certsByBefore = cashierService.listCertificate(current, size, LoginUser.getCompanyId(), 0L, null, startDateLong, endDateLong, Boolean.FALSE, Boolean.TRUE).getRecords();
+        List<Certificate> certsByBeNow = getCertListByNow(LoginUser.getCompanyId(), startDateLong, endDateLong);
 
         //初始化科目实例
         initTotalByConfirm(subjMap, certsByBefore, certsByBeNow, c -> Collections.singletonList(c.getSubj()));
@@ -1314,17 +1298,16 @@ public class CashierController {
      *
      * @param current   页码
      * @param size      条数
-     * @param companyId 公司id
      * @param startDateLong 起始时间时间戳
      * @param endDateLong   结束时间时间戳
      */
     @GetMapping("/exportConfirm")
     public void exportConfirm(HttpServletRequest req, HttpServletResponse resp,
                               @RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size,
-                              @RequestParam Long companyId,
+                              
                               @RequestParam(name = "startDate", required = false) Long startDateLong,
                               @RequestParam(name = "endDate", required = false) Long endDateLong) {
-        List<ConfirmTotalDto> oriData = listConfirm(current, size, companyId, startDateLong, endDateLong).getData().getRecords();
+        List<ConfirmTotalDto> oriData = listConfirm(current, size, startDateLong, endDateLong).getData().getRecords();
 
         Consumer<ExcelWriter> initSubTitleFunc = w -> initSubTitleByConfirm(w,
                 LoginUser.get().getName(),

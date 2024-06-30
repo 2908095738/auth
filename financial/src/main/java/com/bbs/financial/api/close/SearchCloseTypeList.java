@@ -3,6 +3,7 @@ package com.bbs.financial.api.close;
 import com.bbs.Result;
 import com.bbs.financial.entity.CloseType;
 import com.bbs.financial.service.CloseService;
+import com.bbs.financial.util.LoginUser;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -26,10 +27,10 @@ public class SearchCloseTypeList {
     private DataSourceTransactionManager transactionManager;
 
     @GetMapping("/close/type/list")
-    public Result<List<CloseType>> search(@RequestParam Long companyId) {
+    public Result<List<CloseType>> search() {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            List<CloseType> closeTypeList = closeService.searchCloseType(companyId);
+            List<CloseType> closeTypeList = closeService.searchCloseType(LoginUser.getCompanyId());
             transactionManager.commit(transaction);
             return Result.success(closeTypeList);
         } catch (Exception e) {

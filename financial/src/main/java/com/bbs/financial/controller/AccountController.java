@@ -263,8 +263,8 @@ public class AccountController
     }
 
     @GetMapping("/account/currency/list")
-    public Result<List<AccountCurrency>> searchCurrencyList(@RequestParam Long companyId) {
-        return success(accountCurrencyService.lambdaQuery().eq(AccountCurrency::getCompanyId, companyId).list());
+    public Result<List<AccountCurrency>> searchCurrencyList() {
+        return success(accountCurrencyService.lambdaQuery().eq(AccountCurrency::getCompanyId, LoginUser.getCompanyId()).list());
     }
 
     @GetMapping("/account/name")
@@ -292,8 +292,8 @@ public class AccountController
     }
 
     @GetMapping("/money/type/list")
-    public Result<List<PriceType>> searchMoneyTypeList(@RequestParam Long companyId) {
-        return success(priceTypeService.lambdaQuery().eq(PriceType::getCompanyId, companyId).list());
+    public Result<List<PriceType>> searchMoneyTypeList() {
+        return success(priceTypeService.lambdaQuery().eq(PriceType::getCompanyId, LoginUser.getCompanyId()).list());
     }
 
     @Resource
@@ -310,7 +310,7 @@ public class AccountController
     }
 
     @GetMapping("/auxiliary/calculation/list")
-    public Result<List<AuxiliaryCalculation>> searchAuxiliaryCalculationList(@RequestParam Long companyId) {
-        return success(auxiliaryCalculationService.lambdaQuery().eq(AuxiliaryCalculation::getCompanyId, companyId).list());
+    public Result<List<AuxiliaryCalculation>> searchAuxiliaryCalculationList() {
+        return success(auxiliaryCalculationService.lambdaQuery().eq(AuxiliaryCalculation::getCompanyId, LoginUser.getCompanyId()).list());
     }
 }

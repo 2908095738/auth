@@ -9,6 +9,7 @@ import com.bbs.api.auth.UserAPI;
 import com.bbs.api.auth.company.CompanyAPI;
 import com.bbs.financial.entity.*;
 import com.bbs.financial.service.AssetService;
+import com.bbs.financial.util.LoginUser;
 import com.bbs.vo.CompanyStructure;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.AllArgsConstructor;
@@ -17,7 +18,6 @@ import lombok.NoArgsConstructor;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
@@ -42,7 +42,6 @@ public class ExportAsset {
     @DubboReference
     private CompanyAPI companyAPI;
 
-
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -55,7 +54,7 @@ public class ExportAsset {
 
     @GetMapping("/asset/export")
     public void export(
-            @RequestParam Long companyId,
+            
             Param param
     ) {
         Date startDate = null;
@@ -72,7 +71,7 @@ public class ExportAsset {
         Date finalEndDate = endDate;
         List<Asset> assets = db.listDeep(new MPJLambdaWrapper<Asset>()
                 .selectAll(Asset.class)
-                .eq(Asset::getCompanyId, companyId)
+                .eq(Asset::getCompanyId, LoginUser.getCompanyId())
                 .or(nonNull(startDate), wrapper -> wrapper
                         .ge(Asset::getCreateTime, nonNull(finalStartDate) ? DateUtil.beginOfMonth(finalStartDate) : null)
                         // 最大时间使用传入的 endDate 取当月最后一天（如果只查单月，则 endDate 可空，并使用传入的 startDate 替换计算最后一天）

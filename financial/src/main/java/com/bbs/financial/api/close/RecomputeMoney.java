@@ -4,13 +4,13 @@ import cn.hutool.core.date.DateUtil;
 import com.bbs.Result;
 import com.bbs.financial.entity.*;
 import com.bbs.financial.service.*;
+import com.bbs.financial.util.LoginUser;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
@@ -40,13 +40,13 @@ public class RecomputeMoney {
     private CertificateService certificateService;
 
     @PostMapping("/close/compute")
-    public Result<List<CloseType>> recomputeMoney(@RequestParam Long companyId) {
+    public Result<List<CloseType>> recomputeMoney() {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            List<CloseType> closeTypeList = closeService.searchCloseType(companyId);
+            List<CloseType> closeTypeList = closeService.searchCloseType(LoginUser.getCompanyId());
             closeTypeList.forEach(closeType -> {
                 if(closeType.getTypeName().equals("asset_depreciation")) {
-                    Long allAssetMoney = computeAllAssetMoney(companyId);
+                    Long allAssetMoney = computeAllAssetMoney(LoginUser.getCompanyId());
                     closeType.setMoney(allAssetMoney);
                     closeTypeService.lambdaUpdate()
                             .eq(CloseType::getId, closeType.getId())
@@ -55,13 +55,13 @@ public class RecomputeMoney {
                 } else if(closeType.getTypeName().equals("transfer_out_unpaid_vat")) {
                     // 1. 获取增值税相关科目，当月产生的凭证
                     Date now = new Date();
-                    List<Certificate> certificates = certificateService.selectJoinList(Certificate.class, new MPJLambdaWrapper<Certificate>()
+                    certificateService.selectJoinList(Certificate.class, new MPJLambdaWrapper<Certificate>()
                             .selectAll(Certificate.class)
                             .selectCollection(CertificateAbstract.class, Certificate::getAbstracts)
                             .leftJoin(CertificateAbstract.class, CertificateAbstract::getCertificateId, Certificate::getId)
                             .leftJoin(Account.class, Account::getId, CertificateAbstract::getAccountId)
                             // 筛选公司
-                            .eq(Certificate::getCompanyId, companyId)
+                            .eq(Certificate::getCompanyId, LoginUser.getCompanyId())
                             // 筛选增值税相关科目
                             .eq(Account::getNo, 2221)
                             // 筛选当月数据

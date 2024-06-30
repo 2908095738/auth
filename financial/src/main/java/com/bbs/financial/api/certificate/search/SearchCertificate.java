@@ -11,6 +11,7 @@ import com.bbs.financial.entity.Certificate;
 import com.bbs.financial.entity.CertificateAbstract;
 import com.bbs.financial.entity.CertificateFile;
 import com.bbs.financial.service.CertificateService;
+import com.bbs.financial.util.LoginUser;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -65,7 +66,6 @@ public class SearchCertificate {
     public Result<Page<Certificate>> search(
             @RequestParam(defaultValue = "1") Integer current,
             @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam Long companyId,
             @RequestParam(name = "words", required = false) List<String> words,
             @RequestParam(name = "createUserIds", required = false) List<Long> createUserIds,
             @RequestParam(name = "authUserIds", required = false) List<Long> authUserIds,
@@ -84,7 +84,7 @@ public class SearchCertificate {
                 .leftJoin(Account.class, Account::getId, CertificateAbstract::getAccountId)
                 .leftJoin(CertificateFile.class, CertificateFile::getCertificateId, Certificate::getId)
 
-                .eq(Certificate::getCompanyId, companyId)
+                .eq(Certificate::getCompanyId, LoginUser.getCompanyId())
                 .in(nonNull(words) && words.size() > INTEGER_ZERO, Certificate::getCertificateWord, words)
                 .in(nonNull(createUserIds) && createUserIds.size() > INTEGER_ZERO, Certificate::getCreateBy)
                 .in(nonNull(authUserIds) && authUserIds.size() > INTEGER_ZERO, Certificate::getAuthBy)
@@ -127,17 +127,15 @@ public class SearchCertificate {
 
     /**
      * 【凭证字】去重
-     * @param companyId 公司ID
      * @return 【凭证字】去重 List
      */
     @GetMapping("/certificate/word/list")
     public Result<List<CertificateWordEnum.Item>> searchCertificateWord(
-            @RequestParam(required = false) String word,
-            @RequestParam Long companyId
+            @RequestParam(required = false) String word
     ) {
         List<Object> wordObjs = certificateService.listObjs(new LambdaQueryWrapper<Certificate>()
                 .select(Certificate::getCertificateWord)
-                .eq(Certificate::getCompanyId, companyId)
+                .eq(Certificate::getCompanyId, LoginUser.getCompanyId())
                 .groupBy(Certificate::getCertificateWord)
         );
 

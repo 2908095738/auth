@@ -26,19 +26,17 @@ public interface CheckoutService extends IService<Checkout> {
     /**
      * 获取本年结账列表
      *
-     * @param companyId     公司id
      * @param oriDateByYear 本年起始日
      * @param endDateByYear 本年结束日
      * @return
      */
-    List<Checkout> getCheckByYear(@RequestParam Long companyId, Date oriDateByYear, Date endDateByYear);
+    List<Checkout> getCheckByYear( Date oriDateByYear, Date endDateByYear);
 
     /**
      * 本月是否结账
      *
-     * @param companyId 公司id
      * @param msecStr   时间戳字符串
      * @return
      */
-    boolean isCheck(@RequestParam Long companyId, @RequestParam String msecStr);
+    boolean isCheck( @RequestParam String msecStr);
 }

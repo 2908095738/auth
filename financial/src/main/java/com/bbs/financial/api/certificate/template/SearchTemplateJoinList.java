@@ -7,6 +7,7 @@ import com.bbs.financial.entity.CertificateTemplate;
 import com.bbs.financial.entity.CertificateTemplateAbstract;
 import com.bbs.financial.entity.PriceType;
 import com.bbs.financial.service.CertificateTemplateService;
+import com.bbs.financial.util.LoginUser;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,7 +28,7 @@ public class SearchTemplateJoinList {
 
     @GetMapping("/certificate/template/join/list")
     public Result<Page<CertificateTemplate>> search(
-            @RequestParam Long companyId,
+            
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String comment,
             @RequestParam(required = false) String type,
@@ -45,7 +46,7 @@ public class SearchTemplateJoinList {
                         .leftJoin(CertificateTemplateAbstract.class, CertificateTemplateAbstract::getTemplateId, CertificateTemplate::getId)
                         .leftJoin(PriceType.class, PriceType::getId, CertificateTemplateAbstract::getPriceTypeId)
                         .leftJoin(Account.class, Account::getId, CertificateTemplateAbstract::getAccountId)
-                        .eq(CertificateTemplate::getCompanyId, companyId)
+                        .eq(CertificateTemplate::getCompanyId, LoginUser.getCompanyId())
                         .like(isNotBlank(type), CertificateTemplate::getType, type)
                         .in(isNotBlank(typeNames), CertificateTemplate::getType, isNotBlank(typeNames) ? asList(typeNames.split(",")) : null)
                         .and(isNotBlank(name) || isNotBlank(comment), ext -> ext

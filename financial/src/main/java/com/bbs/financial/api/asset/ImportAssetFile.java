@@ -101,10 +101,10 @@ public class ImportAssetFile {
     private static final String PARSE_ERROR_MSG = "文件解析失败，请检查内容是否与模板一致";
 
     @PostMapping("/asset/import/template")
-    public Result<Boolean> importFile(@RequestParam Long companyId, @RequestParam MultipartFile file) throws IllegalArgumentException {
+    public Result<Boolean> importFile( @RequestParam MultipartFile file) throws IllegalArgumentException {
 
         // 创建导入记录
-        AssetImportRecord record = new AssetImportRecord(companyId, LoginUser.getId());
+        AssetImportRecord record = new AssetImportRecord(LoginUser.getCompanyId(), LoginUser.getId());
 
         // 解析 excel
         List<Asset> assets = parseExcelToAssetList(file);
@@ -112,7 +112,7 @@ public class ImportAssetFile {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             // 填充各种字段（例如创建人，通过创建人名称查询用户信息，将 UID 回填）
-            fillProperty(assets, companyId);
+            fillProperty(assets, LoginUser.getCompanyId());
 
             // 批量入库
             boolean addResult = assetService.saveBatch(assets);

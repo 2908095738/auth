@@ -7,6 +7,7 @@ import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.UserCompany;
 import com.bbs.auth.service.CompanyService;
 import com.bbs.auth.service.UserCompanyService;
+import com.bbs.auth.service.UserService;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +27,8 @@ public class Search {
     private CompanyService companyService;
     @Resource
     private UserCompanyService userCompanyService;
+    @Resource
+    private UserService userService;
 
     @GetMapping("/company/staff")
     public Result<Company> search(
@@ -39,7 +42,6 @@ public class Search {
     @GetMapping("/company/staff/list")
     public Result<Object> searchList(
             @RequestParam(required = false) String val,
-            @RequestParam Long companyId,
             @RequestParam(value = "current", required = false) Integer current,
             @RequestParam(value = "size", required = false) Integer size
     ) {
@@ -52,7 +54,7 @@ public class Search {
                             .leftJoin(User.class, User::getId, UserCompany::getUserId, ext -> ext
                                     .selectAssociation(User.class, UserCompany::getUser)
                             )
-                            .eq(UserCompany::getCompanyId, companyId)
+                            .eq(UserCompany::getCompanyId, userService.loginUser().getCompanyId())
                             .and(StringUtils.isNotBlank(val), wrapper -> wrapper
                                     .like(User::getName, val)
                                     .or()
@@ -67,7 +69,7 @@ public class Search {
                             .leftJoin(User.class, User::getId, UserCompany::getUserId, ext -> ext
                                     .selectAssociation(User.class, UserCompany::getUser)
                             )
-                            .eq(UserCompany::getCompanyId, companyId)
+                            .eq(UserCompany::getCompanyId, userService.loginUser().getCompanyId())
                             .and(StringUtils.isNotBlank(val), wrapper -> wrapper
                                     .like(User::getName, val)
                                     .or()
@@ -76,46 +78,4 @@ public class Search {
             ));
         }
     }
-
-    /**
-     * 查询非公司员工
-     */
-//    @GetMapping("/company/user/list")
-//    public Result<Object> searchNonEmployeeList(
-//            @RequestParam(required = false) String val,
-//            @RequestParam Long companyId
-//    ) {
-//        if(nonNull(current) && nonNull(size)) {
-//            return Result.success(userCompanyService.selectJoinListPage(
-//                    new Page<>(current, size),
-//                    UserCompany.class,
-//                    new MPJLambdaWrapper<UserCompany>()
-//                            .selectAll(UserCompany.class)
-//                            .leftJoin(User.class, User::getId, UserCompany::getUserId, ext -> ext
-//                                    .selectAssociation(User.class, UserCompany::getUser)
-//                            )
-//                            .eq(UserCompany::getCompanyId, companyId)
-//                            .and(StringUtils.isNotBlank(val), wrapper -> wrapper
-//                                    .like(User::getName, val)
-//                                    .or()
-//                                    .like(User::getPhone, val)
-//                            )
-//            ));
-//        } else {
-//            return Result.success(userCompanyService.selectJoinList(
-//                    UserCompany.class,
-//                    new MPJLambdaWrapper<UserCompany>()
-//                            .selectAll(UserCompany.class)
-//                            .leftJoin(User.class, User::getId, UserCompany::getUserId, ext -> ext
-//                                    .selectAssociation(User.class, UserCompany::getUser)
-//                            )
-//                            .eq(UserCompany::getCompanyId, companyId)
-//                            .and(StringUtils.isNotBlank(val), wrapper -> wrapper
-//                                    .like(User::getName, val)
-//                                    .or()
-//                                    .like(User::getPhone, val)
-//                            )
-//            ));
-//        }
-//    }
 }

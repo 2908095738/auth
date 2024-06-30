@@ -9,6 +9,7 @@ import com.bbs.Result;
 import com.bbs.financial.entity.CertificateAbstract;
 import com.bbs.financial.enums.BorrowOrLoansType;
 import com.bbs.financial.service.CertificateAbstractService;
+import com.bbs.financial.util.LoginUser;
 import lombok.Data;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,9 +29,8 @@ public class BalanceAccount {
     private CertificateAbstractService certificateAbstractService;
 
     @GetMapping("/certificate/balance")
-    public Result<List<Vo>> balanceAccount(@RequestParam("companyId")Long companyId,
-                                           @RequestParam("createTime") String certificateCreateTime) {
-        Page<CertificateAbstract> list = certificateAbstractService.selectPage(companyId, certificateCreateTime, null, 1, 9999);
+    public Result<List<Vo>> balanceAccount(@RequestParam("createTime") String certificateCreateTime) {
+        Page<CertificateAbstract> list = certificateAbstractService.selectPage(LoginUser.getCompanyId(), certificateCreateTime, null, 1, 9999);
         List<Vo> result = new ArrayList<>();
 
         if(CollUtil.isNotEmpty(list.getRecords())){

@@ -33,7 +33,7 @@ public class UploadFile {
 
     @PostMapping("/certificate/file/upload")
     public Result<Boolean> upload(
-            @RequestParam Long companyId,
+            
             @RequestParam String certificateWord,
             @RequestParam Long no,
             @RequestParam String date,
@@ -51,7 +51,7 @@ public class UploadFile {
                 FileType.IMAGE.getCode() : FileType.FILE.getCode();
         CertificateFile entity = new CertificateFile(
                 file.getOriginalFilename(),
-                companyId,
+                LoginUser.getCompanyId(),
                 certificateWord,
                 no,
                 new Date(Long.parseLong(date)),

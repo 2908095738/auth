@@ -3,6 +3,7 @@ package com.bbs.financial.controller;
 import com.bbs.Result;
 import com.bbs.financial.entity.Checkout;
 import com.bbs.financial.service.CheckoutService;
+import com.bbs.financial.util.LoginUser;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -38,26 +39,21 @@ public class CheckoutController {
 
     /**
      * 获取出纳启用期间
-     *
-     * @param companyId 公司id
-     * @return
      */
     @GetMapping("/getOri")
-    public Result<Date> getOriByCheck(@RequestParam Long companyId) {
-        return checkoutService.getOriByCheck(companyId);
+    public Result<Date> getOriByCheck() {
+        return checkoutService.getOriByCheck(LoginUser.getCompanyId());
     }
 
     /**
      * 获取本年结账列表
      *
-     * @param companyId 公司id
      * @param msecStr   时间戳字符串
-     * @return
      */
     @GetMapping("/getCheckByYear")
-    public Result<List<Checkout>> getCheckByYear(@RequestParam Long companyId, @RequestParam String msecStr) {
+    public Result<List<Checkout>> getCheckByYear( @RequestParam String msecStr) {
         Map<String, Date> dateMap = getDateByLoop(msecStr);
-        return Result.success(checkoutService.getCheckByYear(companyId, dateMap.get("ori"), dateMap.get("end")));
+        return Result.success(checkoutService.getCheckByYear(dateMap.get("ori"), dateMap.get("end")));
     }
 
     /**
@@ -91,13 +87,11 @@ public class CheckoutController {
     /**
      * 本月是否结账
      *
-     * @param companyId 公司id
      * @param msecStr   时间戳字符串
-     * @return
      */
     @GetMapping("/isCheck")
-    private Result<Boolean> isCheck(@RequestParam Long companyId, @RequestParam String msecStr) {
-        return Result.success(checkoutService.isCheck(companyId, msecStr));
+    private Result<Boolean> isCheck( @RequestParam String msecStr) {
+        return Result.success(checkoutService.isCheck(msecStr));
     }
 
     /**

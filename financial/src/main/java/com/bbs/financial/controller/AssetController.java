@@ -272,12 +272,11 @@ public class AssetController {
      */
     @GetMapping("/asset/storage/place")
     public Result<List<String>> searchStoragePlace(
-            @RequestParam Long companyId,
             @RequestParam(required = false) String name
     ) {
         return success(assetService.listObjs(new QueryWrapper<Asset>()
                 .select("DISTINCT storage_place")
-                .eq("company_id", companyId)
+                .eq("company_id", LoginUser.getCompanyId())
                 .like(StringUtils.isNotBlank(name), "storage_place", name)
                 .isNotNull("storage_place")
                 .orderByAsc("storage_place")
