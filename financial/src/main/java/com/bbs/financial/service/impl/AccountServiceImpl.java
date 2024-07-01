@@ -19,7 +19,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
@@ -84,8 +86,32 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
     @Cacheable(cacheNames = "account-tree")
     @Override
     public List<Tree<Long>> tree(String accountSort, Long companyId, String name, String no) {
+        // 判断是否搜索 no（应对以 name 字段存储 no 情况）
+        boolean noNotIsNumber = nonNull(name) && !name.matches("-?\\d+(\\.\\d+)?");
         List<Account> allAccount = list(searchAccountWrapper(accountSort, companyId, name, no));
+        if(noNotIsNumber) {
+            allAccount.addAll(searchChildAccount(allAccount));
+        }
         return tree(allAccount);
+    }
+
+    private Boolean isTopAccount(Account account) {
+        return INTEGER_ZERO.equals(account.getLevel());
+    }
+
+    private List<Account> searchChildAccount(List<Account> allAccount) {
+        Set<Long> idSet = new HashSet<>();
+        Set<String> topAccountNos = new HashSet<>();
+
+        // 过滤出顶级科目的 no
+        for (Account account : allAccount) {
+            idSet.add(account.getId());
+            if(isTopAccount(account)) {
+                topAccountNos.add(account.getNo());
+            }
+        }
+        // 通过【顶级科目的 no】查询可能存在的子科目，并通过原科目 list 去重后的 id 集合（idSet），避免查询结果重复
+        return list(Wrappers.lambdaQuery(Account.class).in(Account::getNo, topAccountNos).notIn(Account::getId, idSet));
     }
 
     private Wrapper<Account> searchAccountWrapper(String accountSort, Long companyId, String name, String no) {
