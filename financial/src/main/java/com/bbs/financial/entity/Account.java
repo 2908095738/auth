@@ -109,6 +109,12 @@ public class Account implements Serializable {
     private Long parentId;
 
     /**
+     * 上级ID集合（String，逗号分隔）
+     */
+    @TableField(value = "parent_ids")
+    private String parentIds;
+
+    /**
      * 权重
      */
     @TableField(value = "weight")

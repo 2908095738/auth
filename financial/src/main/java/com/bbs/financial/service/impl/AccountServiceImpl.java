@@ -3,7 +3,8 @@ package com.bbs.financial.service.impl;
 import cn.hutool.core.lang.tree.Tree;
 import cn.hutool.core.lang.tree.TreeNodeConfig;
 import cn.hutool.core.lang.tree.TreeUtil;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.alibaba.fastjson2.JSONArray;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.financial.entity.Account;
@@ -17,11 +18,9 @@ import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
@@ -83,38 +82,102 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
         baseMapper.deleteBatchIds(ids);
     }
 
-    @Cacheable(cacheNames = "account-tree")
+//    @Cacheable(cacheNames = "account-tree")
+    @Transactional
     @Override
     public List<Tree<Long>> tree(String accountSort, Long companyId, String name, String no) {
-        // 判断是否搜索 no（应对以 name 字段存储 no 情况）
-        boolean noNotIsNumber = nonNull(name) && !name.matches("-?\\d+(\\.\\d+)?");
-        List<Account> allAccount = list(searchAccountWrapper(accountSort, companyId, name, no));
-        if(noNotIsNumber) {
-            allAccount.addAll(searchChildAccount(allAccount));
+        LambdaQueryWrapper<Account> wrapper = searchWrapperByNameOrNo(accountSort, companyId, name, no);
+        List<Account> allAccount = list(wrapper);
+        List<Account> accountParents = new ArrayList<>();
+        for (Account account: allAccount) {
+            String parentIdJSONArr = account.getParentIds();
+            List<Account> currentAccountTree = new ArrayList<Account>() {{ add(account);}};
+            if(isSetParentIdArrField(parentIdJSONArr)) {
+                // 解析父级科目的 parentIds 字段，查询父级科目链，并填充到 currentAccountTree
+                currentAccountTree.addAll(searchParents(parentIdJSONArr));
+            } else {
+                List<Long> parentIds = new ArrayList<>();
+                // 递归查询父级科目，并填充到 currentAccountTree
+                recursiveSearchParentAndFillToList(account, currentAccountTree, parentIds);
+                // 更新当前科目的 parentIds 字段
+                update(joinParentIdJSONArray(account, parentIds), account);
+            }
+            accountParents.addAll(currentAccountTree);
         }
+        allAccount.addAll(accountParents);
         return tree(allAccount);
     }
 
-    private Boolean isTopAccount(Account account) {
-        return INTEGER_ZERO.equals(account.getLevel());
+    private void update(String parentIdJSONArr, Account account) {
+        lambdaUpdate().set(Account::getParentIds, parentIdJSONArr).eq(Account::getId, account.getId()).update();
     }
 
-    private List<Account> searchChildAccount(List<Account> allAccount) {
-        Set<Long> idSet = new HashSet<>();
-        Set<String> topAccountNos = new HashSet<>();
+    private String joinParentIdJSONArray(Account account, List<Long> parentIds) {
+        List<Long> ids = new ArrayList<Long>() {{ add(account.getId()); addAll(parentIds); }};
+        return JSONArray.toJSONString(ids);
+    }
 
-        // 过滤出顶级科目的 no
-        for (Account account : allAccount) {
-            idSet.add(account.getId());
-            if(isTopAccount(account)) {
-                topAccountNos.add(account.getNo());
-            }
+    private Boolean isSetParentIdArrField(String parentIdJSONArr) {
+        return StringUtils.isNotBlank(parentIdJSONArr);
+    }
+
+    private List<Account> searchParents(String parentIdJSONArr) {
+        List<Long> ids = JSONArray.parseArray(parentIdJSONArr, Long.class);
+        return listByIds(ids.subList(INTEGER_ZERO, ids.size()));
+    }
+
+    private void recursiveSearchParentAndFillToList(Account currentAccount, List<Account> parents, List<Long> parentIds) {
+        if(currentAccount.getLevel() > INTEGER_ZERO) {
+            Account parent = getById(currentAccount.getParentId());
+            parents.add(parent);
+            parentIds.add(parent.getId());
+            recursiveSearchParentAndFillToList(parent, parents, parentIds);
         }
-        // 通过【顶级科目的 no】查询可能存在的子科目，并通过原科目 list 去重后的 id 集合（idSet），避免查询结果重复
-        return list(Wrappers.lambdaQuery(Account.class).in(Account::getNo, topAccountNos).notIn(Account::getId, idSet));
     }
 
-    private Wrapper<Account> searchAccountWrapper(String accountSort, Long companyId, String name, String no) {
+    private LambdaQueryWrapper<Account> searchWrapperByNameOrNo(String accountSort, Long companyId, String name, String no) {
+        LambdaQueryWrapper<Account> wrapper = baseWrapper(accountSort, companyId);
+        // 如果 param.name 为 no，而且并 param.no 为 null，则使用 name 的值，作为 no 字段查询
+        if(StringUtils.isNotBlank(name)) {
+            if(isNumber(name)) {
+                // param.name != null && param.no == null
+                if (StringUtils.isBlank(no)) {
+                    wrapper = wrapper.and(ext -> ext
+                                    .eq(Account::getNo, name)
+                                    .or()
+                                    .like(Account::getName, name)
+                    );
+                } else {
+                    // param.name != null && param.no != null
+                    wrapper = wrapper.and(ext -> ext
+                            .and(ext2 -> ext2
+                                    .eq(StringUtils.isNotBlank(no), Account::getNo, no)
+                                    .or()
+                                    .like(Account::getName, name)
+                            )
+                    );
+                }
+            } else {
+                // 如果 name 为正常字符串，则先 like，取出结果集的 no 去重，再查询对应 no 的全部科目
+                wrapper = wrapper
+                        .and(ext -> ext
+                                .in(Account::getNo, no)
+                                .or()
+                                .like(Account::getName, name)
+                        );
+            }
+        } else {
+            wrapper = wrapper.eq(StringUtils.isNotBlank(no), Account::getNo, no);
+        }
+        return wrapper;
+    }
+
+    private boolean isNumber(String name) {
+        return nonNull(name) && name.matches("-?\\d+(\\.\\d+)?");
+    }
+
+
+    private LambdaQueryWrapper<Account> baseWrapper(String accountSort, Long companyId) {
         return Wrappers.lambdaQuery(Account.class)
                 .eq(StringUtils.isNotBlank(accountSort), Account::getAccountSort, accountSort)
                 .eq(isNull(companyId), Account::getCompanyId, INTEGER_ZERO)
@@ -122,17 +185,12 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
                         .eq(Account::getCompanyId, INTEGER_ZERO)
                         .or()
                         .eq(Account::getCompanyId, companyId)
-                )
-                .and((StringUtils.isNotBlank(name) || StringUtils.isNotBlank(no)), wrapper -> wrapper
-                        .like(StringUtils.isNotBlank(name), Account::getName, name)
-                        .or()
-                        .like(StringUtils.isNotBlank(no), Account::getNo, no)
                 );
     }
 
     @Override
     public Page<Account> page(Page<Account> page, String accountSort, Long companyId, String name, String no) {
-        return page(page, searchAccountWrapper(accountSort, companyId, name, no));
+        return page(page, searchWrapperByNameOrNo(accountSort, companyId, name, no));
     }
 
     @Override
