@@ -17,6 +17,7 @@ import com.bbs.financial.service.CertificateService;
 import com.bbs.financial.service.CertificateTemplateService;
 import com.bbs.financial.service.SalaryService;
 import com.bbs.financial.util.LoginUser;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -120,6 +121,33 @@ public class AddSalaryCertificate {
                 }).collect(Collectors.toList()));
                 no+=INTEGER_ONE;
                 certificateTypeAndId.put(certificateTemplate.getType(),certificate.getId());
+            }
+
+            //删除旧凭证
+            for (String templateName : param.templateNames) {
+                if(templateName.equals("jc")){
+                    db.deleteJoin(new MPJLambdaWrapper<Certificate>()
+                            .leftJoin(Salary.class,"jc",Salary::getJCertificateId,Certificate::getId)
+                            .eq(Salary::getId,param.salaryId)
+                    );
+                    certificateAbstractService.deleteJoin(new MPJLambdaWrapper<CertificateAbstract>()
+                            .leftJoin(Certificate.class,Certificate::getId,CertificateAbstract::getCertificateId)
+                            .leftJoin(Salary.class,"jc",Salary::getJCertificateId,Certificate::getId)
+                            .eq(Salary::getId,param.salaryId)
+                    );
+                }
+                if(templateName.equals("fc")){
+                    db.deleteJoin(new MPJLambdaWrapper<Certificate>()
+                            .leftJoin(Salary.class,"fc",Salary::getFCertificateId,Certificate::getId)
+                            .eq(Salary::getId,param.salaryId)
+                    );
+                    certificateAbstractService.deleteJoin(new MPJLambdaWrapper<CertificateAbstract>()
+                            .leftJoin(Certificate.class,Certificate::getId,CertificateAbstract::getCertificateId)
+                            .leftJoin(Salary.class,"fc",Salary::getFCertificateId,Certificate::getId)
+                            .eq(Salary::getId,param.salaryId)
+                    );
+                }
+
             }
             Salary salary = new Salary().setId(param.getSalaryId())
                     .setFCertificateId(certificateTypeAndId.getOrDefault(CertificateType.PAY_A_SALARY.getValue(),null))
