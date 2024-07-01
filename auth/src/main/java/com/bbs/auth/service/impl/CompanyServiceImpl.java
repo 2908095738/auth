@@ -124,7 +124,7 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
             Set<Long> ids = new HashSet<>();
             Map<Long, Integer> indexMap = new HashMap<>();
 
-            List<String> structureCacheKeys = new ArrayList<>();
+            Set<String> structureCacheKeys = new HashSet<>();
             List<Long> structureIds = new ArrayList<>();
 
             for (int index = INTEGER_ZERO; index < userCompanyList.size(); index++) {
@@ -138,15 +138,16 @@ public class CompanyServiceImpl extends MPJBaseServiceImpl<CompanyMapper, Compan
                     structureIds.add(structureId);
                 }
             }
-            List<String> structureStrList = redisUtil.multiGet(structureCacheKeys);
+            Map<Long, CompanyStructure> companyStructureMap = redisUtil.multiGet(new ArrayList<>(structureCacheKeys)).stream()
+                    .map(str -> JSONUtil.toBean(str, CompanyStructure.class))
+                    .collect(Collectors.toMap(CompanyStructure::getId, structure -> structure));
             List<Long> cacheEmptyStructureIds = new ArrayList<>();
             Map<Long, Integer> cacheEmptyStructureIdAndIndexMap = new HashMap<>();
 
-            for (int index = 0; index < structureStrList.size(); index++) {
-                String structureStr = structureStrList.get(index);
-                if(StringUtils.isNotBlank(structureStr)) {
-                    CompanyStructure companyStructure = JSONUtil.toBean(structureStr, CompanyStructure.class);
-                    UserCompany userCompany = userCompanyList.get(index);
+            for (int index = 0; index < userCompanyList.size(); index++) {
+                UserCompany userCompany = userCompanyList.get(index);
+                CompanyStructure companyStructure = companyStructureMap.get(userCompany.getStructureId());
+                if(nonNull(companyStructure)) {
                     userCompany.setStructure(companyStructure); //填充用户的部门信息 1
                 } else {
                     Long emptyStructureID = structureIds.get(index);
