@@ -37,10 +37,10 @@ public class SalaryServiceImpl extends MPJBaseServiceImpl<SalaryMapper, Salary>
         return selectJoinListPage(new Page<>(param.getCurrent(),param.getSize()),SalaryVo.class,new MPJLambdaWrapper<Salary>()
                 .selectAll(Salary.class)
 
-                .selectCollection(EmployeeSalary.class,SalaryVo::getEmployeeSalaries,
-                        o->o.collection(EmployeeItemExtend.class,EmployeeSalary::getEmployeeItemExtends,
-                                o1->o1.association(AuxiliaryCalculation.class, EmployeeItemExtend::getName,result->result.result(AuxiliaryCalculation::getName))))
-
+                .selectCollection(EmployeeSalary.class,SalaryVo::getEmployeeSalaries)
+//                        o->o.collection(EmployeeItemExtend.class,EmployeeSalary::getEmployeeItemExtends,
+//                                o1->o1.association(AuxiliaryCalculation.class, EmployeeItemExtend::getName,result->result.result(AuxiliaryCalculation::getName))))
+//
 
                 .leftJoin(EmployeeSalary.class,EmployeeSalary::getSalaryId,Salary::getId)
 
@@ -68,9 +68,9 @@ public class SalaryServiceImpl extends MPJBaseServiceImpl<SalaryMapper, Salary>
     public SalaryVo selectOneAndEmployeeSalary(Long id) {
         return selectJoinOne(SalaryVo.class,new MPJLambdaWrapper<Salary>()
                 .selectAll(Salary.class)
-                .selectCollection(EmployeeSalary.class,SalaryVo::getEmployeeSalaries,
-                        o->o.collection(EmployeeItemExtend.class,EmployeeSalary::getEmployeeItemExtends,
-                                o1->o1.association(AuxiliaryCalculation.class, EmployeeItemExtend::getName,result->result.result(AuxiliaryCalculation::getName))))
+                .selectCollection(EmployeeSalary.class,SalaryVo::getEmployeeSalaries)
+//                        o->o.collection(EmployeeItemExtend.class,EmployeeSalary::getEmployeeItemExtends,
+//                                o1->o1.association(AuxiliaryCalculation.class, EmployeeItemExtend::getName,result->result.result(AuxiliaryCalculation::getName))))
                 .leftJoin(EmployeeSalary.class,EmployeeSalary::getSalaryId,Salary::getId)
                 .leftJoin(EmployeeItemExtend.class, on -> on
                         .eq(EmployeeItemExtend::getSalaryId,EmployeeSalary::getSalaryId)

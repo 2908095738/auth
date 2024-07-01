@@ -2,6 +2,7 @@ package com.bbs.financial.api.certificate.add;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.ObjUtil;
 import com.bbs.Result;
 import com.bbs.enums.financial.CertificateWordEnum;
 import com.bbs.financial.converter.CertificateConverter;
@@ -81,7 +82,7 @@ public class AddSalaryCertificate {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         List<CertificateTemplate> template = certificateTemplateService.getJoinTemplate(LoginUser.getCompanyId(), param.templateNames);
         if (CollUtil.isEmpty(template)) {
-            return Result.failed("模板不存在");
+            throw new RuntimeException("模板不存在");
         }
         long no = db.lambdaQuery().eq(Certificate::getCompanyId, LoginUser.getCompanyId())
                 .ge(Certificate::getCreateTime, DateUtil.beginOfMonth(new Date()))
@@ -101,6 +102,9 @@ public class AddSalaryCertificate {
                     Long useField = certificateAbstract.getUseField();//取值
                     String useEmployee = certificateAbstract.getUseEmployee();//应用人员范围
                     Integer salaryType = certificateAbstract.getSalaryType();//类型
+                    if(ObjUtil.isNull(useField)){
+                        throw new RuntimeException(certificateTemplate.getType()+"模板没有设置取值字段！");
+                    }
                     CertificateAbstract entity = new CertificateAbstract();
                     entity.setCertificateId(certificate.getId());
                     entity.setCertificateAbstract(certificateAbstract.getCertificateAbstract());
@@ -121,7 +125,6 @@ public class AddSalaryCertificate {
                     .setFCertificateId(certificateTypeAndId.getOrDefault(CertificateType.PAY_A_SALARY.getValue(),null))
                     .setJCertificateId(certificateTypeAndId.getOrDefault(CertificateType.ACCRUED_SALARY.getValue(),null));
             salaryService.updateById(salary);
-            transactionManager.commit(transaction);
 
             Set<String> collect = template.stream().map(certificateTemplate -> {
                 if (!param.templateNames.contains(certificateTemplate.getType())) {
@@ -129,13 +132,14 @@ public class AddSalaryCertificate {
                 }
                 return null;
             }).collect(Collectors.toSet());
-            if (CollUtil.isNotEmpty(collect)) {
-                return Result.failed(String.join(",", collect) + "模板不存在");
+            if (CollUtil.isNotEmpty(collect)&& ObjUtil.isNotEmpty(collect.toArray()[0])) {
+                throw new RuntimeException(String.join(",", collect) + "模板不存在");
             }
+            transactionManager.commit(transaction);
             return Result.success();
         } catch (Exception e) {
             transactionManager.rollback(transaction);
-            throw new RuntimeException(e);
+            return Result.failed(e.getMessage());
         }
     }
 }
