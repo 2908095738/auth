@@ -89,23 +89,36 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
         LambdaQueryWrapper<Account> wrapper = searchWrapperByNameOrNo(accountSort, companyId, name, no);
         List<Account> allAccount = list(wrapper);
         List<Account> accountParents = new ArrayList<>();
+        List<String> ids = new ArrayList<>();
         for (Account account: allAccount) {
-            String parentIdJSONArr = account.getParentIds();
-            List<Account> currentAccountTree = new ArrayList<Account>() {{ add(account);}};
-            if(isSetParentIdArrField(parentIdJSONArr)) {
-                // 解析父级科目的 parentIds 字段，查询父级科目链，并填充到 currentAccountTree
-                currentAccountTree.addAll(searchParents(parentIdJSONArr));
-            } else {
-                List<Long> parentIds = new ArrayList<>();
-                // 递归查询父级科目，并填充到 currentAccountTree
-                recursiveSearchParentAndFillToList(account, currentAccountTree, parentIds);
-                // 更新当前科目的 parentIds 字段
-                update(joinParentIdJSONArray(account, parentIds), account);
-            }
-            accountParents.addAll(currentAccountTree);
+            ids.add(" " + account.getId() + " ");
+            accountParents.addAll(searchParents(account));
         }
+        accountParents.addAll(searchChildren(ids));
         allAccount.addAll(accountParents);
         return tree(allAccount);
+    }
+
+    private List<Account> searchChildren(List<String> ids) {
+        return lambdaQuery()
+                .like(Account::getParentIds, ids)
+                .list();
+    }
+
+    private List<Account> searchParents(Account account) {
+        String parentIdJSONArr = account.getParentIds();
+        List<Account> currentAccountTree = new ArrayList<Account>() {{ add(account);}};
+        if(isSetParentIdArrField(parentIdJSONArr)) {
+            // 解析父级科目的 parentIds 字段，查询父级科目链，并填充到 currentAccountTree
+            currentAccountTree.addAll(searchByIds(parentIdJSONArr));
+        } else {
+            List<Long> parentIds = new ArrayList<>();
+            // 递归查询父级科目，并填充到 currentAccountTree
+            recursiveSearchParentAndFillToList(account, currentAccountTree, parentIds);
+            // 更新当前科目的 parentIds 字段
+            update(joinParentIdJSONArray(account, parentIds), account);
+        }
+        return currentAccountTree;
     }
 
     private void update(String parentIdJSONArr, Account account) {
@@ -113,7 +126,8 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
     }
 
     private String joinParentIdJSONArray(Account account, List<Long> parentIds) {
-        List<Long> ids = new ArrayList<Long>() {{ add(account.getId()); addAll(parentIds); }};
+        List<String> ids = new ArrayList<String>() {{ add(" " + account.getId() + " "); }};
+        parentIds.forEach(parentId -> ids.add(" " + parentId + " "));
         return JSONArray.toJSONString(ids);
     }
 
@@ -121,9 +135,13 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
         return StringUtils.isNotBlank(parentIdJSONArr);
     }
 
-    private List<Account> searchParents(String parentIdJSONArr) {
-        List<Long> ids = JSONArray.parseArray(parentIdJSONArr, Long.class);
-        return listByIds(ids.subList(INTEGER_ZERO, ids.size()));
+    private List<Account> searchByIds(String idJSONArr) {
+        List<String> ids = JSONArray.parseArray(idJSONArr, String.class);
+        List<String> notContainCurrentAccountIdList = ids.subList(INTEGER_ZERO, ids.size());
+        return listByIds(notContainCurrentAccountIdList.stream()
+                .map(String::trim)
+                .map(Long::valueOf)
+                .collect(Collectors.toList()));
     }
 
     private void recursiveSearchParentAndFillToList(Account currentAccount, List<Account> parents, List<Long> parentIds) {
