@@ -1,0 +1,59 @@
+package com.clinic.controller;
+
+import com.bbs.Result;
+import com.clinic.dto.param.AddSettingsParam;
+import com.clinic.dto.param.UpdateSettingsParam;
+import com.clinic.entity.Settings;
+import com.clinic.service.SettingsService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
+import javax.validation.Valid;
+
+
+@Slf4j
+@RestController
+@RequestMapping("/settings")
+public class SettingsController {
+
+    @Resource
+    private SettingsService service;
+
+    /**
+     * 添加设置
+     * @param param AddSettingsParam
+     * @return 添加结果
+     */
+    @PutMapping
+    public Result<Boolean> add(@RequestBody @Valid AddSettingsParam param){
+        return service.add(param);
+    }
+
+
+    /**
+     * 修改设置
+     * @param param UpdateSettingsParam
+     * @return 修改结果
+     */
+    @PostMapping
+    public Result<Boolean> update(@RequestBody @Valid UpdateSettingsParam param){
+        return service.update(param);
+    }
+
+    /**
+     * 用户设置查询
+     * @return Settings
+     */
+    @GetMapping
+    public Result<Settings> getByUserId(){
+        return Result.success(service.getByUserId());
+    }
+
+
+}

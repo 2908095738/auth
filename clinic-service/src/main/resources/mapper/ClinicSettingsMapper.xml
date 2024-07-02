@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clinic.mapper.ClinicSettingsMapper">
+
+    <resultMap id="BaseResultMap" type="com.clinic.entity.Settings">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="expiryAlertMonth" column="expiry_alert_month" jdbcType="INTEGER"/>
+            <result property="stateCountRule" column="state_count_rule" jdbcType="TINYINT"/>
+            <result property="countVal" column="count_val" jdbcType="INTEGER"/>
+            <result property="countUnitId" column="count_unit_id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,expiry_alert_month,state_count_rule,
+        count_val,count_unit_id,user_id,
+        create_time
+    </sql>
+</mapper>

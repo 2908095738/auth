@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clinic.mapper.DossierPrescriptionMapper">
+
+    <resultMap id="BaseResultMap" type="com.clinic.entity.DossierPrescription">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="dossierId" column="dossier_id" jdbcType="INTEGER"/>
+            <result property="prescriptionId" column="prescription_id" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,dossier_id,prescription_id
+    </sql>
+</mapper>
