@@ -36,11 +36,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.bbs.Result.success;
 import static com.bbs.auth.cache.user.UserCache.cacheIsExists;
@@ -48,6 +45,7 @@ import static com.bbs.enums.CodeEnum.FAILED_USER_CODE_NOT_AVAILABLE;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 /**
 * @author Lenovo
@@ -232,6 +230,15 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
     @Override
     public List<User> search(Set<Long> ids) {
         return search(new ArrayList<>(ids));
+    }
+
+    @Override
+    public Map<Long, User> searchMap(Set<Long> ids) {
+        List<User> users = search(ids);
+        if(nonNull(users) && users.size() > INTEGER_ZERO) {
+            return users.stream().collect(Collectors.toMap(User::getId, user -> user));
+        }
+        return new HashMap<>();
     }
 
     @Override

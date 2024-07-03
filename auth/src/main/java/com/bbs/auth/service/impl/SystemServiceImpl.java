@@ -1,18 +1,18 @@
 package com.bbs.auth.service.impl;
 
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.auth.entity.System;
 import com.bbs.auth.service.SystemService;
 import com.bbs.auth.mapper.SystemMapper;
-import com.github.yulichang.base.MPJBaseServiceImpl;
 import org.springframework.stereotype.Service;
 
 /**
 * @author 路晨霖
-* @description 针对表【system】的数据库操作Service实现
-* @createDate 2024-04-14 13:45:45
+* @description 针对表【system(系统)】的数据库操作Service实现
+* @createDate 2024-07-02 19:01:34
 */
 @Service
-public class SystemServiceImpl extends MPJBaseServiceImpl<SystemMapper, System>
+public class SystemServiceImpl extends ServiceImpl<SystemMapper, System>
     implements SystemService{
 
 }
