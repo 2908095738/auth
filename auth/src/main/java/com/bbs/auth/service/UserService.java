@@ -9,6 +9,7 @@ import com.bbs.exception.ReLoginException;
 import com.github.yulichang.base.MPJBaseService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -99,6 +100,8 @@ public interface UserService extends MPJBaseService<User> {
     List<User> search(List<Long> ids);
 
     List<User> search(Set<Long> ids);
+
+    Map<Long, User> searchMap(Set<Long> ids);
 
     Boolean isLogin();
 

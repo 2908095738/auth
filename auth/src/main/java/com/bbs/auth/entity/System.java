@@ -9,10 +9,10 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 
+ * 系统
  * @TableName system
  */
-@TableName(value ="system")
+@TableName(value ="back_system")
 @Data
 public class System implements Serializable {
     /**
@@ -22,25 +22,25 @@ public class System implements Serializable {
     private Long id;
 
     /**
-     * 系统名称
+     * 名称
      */
     @TableField(value = "name")
     private String name;
 
     /**
-     * 管理员ID
+     * 管理员
      */
-    @TableField(value = "admin")
-    private Long admin;
+    @TableField(value = "admin_id")
+    private Long adminId;
 
     /**
-     * 系统描述
+     * 描述
      */
     @TableField(value = "description")
     private String description;
 
     /**
-     * 父级系统 ID（0为最大级别）
+     * 父级系统
      */
     @TableField(value = "pid")
     private Long pid;
@@ -52,7 +52,7 @@ public class System implements Serializable {
     private Date createTime;
 
     /**
-     * 创建人
+     * 信息创建人
      */
     @TableField(value = "create_by")
     private Long createBy;
@@ -64,17 +64,20 @@ public class System implements Serializable {
     private Date updateTime;
 
     /**
-     * 修改人
+     * 信息修改人
      */
     @TableField(value = "update_by")
     private Long updateBy;
 
     /**
-     * 系统状态（0正常）
+     * 状态
      */
     @TableField(value = "state")
     private Integer state;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+    @TableField(exist = false)
+    private User admin;
 }
