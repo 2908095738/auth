@@ -19,15 +19,22 @@ import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
 
-@RestController
+@RestController("searchSystemRouter")
 @RequestMapping
-public class SearchSystemRouter {
+public class Search {
 
     @Resource
     private SystemRouterService systemRouterService;
 
+    @GetMapping("/back/system/router/list")
+    public Result<List<SystemRouter>> searchList(@RequestParam(required = false) Long systemId) {
+        return Result.success(systemRouterService.list(new LambdaQueryWrapper<SystemRouter>()
+                .eq(nonNull(systemId), SystemRouter::getSystemId, systemId)
+        ));
+    }
+
     @GetMapping("/back/system/router")
-    public Result<List<Tree<Long>>> search(@RequestParam(required = false) Long systemId) {
+    public Result<List<Tree<Long>>> searchTree(@RequestParam(required = false) Long systemId) {
         List<SystemRouter> routers = systemRouterService.list(new LambdaQueryWrapper<SystemRouter>()
                 .eq(nonNull(systemId), SystemRouter::getSystemId, systemId)
         );
