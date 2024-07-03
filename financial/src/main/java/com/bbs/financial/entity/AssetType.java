@@ -68,7 +68,7 @@ public class AssetType implements Serializable {
      * 固定资产科目
      */
     @TableField(exist = false)
-    private String fixedAssetsAccountName;
+    private Account fixedAssetsAccount;
 
 
     /**
@@ -81,7 +81,7 @@ public class AssetType implements Serializable {
      * 折旧科目
      */
     @TableField(exist = false)
-    private String depreciationAccountName;
+    private Account depreciationAccount;
 
     /**
      * 备注

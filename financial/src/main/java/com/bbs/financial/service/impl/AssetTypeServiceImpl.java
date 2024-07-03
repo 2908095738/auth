@@ -20,8 +20,8 @@ public class AssetTypeServiceImpl extends MPJBaseServiceImpl<AssetTypeMapper, As
     public Page<AssetType> selectJoinPage(Long companyId, Integer current, Integer size) {
         return selectJoinListPage(new Page<>(current, size), AssetType.class, new MPJLambdaWrapper<AssetType>()
                 .selectAll(AssetType.class)
-                .selectAssociation("FixedAssets",Account.class,  AssetType::getFixedAssetsAccountName, o -> o.result(Account::getName))
-                .selectAssociation( "Depreciation", Account.class,AssetType::getDepreciationAccountName, t -> t.result(Account::getName))
+                .selectAssociation("FixedAssets",Account.class,  AssetType::getFixedAssetsAccount)
+                .selectAssociation( "Depreciation", Account.class,AssetType::getDepreciationAccount)
                 .leftJoin(Account.class, "FixedAssets", Account::getId, AssetType::getFixedAssetsAccountId)
                 .leftJoin(Account.class, "Depreciation", Account::getId, AssetType::getDepreciationAccountId)
 
