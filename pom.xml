@@ -21,6 +21,7 @@
         <module>dfs-server</module>
         <module>log-server</module>
         <module>financial</module>
+        <module>clinic-service</module>
     </modules>
 
     <properties>

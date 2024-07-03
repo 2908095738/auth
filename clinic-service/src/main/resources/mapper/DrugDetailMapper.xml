@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.clinic.mapper.DrugDetailMapper">
+
+    <resultMap id="BaseResultMap" type="com.clinic.entity.DrugDetail">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="lotNo" column="lot_no" jdbcType="VARCHAR"/>
+            <result property="inventory" column="inventory" jdbcType="BIGINT"/>
+            <result property="inOrOutQTY" column="in_or_out_qty" jdbcType="BIGINT"/>
+            <result property="sellingPrice" column="selling_price" jdbcType="DECIMAL"/>
+            <result property="totalSellingPrice" column="total_selling_price" jdbcType="DECIMAL"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="createName" column="create_name" jdbcType="VARCHAR"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="deleteFlag" column="delete_flag" jdbcType="TINYINT"/>
+            <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="type" column="type" jdbcType="TINYINT"/>
+            <result property="size" column="size" jdbcType="VARCHAR"/>
+            <result property="unit" column="unit" jdbcType="CHAR"/>
+            <result property="origin" column="origin" jdbcType="VARCHAR"/>
+            <result property="manufacturer" column="manufacturer" jdbcType="VARCHAR"/>
+            <result property="drugNo" column="drug_no" jdbcType="VARCHAR"/>
+            <result property="cost" column="cost" jdbcType="DECIMAL"/>
+            <result property="expiryDate" column="expiry_date" jdbcType="VARCHAR"/>
+            <result property="totalCost" column="total_cost" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+         id,lot_no,inventory,
+        selling_price,total_selling_price,create_time,
+        create_name,update_time,delete_flag,
+        name,type,size,
+        unit,origin,manufacturer,
+        drug_no,cost,expiry_date,
+        total_cost,
+        in_or_out_qty
+    </sql>
+
+</mapper>

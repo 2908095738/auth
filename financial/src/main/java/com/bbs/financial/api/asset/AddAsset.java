@@ -15,7 +15,6 @@ import com.bbs.financial.service.AssetTypeService;
 import com.bbs.financial.util.LoginUser;
 import com.bbs.vo.CompanyStructure;
 import org.apache.commons.compress.utils.Sets;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -23,7 +22,6 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.lang.reflect.Field;

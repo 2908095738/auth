@@ -97,7 +97,7 @@ public class SalaryServiceImpl extends MPJBaseServiceImpl<SalaryMapper, Salary>
                 .eq(Salary::getId,salaryId)
                 .eq(EmployeeItemExtend::getItemTypeId,useField)
                 .in(CollUtil.isNotEmpty(list),EmployeeItemExtend::getEmployeeId,list)
-//                .in(EmployeeItemExtend::getSalaryType,salaryType)
+//                .eq(EmployeeItemExtend::getSalaryType,salaryType)
         );
     }
 
