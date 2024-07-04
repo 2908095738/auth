@@ -1,7 +1,10 @@
 package com.bbs.auth.service;
 
+import cn.hutool.core.lang.tree.Tree;
 import com.bbs.auth.entity.SystemRouter;
 import com.github.yulichang.base.MPJBaseService;
+
+import java.util.List;
 
 /**
 * @author 路晨霖
@@ -10,4 +13,7 @@ import com.github.yulichang.base.MPJBaseService;
 */
 public interface SystemRouterService extends MPJBaseService<SystemRouter> {
 
+    List<SystemRouter> searchBySystemId(Long systemId);
+
+    List<Tree<Long>> toTree(List<SystemRouter> routers);
 }

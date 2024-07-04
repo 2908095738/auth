@@ -2,8 +2,8 @@ package com.bbs.financial.service;
 
 import com.bbs.financial.entity.Certificate;
 import com.github.yulichang.base.MPJBaseService;
-import com.github.yulichang.extension.mapping.base.MPJDeepService;
 
+import java.util.Date;
 import java.util.List;
 
 
@@ -14,5 +14,5 @@ import java.util.List;
  */
 public interface CertificateService extends MPJBaseService<Certificate> {
 
-    List<Certificate> selectByDepreciation();
+    List<Certificate> searchByCreate(Date startDate, Date endDate, String no);
 }

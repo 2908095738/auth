@@ -67,4 +67,10 @@ public class SystemRouter implements Serializable {
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+    @TableField(exist = false)
+    private System system;
+
+    @TableField(exist = false)
+    private SystemRouter parent;
 }

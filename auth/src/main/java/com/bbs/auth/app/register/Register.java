@@ -3,6 +3,7 @@ package com.bbs.auth.app.register;
 import com.bbs.auth.app.login.Login;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.Result;
+import com.bbs.auth.app.login.VO;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.dao.UserDao;
 import com.bbs.auth.entity.User;
@@ -82,7 +83,7 @@ public class Register extends ServiceImpl<UserMapper, User> {
      * @return 注册是否成功
      */
     @PutMapping("/user")
-    public Result<Login.VO> register(@Valid @RequestBody Param param) throws IllegalArgumentException{
+    public Result<VO> register(@Valid @RequestBody Param param) throws IllegalArgumentException{
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         User user = converter.toEntity(param);
         service.checkPhoneCodeThrow(param.phone, param.code);
@@ -103,7 +104,7 @@ public class Register extends ServiceImpl<UserMapper, User> {
             saveUser(user);
 
             transactionManager.commit(transaction);
-            return success(new Login.VO(user.getId(), user.getName(), tokenService.createToken(user), null));
+            return success(new VO(user.getId(), user.getName(), tokenService.createToken(user), null));
         } catch (Exception e) {
             e.printStackTrace();
             transactionManager.rollback(transaction);
