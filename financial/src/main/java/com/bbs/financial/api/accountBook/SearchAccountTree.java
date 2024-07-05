@@ -40,7 +40,7 @@ public class SearchAccountTree {
                                                              @RequestParam("current")Integer current,
                                                              @RequestParam("size")Integer size) {
         Page<CertificateAbstract> list = certificateAbstractService.selectPage(LoginUser.getCompanyId(), certificateCreateTime, accountId, current, size);
-        certificateAbstractService.initData(list);
+        certificateAbstractService.initDataByNo(list);
         return Result.success(list);
     }
 
@@ -50,7 +50,7 @@ public class SearchAccountTree {
                                                              @RequestParam("current")Integer current,
                                                              @RequestParam("size")Integer size) {
         Page<CertificateAbstract> list = certificateAbstractService.selectPage(LoginUser.getCompanyId(), certificateCreateTime,null, current, size);
-        certificateAbstractService.initData(list);
+        certificateAbstractService.initDataByNo(list);
         List<String> emnu = Lists.newArrayList("期初余额", "本期合计", "本年累计");
         list.setRecords(list.getRecords().stream().filter(item -> emnu.contains(item.getCertificateAbstract())).collect(Collectors.toList()));
         return Result.success(list);

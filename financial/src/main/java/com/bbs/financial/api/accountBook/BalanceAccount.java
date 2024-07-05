@@ -28,13 +28,13 @@ public class BalanceAccount {
     @Resource
     private CertificateAbstractService certificateAbstractService;
 
-    @GetMapping("/certificate/balance")
+    @GetMapping("/certificate/account/balance")
     public Result<List<Vo>> balanceAccount(@RequestParam("createTime") String certificateCreateTime) {
         Page<CertificateAbstract> list = certificateAbstractService.selectPage(LoginUser.getCompanyId(), certificateCreateTime, null, 1, 9999);
         List<Vo> result = new ArrayList<>();
 
         if(CollUtil.isNotEmpty(list.getRecords())){
-            certificateAbstractService.initData(list);
+            certificateAbstractService.initDataByNo(list);
             Map<Long, List<CertificateAbstract>> collect = list.getRecords().stream().collect(Collectors.groupingBy(CertificateAbstract::getAccountId));
             for (Long accountId : collect.keySet()) {
                 CertificateAbstract certificateAbstract = collect.get(accountId).get(0);
