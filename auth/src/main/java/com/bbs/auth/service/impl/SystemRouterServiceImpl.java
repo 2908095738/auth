@@ -57,6 +57,11 @@ public class SystemRouterServiceImpl extends MPJBaseServiceImpl<SystemRouterMapp
             }
         });
     }
+
+    @Override
+    public List<Tree<Long>> searchTreeBySystemId(Long systemId) {
+        return toTree(searchBySystemId(systemId));
+    }
 }
 
 

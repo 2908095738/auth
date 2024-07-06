@@ -1,4 +1,4 @@
-package com.bbs.auth.app.login;
+package com.bbs.auth.app.login.param;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

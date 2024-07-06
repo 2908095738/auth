@@ -1,5 +1,6 @@
 package com.bbs.auth.app.login;
 
+import com.bbs.auth.app.login.param.Param;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginLog {
+public class Log {
 
     /**
      * 登录结果（0正常/1失败）
@@ -49,7 +50,7 @@ public class LoginLog {
      */
     private String loginTime;
 
-    public LoginLog(Integer result, Param param, String loginTime) {
+    public Log(Integer result, Param param, String loginTime) {
         this.result = result;
         this.phone = param.getPhone();
         this.code = param.getCode();

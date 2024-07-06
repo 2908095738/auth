@@ -30,7 +30,7 @@ public class SearchSystem {
 
     @GetMapping("/back/system")
     public Result<List<System>> search() {
-        List<System> systems = systemService.list();
+        List<System> systems = systemService.lambdaQuery().list();
         if(systems.size() > INTEGER_ZERO) fillAdmin(systems);
         return Result.success(systems);
     }

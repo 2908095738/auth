@@ -6,7 +6,10 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
+
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 系统
@@ -14,12 +17,20 @@ import lombok.Data;
  */
 @TableName(value ="back_system")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class System implements Serializable {
     /**
      * 主键
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
+
+    /**
+     * 编码
+     */
+    @TableField(value = "code")
+    private String code;
 
     /**
      * 名称
@@ -74,6 +85,18 @@ public class System implements Serializable {
      */
     @TableField(value = "state")
     private Integer state;
+
+    /**
+     * 是否隐藏
+     */
+    @TableField(value = "is_hide")
+    private Integer isHide;
+
+    /**
+     * icon
+     */
+    @TableField(value = "icon_name")
+    private String iconName;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

@@ -2,12 +2,13 @@ package com.bbs.auth.app.login;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONUtil;
+import com.bbs.auth.app.login.param.Param;
+import com.bbs.auth.app.login.vo.VO;
 import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.dao.UserDao;
 import com.bbs.auth.entity.Company;
 import com.bbs.auth.entity.UserCompany;
 import com.bbs.auth.service.CompanyService;
-import com.bbs.auth.service.SystemRouterService;
 import com.bbs.auth.service.UserService;
 import com.bbs.auth.util.RedisUtil;
 import com.bbs.Result;
@@ -174,13 +175,13 @@ public class Login {
     }
 
     public void recordLoginSuccessLog(Param param, String newToken, String loginTime) {
-        LoginLog log = new LoginLog(NumberUtils.INTEGER_ZERO, param, loginTime);
+        Log log = new Log(NumberUtils.INTEGER_ZERO, param, loginTime);
         log.setNewToken(newToken);
         deque().addFirst(JSONUtil.toJsonPrettyStr(log));
     }
 
     public void recordLoginFailLog(Param param, String errorMsg, String loginTime) {
-        LoginLog log = new LoginLog(NumberUtils.INTEGER_ZERO, param, loginTime);
+        Log log = new Log(NumberUtils.INTEGER_ZERO, param, loginTime);
         log.setErrorMsg(errorMsg);
         deque().addFirst(JSONUtil.toJsonPrettyStr(log));
     }

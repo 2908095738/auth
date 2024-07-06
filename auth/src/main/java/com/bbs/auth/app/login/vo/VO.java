@@ -1,4 +1,4 @@
-package com.bbs.auth.app.login;
+package com.bbs.auth.app.login.vo;
 
 import com.bbs.auth.entity.UserCompany;
 import lombok.AllArgsConstructor;

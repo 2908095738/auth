@@ -16,4 +16,6 @@ public interface SystemRouterService extends MPJBaseService<SystemRouter> {
     List<SystemRouter> searchBySystemId(Long systemId);
 
     List<Tree<Long>> toTree(List<SystemRouter> routers);
+
+    List<Tree<Long>> searchTreeBySystemId(Long systemId);
 }

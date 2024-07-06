@@ -1,9 +1,8 @@
 package com.bbs.auth.app.register;
 
-import com.bbs.auth.app.login.Login;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.Result;
-import com.bbs.auth.app.login.VO;
+import com.bbs.auth.app.login.vo.VO;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.dao.UserDao;
 import com.bbs.auth.entity.User;
