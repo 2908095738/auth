@@ -32,9 +32,9 @@ import java.util.Optional;
 
 import static java.util.Objects.nonNull;
 
-@RestController
+@RestController("searchAdmissionJoin")
 @RequestMapping
-public class Admission extends MPJBaseServiceImpl<AdmissionLogMapper, AdmissionLog> {
+public class Search extends MPJBaseServiceImpl<AdmissionLogMapper, AdmissionLog> {
 
 
     @Data
@@ -58,7 +58,7 @@ public class Admission extends MPJBaseServiceImpl<AdmissionLogMapper, AdmissionL
      * @param param SearchAdmissionParam
      */
     @GetMapping("/log/admission/join")
-    public Result<AdmissionLog> searchAdmissionJoin(Param param) {
+    public Result<AdmissionLog> search(Param param) {
         MPJLambdaWrapper<AdmissionLog> wrapper = Optional.of(new MPJLambdaWrapper<>(AdmissionLog.class))
                 .map(this::joinPatient)
                 .map(this::joinDossier)
@@ -68,28 +68,29 @@ public class Admission extends MPJBaseServiceImpl<AdmissionLogMapper, AdmissionL
                 .get();
         wrapper
                 .eq(AdmissionLog::getUserId, LoginUser.getId())
-
+                .eq(AdmissionLog::getId, param.getId())
                 .orderByDesc(AdmissionLog::getCreateTime)
         ;
 
-        wrapper.eq(AdmissionLog::getId, param.getId());
         AdmissionLog log = baseMapper.selectJoinOne(AdmissionLog.class, wrapper);
 
 
-        log.setCreateTimeStr(DateUtil.formatDateTime(log.getCreateTime()));
+        if(nonNull(log)) {
+            log.setCreateTimeStr(DateUtil.formatDateTime(log.getCreateTime()));
 
-        log.getPrescriptionDrugs().forEach(prescriptionDrug -> {
-            List<Unit> units = new ArrayList<>();
-            prescriptionDrug.getStockBatch().getStockUnitList().forEach(stockUnit -> {
-                Unit unit = stockUnit.getUnit();
-                unit.setSort(stockUnit.getSort());
-                unit.setStepSize(stockUnit.getStepSize());
-                units.add(unit);
+            log.getPrescriptionDrugs().forEach(prescriptionDrug -> {
+                List<Unit> units = new ArrayList<>();
+                prescriptionDrug.getStockBatch().getStockUnitList().forEach(stockUnit -> {
+                    Unit unit = stockUnit.getUnit();
+                    unit.setSort(stockUnit.getSort());
+                    unit.setStepSize(stockUnit.getStepSize());
+                    units.add(unit);
+                });
+                prescriptionDrug.setUnits(units);
             });
-            prescriptionDrug.setUnits(units);
-        });
 
-        if(nonNull(log.getPayId())) log.setPayRecords(payRecordService.searchByPayId(log.getPayId()));
+            if(nonNull(log.getPayId())) log.setPayRecords(payRecordService.searchByPayId(log.getPayId()));
+        }
         return Result.success(log);
     }
 
