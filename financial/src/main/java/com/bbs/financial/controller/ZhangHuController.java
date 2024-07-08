@@ -5,6 +5,7 @@ import com.bbs.Result;
 import com.bbs.financial.entity.PriceType;
 import com.bbs.financial.entity.ZhangHu;
 import com.bbs.financial.service.ZhangHuService;
+import com.bbs.financial.util.LoginUser;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +31,7 @@ public class ZhangHuController {
      */
     @PostMapping
     public Result<Boolean> add(@RequestBody ZhangHu zhanghu) {
+        zhanghu.setCompanyId(LoginUser.getCompanyId());
         zhangHuService.save(zhanghu);
         return success();
     }

@@ -1,7 +1,7 @@
 package com.bbs.financial.mapper;
 
 import com.bbs.financial.entity.Note;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 
 /**
 * @author Mafty
@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2024-06-29 15:36:24
 * @Entity com.bbs.financial.entity.Note
 */
-public interface NoteMapper extends BaseMapper<Note> {
+public interface NoteMapper extends MPJBaseMapper<Note> {
 
 }
 

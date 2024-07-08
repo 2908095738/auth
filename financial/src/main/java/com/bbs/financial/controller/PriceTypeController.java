@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.financial.entity.PriceType;
 import com.bbs.financial.service.PriceTypeService;
+import com.bbs.financial.util.LoginUser;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -25,6 +26,7 @@ public class PriceTypeController {
      */
     @PostMapping
     public Result<Boolean> add(@RequestBody PriceType priceType) {
+        priceType.setCompanyId(LoginUser.getCompanyId());
         priceTypeService.save(priceType);
         return success();
     }

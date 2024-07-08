@@ -62,6 +62,6 @@ public class CheckoutServiceImpl extends MPJBaseServiceImpl<CheckoutMapper, Chec
                 .lt(Checkout::getDate, DateUtil.beginOfMonth(DateUtil.offsetMonth(date, INTEGER_ONE)))
         );
 
-        return ObjectUtils.isEmpty(id);
+        return !ObjectUtils.isEmpty(id);
     }
 }

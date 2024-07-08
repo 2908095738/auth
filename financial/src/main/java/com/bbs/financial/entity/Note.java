@@ -4,20 +4,31 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
+
+import com.bbs.api.auth.User;
+import com.github.yulichang.annotation.EntityMapping;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 
 /**
  * 日记账
+ *
  * @TableName note
  */
+@FieldNameConstants
 @TableName(value ="note")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Note implements Serializable {
     /**
-     * 
+     *
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
@@ -37,26 +48,14 @@ public class Note implements Serializable {
     /**
      * 收入
      */
-    @TableField(value = "revenue")
-    private BigDecimal revenue;
+    @TableField(value = "borrow_money")
+    private BigDecimal borrowMoney;
 
     /**
      * 支出
      */
-    @TableField(value = "expenses")
-    private BigDecimal expenses;
-
-    /**
-     * 凭证字
-     */
-    @TableField(value = "certificate_word")
-    private String certificateWord;
-
-    /**
-     * 编号（凭证号）
-     */
-    @TableField(value = "no")
-    private Long no;
+    @TableField(value = "loans_money")
+    private BigDecimal loansMoney;
 
     /**
      * 凭证ID
@@ -69,6 +68,12 @@ public class Note implements Serializable {
      */
     @TableField(value = "date")
     private Date date;
+
+    /**
+     * 备注
+     */
+    @TableField(value = "remark")
+    private String remark;
 
     /**
      * 创建时间
@@ -105,6 +110,24 @@ public class Note implements Serializable {
      */
     @TableField(value = "company_id")
     private Long companyId;
+
+    @TableField(exist = false)
+    @EntityMapping(thisField = Fields.heAccountId, joinField = Account.Fields.id)
+    private Account heAccount;
+
+    @TableField(exist = false)
+    @EntityMapping(thisField = Fields.zhId, joinField = ZhangHu.Fields.id)
+    private ZhangHu zhangHu;
+
+    @TableField(exist = false)
+    @EntityMapping(thisField = Fields.certificateId, joinField = Certificate.Fields.id)
+    private Certificate certificate;
+
+    @TableField(exist = false)
+    private User createUser;
+
+    @TableField(exist = false)
+    private User updateUser;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

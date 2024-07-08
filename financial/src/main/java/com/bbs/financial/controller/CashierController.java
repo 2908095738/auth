@@ -10,17 +10,19 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.api.auth.User;
 import com.bbs.api.auth.UserAPI;
+import com.bbs.financial.api.note.search.SearchNote;
 import com.bbs.financial.dto.*;
 import com.bbs.financial.entity.*;
 import com.bbs.financial.service.*;
 import com.bbs.financial.util.LoginUser;
+import com.bbs.financial.util.SpringUtil;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.dubbo.common.utils.Holder;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataFormat;
+import org.springframework.context.ApplicationContext;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,8 +40,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.bbs.Result.success;
-import static java.util.Objects.nonNull;
 import static com.bbs.financial.util.ExcelUtil.setResponseHeader;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.math.NumberUtils.*;
 
 /**
@@ -71,6 +73,12 @@ public class CashierController {
     @Resource
     private CertificateAbstractService certificateAbstractService;
 
+    @Resource
+    private NoteService noteService;
+
+    @Resource
+    private ApplicationContext applicationContext;
+
     /**
      * 查询日记账
      *
@@ -88,12 +96,12 @@ public class CashierController {
             @RequestParam(name = "endDate", required = false) Long endDateLong) {
 
         //获取凭证分页
-        Page<Certificate> certificatePage = cashierService.listCertificate(current, size, LoginUser.getCompanyId(), zhangHuId, null, startDateLong, endDateLong, Boolean.TRUE, Boolean.TRUE);
+        Page<Certificate> certificatePage = cashierService.listCertificate(current, size, LoginUser.getCompanyId(), Collections.singletonList(zhangHuId), null, startDateLong, endDateLong, Boolean.TRUE, Boolean.TRUE);
 
         //凭证摘要列表排序
-        sortByAbstList(certificatePage.getRecords());
+//        sortByNoteList(certificatePage.getRecords());
 
-        Long oriMoney = getOriMoney(zhangHuId, String.valueOf(startDateLong)).getData();
+        Long oriMoney = getOriMoney(zhangHuId, startDateLong).getData();
         initLessMoney(certificatePage.getRecords(), oriMoney);
 
         // 获取【创建用户】&&【审核用户】的 userId Set
@@ -106,19 +114,13 @@ public class CashierController {
         return Result.success(certificatePage);
     }
 
-    /**
-     * 对凭证摘要排序
-     *
-     * @param list 凭证列表
-     */
-    private void sortByAbstList(List<Certificate> list) {
-        list.forEach(c ->
-                c.getAbstracts().sort((l, r) -> {
+    private void sortByNoteList(List<Note> list) {
+        list.sort((l, r) -> {
                     Long lId = l.getId();
                     Long rId = r.getId();
 
                     return lId.compareTo(rId);
-                }));
+        });
     }
 
     /**
@@ -189,21 +191,20 @@ public class CashierController {
      * @param date      时间戳字符串
      */
     @GetMapping("/cert/oriMoney")
-    public Result<Long> getOriMoney( Long zhangHuId, @RequestParam(name = "date", required = false) String date) {
+    public Result<Long> getOriMoney(Long zhangHuId, @RequestParam(name = "date", required = false) Long date) {
         //计算期初余额
-        List<Certificate> tmpList = cashierService.listCertificate(INTEGER_ZERO, INTEGER_ZERO, LoginUser.getCompanyId(), zhangHuId, date, null, null, Boolean.FALSE, Boolean.FALSE).getRecords();
-        long oriMoeny = 0L;
-        for (Certificate cert : tmpList) {
-            List<CertificateAbstract> abstList = cert.getAbstracts();
-            if (!ObjectUtils.isEmpty(abstList)) {
-                for (CertificateAbstract abst : abstList) {
-                    if (!ObjectUtils.isEmpty(abst.getBorrowMoney()))
-                        oriMoeny = oriMoeny + abst.getBorrowMoney();
-                    if (!ObjectUtils.isEmpty(abst.getLoansMoney()))
-                        oriMoeny = oriMoeny - abst.getLoansMoney();
+        List<Note> tmpList = noteService.listNote(INTEGER_ZERO, INTEGER_ZERO,
+                Collections.singletonList(zhangHuId),
+                INTEGER_ZERO, null, null,
+                date, null, null,
+                Boolean.FALSE, Boolean.FALSE).getRecords();
 
-                }
-            }
+        long oriMoeny = 0L;
+        for (Note note : tmpList) {
+            if (!ObjectUtils.isEmpty(note.getBorrowMoney()))
+                oriMoeny = oriMoeny + note.getBorrowMoney().longValue();
+            if (!ObjectUtils.isEmpty(note.getLoansMoney()))
+                oriMoeny = oriMoeny - note.getLoansMoney().longValue();
         }
 
         return Result.success(oriMoeny);
@@ -214,19 +215,34 @@ public class CashierController {
      *
      * @param resp      响应
      * @param zhangHuId 账户id
+     * @param isAllZh             是否显示所有账户：true: 显示所有;false: 显示启用;
+     * @param voucherStatus       凭证状态：0.所有凭证;1.未生成凭证;2.已生成凭证;
+     * @param certificateAbstract 摘要
+     * @param heSubjName          账号对方科目名称
+     * @param remark              备注
+     * @param makeName            制单人
      * @param startDateLong 起始时间时间戳
      * @param endDateLong   结束时间时间戳
      */
     @GetMapping("/exportCert")
     public void exportCert(HttpServletRequest req, HttpServletResponse resp,
                            @RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size,
-                            @RequestParam Long zhangHuId,
+                           @RequestParam Long zhangHuId, @RequestParam boolean isAllZh,
+                           @RequestParam(name = "voucherStatus", required = false) Integer voucherStatus,
+                           @RequestParam(name = "certificateAbstract", required = false) String certificateAbstract,
+                           @RequestParam(name = "heSubjName", required = false) String heSubjName,
+                           @RequestParam(name = "remark", required = false) String remark,
+                           @RequestParam(name = "makeName", required = false) String makeName,
                            @RequestParam(name = "startDate", required = false) Long startDateLong,
                            @RequestParam(name = "endDate", required = false) Long endDateLong) {
-        List<Certificate> oriData = listCertificate(current, size, zhangHuId, startDateLong, endDateLong).getData().getRecords();
+        SearchNote getNoteContoller = (SearchNote) applicationContext.getBean(SpringUtil.getClassNameOfFirstLow(SearchNote.class));
+        List<NoteDto> oriData = getNoteContoller.search(current, size,
+                zhangHuId, isAllZh, voucherStatus,
+                startDateLong, endDateLong,
+                certificateAbstract, heSubjName, remark, makeName).getData().getRecords();
 
-        Long oriMoney = getOriMoney(LoginUser.getCompanyId(), String.valueOf(startDateLong)).getData();
-        Function<List<Certificate>, List<ExcelNoteDto>> initExcelDataFunc = d -> {
+        Long oriMoney = getOriMoney(zhangHuId, startDateLong).getData();
+        Function<List<NoteDto>, List<ExcelNoteDto>> initExcelDataFunc = d -> {
             List<ExcelNoteDto> datas = getExcelDatasByNote(d, oriMoney);
             initZhByNote(datas, LoginUser.getCompanyId());
             return datas;
@@ -282,40 +298,14 @@ public class CashierController {
     /**
      * 获取表格数据
      *
-     * @param certList 凭证列表
+     * @param noteList 日记账列表
      * @param oriMoney 期初余额
      */
-    private List<ExcelNoteDto> getExcelDatasByNote(List<Certificate> certList, Long oriMoney) {
+    private List<ExcelNoteDto> getExcelDatasByNote(List<NoteDto> noteList, Long oriMoney) {
         List<ExcelNoteDto> result = new ArrayList<>();
 
-        //当前余额
-        BigDecimal nowLess = new BigDecimal(oriMoney);
-
-        for (Certificate cert : certList) {
-            //可重用实例域值
-            String dateStr = DateTime.of(cert.getDate()).toDateStr();
-            String certStr = cert.getCertificateWord().getMsg() + cert.getNo();
-
-            String makeName = cert.getCreateUser().getName();
-
-            List<CertificateAbstract> abstList = cert.getAbstracts();
-            for (CertificateAbstract abst : abstList) {
-                ExcelNoteDto obj = getPartDataByNote(dateStr, certStr, makeName, abst);
-
-                //部分金额赋值
-                initMoneyByNow(Collections.singletonList(obj));
-                initMoneyByOne(Collections.singletonList(abst), obj, true);
-
-                //余额赋值
-                if (obj.getBorrowMoney().doubleValue() != 0)
-                    nowLess = nowLess.add(obj.getBorrowMoney());
-                else if (obj.getLoansMoney().doubleValue() != 0)
-                    nowLess = nowLess.subtract(obj.getLoansMoney());
-                obj.setLessMoney(nowLess);
-
-                result.add(obj);
-            }
-        }
+        for (NoteDto note : noteList)
+            result.add(getNoteByExcel(note));
 
         initFlagNoteByExcel(result, oriMoney);
 
@@ -323,21 +313,32 @@ public class CashierController {
     }
 
     /**
-     * 获取日记账表格数据[可直接赋值的实例域]
-     *
-     * @param dateStr  日期字符串
-     * @param certStr  凭证
-     * @param makeName 制单人
-     * @param abst     凭证摘要列表
+     * 获取日记账表格数据
      */
-    private ExcelNoteDto getPartDataByNote(String dateStr, String certStr, String makeName, CertificateAbstract abst) {
+    private ExcelNoteDto getNoteByExcel(NoteDto note) {
         ExcelNoteDto obj = new ExcelNoteDto();
-        obj.setDateStr(dateStr);
-        obj.setCert(certStr);
-        obj.setMakeName(makeName);
 
-        obj.setCertificateAbstract(abst.getCertificateAbstract());
-        obj.setSubjId(abst.getAccountId());
+        obj.setDateStr(DateTime.of(note.getDate()).toDateStr());
+        obj.setCertificateAbstract(note.getCertificateAbstract());
+        obj.setHeSubjName(note.getHeSubjName());
+
+        if (ObjectUtils.isEmpty(note.getBorrowMoney()))
+            obj.setBorrowMoney(BigDecimal.ZERO);
+        else
+            obj.setBorrowMoney(note.getBorrowMoney());
+
+        if (ObjectUtils.isEmpty(note.getLoansMoney()))
+            obj.setLoansMoney(BigDecimal.ZERO);
+        else
+            obj.setLoansMoney(note.getLoansMoney());
+
+        if (ObjectUtils.isEmpty(note.getSurplusMoney()))
+            obj.setLessMoney(BigDecimal.ZERO);
+        else
+            obj.setLessMoney(note.getSurplusMoney());
+
+        obj.setCert(note.getCertName());
+        obj.setMakeName(note.getMakeName());
 
         return obj;
     }
@@ -350,8 +351,8 @@ public class CashierController {
      */
     private void initFlagNoteByExcel(List<ExcelNoteDto> dataList, Long oriMoney) {
         //合计数据计算
-        BigDecimal borrowTotal = dataList.stream().map(ExcelNoteDto::getBorrowMoney).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal loansTotal = dataList.stream().map(ExcelNoteDto::getLoansMoney).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal borrowTotal = dataList.stream().map(ExcelNoteDto::getBorrowMoney).filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal loansTotal = dataList.stream().map(ExcelNoteDto::getLoansMoney).filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal lessTotal = borrowTotal.subtract(loansTotal);
 
         //合计数据赋值
@@ -415,7 +416,7 @@ public class CashierController {
         //实例域赋值
         dataList.forEach(n -> {
             String zhCode = zhCodeBySubjId.get(n.getSubjId());
-            n.setHeZhCode(zhCode);
+            n.setHeSubjName(zhCode);
         });
     }
 
@@ -452,10 +453,11 @@ public class CashierController {
     private void excelMapByNote(ExcelWriter writer) {
         writer.addHeaderAlias("dateStr", "日期");
         writer.addHeaderAlias("certificateAbstract", "摘要");
-        writer.addHeaderAlias("heZhCode", "对方账户");
+        writer.addHeaderAlias("heSubjName", "账户对方科目");
+        writer.addHeaderAlias("startMoney", "期初余额");
         writer.addHeaderAlias("borrowMoney", "收入");
         writer.addHeaderAlias("loansMoney", "支出");
-        writer.addHeaderAlias("lessMoney", "余额");
+        writer.addHeaderAlias("lessMoney", "期末余额");
         writer.addHeaderAlias("cert", "凭证");
         writer.addHeaderAlias("makeName", "制单人");
     }
@@ -492,6 +494,7 @@ public class CashierController {
         //当月起始、结束表格宽度
         writer.setColumnWidth(0, 14);
         writer.setColumnWidth(1, 16);
+        writer.setColumnWidth(2, 18);
         writer.setColumnWidth(6, 13);
         writer.setColumnWidth(7, 11);
 
@@ -574,7 +577,6 @@ public class CashierController {
     @GetMapping("/cert/iototal")
     public Result listIOTotal(
             @RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size,
-            
             @RequestParam(name = "zhId", required = false) Long zhId,
             @RequestParam(name = "startDate", required = false) Long startDateLong,
             @RequestParam(name = "endDate", required = false) Long endDateLong) {
@@ -582,7 +584,7 @@ public class CashierController {
 
         //TODO L 性能待优化
 
-        Page<IOTotalDto> page = getTotalByPart(current, size, LoginUser.getCompanyId(), zhId);
+        Page<IOTotalDto> page = cashierService.getZhDataByTotal(current, size, zhId);
 
         //可变类型封装的页码
         Holder<Integer> currentPro = new Holder<>();
@@ -597,33 +599,29 @@ public class CashierController {
             boolean isPlus = isPlusRecord(plus2One, isDataLessFunc.test(page), currentPro, size, page.getTotal());
             if (isPlus) {
                 current = currentPro.get();
-                page.getRecords().addAll(getTotalByPart(currentPro.get(), size, LoginUser.getCompanyId(), zhId).getRecords());
-            } else
-                break;
+                page.getRecords().addAll(cashierService.getZhDataByTotal(current, size, zhId).getRecords());
+            }
 
-            result = fixTotalList(page.getRecords());
-            if (result.getCode() == 500)
-                return result;
+            //账户id与汇总表的映射
+            Map<Long, IOTotalDto> subjMap = page.getRecords().stream().collect(Collectors.toMap(IOTotalDto::getZhId, d -> d));
 
-            //科目id与汇总表的映射
-            Map<Long, IOTotalDto> subjMap = page.getRecords().stream().collect(Collectors.toMap(IOTotalDto::getSubjectsId, d -> d));
+            //初始化收支汇总数据金额相关实例域
             subjMap.values().forEach(d -> initMoneyByNow(Collections.singletonList(d)));
 
             //期初余额计算
-            List<Certificate> certs2Ori = cashierService.listCertificate(current, size, LoginUser.getCompanyId(), 0L, null, startDateLong, endDateLong, Boolean.FALSE, Boolean.TRUE).getRecords();
-            initMoney(certs2Ori, subjMap::containsKey, sId -> Collections.singletonList(subjMap.get(sId)), false);
+            List<Note> noteList2Ori = noteService.listNote(current, size,
+                    subjMap.keySet(), INTEGER_ONE,
+                    null, null,
+                    startDateLong, null, null,
+                    Boolean.FALSE, Boolean.TRUE).getRecords();
+            initMoney(noteList2Ori, subjMap.values(), false);
 
             //收入、支出计算
-            List<Certificate> certs2IO = getCert2Cal(zhId, current, size, LoginUser.getCompanyId(), startDateLong, endDateLong, certs2Ori, page.getRecords());
-            initMoney(certs2IO, subjMap::containsKey, sId -> Collections.singletonList(subjMap.get(sId)), true);
+            List<Note> noteList2IO = getNote2Cal(subjMap.keySet(), current, size, startDateLong, endDateLong, noteList2Ori, page.getRecords());
+            initMoney(noteList2IO, subjMap.values(), true);
 
             //期末余额计算
             subjMap.values().forEach(d -> initEndMoney(Collections.singletonList(d)));
-
-            //初始化币别名称
-            result = initPriceTypeName(subjMap.values(), LoginUser.getCompanyId());
-            if (result.getCode() == 500)
-                return result;
 
             /**
              * TODO L BUG： 返回给前端的数据，从DB查出来后，需要在后端进行处理才能得知数据是否有效。
@@ -649,27 +647,6 @@ public class CashierController {
     }
 
     /**
-     * 获取收支汇总表的部分数据列表
-     *
-     * @param current   页码
-     * @param size      条数
-     * @param companyId 公司id
-     * @param zhId      账户id
-     */
-    private Page<IOTotalDto> getTotalByPart(Integer current, Integer size, Long companyId, Long zhId) {
-        return zhService.selectJoinListPage(new Page<>(current, size), IOTotalDto.class,
-                new MPJLambdaWrapper<ZhangHu>()
-                        .selectAs(ZhangHu::getCode, IOTotalDto::getZhCode)
-                        .selectAs(ZhangHu::getName, IOTotalDto::getZhName)
-                        .select(ZhangHu::getMTypeId, ZhangHu::getSubjectsId)
-                        .eq(ZhangHu::getIsActive, 1)
-                        .eq(ZhangHu::getCompanyId, companyId)
-                        .eq(!ObjectUtils.isEmpty(zhId) && (zhId > NumberUtils.LONG_ZERO), ZhangHu::getId, zhId)
-                        .orderByAsc(ZhangHu::getCreateTime)
-        );
-    }
-
-    /**
      * 是否补充分页数据
      *
      * @param plus2One   是否第一页需要补充分页数据
@@ -684,77 +661,90 @@ public class CashierController {
                 return false;
 
             currentPro.set(currentPro.get() + 1);
-        }
+
         return true;
     }
 
-    /**
-     * 获取正确的收支汇总列表
-     * @param toFixList 待修复列表
-     */
-    private Result<Boolean> fixTotalList(List<IOTotalDto> toFixList) {
-        //TODO L SQL待修正，即分组后只取首个
-
-        //多账户可能会绑定同一账目，所以收支汇总表仅展示首位账户。
-        Map<Long, List<IOTotalDto>> subjMap = toFixList.stream()
-                .filter(t -> !ObjectUtils.isEmpty(t.getSubjectsId()))
-                .collect(Collectors.groupingBy(IOTotalDto::getSubjectsId));
-        toFixList.clear();
-
-        if (ObjectUtils.isEmpty(subjMap))
-            return Result.failed("账户需要设置入账科目");
-
-        for (List<IOTotalDto> nowList : subjMap.values())
-            toFixList.add(nowList.get(0));
-
-        return Result.success();
+        return false;
     }
 
     /**
-     * 获取计算收入、支出的凭证列表
+     * 获取计算收入、支出的日记账列表
      *
-     * @param zhId         账户id
+     * @param zhIdList      账户id列表
      * @param current      页码
      * @param size         条数
-     * @param companyId    公司id
      * @param startDateLong 起始时间时间戳
      * @param endDateLong   结束时间时间戳
-     * @param certs2Ori    期初余额计算使用的凭证列表
+     * @param noteList2Ori  期初余额计算使用的日记账列表
      * @param totalsByPage 分页中的数据列表
-     * @return
      */
-    private List<Certificate> getCert2Cal(long zhId, Integer current, Integer size, Long companyId, Long startDateLong, Long endDateLong, List<Certificate> certs2Ori, List<IOTotalDto> totalsByPage) {
-        List<Certificate> result;
-        if (zhId != INTEGER_ZERO) {
-            result = cashierService.listCertificate(current, size, companyId, zhId, null, startDateLong, endDateLong, Boolean.TRUE, Boolean.TRUE).getRecords();
-            if (result.isEmpty() && certs2Ori.isEmpty())
-                totalsByPage.clear();
+    private List<Note> getNote2Cal(Collection<Long> zhIdList, Integer current, Integer size, Long startDateLong, Long endDateLong, List<Note> noteList2Ori, List<IOTotalDto> totalsByPage) {
+        List<Note> result;
+        if (Objects.nonNull(zhIdList) && !zhIdList.isEmpty()) {
+            result = noteService.listNote(current, size,
+                    zhIdList, INTEGER_ZERO,
+                    null, null,
+                    null, startDateLong, endDateLong,
+                    Boolean.TRUE, Boolean.TRUE).getRecords();
         } else
-            result = getCertListByNow(companyId, startDateLong, endDateLong);
+            result = noteService.listNote(INTEGER_ZERO, INTEGER_ZERO,
+                    zhIdList, INTEGER_ZERO,
+                    null, null,
+                    null, startDateLong, endDateLong,
+                    true, false).getRecords();
 
-        sortByAbstList(result);
+        initCertNote(result);
+
+        sortByNoteList(result);
         return result;
+    }
+
+    /**
+     * 已生成凭证的日记账，收入/支出都赋值。
+     *
+     * @param noteList 日记账列表
+     */
+    private void initCertNote(List<Note> noteList) {
+        noteList.forEach(n -> {
+            if (!ObjectUtils.isEmpty(n.getCertificateId())) {
+                if (!ObjectUtils.isEmpty(n.getBorrowMoney()) && (n.getBorrowMoney() != BigDecimal.ZERO))
+                    n.setLoansMoney(n.getBorrowMoney());
+                if (!ObjectUtils.isEmpty(n.getLoansMoney()) && (n.getLoansMoney() != BigDecimal.ZERO))
+                    n.setBorrowMoney(n.getLoansMoney());
+            }
+        });
     }
 
     /**
      * 初始化金额相关实例域
      *
-     * @param certList  凭证列表
-     * @param isProcess 科目id与汇总表的映射
+     * @param noteList 日记账列表
+     * @param dtoList  金额列表
      * @param isNow     true: 当月；false:本月之前
      */
-    private void initMoney(List<Certificate> certList, Predicate<Long> isProcess, Function<Long, List<? extends BaseMoneyByCashierDto>> getDto, boolean isNow) {
-        for (Certificate cert : certList) {
-            List<CertificateAbstract> abstList = cert.getAbstracts();
-
-            //[当前凭证]的[凭证摘要]列表的首个[凭证摘要]的[科目id]和账户的[科目id]匹配才可以初始化金额
-            if (!ObjectUtils.isEmpty(abstList)) {
-                Long subjId = abstList.get(0).getAccountId();
-                if (isProcess.test(subjId)) {
-                    getDto.apply(subjId).forEach(dto -> initMoneyByOne(abstList, dto, isNow));
+    private void initMoney(List<Note> noteList, Collection<? extends BaseMoneyByCashierDto> dtoList, boolean isNow) {
+        for (Note note : noteList) {
+            for (BaseMoneyByCashierDto d : dtoList) {
+                if (isInitMoney(d, note.getZhId()))
+                    initMoneyByOne(note, d, isNow);
                 }
             }
+    }
+
+    /**
+     * 是否初始化金额相关实例域
+     */
+    private boolean isInitMoney(BaseMoneyByCashierDto d, Long zhId) {
+        if (d instanceof IOTotalDto) {
+            IOTotalDto trueDto = (IOTotalDto) d;
+            if (Objects.isNull(trueDto.getZhId()))
+                return false;
+            else if (trueDto.getZhId() != zhId)
+                return false;
         }
+
+        return true;
     }
 
     /**
@@ -773,15 +763,14 @@ public class CashierController {
     /**
      * 同一科目的收支汇总表数据赋值
      *
-     * @param abstList 凭证摘要列表
+     * @param note  日记账
      * @param dto      多态金额相关实例
      * @param isNow    true: 当月；false:本月之前
      */
-    private void initMoneyByOne(List<CertificateAbstract> abstList, BaseMoneyByCashierDto dto, boolean isNow) {
-        for (CertificateAbstract abst : abstList) {
+    private void initMoneyByOne(Note note, BaseMoneyByCashierDto dto, boolean isNow) {
             //收入、期初余额计算
-            if (!ObjectUtils.isEmpty(abst.getBorrowMoney()) && abst.getBorrowMoney() > 0) {
-                BigDecimal bMoneyByNow = new BigDecimal(abst.getBorrowMoney());
+        if (!ObjectUtils.isEmpty(note.getBorrowMoney()) && note.getBorrowMoney().doubleValue() > DOUBLE_ZERO) {
+            BigDecimal bMoneyByNow = note.getBorrowMoney();
 
                 if (isNow) {
                     dto.setBorrowMoney(dto.getBorrowMoney().add(bMoneyByNow));
@@ -790,14 +779,13 @@ public class CashierController {
             }
 
             //支出、期初余额计算
-            if (!ObjectUtils.isEmpty(abst.getLoansMoney()) && abst.getLoansMoney() > 0) {
-                BigDecimal lMoneyByNow = new BigDecimal(abst.getLoansMoney());
+        if (!ObjectUtils.isEmpty(note.getLoansMoney()) && note.getLoansMoney().doubleValue() > DOUBLE_ZERO) {
+            BigDecimal lMoneyByNow = note.getLoansMoney();
 
                 if (isNow)
                     dto.setLoansMoney(dto.getLoansMoney().add(lMoneyByNow));
                 else
                     dto.setOriMoney(dto.getOriMoney().subtract(lMoneyByNow));
-            }
         }
     }
 
@@ -846,31 +834,6 @@ public class CashierController {
 
             dto.setEndMoney(oriMoney.add(bMoney).subtract(lMoney));
         });
-    }
-
-    /**
-     * 初始化币别名称
-     *
-     * @param dtos      收支汇总表列表
-     * @param companyId 公司id
-     */
-    private Result initPriceTypeName(Collection<IOTotalDto> dtos, Long companyId) {
-        List<Long> mTypeIds = dtos.stream().map(IOTotalDto::getMTypeId).collect(Collectors.toList());
-        if (ObjectUtils.isEmpty(mTypeIds))
-            return Result.failed("need create zhanghu");
-        List<PriceType> mTypes = priceTypeService.selectJoinList(PriceType.class, new MPJLambdaWrapper<PriceType>()
-                .select(PriceType::getId, PriceType::getName)
-                .eq(PriceType::getCompanyId, companyId)
-                .in(PriceType::getId, mTypeIds)
-        );
-
-        Map<Long, List<IOTotalDto>> mTypeMap = dtos.stream().collect(Collectors.groupingBy(IOTotalDto::getMTypeId));
-        mTypes.forEach(t -> {
-            List<IOTotalDto> dtoList = mTypeMap.get(t.getId());
-            dtoList.forEach(d -> d.setMTypeName(t.getName()));
-        });
-
-        return Result.success();
     }
 
     /**
@@ -965,14 +928,18 @@ public class CashierController {
     @GetMapping("/cert/confirm")
     public Result<Page<ConfirmTotalDto>> listConfirm(
             @RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size,
-            
             @RequestParam(name = "startDate", required = false) Long startDateLong,
             @RequestParam(name = "endDate", required = false) Long endDateLong) {
-        Result result = Result.success();
+        Result<Page<ConfirmTotalDto>> result = Result.success(new Page<>());
 
         //TODO L 性能待优化
 
-        Page<ConfirmTotalDto> page = initConfrimPage(current, size, LoginUser.getCompanyId());
+        Page<ConfirmTotalDto> page = initConfrimPage(current, size);
+
+        if (page.getRecords().isEmpty())
+            return result;
+        else
+            result.setData(page);
 
         //可变类型封装的页码
         Holder<Integer> currentPro = new Holder<>();
@@ -990,29 +957,38 @@ public class CashierController {
 //            else
 //                break;
 
-        //科目id和核对总账的映射
-        Map<Long, ConfirmTotalDto> subjMap = page.getRecords().stream()
-                .filter(c -> !ObjectUtils.isEmpty(c.getSubj()))
-                .collect(Collectors.toMap(c -> c.getSubj().getSubjectsId(), d -> d));
-//            if (ObjectUtils.isEmpty(subjMap))
-//                continue;
-
         //科目id列表
         List<Long> subjIds = page.getRecords().stream().map(ConfirmTotalDto::getSubj).map(ConfirmTotalDto.SubjDto::getSubjectsId).collect(Collectors.toList());
 
         //不同时间区间的凭证列表
-        List<Certificate> certsByBefore = cashierService.listCertificate(current, size, LoginUser.getCompanyId(), 0L, null, startDateLong, endDateLong, Boolean.FALSE, Boolean.TRUE).getRecords();
-        List<Certificate> certsByBeNow = getCertListByNow(LoginUser.getCompanyId(), startDateLong, endDateLong);
+        List<Note> noteListByBefore = noteService.listNote(current, size,
+                Collections.emptyList(), INTEGER_ONE,
+                null, null,
+                startDateLong, null, null,
+                false, true
+        ).getRecords();
+        List<Note> noteListByNow = noteService.listNote(current, size,
+                Collections.emptyList(), INTEGER_ONE,
+                null, null,
+                null, startDateLong, endDateLong,
+                true, false).getRecords();
+
+        //科目id和科目的映射
+        Map<Long, List<ConfirmTotalDto.SubjDto>> subjById = page.getRecords().stream()
+                .filter(c -> !ObjectUtils.isEmpty(c.getSubj()))
+                .map(ConfirmTotalDto::getSubj)
+                .collect(Collectors.groupingBy(ConfirmTotalDto.BaseTotalDto::getSubjectsId));
 
         //初始化科目实例
-        initTotalByConfirm(subjMap, certsByBefore, certsByBeNow, c -> Collections.singletonList(c.getSubj()));
-        initSubjName(subjIds, subjMap);
+        initTotalByConfirm(subjById, noteListByBefore, noteListByNow, c -> c);
+        initSubjName(subjIds, subjById);
 
         //初始化子科目列表
-        initDownSubj(subjIds, page.getRecords(), subjMap, certsByBefore, certsByBeNow);
+        List<ConfirmTotalDto> confirmList = page.getRecords();
+        initDownSubj(subjIds, page.getRecords(), confirmList, noteListByBefore, noteListByNow);
 
         //初始化差额实例
-        initEndMoney(subjMap.values());
+        initEndMoney(page.getRecords());
 
         /**
          * TODO L BUG： 返回给前端的数据，从DB查出来后，需要在后端进行处理才能得知数据是否有效。
@@ -1031,7 +1007,7 @@ public class CashierController {
 //        boolean isDoneDataLess = (page.getTotal() > size) && isDataLessFunc.test(page);//是否实际有效数据少于DB返回的total
 //        if (isDoneDataLess)
 //            page.setTotal(page.getRecords().size());
-        result.setData(page);
+        removeInvalidByConfirmOfOne(page.getRecords());
 
         return result;
     }
@@ -1041,12 +1017,15 @@ public class CashierController {
      *
      * @param current   页码
      * @param size      条数
-     * @param companyId 公司id
      * @return
      */
-    private Page<ConfirmTotalDto> initConfrimPage(Integer current, Integer size, Long companyId) {
+    private Page<ConfirmTotalDto> initConfrimPage(Integer current, Integer size) {
         //分页核心数据赋值
-        Page<ConfirmTotalDto.SubjDto> tmpPage = getSubjIds(current, size, companyId);
+        Page<ConfirmTotalDto.SubjDto> tmpPage = getSubjIds(current, size);
+
+        //删除没有科目的账户
+        tmpPage.getRecords().removeIf(Objects::isNull);
+
         List<ConfirmTotalDto> records = new ArrayList<>();
         tmpPage.getRecords().forEach(s -> {
             ConfirmTotalDto now = new ConfirmTotalDto();
@@ -1069,16 +1048,14 @@ public class CashierController {
      *
      * @param current   页码
      * @param size      条数
-     * @param companyId 公司id
-     * @return
      */
-    private Page<ConfirmTotalDto.SubjDto> getSubjIds(Integer current, Integer size, Long companyId) {
+    private Page<ConfirmTotalDto.SubjDto> getSubjIds(Integer current, Integer size) {
         //TODO L 应该改完日记账，才能顺应改它。
         return zhService.selectJoinListPage(new Page<>(current, size), ConfirmTotalDto.SubjDto.class,
                 new MPJLambdaWrapper<ZhangHu>()
                         .select(ZhangHu::getSubjectsId)
-                        .eq(ZhangHu::getIsActive, 1)
-                        .eq(ZhangHu::getCompanyId, companyId)
+                        .eq(ZhangHu::getIsActive, Boolean.TRUE)
+                        .eq(ZhangHu::getCompanyId, LoginUser.getCompanyId())
                         .groupBy(ZhangHu::getSubjectsId)
                 //TODO L 分组支持null
         );
@@ -1088,42 +1065,60 @@ public class CashierController {
      * 初始化核对总账的科目实例
      *
      * @param subjMap       科目id和核对总账的映射
-     * @param certsByBefore 本月前的凭证列表
-     * @param certsByBeNow  本月的凭证列表
+     * @param noteListByBefore 本月前的日记账列表
+     * @param noteListByNow    本月的日记账列表
      * @param getMoneyImpl  获取多态金额实例
      */
-    private <T> void initTotalByConfirm
-    (Map<Long, T> subjMap, List<Certificate> certsByBefore, List<Certificate> certsByBeNow, Function<T, List<? extends
+    private <T extends ConfirmTotalDto.BaseTotalDto> void initTotalByConfirm
+    (Map<Long, List<T>> subjMap, List<Note> noteListByBefore, List<Note> noteListByNow, Function<List<T>, List<? extends
             BaseMoneyByCashierDto>> getMoneyImpl) {
         //金额相关实例域赋初值
         subjMap.values().forEach(d -> initMoneyByNow(getMoneyImpl.apply(d)));
 
         //期初余额计算
-        initMoney(certsByBefore, sId -> subjMap.containsKey(sId), sId -> getMoneyImpl.apply(subjMap.get(sId)), false);
+        initMoneyByConfrim(noteListByBefore, sId -> subjMap.containsKey(sId), sId -> getMoneyImpl.apply(subjMap.get(sId)), false);
 
         //收入、支出计算
-        initMoney(certsByBeNow, sId -> subjMap.containsKey(sId), sId -> getMoneyImpl.apply(subjMap.get(sId)), true);
+        initMoneyByConfrim(noteListByNow, sId -> subjMap.containsKey(sId), sId -> getMoneyImpl.apply(subjMap.get(sId)), true);
 
         //期末余额计算
         subjMap.values().forEach(d -> initEndMoney(getMoneyImpl.apply(d)));
     }
 
     /**
+     * 核对总账初始化金额相关实例域
+     *
+     * @param certList  凭证列表
+     * @param isProcess 科目id与汇总表的映射
+     * @param isNow     true: 当月；false:本月之前
+     */
+    private void initMoneyByConfrim(List<Note> certList, Predicate<Long> isProcess, Function<Long, List<? extends BaseMoneyByCashierDto>> getDto, boolean isNow) {
+        for (Note note : certList) {
+            //[当前凭证]的[凭证摘要]列表的首个[凭证摘要]的[科目id]和账户的[科目id]匹配才可以初始化金额
+            Long subjId = note.getZhangHu().getSubjectsId();
+            if (isProcess.test(subjId)) {
+                getDto.apply(subjId).forEach(dto -> initMoneyByOne(note, dto, isNow));
+            }
+        }
+    }
+
+    /**
      * 初始化科目总账名称
      *
      * @param subjIds 科目id列表
-     * @param subjMap 科目id和核对总账的映射
+     * @param subjById 科目id和科目的映射
      */
-    private void initSubjName(List<Long> subjIds, Map<Long, ConfirmTotalDto> subjMap) {
+    private void initSubjName(List<Long> subjIds, Map<Long, List<ConfirmTotalDto.SubjDto>> subjById) {
         List<SubjectsNameDto> subjs = accountService.selectJoinList(SubjectsNameDto.class,
                 new MPJLambdaWrapper<Account>()
                         .select(Account::getId, Account::getNo, Account::getName)
                         .in(Account::getId, subjIds)
         );
         subjs.forEach(s -> {
-            ConfirmTotalDto.SubjDto subj = subjMap.get(s.getId()).getSubj();
-            subj.setNo(s.getNo());
-            subj.setProjName(s.getName());
+            subjById.get(s.getId()).forEach(now -> {
+                now.setNo(s.getNo());
+                now.setProjName(s.getName());
+            });
         });
     }
 
@@ -1132,21 +1127,21 @@ public class CashierController {
      *
      * @param subjIds       科目id列表
      * @param upSubjList    [父]科目列表
-     * @param subjMap       科目id和核对总账的映射
-     * @param certsByBefore 当月前的凭证列表
-     * @param certsByBeNow  当月凭证列表
+     * @param confirmList      核对总账列表
+     * @param noteListByBefore 当月前的日记账列表
+     * @param noteListByNow    当月日记账列表
      */
-    private void initDownSubj(List<Long> subjIds, List<ConfirmTotalDto> upSubjList, Map<Long, ConfirmTotalDto> subjMap, List<Certificate> certsByBefore, List<Certificate> certsByBeNow) {
+    private void initDownSubj(List<Long> subjIds, List<ConfirmTotalDto> upSubjList, List<ConfirmTotalDto> confirmList, List<Note> noteListByBefore, List<Note> noteListByNow) {
         initDownSubjByBase(subjIds, upSubjList);
-        for (ConfirmTotalDto dto : subjMap.values()) {
-            List<ConfirmTotalDto.BaseTotalDto> zhTotals = dto.getDownSubj();
-            if (ObjectUtils.isEmpty(zhTotals))//子科目为空说明，该科目没有子科目
+        for (ConfirmTotalDto confirm : confirmList) {
+            List<ConfirmTotalDto.BaseTotalDto> downList = confirm.getDownSubj();
+            if (ObjectUtils.isEmpty(downList))//子科目为空说明，该科目没有子科目
                 continue;
 
             //科目总账id[父]和子科目总账的映射
-            Map<Long, List<ConfirmTotalDto.BaseTotalDto>> subjForZh = zhTotals.stream().collect(Collectors.groupingBy(ConfirmTotalDto.BaseTotalDto::getSubjectsId));
+            Map<Long, List<ConfirmTotalDto.BaseTotalDto>> subjForZh = downList.stream().collect(Collectors.groupingBy(ConfirmTotalDto.BaseTotalDto::getSubjectsId));
 
-            initTotalByConfirm(subjForZh, certsByBefore, certsByBeNow, z -> z);
+            initTotalByConfirm(subjForZh, noteListByBefore, noteListByNow, z -> z);
         }
     }
 
@@ -1171,7 +1166,7 @@ public class CashierController {
             List<Account> zhList = zhMap.get(subjId);
             zhList.forEach(z -> {
                 ConfirmTotalDto.BaseTotalDto zhTotal = new ConfirmTotalDto.BaseTotalDto();
-                zhTotal.setProjName(z.getAccountName());
+                zhTotal.setProjName(z.getName());
                 zhTotal.setSubjectsId(z.getId());
                 zhTotals.add(zhTotal);
             });
@@ -1189,7 +1184,7 @@ public class CashierController {
     private Map<Long, List<Account>> getDownSubj(List<Long> subjIds) {
         List<Account> tmpZhs = accountService.selectJoinList(Account.class,
                 new MPJLambdaWrapper<Account>()
-                        .select(Account::getId, Account::getAccountName, Account::getParentId)
+                        .select(Account::getId, Account::getName, Account::getParentId)
                         .in(Account::getParentId, subjIds)
                         .orderByAsc(Account::getWeight)
         );
@@ -1273,24 +1268,23 @@ public class CashierController {
     /**
      * 移除第一页不符合要求的核对总账
      *
-     * @param totalList 核对总账列表
+     * @param confirmList 核对总账列表
      */
-    private void removeInvalidByConfirmOfOne(List<ConfirmTotalDto> totalList) {
-        List<Boolean> tmpList = new ArrayList<>();
-        totalList.removeIf(t -> {
-            tmpList.clear();
+    private void removeInvalidByConfirmOfOne(List<ConfirmTotalDto> confirmList) {
+        //移除无金额的核对总账
+        List<ConfirmTotalDto> doneList = new ArrayList<>();
+        for (ConfirmTotalDto confirm : confirmList) {
+//            if (!hasMoney(confirm.getSubj()) && !hasMoney(confirm.getLessTotal()))
+            doneList.add(confirm);
+//            else
+//                continue;
 
-            tmpList.add(hasMoney(t.getSubj()));
-            if (!ObjectUtils.isEmpty(t.getDownSubj()))
-                t.getDownSubj().forEach(d -> tmpList.add(hasMoney(d)));
-            tmpList.add(hasMoney(t.getLessTotal()));
+            if (!ObjectUtils.isEmpty(confirm.getDownSubj()))
+                confirm.getDownSubj().removeIf(d -> hasMoney(d));
+        }
 
-            tmpList.removeIf(Boolean::booleanValue);
-            if (tmpList.size() == INTEGER_ZERO)
-                return true;
-            else
-                return false;
-        });
+        confirmList.clear();
+        confirmList.addAll(doneList);
     }
 
     /**
@@ -1304,7 +1298,6 @@ public class CashierController {
     @GetMapping("/exportConfirm")
     public void exportConfirm(HttpServletRequest req, HttpServletResponse resp,
                               @RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size,
-                              
                               @RequestParam(name = "startDate", required = false) Long startDateLong,
                               @RequestParam(name = "endDate", required = false) Long endDateLong) {
         List<ConfirmTotalDto> oriData = listConfirm(current, size, startDateLong, endDateLong).getData().getRecords();
