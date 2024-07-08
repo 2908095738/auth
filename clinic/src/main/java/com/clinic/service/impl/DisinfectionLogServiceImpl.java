@@ -40,7 +40,7 @@ public class DisinfectionLogServiceImpl extends ServiceImpl<DisinfectionLogMappe
     @Override
     public Result<Boolean> add(@RequestBody @Valid  AddDisinfectionLogParam param) {
         DisinfectionLog log = converter.toDisinfectionEntity(param);
-        log.setId(LoginUser.getId());
+        log.setUserId(LoginUser.getId());
         log.setTimeRange(DateUtil.format(param.getStartTimeRange(), "HH:mm:ss") + "~" + DateUtil.format(param.getEndTimeRange(), "HH:mm:ss"));
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
