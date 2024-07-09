@@ -90,7 +90,7 @@ public class CheckoutController {
      * @param msecStr   时间戳字符串
      */
     @GetMapping("/isCheck")
-    private Result<Boolean> isCheck( @RequestParam String msecStr) {
+    public Result<Boolean> isCheck( @RequestParam String msecStr) {
         return Result.success(checkoutService.isCheck(msecStr));
     }
 

@@ -8,16 +8,26 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.yulichang.annotation.EntityMapping;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
 
 /**
  * 账户
  *
  * @TableName zhang_hu
  */
-@TableName(value = "zhang_hu")
 @Data
+@TableName(value = "zhang_hu")
+@Accessors(chain = true)
+@FieldNameConstants
+@NoArgsConstructor
+@AllArgsConstructor
 public class ZhangHu implements Serializable {
     /**
      * 唯一标识符
@@ -75,10 +85,11 @@ public class ZhangHu implements Serializable {
     private Integer type;
 
     /**
-     * 是否启用该账户：1.启用;0.关闭
+     * 是否启用该账户：1.启用;0.关闭;
      */
     @TableField(value = "is_active")
-    private Integer isActive;
+    @JsonFormat(shape = JsonFormat.Shape.NUMBER)
+    private Boolean isActive;
 
     /**
      * 银企互联状态：1.启用;0.关闭
@@ -102,5 +113,6 @@ public class ZhangHu implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @TableField(exist = false)
+    @EntityMapping(thisField = Fields.mTypeId, joinField = PriceType.Fields.id)
     private PriceType priceType;
 }

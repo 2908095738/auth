@@ -30,7 +30,7 @@ public class ExcelNoteDto extends BaseMoneyByCashierDto {
     /**
      * 对方账户
      */
-    private String heZhCode;
+    private String heSubjName;
 
     /**
      * 科目id

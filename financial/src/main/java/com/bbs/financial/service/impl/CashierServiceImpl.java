@@ -2,18 +2,21 @@ package com.bbs.financial.service.impl;
 
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.bbs.financial.dto.IOTotalDto;
 import com.bbs.financial.entity.*;
 import com.bbs.financial.service.CashierService;
 import com.bbs.financial.service.CertificateService;
+import com.bbs.financial.service.NoteService;
 import com.bbs.financial.service.ZhangHuService;
+import com.bbs.financial.util.LoginUser;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.nonNull;
 
@@ -25,30 +28,72 @@ public class CashierServiceImpl implements CashierService {
     @Resource
     private CertificateService certificateService;
 
+    @Resource
+    private NoteService noteService;
+
     @Override
-    public Page<Certificate> listCertificate(Integer current, Integer size, Long companyId, Long zhangHuId, String dateStr, Long startDateLong, Long endDateLong, boolean isMonth, boolean isPage) {
+    public Page<Certificate> listCertificate(Integer current, Integer size, Long companyId, Collection<Long> zhIdList, Long pastDateLong, Long startDateLong, Long endDateLong, boolean isMonth, boolean isPage) {
         //TODO L SQL合一
 
         //SQL待使用凭证id列表
-        List<Long> inCertId = Collections.emptyList();
-        if (!ObjectUtils.isEmpty(zhangHuId) && (zhangHuId > 0)) {
-            //查询该账户对应凭证
-            inCertId = zhService.selectJoinList(Long.class,
-                    new MPJLambdaWrapper<ZhangHu>()
-                            .select(CertificateAbstract::getCertificateId)
-                            .eq(!ObjectUtils.isEmpty(zhangHuId) && zhangHuId > 0, ZhangHu::getId, zhangHuId)
-                            .leftJoin(CertificateAbstract.class, CertificateAbstract::getAccountId, ZhangHu::getSubjectsId));
-        }
+        boolean isZhIdList = Objects.nonNull(zhIdList) && !zhIdList.isEmpty();//账户id列表是否有值
+        List<Long> inCertId = getSimpleNote(zhIdList, isZhIdList).stream().map(Note::getCertificateId).collect(Collectors.toList());
 
         MPJLambdaWrapper<Certificate> wrappers = getDataWrapperByCertList();
 
-        boolean nonZhId = !ObjectUtils.isEmpty(zhangHuId) && (zhangHuId == 0);
-        if (isMonth && nonZhId && isPage) {
-            return certificateService.selectJoinListPage(new Page<>(current, size), Certificate.class, getConditionByCertList(wrappers, companyId, inCertId, isMonth, dateStr, startDateLong, endDateLong));
+        if (isMonth && !isZhIdList && isPage) {
+            return certificateService.selectJoinListPage(new Page<>(current, size), Certificate.class, getConditionByCertList(wrappers, companyId, inCertId, isMonth, pastDateLong, startDateLong, endDateLong));
         } else {
             return new Page<Certificate>().setRecords(certificateService.selectJoinList(Certificate.class,
-                    getConditionByCertList(wrappers, companyId, inCertId, isMonth, dateStr, startDateLong, endDateLong)));
+                    getConditionByCertList(wrappers, companyId, inCertId, isMonth, pastDateLong, startDateLong, endDateLong)));
         }
+        }
+
+    /**
+     * 获取仅有凭证id、账户id的日记账列表
+     *
+     * @param zhIdList 账户id列表
+     */
+    private List<Note> getSimpleNote(Collection<Long> zhIdList, boolean isZhIdList) {
+        return noteService.selectJoinList(Note.class,
+                new MPJLambdaWrapper<Note>()
+                        .select(Note::getCertificateId)
+                        .select(Note::getZhId)
+                        .eq(Note::getCompanyId, LoginUser.getCompanyId())
+                        .in(isZhIdList, Note::getZhId, zhIdList));
+    }
+
+    @Override
+    public Page<IOTotalDto> getZhDataByTotal(Integer current, Integer size, Long zhId) {
+        boolean isZhId = !ObjectUtils.isEmpty(zhId) && (zhId > NumberUtils.LONG_ZERO);
+        Page<ZhangHu> tmpPage = zhService.selectJoinListPage(new Page<>(current, size), ZhangHu.class,
+                new MPJLambdaWrapper<ZhangHu>()
+                        .selectAll(ZhangHu.class)
+
+                        .selectAssociation(PriceType.class, ZhangHu::getPriceType)
+                        .leftJoin(PriceType.class, PriceType::getId, ZhangHu::getMTypeId)
+
+                        .eq(ZhangHu::getIsActive, Boolean.TRUE)
+                        .eq(ZhangHu::getCompanyId, LoginUser.getCompanyId())
+                        .eq(isZhId, ZhangHu::getId, zhId)
+        );
+
+        List<IOTotalDto> resultList = new ArrayList<>();
+        tmpPage.getRecords().forEach(z -> {
+            IOTotalDto dto = new IOTotalDto();
+            dto.setZhId(z.getId());
+            dto.setZhCode(z.getCode());
+            dto.setZhName(z.getName());
+            dto.setMTypeName(z.getPriceType().getName());
+
+            resultList.add(dto);
+        });
+
+        return new Page<IOTotalDto>()
+                .setCurrent(current)
+                .setSize(size)
+                .setTotal(tmpPage.getTotal())
+                .setRecords(resultList);
     }
 
     /**
@@ -76,11 +121,11 @@ public class CashierServiceImpl implements CashierService {
      * @param companyId 公司id
      * @param inCertId  SQL待使用凭证id列表
      * @param isMonth   true：当月；false：当月及之前
-     * @param dateStr       时间戳字符串
+     * @param pastDateLong  当前日期之前时间戳
      * @param startDateLong 起始时间时间戳
      * @param endDateLong   结束时间时间戳
      */
-    private MPJLambdaWrapper<Certificate> getConditionByCertList(MPJLambdaWrapper<Certificate> wrappers, Long companyId, List<Long> inCertId, boolean isMonth, String dateStr, Long startDateLong, Long endDateLong) {
+    private MPJLambdaWrapper<Certificate> getConditionByCertList(MPJLambdaWrapper<Certificate> wrappers, Long companyId, List<Long> inCertId, boolean isMonth, Long pastDateLong, Long startDateLong, Long endDateLong) {
         return wrappers
                 .eq(Certificate::getCompanyId, companyId)
                 .in(inCertId.size() > 0, Certificate::getId, inCertId)
@@ -90,7 +135,7 @@ public class CashierServiceImpl implements CashierService {
                         .lt(nonNull(endDateLong), Certificate::getDate, new Date(endDateLong))
                 )
 
-                .lt(!isMonth, Certificate::getDate, DateUtil.beginOfMonth(nonNull(dateStr) ? new Date(Long.parseLong(dateStr)) : new Date()))
+                .lt(!isMonth, Certificate::getDate, DateUtil.beginOfMonth(nonNull(pastDateLong) ? new Date(pastDateLong) : new Date()))
 
                 .orderByAsc(Certificate::getCreateTime);
     }

@@ -67,6 +67,7 @@ public class SearchCertificate {
             @RequestParam(defaultValue = "1") Integer current,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(name = "words", required = false) List<String> words,
+            @RequestParam(name = "no", required = false) Long no,
             @RequestParam(name = "createUserIds", required = false) List<Long> createUserIds,
             @RequestParam(name = "authUserIds", required = false) List<Long> authUserIds,
             @RequestParam(name = "startDate", required = false) Long startDateLong,
@@ -85,6 +86,7 @@ public class SearchCertificate {
                 .leftJoin(CertificateFile.class, CertificateFile::getCertificateId, Certificate::getId)
 
                 .eq(Certificate::getCompanyId, LoginUser.getCompanyId())
+                .eq(nonNull(no),Certificate::getNo,no)
                 .in(nonNull(words) && words.size() > INTEGER_ZERO, Certificate::getCertificateWord, words)
                 .in(nonNull(createUserIds) && createUserIds.size() > INTEGER_ZERO, Certificate::getCreateBy)
                 .in(nonNull(authUserIds) && authUserIds.size() > INTEGER_ZERO, Certificate::getAuthBy)

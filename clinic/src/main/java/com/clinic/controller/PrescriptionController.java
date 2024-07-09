@@ -146,7 +146,7 @@ public class PrescriptionController {
      */
     @GetMapping("/file")
     public void getFile(@NotNull Long id, @NotNull Integer templateIndex) throws Exception {
-//        LogUtil.Operation.record("处方",LoginUser.get().getName()+"下载处方：处方id="+id+", 模板id="+templateIndex, Level.INFO);
+        LogUtil.Operation.record("处方",LoginUser.get().getName()+"下载处方：处方id="+id+", 模板id="+templateIndex, Level.INFO);
         createPrescriptionFile.generation(id, templateIndex);
     }
 

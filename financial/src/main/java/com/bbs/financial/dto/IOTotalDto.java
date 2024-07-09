@@ -11,6 +11,11 @@ import lombok.Data;
 public class IOTotalDto extends BaseMoneyByCashierDto {
 
     /**
+     * 账户id
+     */
+    private Long zhId;
+
+    /**
      * 账户编码
      */
     private String zhCode;
@@ -21,18 +26,7 @@ public class IOTotalDto extends BaseMoneyByCashierDto {
     private String zhName;
 
     /**
-     * 币别ID
-     */
-    private Long mTypeId;
-
-    /**
      * 币别名称
      */
     private String mTypeName;
-
-    /**
-     * 科目id
-     *  TODO L 前端无用字段，用于后端使用，后续剔除
-     */
-    private Long subjectsId;
 }

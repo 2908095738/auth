@@ -6,7 +6,12 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
+
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
 
 /**
  * 币别
@@ -14,6 +19,10 @@ import lombok.Data;
  */
 @TableName(value ="price_type")
 @Data
+@Accessors(chain = true)
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldNameConstants
 public class PriceType implements Serializable {
     /**
      * 

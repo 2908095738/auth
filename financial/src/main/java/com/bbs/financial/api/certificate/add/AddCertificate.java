@@ -110,6 +110,7 @@ public class AddCertificate {
         Certificate certificate = converter.toEntity(param);
         certificate.setCertificateWord(CertificateWordEnum.RECORD);
         certificate.setCreateBy(LoginUser.getId());
+        certificate.setCompanyId(LoginUser.getCompanyId());
         try {
             // 保存凭证
             saveCertificate(certificate);
@@ -134,8 +135,10 @@ public class AddCertificate {
             CertificateAbstract entity = new CertificateAbstract();
             entity.setCertificateId(certificate.getId());
             entity.setAccountId(certificateAbstract.getAccountId());
-            if(nonNull(certificateAbstract.getBorrowMoney())) entity.setBorrowMoney(Long.valueOf(certificateAbstract.getBorrowMoney().replace(",", "")));
-            if(nonNull(certificateAbstract.getLoansMoney())) entity.setLoansMoney(Long.valueOf(certificateAbstract.getLoansMoney().replace(",", "")));
+            if (nonNull(certificateAbstract.getBorrowMoney()))
+                entity.setBorrowMoney(Long.valueOf(certificateAbstract.getBorrowMoney().replace(",", "")));
+            if (nonNull(certificateAbstract.getLoansMoney()))
+                entity.setLoansMoney(Long.valueOf(certificateAbstract.getLoansMoney().replace(",", "")));
             entity.setCertificateAbstract(certificateAbstract.getCertificateAbstract());
             return entity;
         }).collect(Collectors.toList()));

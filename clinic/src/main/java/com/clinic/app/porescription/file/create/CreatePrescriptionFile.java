@@ -2,6 +2,7 @@ package com.clinic.app.porescription.file.create;
 
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.io.FileUtil;
 import com.aspose.words.Document;
 import com.aspose.words.SaveFormat;
 import com.clinic.app.AppPrescriptionService;
@@ -59,7 +60,7 @@ public class CreatePrescriptionFile implements ApplicationListener<ContextRefres
     @Override
     public void onApplicationEvent(@NotNull ContextRefreshedEvent event) {
         log.info("加载本地处方模板... templateAbsPath={}", templateAbsPath);
-//        templates = FileUtil.listFileNames(templateAbsPath);
+        templates = FileUtil.listFileNames(templateAbsPath);
         log.info("加载本地处方模板: templates={}", templates);
     }
 
