@@ -6,7 +6,7 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN echo 'Asia/Shanghai' >/etc/timezone
 # 拷贝jar 把可执行jar包复制到基础镜像的根目录下
 ADD clinic/target/clinic-1.0.jar app.jar
-ADD clinic/target/classes/template /app/template
+ADD clinic/target/classes/templates /app/templates
 ADD clinic/target/classes/diagnosis /app/diagnosis
 ADD clinic/target/classes/preview /app/preview
 # 设置暴露的端口号
