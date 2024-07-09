@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.financial.entity.CertificateAbstract;
 import com.github.yulichang.base.MPJBaseService;
 
+import java.util.Date;
+import java.util.List;
+
 /**
 * @author 路晨霖
 * @description 针对表【certificate_abstract(记账凭证摘要)】的数据库操作Service
@@ -15,5 +18,7 @@ public interface CertificateAbstractService extends MPJBaseService<CertificateAb
 
     void initDataByNo(Page<CertificateAbstract> list);
 
-    void initDataByMonth(Page<CertificateAbstract> list);
+    void initDataByMonth(List<CertificateAbstract> list);
+
+    List<CertificateAbstract> selectList(Long companyId, Date certificateStartCreateTime, Date certificateEndCreateTime, Long accountId);
 }
