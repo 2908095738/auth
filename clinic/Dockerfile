@@ -6,6 +6,9 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN echo 'Asia/Shanghai' >/etc/timezone
 # 拷贝jar 把可执行jar包复制到基础镜像的根目录下
 ADD clinic/target/clinic-1.0.jar app.jar
+ADD clinic/src/main/resources/template template
+ADD clinic/src/main/resources/diagnosis diagnosis
+ADD clinic/src/main/resources/preview preview
 # 设置暴露的端口号
 EXPOSE 8080
 # 在镜像运行为容器后执行的命令

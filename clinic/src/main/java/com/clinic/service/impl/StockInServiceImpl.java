@@ -50,7 +50,7 @@ public class StockInServiceImpl extends ServiceImpl<StockInMapper, StockIn>
     public Page<QueryStockInDto> query(QueryStockInParam param) {
         return baseMapper.selectJoinPage(param.toPage(), QueryStockInDto.class, new MPJLambdaWrapper<StockIn>()
                 .selectAll(StockIn.class)
-                .selectCollection(StockInDrug.class,QueryStockInDto::getStockInDrugs)
+                .selectAssociation(StockInDrug.class,QueryStockInDto::getStockInDrugs)
                 .leftJoin(StockInDrug.class,StockInDrug::getStockInId,StockIn::getId)
                 .eq(StockIn::getUserId,LoginUser.getId())
         );
