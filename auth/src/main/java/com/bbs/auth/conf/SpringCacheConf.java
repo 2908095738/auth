@@ -11,6 +11,11 @@ public class SpringCacheConf {
 
     @Bean
     public CacheManager cacheManager() {
-        return new ConcurrentMapCacheManager("companyStructure", "city");
+        return new ConcurrentMapCacheManager(
+                "companyStructure",
+                "city",
+                "back::system",
+                "system::router::user"
+        );
     }
 }

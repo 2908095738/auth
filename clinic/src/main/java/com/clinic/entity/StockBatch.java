@@ -72,7 +72,7 @@ public class StockBatch implements Serializable {
     /**
      * 过期状态（0正常、1过期）
      */
-    @TableField(exist = false)
+    @TableField(value = "expiry_state")
     private Integer expiryState;
 
     /**

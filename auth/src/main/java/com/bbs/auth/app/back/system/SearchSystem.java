@@ -5,6 +5,7 @@ import com.bbs.auth.entity.System;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.service.SystemService;
 import com.bbs.auth.service.UserService;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,6 +29,7 @@ public class SearchSystem {
     @Resource
     private UserService userService;
 
+    @Cacheable(cacheNames = "back::system")
     @GetMapping("/back/system")
     public Result<List<System>> search() {
         List<System> systems = systemService.lambdaQuery().list();

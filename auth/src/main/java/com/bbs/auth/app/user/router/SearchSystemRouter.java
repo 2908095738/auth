@@ -12,6 +12,7 @@ import com.google.common.base.Preconditions;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -47,6 +48,7 @@ public class SearchSystemRouter {
         private List<Tree<Long>> tree;
     }
 
+    @Cacheable(cacheNames = "system::router::user")
     @GetMapping("/system/router/user")
     public Result<VO> search(@RequestParam Long systemId) {
         Long companyId = searchCompanyId();

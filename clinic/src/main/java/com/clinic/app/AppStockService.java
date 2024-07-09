@@ -1,11 +1,10 @@
 package com.clinic.app;
 
+import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.Result;
-import com.clinic.dto.DeficiencyStockVo;
-import com.clinic.dto.ExpiryDateStockVo;
 import com.clinic.dto.PrescriptionDrugDto;
 import com.clinic.dto.PrescriptionDto;
 import com.clinic.dto.param.PutStock;
@@ -19,6 +18,7 @@ import com.clinic.entity.StockIn;
 import com.clinic.entity.StockInDrug;
 import com.clinic.entity.StockUnit;
 import com.clinic.entity.Unit;
+import com.clinic.enums.DrugExpiryStateEnum;
 import com.clinic.enums.DrugTypeEnum;
 import com.clinic.enums.StockStateEnum;
 import com.clinic.mapper.StockMapper;
@@ -30,8 +30,10 @@ import com.clinic.service.StockService;
 import com.clinic.util.LoginUser;
 import com.clinic.util.RedisUtil;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -40,19 +42,20 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.clinic.enums.DrugExpiryStateEnum.ABOUT_EXPIRES;
+import static com.clinic.enums.DrugExpiryStateEnum.EXPIRES;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.math.NumberUtils.*;
 
 @Slf4j
 @Service
@@ -73,6 +76,7 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
     private StockBatchService batchService;
 
     private SettingsService settingsService;
+
 
     private static final String STOCK_NO_GENERATE = "STOCK_NO_GENERATE";
 
@@ -144,20 +148,18 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
 
     private Page countStockStateAndPage(Page<Stock> page, List<Stock> records) {
         Settings settings = settingsService.getByUserId();
-        Integer stockExpiryAlertMonth = nonNull(settings) && nonNull(settings.getExpiryAlertMonth()) ? settings.getExpiryAlertMonth() : stockDefaultExpiryAlertMonth;
-        Date alertDate = getAlertDate(stockExpiryAlertMonth);
-
+        Integer stockExpiryAlertMonth = getUserSettingStockExpiryAlertMonth(settings);  //用户设置的库存药品过期提醒时间
         List<Stock> stocks = records.stream()
                 .skip((page.getCurrent() - 1) * page.getSize())
                 .limit(page.getSize())
                 .collect(Collectors.toList());
-        stocks.forEach(stock -> stock.getBatchList().forEach(batch -> {
+        stocks.forEach(stock -> stock.getBatchList().forEach(batchDrug -> {
 
-            batch.getStockInDrugList().sort((stockInDrug1, stockInDrug2) -> DateUtil.compare(stockInDrug1.getCreateTime(), stockInDrug2.getCreateTime()));
-            batch.setExpiryState(batch.getExpiryDate().compareTo(alertDate) > 0? StockStateEnum.NORMAL.getCode():StockStateEnum.SHORTAGE.getCode());
-            DrugTypeEnum typeEnum = DrugTypeEnum.values()[batch.getType()];
-            batch.setTypeObj(typeEnum);
-            stockService.countStockState(batch, settings);
+            batchDrug.setExpiryState(computeDrugIsExpiry(batchDrug, stockExpiryAlertMonth).getCode());
+
+            DrugTypeEnum typeEnum = DrugTypeEnum.values()[batchDrug.getType()];
+            batchDrug.setTypeObj(typeEnum);
+            stockService.countStockState(batchDrug, settings);
         }));
 
         page.setTotal(records.size());
@@ -165,13 +167,22 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
         return page;
     }
 
-    private Date getAlertDate(Integer userAlertMonth){
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
-        calendar.add(Calendar.MONTH, userAlertMonth);
-        return calendar.getTime();
+    private DrugExpiryStateEnum computeDrugIsExpiry(StockBatch batchDrug, Integer stockExpiryAlertMonth) {
+        long betweenDay = DateUtil.between(new Date(), batchDrug.getExpiryDate(), DateUnit.DAY, false);
+        // >0 时间线：nowDate -> expiryDate（当参数 1 为当前日期，且差值 > 0 时，未过期）
+        if(betweenDay == INTEGER_ZERO) {
+            return ABOUT_EXPIRES;
+        } else if(betweenDay > INTEGER_ZERO) {
+            if(betweenDay > 30 && betweenDay / 30 > stockExpiryAlertMonth) {
+                return DrugExpiryStateEnum.NORMAL;
+            }
+        }
+        return EXPIRES;
     }
 
+    private Integer getUserSettingStockExpiryAlertMonth (Settings settings) {
+        return nonNull(settings) && nonNull(settings.getExpiryAlertMonth()) ? settings.getExpiryAlertMonth() : stockDefaultExpiryAlertMonth;
+    }
 
 
     public Result<Boolean> putStock(PutStock param) {
@@ -230,33 +241,66 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
         }
     }
 
-    public Result<List<Map<String,Object>>> stockDeficiencyAlert(){
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    private static class DrugExpiryCount {
+
+        private Long normal;
+
+        private Long aboutExpires;
+
+        private Long expires;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DrugExpiryGroup {
+
+        private List<StockBatch> normal;
+
+        private List<StockBatch> aboutExpires;
+
+        private List<StockBatch> expires;
+    }
+
+    public DrugExpiryGroup countAndUpdateDrugExpiryState(){
         Settings settings = settingsService.getByUserId();
-        Date alertDate = getAlertDate(settings.getExpiryAlertMonth());
-        MPJLambdaWrapper<Stock> wrapper = getBaseWrapper();
-        List<Stock> stocks = baseMapper.selectJoinList(Stock.class, wrapper);
+        Integer stockExpiryAlertMonth = getUserSettingStockExpiryAlertMonth(settings);  //用户设置的库存药品过期提醒时间'
 
-        List<Map<String,Object>> result = new ArrayList<>();
-        stocks.forEach(o-> {
-            Map<String,Object> resultMap = new HashMap<>();
-            o.getBatchList().forEach(batch->{
-                                batch.setExpiryState(batch.getExpiryDate().compareTo(alertDate) > 0? StockStateEnum.NORMAL.getCode():StockStateEnum.SHORTAGE.getCode());
-                                stockService.countStockState(batch, settings);
-            });
+        List<StockBatch> allDrugBatch = batchService.lambdaQuery()
+                .eq(StockBatch::getUserId, LoginUser.getId())
+                .list();
 
-            List<DeficiencyStockVo> stockStateList = o.getBatchList().stream().filter(stock -> Objects.equals(stock.getState(), StockStateEnum.SHORTAGE.getCode()))
-                    .map(batch -> new DeficiencyStockVo(o.getName(), batch.getBatchNumber(), batch.getNumber())).collect(Collectors.toList());
-            List<ExpiryDateStockVo> expiryStateList = o.getBatchList().stream().filter(stock -> stock.getExpiryState() == 1)
-                    .map(batch -> new ExpiryDateStockVo(o.getName(), batch.getBatchNumber(), batch.getExpiryDate())).collect(Collectors.toList());
-
-            if(CollectionUtils.isNotEmpty(stockStateList)||CollectionUtils.isNotEmpty(expiryStateList)){
-                resultMap.put("name", o.getName());
-                if(CollectionUtils.isNotEmpty(stockStateList))resultMap.put("stockStateList",stockStateList);
-                if(CollectionUtils.isNotEmpty(expiryStateList))resultMap.put("expiryStateList",expiryStateList);
-                result.add(resultMap);
+        List<StockBatch> expiresStateNormal = new ArrayList<>();    // 正常
+        List<StockBatch> needUpdateToExpiresState = new ArrayList<>();  // 过期（需要 update DB）
+        List<StockBatch> needUpdateToAboutExpiresState = new ArrayList<>(); // 即将过期（需要 update DB）
+        allDrugBatch.forEach(drugBatch -> {
+            if(
+                    DrugExpiryStateEnum.NORMAL.getCode().equals(drugBatch.getExpiryState()) ||
+                    ABOUT_EXPIRES.getCode().equals(drugBatch.getExpiryState())
+            ) {
+                DrugExpiryStateEnum expiryState = computeDrugIsExpiry(drugBatch, stockExpiryAlertMonth);
+                if(EXPIRES.equals(expiryState)) {
+                    drugBatch.setExpiryState(EXPIRES.getCode());
+                    needUpdateToExpiresState.add(drugBatch);
+                } else if(ABOUT_EXPIRES.equals(expiryState)) {
+                    drugBatch.setExpiryState(ABOUT_EXPIRES.getCode());
+                    needUpdateToAboutExpiresState.add(drugBatch);
+                } else {
+                    expiresStateNormal.add(drugBatch);
+                }
             }
         });
-       return Result.success(result);
+        if(needUpdateToExpiresState.size() > INTEGER_ZERO) {
+            batchService.updateBatchById(needUpdateToExpiresState);
+        }
+        if(needUpdateToAboutExpiresState.size() > INTEGER_ZERO) {
+            batchService.updateBatchById(needUpdateToAboutExpiresState);
+        }
+        return new DrugExpiryGroup(expiresStateNormal, needUpdateToExpiresState, needUpdateToAboutExpiresState);
     }
 
 
