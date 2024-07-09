@@ -7,6 +7,7 @@ import com.clinic.dto.param.PutStockParam;
 import com.clinic.entity.Stock;
 import com.clinic.entity.StockBatch;
 import com.clinic.entity.StockUnit;
+import com.clinic.enums.DrugStockRule;
 import com.clinic.enums.DrugTypeEnum;
 import com.clinic.service.StockBatchService;
 import com.clinic.service.StockService;
@@ -46,7 +47,9 @@ public class StockMethod {
                 .setNumber(drugNumber)
                 .setTotalNumber(drugNumber)
                 .setUnitId(getMinUnit(param).getId())
-                .setType(DrugTypeEnum.map.get(param.getSort()).getCode());
+                .setStateCountRule(DrugStockRule.map.get(param.getCountType()))
+                .setType(DrugTypeEnum.map.get(param.getSort()).getCode())
+                ;
     }
 
     private static PutStockParam.StockUnitParam getMinUnit(PutStockParam param) {

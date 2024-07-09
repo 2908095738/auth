@@ -14,11 +14,11 @@ public interface StockConverter {
     Stock toEntity(PutStockParam param);
 
     @Mapping(source = "type", target = "dosageForm")
-    @Mapping(source = "countType", target = "stateCountRule")
     @Mapping(source = "countNumber", target = "countVal")
     @Mapping(source = "countUnitId", target = "countUnitId")
     @Mapping(source = "usage", target = "drugUsage")
     @Mapping(target = "type", ignore = true)
+    @Mapping(target = "stateCountRule", ignore = true)
     StockBatch toBatchEntity(PutStockParam param);
 
     @Mapping(source = "type", target = "dosageForm")

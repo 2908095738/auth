@@ -5,7 +5,11 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.clinic.dto.PrescriptionDrugDto;
+import com.clinic.dto.param.PutStockParam;
+import com.clinic.enums.DrugStockRule;
 import com.clinic.enums.DrugTypeEnum;
+import com.clinic.enums.StockStateEnum;
+import com.clinic.util.LoginUser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -175,7 +179,7 @@ public class StockBatch implements Serializable {
      * 库存统计规则
      */
     @TableField(value = "state_count_rule")
-    private Integer stateCountRule;
+    private DrugStockRule stateCountRule;
 
     /**
      * 统计值（统计方式值，如百分比 10%； 数量）
@@ -193,7 +197,7 @@ public class StockBatch implements Serializable {
      * 库存状态
      */
     @TableField(value = "state")
-    private Integer state;
+    private StockStateEnum state;
 
     /**
      * 用户 ID

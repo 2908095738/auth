@@ -19,14 +19,11 @@ import com.clinic.entity.StockInDrug;
 import com.clinic.entity.StockUnit;
 import com.clinic.entity.Unit;
 import com.clinic.enums.DrugExpiryStateEnum;
+import com.clinic.enums.DrugStockRule;
 import com.clinic.enums.DrugTypeEnum;
 import com.clinic.enums.StockStateEnum;
 import com.clinic.mapper.StockMapper;
-import com.clinic.service.SettingsService;
-import com.clinic.service.StockBatchService;
-import com.clinic.service.StockInDrugService;
-import com.clinic.service.StockInService;
-import com.clinic.service.StockService;
+import com.clinic.service.*;
 import com.clinic.util.LoginUser;
 import com.clinic.util.RedisUtil;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
@@ -41,6 +38,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -61,22 +59,22 @@ import static org.apache.commons.lang3.math.NumberUtils.*;
 @Service
 public class AppStockService extends ServiceImpl<StockMapper, Stock> {
 
+    @Autowired
     private RedisUtil redis;
-
+    @Resource
     private StockInService stockInService;
-
+    @Resource
     private StockInDrugService stockInDrugService;
-
+    @Resource
     private StockService stockService;
-
+    @Resource
     private DataSourceTransactionManager transactionManager;
-
+    @Resource
     private TransactionDefinition transactionDefinition;
-
+    @Resource
     private StockBatchService batchService;
-
+    @Resource
     private SettingsService settingsService;
-
 
     private static final String STOCK_NO_GENERATE = "STOCK_NO_GENERATE";
 
@@ -167,7 +165,7 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
         return page;
     }
 
-    private DrugExpiryStateEnum computeDrugIsExpiry(StockBatch batchDrug, Integer stockExpiryAlertMonth) {
+    public static DrugExpiryStateEnum computeDrugIsExpiry(StockBatch batchDrug, Integer stockExpiryAlertMonth) {
         long betweenDay = DateUtil.between(new Date(), batchDrug.getExpiryDate(), DateUnit.DAY, false);
         // >0 时间线：nowDate -> expiryDate（当参数 1 为当前日期，且差值 > 0 时，未过期）
         if(betweenDay == INTEGER_ZERO) {
@@ -180,7 +178,7 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
         return EXPIRES;
     }
 
-    private Integer getUserSettingStockExpiryAlertMonth (Settings settings) {
+    public Integer getUserSettingStockExpiryAlertMonth(Settings settings) {
         return nonNull(settings) && nonNull(settings.getExpiryAlertMonth()) ? settings.getExpiryAlertMonth() : stockDefaultExpiryAlertMonth;
     }
 
@@ -254,55 +252,6 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
         private Long expires;
     }
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class DrugExpiryGroup {
-
-        private List<StockBatch> normal;
-
-        private List<StockBatch> aboutExpires;
-
-        private List<StockBatch> expires;
-    }
-
-    public DrugExpiryGroup countAndUpdateDrugExpiryState(){
-        Settings settings = settingsService.getByUserId();
-        Integer stockExpiryAlertMonth = getUserSettingStockExpiryAlertMonth(settings);  //用户设置的库存药品过期提醒时间'
-
-        List<StockBatch> allDrugBatch = batchService.lambdaQuery()
-                .eq(StockBatch::getUserId, LoginUser.getId())
-                .list();
-
-        List<StockBatch> expiresStateNormal = new ArrayList<>();    // 正常
-        List<StockBatch> needUpdateToExpiresState = new ArrayList<>();  // 过期（需要 update DB）
-        List<StockBatch> needUpdateToAboutExpiresState = new ArrayList<>(); // 即将过期（需要 update DB）
-        allDrugBatch.forEach(drugBatch -> {
-            if(
-                    DrugExpiryStateEnum.NORMAL.getCode().equals(drugBatch.getExpiryState()) ||
-                    ABOUT_EXPIRES.getCode().equals(drugBatch.getExpiryState())
-            ) {
-                DrugExpiryStateEnum expiryState = computeDrugIsExpiry(drugBatch, stockExpiryAlertMonth);
-                if(EXPIRES.equals(expiryState)) {
-                    drugBatch.setExpiryState(EXPIRES.getCode());
-                    needUpdateToExpiresState.add(drugBatch);
-                } else if(ABOUT_EXPIRES.equals(expiryState)) {
-                    drugBatch.setExpiryState(ABOUT_EXPIRES.getCode());
-                    needUpdateToAboutExpiresState.add(drugBatch);
-                } else {
-                    expiresStateNormal.add(drugBatch);
-                }
-            }
-        });
-        if(needUpdateToExpiresState.size() > INTEGER_ZERO) {
-            batchService.updateBatchById(needUpdateToExpiresState);
-        }
-        if(needUpdateToAboutExpiresState.size() > INTEGER_ZERO) {
-            batchService.updateBatchById(needUpdateToAboutExpiresState);
-        }
-        return new DrugExpiryGroup(expiresStateNormal, needUpdateToExpiresState, needUpdateToAboutExpiresState);
-    }
-
 
 
     public boolean updateNum(PrescriptionDto prescriptionDto) {
@@ -332,17 +281,4 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
                 redis.increment(STOCK_NO_GENERATE)
         ;
     }
-
-    @Autowired
-    public AppStockService(RedisUtil redis, StockInService stockInService, StockInDrugService stockInDrugService, StockService stockService, DataSourceTransactionManager transactionManager, TransactionDefinition transactionDefinition, StockBatchService batchService, SettingsService settingsService) {
-        this.redis = redis;
-        this.stockInService = stockInService;
-        this.stockInDrugService = stockInDrugService;
-        this.stockService = stockService;
-        this.transactionManager = transactionManager;
-        this.transactionDefinition = transactionDefinition;
-        this.batchService = batchService;
-        this.settingsService = settingsService;
-    }
-
 }

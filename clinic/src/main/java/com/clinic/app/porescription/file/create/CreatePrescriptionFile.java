@@ -60,8 +60,10 @@ public class CreatePrescriptionFile implements ApplicationListener<ContextRefres
     @Override
     public void onApplicationEvent(@NotNull ContextRefreshedEvent event) {
         log.info("加载本地处方模板... templateAbsPath={}", templateAbsPath);
-        templates = FileUtil.listFileNames(templateAbsPath);
+//        templates = FileUtil.listFileNames(templateAbsPath);
         log.info("加载本地处方模板: templates={}", templates);
+
+
     }
 
     public List<String> getTemplates() {

@@ -119,18 +119,18 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock>
     @Override
     public void countStockState(StockBatch batch, Settings settings){
         if(isNull(settings) || isNull(settings.getCountVal())||isNull(settings.getStateCountRule())){
-            batch.setState(StockStateEnum.UNDEFINED.getCode());
+            batch.setState(StockStateEnum.UNDEFINED);
         } else {
             batch.setState(computeStockNumberState(batch, settings));
         }
     }
 
-    public Integer computeStockNumberState(StockBatch batch, Settings settings) {
+    public StockStateEnum computeStockNumberState(StockBatch batch, Settings settings) {
         return stockNumberStateIsNormal(
                 batch.getNumber(),
                 StockStateCountTypeEnum.map.get(settings.getStateCountRule()),
                 batch.getTotalNumber(),
-                settings.getCountVal()) ? 0 : 1;
+                settings.getCountVal()) ? StockStateEnum.NORMAL : StockStateEnum.SHORTAGE;
     }
 
     /**
@@ -204,7 +204,7 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock>
         private Integer countVal;
 
         public static CountSetting create(StockBatch stockBatch) {
-            return new CountSetting(stockBatch.getStateCountRule(), stockBatch.getCountVal());
+            return new CountSetting(stockBatch.getStateCountRule().getCode(), stockBatch.getCountVal());
         }
     }
 

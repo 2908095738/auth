@@ -119,7 +119,7 @@ public class AdmissionLog implements Serializable {
      * 接诊状态（0未接诊/1正在接诊/2结束就诊）
      */
     @TableField(value = "state")
-    private Integer state;
+    private AdmissionStateEnum state;
 
 
 
@@ -167,7 +167,7 @@ public class AdmissionLog implements Serializable {
         this.isFirst = param.getIsFirst();
 
         this.userId = LoginUser.getId();
-        this.state = AdmissionStateEnum.RUN.getCode();
+        this.state = AdmissionStateEnum.RUN;
 
         this.name = patient.getName();
         this.sex = patient.getSex();

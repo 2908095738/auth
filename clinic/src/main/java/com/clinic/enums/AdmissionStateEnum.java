@@ -1,5 +1,7 @@
 package com.clinic.enums;
 
+import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -11,7 +13,9 @@ public enum AdmissionStateEnum {
     RUN(1, "正在接诊"),
     END(2, "结束就诊");
 
-    private Integer code;
+    @EnumValue
+    @JsonValue
+    private final Integer code;
 
-    private String msg;
+    private final String msg;
 }
