@@ -19,6 +19,7 @@ import com.clinic.dto.param.PatientPayRecordParam;
 import com.clinic.dto.param.ReturnPayRecordParam;
 import com.clinic.dto.param.UpdatePayById;
 import com.clinic.entity.PayRecord;
+import com.clinic.service.AdmissionLogService;
 import com.clinic.util.LogUtil;
 import com.clinic.util.LoginUser;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,7 @@ import java.util.List;
 @RequestMapping("/pay")
 public class PayController {
 
+    private final AdmissionLogService admissionLogService;
     private final AppPayService service;
 
     private final PayCache payCache;
@@ -151,6 +153,8 @@ public class PayController {
             PrescriptionDto prescriptionDto = appPrescriptionService.getByPayId(param.getId());
             //根据处方数据，扣库存
             if(!appStockService.updateNum(prescriptionDto))throw new RuntimeException();
+            //修改门诊日志状态
+            if (!admissionLogService.updateEndState(param.getAdmissionId()))throw new RuntimeException();
             LogUtil.Operation.record("收费",LoginUser.get().getName()+"本次收费-修改收费状态和收费方式：收费id="+param.getId()+", 处方id="+prescriptionDto.getId(), Level.INFO);
             transactionManager.commit(transaction);
             return Result.success(true);
@@ -162,7 +166,8 @@ public class PayController {
     }
 
     @Autowired
-    public PayController(AppPayService service, PayCache payCache, PayConverter payConverter, AppStockService appStockService, AppPrescriptionService appPrescriptionService, DataSourceTransactionManager transactionManager, TransactionDefinition transactionDefinition) {
+    public PayController(AdmissionLogService admissionLogService, AppPayService service, PayCache payCache, PayConverter payConverter, AppStockService appStockService, AppPrescriptionService appPrescriptionService, DataSourceTransactionManager transactionManager, TransactionDefinition transactionDefinition) {
+        this.admissionLogService = admissionLogService;
         this.service = service;
         this.payCache = payCache;
         this.payConverter = payConverter;

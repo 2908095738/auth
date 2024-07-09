@@ -1,6 +1,5 @@
 package com.bbs.financial.api.accountBook;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.financial.entity.CertificateAbstract;
 import com.bbs.financial.service.CertificateAbstractService;
@@ -10,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
 
 
@@ -19,10 +19,12 @@ public class ColumnarController {
     @Resource
     private CertificateAbstractService certificateAbstractService;
     @GetMapping("/certificate/account/columnar")
-    public Result<List<CertificateAbstract>> columnarAccount(@RequestParam("createTime") String certificateCreateTime, @RequestParam("cAccountId")Long accountId) {
-        Page<CertificateAbstract> list = certificateAbstractService.selectPage(LoginUser.getCompanyId(), certificateCreateTime, accountId, 1, 1000);
+    public Result<List<CertificateAbstract>> columnarAccount(@RequestParam("startCreateTime") Date certificateStartCreateTime,
+                                                                 @RequestParam("endCreateTime") Date certificateEndCreateTime,
+                                                             @RequestParam("cAccountId")Long accountId) {
+        List<CertificateAbstract> list = certificateAbstractService.selectList(LoginUser.getCompanyId(), certificateStartCreateTime,certificateEndCreateTime, accountId);
         certificateAbstractService.initDataByMonth(list);
-        return Result.success(list.getRecords());
+        return Result.success(list);
     }
 
 

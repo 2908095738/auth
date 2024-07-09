@@ -14,10 +14,14 @@ import org.springframework.stereotype.Service;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+
+
 
 /**
 * @author 路晨霖
@@ -108,10 +112,9 @@ public class CertificateAbstractServiceImpl extends MPJBaseServiceImpl<Certifica
      * @param list
      */
     @Override
-    public void initDataByMonth(Page<CertificateAbstract> list) {
-        if(CollUtil.isNotEmpty(list.getRecords())) {
-            List<CertificateAbstract> abstractList = list.getRecords();
-            Map<YearMonth, List<CertificateAbstract>> collect = abstractList.stream().collect(Collectors.groupingBy(o->
+    public void initDataByMonth(List<CertificateAbstract> list) {
+        if(CollUtil.isNotEmpty(list)) {
+            Map<YearMonth, List<CertificateAbstract>> collect = list.stream().collect(Collectors.groupingBy(o->
                     YearMonth.from(o.getCertificate().getCreateTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()))
             );
             for (YearMonth accountId : collect.keySet()) {
@@ -138,7 +141,7 @@ public class CertificateAbstractServiceImpl extends MPJBaseServiceImpl<Certifica
                         initialBalanceAbstract.setAccountId(certificateAbstract.getAccountId());
                         initialBalanceAbstract.setCertificateAbstract("期初余额");
                         initialBalanceAbstract.setAccount(certificateAbstract.getAccount());
-                        abstractList.add(initialBalanceAbstract);
+                        list.add(initialBalanceAbstract);
 
                         currentPeriodAbstract.setAccountId(certificateAbstract.getAccountId());
                         currentPeriodAbstract.setCertificateAbstract("本期合计");
@@ -146,7 +149,7 @@ public class CertificateAbstractServiceImpl extends MPJBaseServiceImpl<Certifica
                         currentPeriodAbstract.setLoansMoney(LoansMoney);
                         currentPeriodAbstract.setSurplusMoney(borrowMoney-LoansMoney);
                         currentPeriodAbstract.setAccount(certificateAbstract.getAccount());
-                        abstractList.add(currentPeriodAbstract);
+                        list.add(currentPeriodAbstract);
 
                         incurredYearAbstract.setAccountId(certificateAbstract.getAccountId());
                         incurredYearAbstract.setCertificateAbstract("本年累计");
@@ -154,11 +157,27 @@ public class CertificateAbstractServiceImpl extends MPJBaseServiceImpl<Certifica
                         incurredYearAbstract.setLoansMoney(LoansMoney);
                         incurredYearAbstract.setSurplusMoney(borrowMoney-LoansMoney);
                         incurredYearAbstract.setAccount(certificateAbstract.getAccount());
-                        abstractList.add(incurredYearAbstract);
+                        list.add(incurredYearAbstract);
                     }
                 }
             }
         }
+    }
+
+    @Override
+    public List<CertificateAbstract> selectList(Long companyId, Date certificateStartCreateTime, Date certificateEndCreateTime, Long accountId) {
+        return selectJoinList(CertificateAbstract.class, new MPJLambdaWrapper<CertificateAbstract>()
+                .selectAll(CertificateAbstract.class)
+                .selectAssociation(Certificate.class, CertificateAbstract::getCertificate)
+                .rightJoin(Certificate.class, Certificate::getId, CertificateAbstract::getCertificateId)
+                .selectAssociation(Account.class, CertificateAbstract::getAccount)
+                .rightJoin(Account.class, Account::getId, CertificateAbstract::getAccountId)
+                .eq(Objects.nonNull(accountId),CertificateAbstract::getAccountId,accountId)
+                .eq(Certificate::getCompanyId,companyId)
+                .ge(Objects.nonNull(certificateStartCreateTime),Certificate::getCreateTime,certificateStartCreateTime)
+                .le(Objects.nonNull(certificateEndCreateTime),Certificate::getCreateTime,certificateEndCreateTime)
+                .orderByAsc(Certificate::getCreateTime)
+        );
     }
 
 

@@ -14,7 +14,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAsync
 @EnableSpringUtil
 @EnableCaching
-@ComponentScan(value = { "com.bbs.api", "com.clinic"})
+@ComponentScan(value = { "com.bbs", "com.clinic"})
 @SpringBootApplication
 @EnableDubbo
 @EnableDiscoveryClient  //Nacos 服务发现

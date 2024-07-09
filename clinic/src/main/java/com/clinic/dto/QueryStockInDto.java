@@ -6,7 +6,6 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.List;
 
 /**
  * 库存：入库
@@ -42,7 +41,7 @@ public class QueryStockInDto{
     private Date createTime;
 
     @TableField(exist = false)
-    private List<QueryStockInDrugDto> stockInDrugs;
+    private QueryStockInDrugDto stockInDrugs;
 
 
 
