@@ -8,7 +8,11 @@ import java.math.BigDecimal;
 
 @Data
 public class UpdatePayById {
-
+    /**
+     * 门诊日志id
+     */
+    @NotNull(message = "日志id不能为空！")
+    private Long admissionId;
     /**
      * id
      */

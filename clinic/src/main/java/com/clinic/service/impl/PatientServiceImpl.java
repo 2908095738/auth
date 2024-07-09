@@ -168,7 +168,7 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
     }
 
     private boolean updateIsFirstAndDB(Patient patient) {
-        if(patient.getDossierNum()>1){
+        if(patient.getDossierNum()>=1){
             patient.setIsFirst(1);
             return true;
         }

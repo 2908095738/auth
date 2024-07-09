@@ -18,11 +18,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import static java.util.Objects.nonNull;
 
+/**
+ * 正在接诊页面接口
+ */
 @RestController("searchAdmissionList")
 @RequestMapping
 public class SearchList extends MPJBaseServiceImpl<AdmissionLogMapper, AdmissionLog> {
@@ -41,19 +43,17 @@ public class SearchList extends MPJBaseServiceImpl<AdmissionLogMapper, Admission
 
         private Integer size;
 
-        private Long createTimeLong;
+        private String createTime;
+
+        private Integer state;
     }
     @GetMapping("/log/admission/list")
     public Result<Page<AdmissionLog>> search(Param param) {
-        Date createTime = null;
-        if(nonNull(param.createTimeLong)) {
-            createTime = new Date(param.createTimeLong);
-        }
-
         List<AdmissionLog> admissionLogs = selectJoinList(AdmissionLog.class, new MPJLambdaWrapper<AdmissionLog>()
                 .selectAll(AdmissionLog.class)
                 .eq(AdmissionLog::getUserId, LoginUser.getId())
-                .eq(nonNull(createTime), AdmissionLog::getCreateTime, createTime)
+                .likeRight(nonNull(param.createTime), AdmissionLog::getCreateTime, param.createTime)
+                .eq(nonNull(param.state),AdmissionLog::getState, param.state)
         );
         int totalPage = PageUtil.totalPage(admissionLogs.size(), param.getSize());
         Page<AdmissionLog> result = new Page<>(param.getCurrent(), param.getSize(), totalPage);

@@ -8,6 +8,7 @@ import com.clinic.dto.param.SearchAdmissionParam;
 import com.clinic.dto.param.StatsParam;
 import com.clinic.entity.AdmissionLog;
 import com.clinic.entity.Patient;
+import com.clinic.enums.AdmissionStateEnum;
 import com.clinic.mapper.AdmissionLogMapper;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.PatientService;
@@ -84,6 +85,11 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
         QueryWrapper<AdmissionLog> wrapper = new QueryWrapper<>();
         wrapper.select("distinct patient_id").between("create_time",param.getStartTime(),param.getEndTime());
         return baseMapper.selectCount(wrapper);
+    }
+
+    @Override
+    public boolean updateEndState(Long admissionId) {
+        return lambdaUpdate().set(AdmissionLog::getState, AdmissionStateEnum.END.getCode()).eq(AdmissionLog::getId, admissionId).update();
     }
 
     @Override

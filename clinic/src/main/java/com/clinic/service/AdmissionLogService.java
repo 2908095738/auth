@@ -23,4 +23,6 @@ public interface AdmissionLogService extends IService<AdmissionLog> {
     Boolean update(Long admissionId, Long id, Long payId);
 
     Long countPatientNum(StatsParam param);
+
+    boolean updateEndState(Long admissionId);
 }
