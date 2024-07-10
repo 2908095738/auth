@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 /**
  * 正在接诊页面接口
@@ -58,11 +59,13 @@ public class SearchList extends MPJBaseServiceImpl<AdmissionLogMapper, Admission
         int totalPage = PageUtil.totalPage(admissionLogs.size(), param.getSize());
         Page<AdmissionLog> result = new Page<>(param.getCurrent(), param.getSize(), totalPage);
         List<List<AdmissionLog>> partition = ListUtils.partition(admissionLogs, param.getSize());
-        List<AdmissionLog> limitLog = new ArrayList<>();
-        if(partition.size() <= param.getCurrent()) {
-            limitLog = partition.get(param.getCurrent() - 1);
+        if(partition.size() > INTEGER_ZERO) {
+            List<AdmissionLog> limitLog = new ArrayList<>();
+            if(partition.size() <= param.getCurrent()) {
+                limitLog = partition.get(param.getCurrent() - 1);
+            }
+            result.setRecords(limitLog);
         }
-        result.setRecords(limitLog);
         return Result.success(result);
     }
 }
