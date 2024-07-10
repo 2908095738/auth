@@ -8,6 +8,7 @@ import com.clinic.entity.DiagnosisProof;
 import com.clinic.service.DiagnosisProofService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,13 +40,20 @@ public class DiagnosisProofController {
         return service.queryList(param);
     }
 
+    @GetMapping("/one")
+    public Result<DiagnosisProof> getFileInfo(@NotNull Long id){
+        return Result.success(service.getById(id));
+    }
 
     @GetMapping("/file")
     public void getFile(@NotNull Long id) throws Exception {
         createDiagnosisProofFile.generation(id);
     }
 
-
+    @DeleteMapping()
+    public Result<Boolean> delete(@NotNull Long id){
+        return Result.success(service.removeById(id));
+    }
 
 
     @Autowired
