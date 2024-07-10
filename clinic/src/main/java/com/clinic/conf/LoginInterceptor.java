@@ -31,8 +31,13 @@ public class LoginInterceptor implements HandlerInterceptor {
 
 
     @Override
-    public boolean preHandle(@NotNull HttpServletRequest request, @Nonnull HttpServletResponse response, @Nonnull Object handler) throws ReLoginException, IOException {
-        User user = userAPI.getUserByToken(request.getHeader(tokenName));
+    public boolean preHandle(@NotNull @org.jetbrains.annotations.NotNull HttpServletRequest request, @Nonnull HttpServletResponse response, @Nonnull Object handler) throws ReLoginException, IOException {
+        User user;
+        try {
+            user = userAPI.getUserByToken(request.getHeader(tokenName));
+        } catch (Exception e) {
+            throw new ReLoginException();
+        }
         if (nonNull(user)){
             LoginUser.set(user);
             return true;
@@ -46,7 +51,7 @@ public class LoginInterceptor implements HandlerInterceptor {
      * 接口访问结束后，从ThreadLocal中删除用户信息
      */
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+    public void afterCompletion(@org.jetbrains.annotations.NotNull HttpServletRequest request, @org.jetbrains.annotations.NotNull HttpServletResponse response, @org.jetbrains.annotations.NotNull Object handler, Exception ex) {
         LoginUser.remove();
     }
 

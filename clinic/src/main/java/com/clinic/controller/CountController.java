@@ -63,41 +63,43 @@ public class CountController {
         long currentDayTotalReceptionNumber = 0;
         Date now = new Date();
         DrugExpiryGroup drugExpiryGroup = countAndUpdateDrugExpiryState();
-        Map<Date, List<AdmissionLog>> map = admissionLogService.list(new LambdaQueryWrapper<AdmissionLog>()
+        Map<String, List<AdmissionLog>> map = admissionLogService.list(new LambdaQueryWrapper<AdmissionLog>()
                 .eq(AdmissionLog::getUserId, LoginUser.getId())
-                .eq(AdmissionLog::getCreateTime, now)
                 .and(ext -> ext
                         .ge(AdmissionLog::getCreateTime, DateUtil.beginOfMonth(now))
                         .lt(AdmissionLog::getCreateTime, DateUtil.beginOfMonth(DateUtil.offsetMonth(now, INTEGER_ONE)))
                 )
-        ).stream().collect(Collectors.groupingBy(AdmissionLog::getCreateTime));
+        ).stream().collect(Collectors.groupingBy(log -> DateUtil.formatDate(log.getCreateTime())));
 
         if(map.size() > INTEGER_ZERO) {
-            List<AdmissionLog> currentDayAdmissionLogs = map.get(now);
-            for (AdmissionLog log : currentDayAdmissionLogs) {
-                AdmissionStateEnum state = log.getState();
-                if(AdmissionStateEnum.RUN.equals(state)) {
-                    queueNumber++;
+            List<AdmissionLog> currentDayAdmissionLogs = map.get(DateUtil.formatDate(now));
+            if(nonNull(currentDayAdmissionLogs)) {
+                for (AdmissionLog log : currentDayAdmissionLogs) {
+                    AdmissionStateEnum state = log.getState();
+                    if(AdmissionStateEnum.RUN.equals(state)) {
+                        queueNumber++;
+                    }
+                    currentDayTotalReceptionNumber++;
                 }
-                currentDayTotalReceptionNumber++;
             }
         }
         // 本月接诊人数（折线图数据）
         Map<String, Integer> singularMonthReceptionNumber = map.entrySet().stream()
-                .collect(Collectors.toMap(entity -> DateUtil.formatDate(entity.getKey()), entity -> entity.getValue().size()));
+                .collect(Collectors.toMap(Map.Entry::getKey, entity -> entity.getValue().size()));
 
         String[] split = DateUtil.formatDate(now).split("-");
-        String prefix = split[0] + "-" + split[1] + "-";
+        String prefix = split[1] + "-";
         List<String> dateList = new ArrayList<>();
         List<Integer> numberList = new ArrayList<>();
         int currentMonthDayNumber = DateUtil.lengthOfMonth(DateUtil.month(now), DateUtil.isLeapYear(DateUtil.year(now)));
         for (int day = 1; day <= currentMonthDayNumber; day++) {
             String key = prefix + (day < 10 ? ("0" + day) : day);
             dateList.add(key);
-            numberList.add(singularMonthReceptionNumber.getOrDefault(key, INTEGER_ZERO));
+            numberList.add(singularMonthReceptionNumber.getOrDefault(split[0] + "-" + key, INTEGER_ZERO));
         }
         ReceptionPeopleNumberChartData receptionPeopleNumberChartData = new ReceptionPeopleNumberChartData(dateList, numberList);
 
+        // 本月销售额（柱状图数据）
         List<Pay> currentMonthPayList = payService.lambdaQuery()
                 .eq(Pay::getCreator, LoginUser.getId())
                 .and(ext -> ext
@@ -112,7 +114,11 @@ public class CountController {
         ));
         BigDecimal currentDayEarnings = singularMonthEveryDayFeeMap.get(DateUtil.formatDate(now));
 
-        List<BigDecimal> singularMonthSalesList = new ArrayList<>(singularMonthEveryDayFeeMap.values());
+        List<BigDecimal> singularMonthSalesList = new ArrayList<>();
+        for (int day = 1; day <= currentMonthDayNumber; day++) {
+            String key = prefix + (day < 10 ? ("0" + day) : day);
+            singularMonthSalesList.add(singularMonthEveryDayFeeMap.getOrDefault(split[0] + "-" + key, BigDecimal.ZERO));
+        }
         SingularMonthSalesChartData singularMonthSalesChartData = new SingularMonthSalesChartData(dateList, singularMonthSalesList);
 
         int AboutExpiresDrugNumber = drugExpiryGroup.getAboutExpires().size();

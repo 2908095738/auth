@@ -1,4 +1,4 @@
-package com.clinic.conf;
+package com.bbs.financial.config;
 
 import com.bbs.Result;
 import com.bbs.exception.BusinessException;
@@ -22,6 +22,7 @@ public class BusinessExceptionHandler {
     @ResponseBody
     @ExceptionHandler(value = BusinessException.class)
     public Result<Object> errorHandler(BusinessException exception) {
+        exception.printStackTrace();
         return Result.failed(exception.getCode(), exception.getMessage());
     }
 
