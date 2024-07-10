@@ -1,6 +1,5 @@
 package com.clinic.controller;
 
-
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.bbs.Result;
@@ -92,12 +91,15 @@ public class CountController {
         List<String> dateList = new ArrayList<>();
         List<Integer> numberList = new ArrayList<>();
         int currentMonthDayNumber = DateUtil.lengthOfMonth(DateUtil.month(now), DateUtil.isLeapYear(DateUtil.year(now)));
+        int max = 0;
         for (int day = 1; day <= currentMonthDayNumber; day++) {
             String key = prefix + (day < 10 ? ("0" + day) : day);
             dateList.add(key);
-            numberList.add(singularMonthReceptionNumber.getOrDefault(split[0] + "-" + key, INTEGER_ZERO));
+            Integer number = singularMonthReceptionNumber.getOrDefault(split[0] + "-" + key, INTEGER_ZERO);
+            if(number > max) max = number;
+            numberList.add(number);
         }
-        ReceptionPeopleNumberChartData receptionPeopleNumberChartData = new ReceptionPeopleNumberChartData(dateList, numberList);
+        ReceptionPeopleNumberChartData receptionPeopleNumberChartData = new ReceptionPeopleNumberChartData(dateList, numberList, max);
 
         // 本月销售额（柱状图数据）
         List<Pay> currentMonthPayList = payService.lambdaQuery()
@@ -112,14 +114,17 @@ public class CountController {
                 entry -> DateUtil.formatDate(entry.getKey()),
                 entry -> entry.getValue().stream().map(Pay::getFee).reduce(BigDecimal.ZERO, BigDecimal::add)
         ));
-        BigDecimal currentDayEarnings = singularMonthEveryDayFeeMap.get(DateUtil.formatDate(now));
+        BigDecimal currentDayEarnings = singularMonthEveryDayFeeMap.getOrDefault(DateUtil.formatDate(now), BigDecimal.ZERO);
 
         List<BigDecimal> singularMonthSalesList = new ArrayList<>();
+        BigDecimal maxEarnings = BigDecimal.ZERO;
         for (int day = 1; day <= currentMonthDayNumber; day++) {
             String key = prefix + (day < 10 ? ("0" + day) : day);
-            singularMonthSalesList.add(singularMonthEveryDayFeeMap.getOrDefault(split[0] + "-" + key, BigDecimal.ZERO));
+            BigDecimal number = singularMonthEveryDayFeeMap.getOrDefault(split[0] + "-" + key, BigDecimal.ZERO);
+            if(number.compareTo(maxEarnings) == INTEGER_ONE) maxEarnings = number;
+            singularMonthSalesList.add(number);
         }
-        SingularMonthSalesChartData singularMonthSalesChartData = new SingularMonthSalesChartData(dateList, singularMonthSalesList);
+        SingularMonthSalesChartData singularMonthSalesChartData = new SingularMonthSalesChartData(dateList, singularMonthSalesList, maxEarnings);
 
         int AboutExpiresDrugNumber = drugExpiryGroup.getAboutExpires().size();
         boolean existCriticalDrug = AboutExpiresDrugNumber > INTEGER_ZERO;
@@ -235,6 +240,8 @@ public class CountController {
         private List<String> dateList;
 
         private List<Integer> numberList;
+
+        private Integer max;
     }
 
     @Data
@@ -245,6 +252,8 @@ public class CountController {
         private List<String> dateList;
 
         private List<BigDecimal> numberList;
+
+        private BigDecimal max;
     }
 
     @Data

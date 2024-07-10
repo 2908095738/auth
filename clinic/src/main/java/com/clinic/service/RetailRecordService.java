@@ -1,8 +1,6 @@
 package com.clinic.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.clinic.dto.param.SearchRetailRecordParam;
-import com.clinic.entity.RetailDrugRecord;
 import com.clinic.entity.RetailRecord;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -13,5 +11,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface RetailRecordService extends IService<RetailRecord> {
 
-    Page<RetailRecord> list(SearchRetailRecordParam param);
+    Page<RetailRecord> list(Page<RetailRecord> page, String val, Long startDateLong, Long endDateLong);
 }
