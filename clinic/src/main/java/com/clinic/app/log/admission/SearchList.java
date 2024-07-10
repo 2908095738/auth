@@ -55,6 +55,9 @@ public class SearchList extends MPJBaseServiceImpl<AdmissionLogMapper, Admission
                 .likeRight(nonNull(param.createTime), AdmissionLog::getCreateTime, param.createTime)
                 .eq(nonNull(param.state),AdmissionLog::getState, param.state)
         );
+        if(admissionLogs.isEmpty()) {
+            return Result.success(new Page<>());
+        }
         int totalPage = PageUtil.totalPage(admissionLogs.size(), param.getSize());
         Page<AdmissionLog> result = new Page<>(param.getCurrent(), param.getSize(), totalPage);
         List<List<AdmissionLog>> partition = ListUtils.partition(admissionLogs, param.getSize());
