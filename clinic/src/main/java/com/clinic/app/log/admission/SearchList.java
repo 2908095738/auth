@@ -4,6 +4,7 @@ import cn.hutool.core.util.PageUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.clinic.entity.AdmissionLog;
+import com.clinic.entity.Pay;
 import com.clinic.mapper.AdmissionLogMapper;
 import com.clinic.util.LoginUser;
 import com.github.yulichang.base.MPJBaseServiceImpl;
@@ -52,9 +53,12 @@ public class SearchList extends MPJBaseServiceImpl<AdmissionLogMapper, Admission
     public Result<Page<AdmissionLog>> search(Param param) {
         List<AdmissionLog> admissionLogs = selectJoinList(AdmissionLog.class, new MPJLambdaWrapper<AdmissionLog>()
                 .selectAll(AdmissionLog.class)
+                .selectAssociation(Pay.class, AdmissionLog::getPay)
                 .eq(AdmissionLog::getUserId, LoginUser.getId())
                 .likeRight(nonNull(param.createTime), AdmissionLog::getCreateTime, param.createTime)
                 .eq(nonNull(param.state),AdmissionLog::getState, param.state)
+                .eq(nonNull(param.state),Pay::getState,0)
+                .leftJoin(Pay.class, Pay::getId, AdmissionLog::getPayId)
         );
         if(admissionLogs.isEmpty()) {
             return Result.success(new Page<>());
