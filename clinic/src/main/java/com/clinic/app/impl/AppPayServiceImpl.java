@@ -58,7 +58,8 @@ public class AppPayServiceImpl implements AppPayService {
     public Result<Page<PayRecordPatientDto>> selectPayPatient(PatientPayRecordParam param) {
         LambdaQueryChainWrapper<Pay> lambdaQuery = payService.lambdaQuery();
         lambdaQuery.eq(Objects.nonNull(param.getPatientId()), Pay::getPatientId,param.getPatientId())
-                .eq(Pay::getCreator, LoginUser.getId());
+                .eq(Pay::getCreator, LoginUser.getId())
+                .orderByAsc(Pay::getState);
         Page<Pay> page = lambdaQuery.page(param.toPage());
         Page<PayRecordPatientDto> result = payConverter.ToDtoPage(page);
         return Result.success(result);
