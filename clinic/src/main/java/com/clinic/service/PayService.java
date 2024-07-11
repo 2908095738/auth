@@ -7,6 +7,8 @@ import com.clinic.dto.PayAndRecordPageDto;
 import com.clinic.dto.param.GetPayParam;
 import com.clinic.entity.Pay;
 
+import java.util.List;
+
 
 /**
  * 收费记录
@@ -14,6 +16,8 @@ import com.clinic.entity.Pay;
 public interface PayService extends IService<Pay> {
 
     Page<PayAndRecordPageDto> selectPayAndRecordPageDto(GetPayParam param);
+
+    List<PayAndRecordPageDto> selectPayAndRecordDto(GetPayParam param);
 
     GetPayDto getPay(Long id);
 }
