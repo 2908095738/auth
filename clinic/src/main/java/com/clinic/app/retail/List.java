@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.clinic.entity.RetailRecord;
 import com.clinic.service.RetailRecordService;
+import com.clinic.util.PageUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,7 +27,7 @@ public class List {
             @RequestParam(required = false) Long startDate,
             @RequestParam(required = false) Long endDate
     ) {
-        return Result.success(drugRecordService.list(new Page<>(current, size), val, startDate, endDate));
+        return Result.success(PageUtil.execPage(current, size, drugRecordService.list(val, startDate, endDate)));
     }
 
     @Autowired
