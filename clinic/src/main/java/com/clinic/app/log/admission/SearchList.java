@@ -57,6 +57,11 @@ public class SearchList extends MPJBaseServiceImpl<AdmissionLogMapper, Admission
                 .eq(AdmissionLog::getUserId, LoginUser.getId())
                 .likeRight(nonNull(param.createTime), AdmissionLog::getCreateTime, param.createTime)
                 .eq(nonNull(param.state),AdmissionLog::getState, param.state)
+                .isNull(nonNull(param.state),Pay::getState)
+                .or()
+                .eq(AdmissionLog::getUserId, LoginUser.getId())
+                .likeRight(nonNull(param.createTime), AdmissionLog::getCreateTime, param.createTime)
+                .eq(nonNull(param.state),AdmissionLog::getState, param.state)
                 .eq(nonNull(param.state),Pay::getState,0)
                 .leftJoin(Pay.class, Pay::getId, AdmissionLog::getPayId)
         );
