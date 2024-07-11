@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BaseParam {
 
-    private Integer current;
+    private Long current;
 
-    private Integer size;
+    private Long size;
 
     public <T> Page<T> toPage() {
         return new Page<>(current, size);

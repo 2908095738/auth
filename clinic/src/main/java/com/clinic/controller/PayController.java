@@ -20,24 +20,25 @@ import com.clinic.dto.param.ReturnPayRecordParam;
 import com.clinic.dto.param.UpdatePayById;
 import com.clinic.entity.PayRecord;
 import com.clinic.service.AdmissionLogService;
+import com.clinic.service.PayService;
 import com.clinic.util.LogUtil;
 import com.clinic.util.LoginUser;
+import com.clinic.util.PageUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 
 @Slf4j
@@ -58,6 +59,9 @@ public class PayController {
     private final DataSourceTransactionManager transactionManager;
 
     private final TransactionDefinition transactionDefinition;
+
+    @Resource
+    private PayService payService;
     /**
      * 本次收费-数据回显
      */
@@ -78,18 +82,34 @@ public class PayController {
      * 收费列表-已收费
      */
     @GetMapping("/all/is")
-    public Result<Page<PayAndRecordPageDto>> getPay(IsPayRecordParam param){
-        GetPayParam p = payConverter.toParam(param);
-        return service.selectPayRecord(p);
+    public Result<Page<PayAndRecordPageDto>> getPay(
+            @RequestParam(required = false, defaultValue = "1") Integer current,
+            @RequestParam(required = false, defaultValue = "10") Integer size,
+            @RequestParam(required = false) String val,
+            @RequestParam(required = false) Long startDate,
+            @RequestParam(required = false) Long endDate
+    ){
+        GetPayParam param = new GetPayParam(new Page<>(current, size), val, startDate, endDate);
+        param.setState(INTEGER_ONE);
+        List<PayAndRecordPageDto> data = payService.selectPayAndRecordDto(param);
+        return Result.success(PageUtil.execPage(current, size, data));
     }
 
     /**
      * 收费列表-未收费
      */
     @GetMapping("/all/no")
-    public Result<Page<PayAndRecordPageDto>> getPay(NoPayRecordParam param){
-        GetPayParam p = payConverter.toParam(param);
-        return service.selectPayRecord(p);
+    public Result<Page<PayAndRecordPageDto>> getNoPay(
+            @RequestParam(required = false, defaultValue = "1") Integer current,
+            @RequestParam(required = false, defaultValue = "10") Integer size,
+            @RequestParam(required = false) String val,
+            @RequestParam(required = false) Long startDate,
+            @RequestParam(required = false) Long endDate
+    ){
+        GetPayParam param = new GetPayParam(new Page<>(current, size), val, startDate, endDate);
+        param.setState(INTEGER_ZERO);
+        List<PayAndRecordPageDto> data = payService.selectPayAndRecordDto(param);
+        return Result.success(PageUtil.execPage(current, size, data));
     }
 
     /**

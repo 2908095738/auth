@@ -1,12 +1,12 @@
 package com.clinic.app.log.admission;
 
-import cn.hutool.core.util.PageUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.clinic.entity.AdmissionLog;
 import com.clinic.entity.Pay;
 import com.clinic.mapper.AdmissionLogMapper;
 import com.clinic.util.LoginUser;
+import com.clinic.util.PageUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.AllArgsConstructor;
@@ -65,19 +65,6 @@ public class SearchList extends MPJBaseServiceImpl<AdmissionLogMapper, Admission
                 .eq(nonNull(param.state),Pay::getState,0)
                 .leftJoin(Pay.class, Pay::getId, AdmissionLog::getPayId)
         );
-        if(admissionLogs.isEmpty()) {
-            return Result.success(new Page<>());
-        }
-        int totalPage = PageUtil.totalPage(admissionLogs.size(), param.getSize());
-        Page<AdmissionLog> result = new Page<>(param.getCurrent(), param.getSize(), totalPage);
-        List<List<AdmissionLog>> partition = ListUtils.partition(admissionLogs, param.getSize());
-        if(partition.size() > INTEGER_ZERO) {
-            List<AdmissionLog> limitLog = new ArrayList<>();
-            if(partition.size() <= param.getCurrent()) {
-                limitLog = partition.get(param.getCurrent() - 1);
-            }
-            result.setRecords(limitLog);
-        }
-        return Result.success(result);
+        return Result.success(PageUtil.execPage(param.getCurrent(), param.getSize(), admissionLogs));
     }
 }
