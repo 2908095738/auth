@@ -32,7 +32,12 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(@NotNull HttpServletRequest request, @Nonnull HttpServletResponse response, @Nonnull Object handler) throws ReLoginException, IOException {
-        User user = userAPI.getUserByToken(request.getHeader(tokenName));
+        User user = null;
+        try {
+            user = userAPI.getUserByToken(request.getHeader(tokenName));
+        } catch (Exception e) {
+            throw new ReLoginException();
+        }
         if (nonNull(user)){
             LoginUser.set(user);
             return true;

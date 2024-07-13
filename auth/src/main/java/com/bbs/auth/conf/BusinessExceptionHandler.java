@@ -1,5 +1,6 @@
 package com.bbs.auth.conf;
 
+import cn.hutool.jwt.JWTException;
 import com.bbs.Result;
 import com.bbs.exception.ReLoginException;
 import com.bbs.exception.BusinessException;
@@ -27,7 +28,7 @@ public class BusinessExceptionHandler {
     }
 
     @ResponseBody
-    @ExceptionHandler(value = ReLoginException.class)
+    @ExceptionHandler(value = { ReLoginException.class, JWTException.class })
     public void errorHandler(ReLoginException exception) throws IOException {
         response.sendError(exception.getCode(), exception.getMessage());
     }
