@@ -11,7 +11,6 @@ ADD clinic/target/classes/templates /app/templates
 ADD clinic/target/classes/diagnosis /app/diagnosis
 ADD clinic/target/classes/preview /app/preview
 
-yum -y install fontconfig
 RUN set -xe \
 && apk --no-cache add fontconfig
 #&& apk --no-cache add ttf-dejavu fontconfig
