@@ -15,7 +15,7 @@ yum -y install fontconfig
 RUN set -xe \
 && apk --no-cache add fontconfig
 #&& apk --no-cache add ttf-dejavu fontconfig
-ADD clinic/fonts /usr/share/fonts
+COPY clinic/fonts /usr/share/fonts
 # 设置暴露的端口号
 EXPOSE 8080
 # 在镜像运行为容器后执行的命令
