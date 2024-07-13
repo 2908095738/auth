@@ -10,10 +10,12 @@ ADD clinic/target/clinic-1.0.jar app.jar
 ADD clinic/target/classes/templates /app/templates
 ADD clinic/target/classes/diagnosis /app/diagnosis
 ADD clinic/target/classes/preview /app/preview
+
+yum -y install fontconfig
 RUN set -xe \
 && apk --no-cache add fontconfig
 #&& apk --no-cache add ttf-dejavu fontconfig
-ADD clinic/fonts /usr/share/fonts/ttf-dejavu
+ADD clinic/fonts /usr/share/fonts
 # 设置暴露的端口号
 EXPOSE 8080
 # 在镜像运行为容器后执行的命令
