@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 @RestController
@@ -79,7 +80,7 @@ public class SearchNote {
      */
     @GetMapping("/note/list")
     public Result<Page<NoteDto>> search(@RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size, @RequestParam Long zhangHuId, @RequestParam boolean isAllZh, @RequestParam(name = "voucherStatus", required = false) Integer voucherStatus, @RequestParam(name = "startDate", required = false) Long startDateLong, @RequestParam(name = "endDate", required = false) Long endDateLong, @RequestParam(name = "certificateAbstract", required = false) String certificateAbstract, @RequestParam(name = "heSubjName", required = false) String heSubjName, @RequestParam(name = "remark", required = false) String remark, @RequestParam(name = "makeName", required = false) String makeName) {
-        Page<Note> tmpPage = orm.listNote(current, size, Collections.singletonList(zhangHuId), voucherStatus, certificateAbstract, remark, null, startDateLong, endDateLong, true, true);
+        Page<Note> tmpPage = orm.listNote(current, size, Collections.singletonList(zhangHuId), voucherStatus, INTEGER_ONE, certificateAbstract, remark, null, startDateLong, endDateLong, true, true);
 
         //账户启用状态过滤
         tmpPage.getRecords().removeIf(n -> n.getZhangHu().getIsActive().equals(isAllZh));
@@ -177,8 +178,8 @@ public class SearchNote {
      */
     private BigDecimal getOriMoney(Long zhangHuId, Long date, Integer voucherStatus, String certificateAbstract, String remark) {
         //计算期初余额
-        List<Note> tmpList = orm.listNote(INTEGER_ZERO, INTEGER_ZERO, Collections.singletonList(zhangHuId), voucherStatus, certificateAbstract, remark, date, null, null, Boolean.FALSE, Boolean.FALSE).getRecords();
-        BigDecimal oriMoeny = new BigDecimal(NumberUtils.LONG_ZERO);
+        List<Note> tmpList = orm.listNote(INTEGER_ZERO, INTEGER_ZERO, Collections.singletonList(zhangHuId), voucherStatus, INTEGER_ONE, certificateAbstract, remark, date, null, null, Boolean.FALSE, Boolean.FALSE).getRecords();
+        BigDecimal oriMoeny = BigDecimal.ZERO;
         for (Note note : tmpList) {
             if (!ObjectUtils.isEmpty(note.getBorrowMoney())) oriMoeny = oriMoeny.add(note.getBorrowMoney());
             if (!ObjectUtils.isEmpty(note.getLoansMoney())) oriMoeny = oriMoeny.subtract(note.getLoansMoney());

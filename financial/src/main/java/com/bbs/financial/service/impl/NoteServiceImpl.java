@@ -34,17 +34,25 @@ public class NoteServiceImpl extends MPJBaseServiceImpl<NoteMapper, Note>
     private ZhangHuService zhService;
 
     @Override
-    public Page<Note> listNote(Integer current, Integer size, Collection<Long> zhIdList, Integer voucherStatus, String certificateAbstract, String remark, Long dateLong, Long startDateLong, Long endDateLong, boolean isMonth, boolean isPage) {
+    public Page<Note> listNote(Integer current, Integer size, Collection<Long> zhIdList, Integer voucherStatus, Integer noteType, String certificateAbstract, String remark, Long dateLong, Long startDateLong, Long endDateLong, boolean isMonth, boolean isPage) {
         //TODO L SQL合一
+
+        //结束时间时间戳转成当日最后一秒的时间戳
+        if (!ObjectUtils.isEmpty(endDateLong) && endDateLong > 0) {
+            Long hourOf23 = 23 * 60 * 60 * 1000L;
+            Long minuteOf59 = 59 * 60 * 1000L;
+            Long secondOf59 = 59 * 1000L;
+            endDateLong = endDateLong + hourOf23 + minuteOf59 + secondOf59;
+        }
 
         MPJLambdaWrapper<Note> wrappers = getDataWrapperByNoteList();
 
         boolean nonZhId = !isZhId(zhIdList);
         if (isMonth && nonZhId && isPage) {
-            return selectJoinListPage(new Page<>(current, size), Note.class, getConditionByNoteList(wrappers, !nonZhId, zhIdList, voucherStatus, certificateAbstract, remark, isMonth, dateLong, startDateLong, endDateLong));
+            return selectJoinListPage(new Page<>(current, size), Note.class, getConditionByNoteList(wrappers, !nonZhId, zhIdList, voucherStatus, noteType, certificateAbstract, remark, isMonth, dateLong, startDateLong, endDateLong));
         } else {
             return new Page<Note>().setRecords(selectJoinList(Note.class,
-                    getConditionByNoteList(wrappers, !nonZhId, zhIdList, voucherStatus, certificateAbstract, remark, isMonth, dateLong, startDateLong, endDateLong)));
+                    getConditionByNoteList(wrappers, !nonZhId, zhIdList, voucherStatus, noteType, certificateAbstract, remark, isMonth, dateLong, startDateLong, endDateLong)));
         }
     }
 
@@ -82,6 +90,7 @@ public class NoteServiceImpl extends MPJBaseServiceImpl<NoteMapper, Note>
      * @param isZhId              有账户id
      * @param zhIdList            账户id列表
      * @param voucherStatus       凭证状态：0.所有凭证;1.未生成凭证;2.已生成凭证;
+     * @param noteType            日记账类型：1.普通类型;0.初始金额
      * @param certificateAbstract 摘要
      * @param remark              备注
      * @param isMonth             true：当月；false：当月及之前
@@ -89,7 +98,7 @@ public class NoteServiceImpl extends MPJBaseServiceImpl<NoteMapper, Note>
      * @param startDateLong       起始时间时间戳
      * @param endDateLong         结束时间时间戳
      */
-    private MPJLambdaWrapper<Note> getConditionByNoteList(MPJLambdaWrapper<Note> wrappers, boolean isZhId, Collection<Long> zhIdList, Integer voucherStatus, String certificateAbstract, String remark, boolean isMonth, Long dateLong, Long startDateLong, Long endDateLong) {
+    private MPJLambdaWrapper<Note> getConditionByNoteList(MPJLambdaWrapper<Note> wrappers, boolean isZhId, Collection<Long> zhIdList, Integer voucherStatus, Integer noteType, String certificateAbstract, String remark, boolean isMonth, Long dateLong, Long startDateLong, Long endDateLong) {
         return wrappers
                 .eq(Note::getCompanyId, LoginUser.getCompanyId())
                 .in(isZhId, Note::getZhId, zhIdList)
@@ -97,6 +106,9 @@ public class NoteServiceImpl extends MPJBaseServiceImpl<NoteMapper, Note>
                 //凭证状态查询条件
                 .isNull(nonNull(voucherStatus) && voucherStatus.equals(NumberUtils.INTEGER_ONE), Note::getCertificateId)
                 .isNotNull(nonNull(voucherStatus) && voucherStatus.equals(NumberUtils.INTEGER_TWO), Note::getCertificateId)
+
+                //日记账类型查询条件
+                .eq(!ObjectUtils.isEmpty(noteType), Note::getNoteType, noteType)
 
                 //模糊查询条件
                 .like(StringUtils.isNotBlank(certificateAbstract), Note::getCertificateAbstract, certificateAbstract)

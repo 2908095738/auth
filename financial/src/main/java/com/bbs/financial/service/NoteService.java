@@ -20,6 +20,7 @@ public interface NoteService extends MPJBaseService<Note> {
      * @param size                条数
      * @param zhIdList            账户id列表
      * @param voucherStatus       凭证状态：0.所有凭证;1.未生成凭证;2.已生成凭证;
+     * @param noteType            日记账类型：1.普通类型;0.初始金额
      * @param certificateAbstract 摘要
      * @param remark              备注
      * @param dateLong            时间戳
@@ -29,7 +30,7 @@ public interface NoteService extends MPJBaseService<Note> {
      * @param isPage              true：分页；false：不分页
      */
     Page<Note> listNote(Integer current, Integer size,
-                        Collection<Long> zhIdList, Integer voucherStatus,
+                        Collection<Long> zhIdList, Integer voucherStatus, Integer noteType,
                         String certificateAbstract, String remark,
                         Long dateLong, Long startDateLong, Long endDateLong,
                         boolean isMonth, boolean isPage);

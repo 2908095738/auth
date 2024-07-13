@@ -23,6 +23,9 @@ import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataFormat;
 import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -78,6 +81,96 @@ public class CashierController {
 
     @Resource
     private ApplicationContext applicationContext;
+
+    @Resource
+    private DataSourceTransactionManager transactionManager;
+
+    @Resource
+    private TransactionDefinition transactionDefinition;
+
+    public final class StringTIP {
+        private static final String INIT_MONEY = "初始金额";
+    }
+
+    /**
+     * 是否是初始余额
+     *
+     * @param zhangHuId 账户id
+     * @param dateLong  时间戳
+     * @return true: 允许手动编辑初始余额; false: 不允许手动编辑
+     */
+    @GetMapping("/isOriMoney")
+    public Result<Boolean> isOriMoney(@RequestParam Long zhangHuId, @RequestParam Long dateLong) {
+        return Result.success(
+                noteService.listNote(INTEGER_ZERO, INTEGER_ZERO, Collections.singletonList(zhangHuId), INTEGER_ZERO, INTEGER_ONE,
+                        null, null, dateLong, null, null, false, false).getRecords().isEmpty());
+    }
+
+    /**
+     * 新增初始余额
+     *
+     * @param zhangHuId 账户id
+     * @param initMoney 初始余额
+     * @param dateLong  时间戳
+     */
+    @PutMapping("/initMoney/{zhangHuId}/{initMoney}/{dateLong}")
+    public Result<Boolean> addInitMoney(@PathVariable Long zhangHuId, @PathVariable String initMoney, @PathVariable Long dateLong) {
+        Note tmpNote = noteService.selectJoinOne(Note.class, new MPJLambdaWrapper<Note>()
+                .eq(Note::getNoteType, INTEGER_ZERO)
+                .eq(Note::getZhId, zhangHuId)
+                .eq(Note::getCompanyId, LoginUser.getCompanyId()));
+        boolean isHas = Objects.nonNull(tmpNote);
+
+        if (Objects.isNull(tmpNote)) {
+            tmpNote = new Note();
+            tmpNote.setCertificateAbstract(StringTIP.INIT_MONEY);
+            tmpNote.setBorrowMoney(new BigDecimal(initMoney));
+            tmpNote.setDate(new Date(dateLong));
+            tmpNote.setCreateBy(LoginUser.getId());
+            tmpNote.setNoteType(INTEGER_ZERO);
+            tmpNote.setZhId(zhangHuId);
+            tmpNote.setCompanyId(LoginUser.getCompanyId());
+        }
+
+
+        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
+        try {
+            if (isHas)
+                noteService.lambdaUpdate()
+                        .set(Note::getBorrowMoney, new BigDecimal(initMoney))
+                        .eq(Note::getId, tmpNote.getId())
+                        .update();
+            else
+                noteService.save(tmpNote);
+
+            transactionManager.commit(transaction);
+            return Result.success();
+        } catch (Exception e) {
+            transactionManager.rollback(transaction);
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 获取初始余额
+     *
+     * @param zhangHuId 账户id
+     */
+    @GetMapping("/getInitMoney")
+    public Result<String> getInitMoney(@RequestParam Long zhangHuId) {
+        List<BigDecimal> oriMoneyList = noteService.selectJoinList(BigDecimal.class,
+                new MPJLambdaWrapper<Note>()
+                        .select(Note::getBorrowMoney)
+                        .eq(Note::getCompanyId, LoginUser.getCompanyId())
+                        .eq(Note::getNoteType, INTEGER_ZERO)
+                        .eq(!ObjectUtils.isEmpty(zhangHuId) && zhangHuId > 0, Note::getZhId, zhangHuId));
+
+        BigDecimal resultMoney = BigDecimal.ZERO;
+        for (BigDecimal nowMoney : oriMoneyList)
+            resultMoney = resultMoney.add(nowMoney);
+
+        return Result.success(resultMoney.toString());
+    }
 
     /**
      * 查询日记账
@@ -171,11 +264,11 @@ public class CashierController {
      * 查询入账科目列表
      */
     @GetMapping("/listSubjects")
-    public Result<Page<SubjectsNameDto>> listSubjects(Long companyId, @RequestParam Integer current, @RequestParam Integer size) {
+    public Result<Page<SubjectsNameDto>> listSubjects(@RequestParam Integer current, @RequestParam Integer size) {
         Page<SubjectsNameDto> page = accountService.selectJoinListPage(new Page<>(current, size), SubjectsNameDto.class, new MPJLambdaWrapper<Account>()
                 .select(Account::getId, Account::getNo, Account::getName)
                 .eq(Account::getCompanyId, INTEGER_ZERO)
-                .or().eq(nonNull(companyId), Account::getCompanyId, companyId)
+                .or().eq(Account::getCompanyId, LoginUser.getCompanyId())
         );
         // 根据 no 中的 - 的数量，获取需要查询的科目 level
         // ps: value 的三元，可忽略，用于解决 IDEA Null 检查
@@ -195,7 +288,7 @@ public class CashierController {
         //计算期初余额
         List<Note> tmpList = noteService.listNote(INTEGER_ZERO, INTEGER_ZERO,
                 Collections.singletonList(zhangHuId),
-                INTEGER_ZERO, null, null,
+                INTEGER_ZERO, INTEGER_ONE, null, null,
                 date, null, null,
                 Boolean.FALSE, Boolean.FALSE).getRecords();
 
@@ -610,7 +703,7 @@ public class CashierController {
 
             //期初余额计算
             List<Note> noteList2Ori = noteService.listNote(current, size,
-                    subjMap.keySet(), INTEGER_ONE,
+                    subjMap.keySet(), INTEGER_ONE, INTEGER_ONE,
                     null, null,
                     startDateLong, null, null,
                     Boolean.FALSE, Boolean.TRUE).getRecords();
@@ -683,13 +776,13 @@ public class CashierController {
         List<Note> result;
         if (Objects.nonNull(zhIdList) && !zhIdList.isEmpty()) {
             result = noteService.listNote(current, size,
-                    zhIdList, INTEGER_ZERO,
+                    zhIdList, INTEGER_ZERO, INTEGER_ONE,
                     null, null,
                     null, startDateLong, endDateLong,
                     Boolean.TRUE, Boolean.TRUE).getRecords();
         } else
             result = noteService.listNote(INTEGER_ZERO, INTEGER_ZERO,
-                    zhIdList, INTEGER_ZERO,
+                    zhIdList, INTEGER_ZERO, INTEGER_ONE,
                     null, null,
                     null, startDateLong, endDateLong,
                     true, false).getRecords();
@@ -962,13 +1055,13 @@ public class CashierController {
 
         //不同时间区间的凭证列表
         List<Note> noteListByBefore = noteService.listNote(current, size,
-                Collections.emptyList(), INTEGER_ONE,
+                Collections.emptyList(), INTEGER_ONE, INTEGER_ONE,
                 null, null,
                 startDateLong, null, null,
                 false, true
         ).getRecords();
         List<Note> noteListByNow = noteService.listNote(current, size,
-                Collections.emptyList(), INTEGER_ONE,
+                Collections.emptyList(), INTEGER_ONE, INTEGER_ONE,
                 null, null,
                 null, startDateLong, endDateLong,
                 true, false).getRecords();

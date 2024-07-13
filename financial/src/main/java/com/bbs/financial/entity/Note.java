@@ -100,6 +100,12 @@ public class Note implements Serializable {
     private Long updateBy;
 
     /**
+     * 日记账类型：1.普通类型;0.初始金额
+     */
+    @TableField(value = "note_type")
+    private Integer noteType;
+
+    /**
      * 账户id
      */
     @TableField(value = "zh_id")
