@@ -4,11 +4,16 @@ WORKDIR /app
 # 设置时区
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN echo 'Asia/Shanghai' >/etc/timezone
+ENV LANG C.UTF-8
 # 拷贝jar 把可执行jar包复制到基础镜像的根目录下
 ADD clinic/target/clinic-1.0.jar app.jar
 ADD clinic/target/classes/templates /app/templates
 ADD clinic/target/classes/diagnosis /app/diagnosis
 ADD clinic/target/classes/preview /app/preview
+RUN set -xe \
+&& apk --no-cache add fontconfig
+#&& apk --no-cache add ttf-dejavu fontconfig
+ADD clinic/fonts /usr/share/fonts/ttf-dejavu
 # 设置暴露的端口号
 EXPOSE 8080
 # 在镜像运行为容器后执行的命令
