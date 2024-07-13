@@ -80,8 +80,8 @@ public class Account implements Serializable {
     /**
      * 辅助核算类型id
      */
-    @TableField(value = "account_auxiliary_type_id")
-    private String accountAuxiliaryTypeId;
+    @TableField(value = "account_auxiliary_type_ids")
+    private String accountAuxiliaryTypeIds;
 
     /**
      * 是否现金支付
