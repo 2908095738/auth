@@ -13,6 +13,8 @@ ADD clinic/target/classes/preview /app/preview
 
 #&& apk --no-cache add ttf-dejavu fontconfig
 COPY clinic/fonts /usr/share/fonts
+RUN fc-cache -f -v
+
 # 设置暴露的端口号
 EXPOSE 8080
 # 在镜像运行为容器后执行的命令
