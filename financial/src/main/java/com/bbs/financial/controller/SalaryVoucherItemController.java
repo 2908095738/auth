@@ -2,9 +2,9 @@ package com.bbs.financial.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
-import com.bbs.financial.entity.AuxiliaryCalculation;
+import com.bbs.financial.entity.SalaryCalculate;
 import com.bbs.financial.entity.SalaryVoucherItem;
-import com.bbs.financial.service.AuxiliaryCalculationService;
+import com.bbs.financial.service.SalaryCalculateService;
 import com.bbs.financial.service.SalaryVoucherItemService;
 import com.bbs.financial.util.LoginUser;
 import com.bbs.financial.vo.SalaryVoucherItemVo;
@@ -38,7 +38,7 @@ public class SalaryVoucherItemController {
     @Resource
     private SalaryVoucherItemService salaryVoucherItemService;
     @Resource
-    private AuxiliaryCalculationService salaryAccountingItemTypeService;
+    private SalaryCalculateService salaryCalculateService;
 
     @Data
     @NoArgsConstructor
@@ -77,8 +77,8 @@ public class SalaryVoucherItemController {
     @PostMapping("/item")
     public Result<Boolean> add(@RequestBody AddParam addParam)
     {
-        AuxiliaryCalculation salaryAccountingItemType = new AuxiliaryCalculation().setName(addParam.name).setCompanyId(LoginUser.getCompanyId());
-        salaryAccountingItemTypeService.save(salaryAccountingItemType);
+        SalaryCalculate salaryAccountingItemType = new SalaryCalculate().setName(addParam.name).setCompanyId(LoginUser.getCompanyId());
+        salaryCalculateService.save(salaryAccountingItemType);
         salaryVoucherItemService.save(new SalaryVoucherItem().setAccountingItemTypeId(salaryAccountingItemType.getId()).setCompanyId(LoginUser.getCompanyId()).setIsActive(true));
         return success();
     }

@@ -1,12 +1,12 @@
 package com.bbs.financial.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.bbs.financial.entity.AuxiliaryCalculation;
+import com.bbs.financial.entity.SalaryCalculate;
 
 /**
  * @Entity com.bbs.financial.entity.SalaryAccountingItemType
  */
-public interface AuxiliaryCalculationMapper extends BaseMapper<AuxiliaryCalculation> {
+public interface SalaryCalculateMapper extends BaseMapper<SalaryCalculate> {
 
 }
 

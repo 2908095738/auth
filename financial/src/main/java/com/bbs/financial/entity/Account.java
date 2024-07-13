@@ -4,13 +4,13 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
+
+import java.io.Serializable;
 
 /**
  * 科目
@@ -78,10 +78,10 @@ public class Account implements Serializable {
     private String periodExchangeRateAdjust;
 
     /**
-     * 是否辅助核算
+     * 辅助核算类型id
      */
-    @TableField(value = "auxiliary_calculation")
-    private String auxiliaryCalculation;
+    @TableField(value = "account_auxiliary_type_id")
+    private String accountAuxiliaryTypeId;
 
     /**
      * 是否现金支付

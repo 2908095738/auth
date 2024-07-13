@@ -12,15 +12,15 @@ import lombok.experimental.Accessors;
 import java.io.Serializable;
 
 /**
- * 核算项目类型表
- * @TableName salary_accounting_item_type
+ * 资金核算项目
+ * @TableName salary_calculate
  */
-@TableName(value ="auxiliary_calculation")
+@TableName(value ="salary_calculate")
 @Data
 @Accessors(chain = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuxiliaryCalculation implements Serializable {
+public class SalaryCalculate implements Serializable {
     /**
      * 
      */

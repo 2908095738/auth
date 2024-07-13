@@ -5,11 +5,11 @@ import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.financial.controller.SalaryController;
-import com.bbs.financial.entity.AuxiliaryCalculation;
 import com.bbs.financial.entity.Certificate;
 import com.bbs.financial.entity.EmployeeItemExtend;
 import com.bbs.financial.entity.EmployeeSalary;
 import com.bbs.financial.entity.Salary;
+import com.bbs.financial.entity.SalaryCalculate;
 import com.bbs.financial.mapper.SalaryMapper;
 import com.bbs.financial.service.SalaryService;
 import com.bbs.financial.util.LoginUser;
@@ -48,7 +48,7 @@ public class SalaryServiceImpl extends MPJBaseServiceImpl<SalaryMapper, Salary>
                     .eq(EmployeeItemExtend::getSalaryId,EmployeeSalary::getSalaryId)
                     .eq(EmployeeItemExtend::getEmployeeId,EmployeeSalary::getEmployeeId)
                 )
-                .leftJoin(AuxiliaryCalculation.class,on->on.eq(AuxiliaryCalculation::getId,EmployeeItemExtend::getItemTypeId))
+                .leftJoin(SalaryCalculate.class, on->on.eq(SalaryCalculate::getId,EmployeeItemExtend::getItemTypeId))
 
                 .selectAssociation("jc",Certificate.class,SalaryVo::getJCertificate)
                 .selectAssociation("fc",Certificate.class,SalaryVo::getFCertificate)

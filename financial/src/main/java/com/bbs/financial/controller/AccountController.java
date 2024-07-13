@@ -5,10 +5,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
-import com.bbs.financial.entity.*;
+import com.bbs.financial.entity.Account;
+import com.bbs.financial.entity.AccountAuxiliaryType;
+import com.bbs.financial.entity.AccountCurrency;
+import com.bbs.financial.entity.AccountRemark;
+import com.bbs.financial.entity.PriceType;
+import com.bbs.financial.service.AccountAuxiliaryTypeService;
 import com.bbs.financial.service.AccountCurrencyService;
 import com.bbs.financial.service.AccountService;
-import com.bbs.financial.service.AuxiliaryCalculationService;
 import com.bbs.financial.service.PriceTypeService;
 import com.bbs.financial.util.LoginUser;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
@@ -16,16 +20,28 @@ import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 import static com.bbs.Result.failed;
 import static com.bbs.Result.success;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.math.NumberUtils.*;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 /**
  * 科目Controller
@@ -297,20 +313,20 @@ public class AccountController
     }
 
     @Resource
-    private AuxiliaryCalculationService auxiliaryCalculationService;
+    private AccountAuxiliaryTypeService accountAuxiliaryTypeService;
 
     @PutMapping("/auxiliary/calculation")
-    public Result<Boolean> addAuxiliaryCalculation(@RequestBody AuxiliaryCalculation auxiliaryCalculation) {
-        if(auxiliaryCalculationService.lambdaQuery()
-                .eq(AuxiliaryCalculation::getCompanyId, auxiliaryCalculation.getCompanyId())
-                .eq(AuxiliaryCalculation::getName, auxiliaryCalculation.getName()).exists()) {
-            return failed(400, "创建失败，辅助核算项已存在");
+    public Result<Boolean> addAuxiliaryCalculation(@RequestBody AccountAuxiliaryType auxiliaryCalculation) {
+        if(accountAuxiliaryTypeService.lambdaQuery()
+                .eq(AccountAuxiliaryType::getCompanyId, auxiliaryCalculation.getCompanyId())
+                .eq(AccountAuxiliaryType::getName, auxiliaryCalculation.getName()).exists()) {
+            return failed(400, "创建失败，辅助核算类型已存在");
         }
-        return success(auxiliaryCalculationService.save(auxiliaryCalculation));
+        return success(accountAuxiliaryTypeService.save(auxiliaryCalculation));
     }
 
     @GetMapping("/auxiliary/calculation/list")
-    public Result<List<AuxiliaryCalculation>> searchAuxiliaryCalculationList() {
-        return success(auxiliaryCalculationService.lambdaQuery().eq(AuxiliaryCalculation::getCompanyId, LoginUser.getCompanyId()).list());
+    public Result<List<AccountAuxiliaryType>> searchAuxiliaryCalculationList() {
+        return success(accountAuxiliaryTypeService.lambdaQuery().eq(AccountAuxiliaryType::getCompanyId, LoginUser.getCompanyId()).list());
     }
 }

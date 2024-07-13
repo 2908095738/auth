@@ -3,7 +3,6 @@ package com.bbs.financial.api.account.add;
 import com.bbs.Result;
 import com.bbs.financial.converter.AccountConverter;
 import com.bbs.financial.entity.Account;
-import com.bbs.financial.entity.AccountAuxiliary;
 import com.bbs.financial.entity.AccountCurrency;
 import com.bbs.financial.service.AccountAuxiliaryService;
 import com.bbs.financial.service.AccountCurrencyService;
@@ -69,9 +68,9 @@ public class AddAccount {
         private String auxiliaryCalculation;
 
         /**
-         * 辅助核算
+         * 辅助核算类型id
          */
-        private List<String> auxiliaryNameAccount;
+        private List<String> accountAuxiliaryTypeIds;
 
         /**
          * 是否数量核算
@@ -153,12 +152,6 @@ public class AddAccount {
                 account.setLevel(level);
             }
             db.save(account);
-            accountAuxiliaryService.saveBatch(param.getAuxiliaryNameAccount().stream().map(name -> {
-                AccountAuxiliary accountAuxiliary = new AccountAuxiliary();
-                accountAuxiliary.setAccountId(account.getId());
-                accountAuxiliary.setName(name);
-                return accountAuxiliary;
-            }).collect(Collectors.toList()));
             accountCurrencyService.saveBatch(param.getCurrencyList().stream().peek(currency -> {
                 currency.setCompanyId(LoginUser.getCompanyId());
                 currency.setCreateBy(LoginUser.getId());
