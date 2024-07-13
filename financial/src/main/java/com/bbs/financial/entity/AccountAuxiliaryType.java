@@ -4,8 +4,12 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
+
+import java.io.Serializable;
 
 /**
  * 科目辅助核算类型
@@ -13,6 +17,9 @@ import lombok.Data;
  */
 @TableName(value ="account_auxiliary_type")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldNameConstants
 public class AccountAuxiliaryType implements Serializable {
     /**
      * 

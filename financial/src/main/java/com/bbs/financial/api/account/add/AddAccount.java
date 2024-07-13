@@ -70,7 +70,7 @@ public class AddAccount {
         /**
          * 辅助核算类型id
          */
-        private List<String> accountAuxiliaryTypeIds;
+        private String accountAuxiliaryTypeIds;
 
         /**
          * 是否数量核算
