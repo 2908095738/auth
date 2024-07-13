@@ -11,8 +11,6 @@ ADD clinic/target/classes/templates /app/templates
 ADD clinic/target/classes/diagnosis /app/diagnosis
 ADD clinic/target/classes/preview /app/preview
 
-RUN set -xe \
-&& apk --no-cache add fontconfig
 #&& apk --no-cache add ttf-dejavu fontconfig
 COPY clinic/fonts /usr/share/fonts
 # 设置暴露的端口号
