@@ -11,6 +11,7 @@ import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 科目
@@ -137,4 +138,7 @@ public class Account implements Serializable {
 
     @TableField(exist = false)
     private AccountRemark remark;
+
+    @TableField(exist = false)
+    private List<AccountAuxiliary> accountAuxiliaryList;
 }

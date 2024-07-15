@@ -16,9 +16,12 @@ public interface CertificateAbstractService extends MPJBaseService<CertificateAb
 
     Page<CertificateAbstract> selectPage(Long companyId, String certificateCreateTime, Long accountId, Integer current, Integer size);
 
-    void initDataByNo(Page<CertificateAbstract> list);
+    void initDataByNo(List<CertificateAbstract> list);
 
     void initDataByMonth(List<CertificateAbstract> list);
 
     List<CertificateAbstract> selectList(Long companyId, Date certificateStartCreateTime, Date certificateEndCreateTime, Long accountId);
+
+    List<CertificateAbstract> selectQuantityAmountList(Long companyId, String certificateCreateTime, Long accountId);
+
 }

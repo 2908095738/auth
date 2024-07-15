@@ -53,4 +53,6 @@ public interface AccountService extends MPJBaseService<Account> {
     Page<Account> join(String no, String name, String sort, Long companyId, Integer current, Integer size);
 
     List<Tree<Long>> selectTree(Long companyId, String certificateCreateTime);
+
+    List<Tree<Long>> selectQuantityAmountTree(Long companyId, String certificateCreateTime);
 }

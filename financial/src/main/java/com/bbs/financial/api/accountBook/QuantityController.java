@@ -1,6 +1,6 @@
 package com.bbs.financial.api.accountBook;
 
-import com.baomidou.mybatisplus.annotation.TableField;
+import cn.hutool.core.collection.CollUtil;
 import com.bbs.Result;
 import com.bbs.financial.entity.CertificateAbstract;
 import com.bbs.financial.service.CertificateAbstractService;
@@ -11,9 +11,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
+/**
+ * 账簿-数量金额明细账
+ */
 @RestController
 public class QuantityController {
 
@@ -22,12 +30,54 @@ public class QuantityController {
     private CertificateAbstractService certificateAbstractService;
 
     @GetMapping("/certificate/account/quantity")
-    public Result<List<Vo>> quantityAccount(@RequestParam("startCreateTime") Date certificateStartCreateTime,
-                                                             @RequestParam("endCreateTime") Date certificateEndCreateTime,
-                                                             @RequestParam("cAccountId")Long accountId) {
-        List<CertificateAbstract> list = certificateAbstractService.selectList(LoginUser.getCompanyId(), certificateStartCreateTime,certificateEndCreateTime, accountId);
-        certificateAbstractService.initDataByMonth(list);
-        return Result.success(null);
+    public Result<List<Vo>> quantityAccount(@RequestParam("createTime") String certificateCreateTime,
+                                            @RequestParam("accountId")Long accountId) {
+        List<CertificateAbstract> list = certificateAbstractService.selectQuantityAmountList(LoginUser.getCompanyId(), certificateCreateTime, accountId);
+        List<Vo> result = new ArrayList<>();
+        if(CollUtil.isNotEmpty(list)){
+            certificateAbstractService.initDataByMonth(list);
+            for (CertificateAbstract anAbstract : list) {
+                Vo vo = new Vo();
+                vo.setAccountId(anAbstract.getAccountId());
+                vo.setCertificateAbstract(anAbstract.getCertificateAbstract());
+                if(Objects.nonNull(anAbstract.getAccountAuxiliary())){
+                    vo.setAccountName(anAbstract.getAccountAuxiliary().getName());
+                }else{
+                    vo.setAccountName(anAbstract.getAccount().getName());
+                }
+                if(Objects.nonNull(anAbstract.getCertificate())){
+                    vo.setCreateTime(anAbstract.getCertificate().getCreateTime());
+                    vo.setCertificateWord(anAbstract.getCertificate().getCertificateWord().getMsg());
+                    vo.setNo(anAbstract.getCertificate().getNo());
+                }else{
+                    SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM");
+                    try {
+                        Date date = inputFormat.parse(certificateCreateTime);
+                        Calendar calendar = Calendar.getInstance();
+                        calendar.setTime(date);
+                        calendar.set(Calendar.DAY_OF_MONTH, 1);
+                        vo.setCreateTime(calendar.getTime());
+                    } catch (ParseException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                if(Objects.nonNull(anAbstract.getLoansMoney())){
+                    vo.setBorrowNum(anAbstract.getNum());
+                    vo.setBorrowPrice(anAbstract.getPrice());
+                    vo.setBorrowMoney(anAbstract.getLoansMoney());
+                }else if (Objects.nonNull(anAbstract.getBorrowMoney())){
+                    vo.setLoansNum(anAbstract.getNum());
+                    vo.setLoansPrice(anAbstract.getPrice());
+                    vo.setLoansMoney(anAbstract.getBorrowMoney());
+                }else{
+                    vo.setSurplusNum(anAbstract.getNum());
+                    vo.setSurplusPrice(anAbstract.getPrice());
+                    vo.setSurplusMoney(anAbstract.getSurplusMoney());
+                }
+                result.add(vo);
+            }
+        }
+        return Result.success(result);
     }
 
 
@@ -43,7 +93,6 @@ public class QuantityController {
         /**
          * 日期
          */
-        @TableField(value = "create_time")
         private Date createTime;
 
         /**
@@ -54,13 +103,13 @@ public class QuantityController {
         /**
          * 凭证编号
          */
-        @TableField(value = "no")
         private Long no;
+
+        private String certificateAbstract;
 
         /**
          * 科目名称
          */
-        @TableField(exist = false)
         private String accountName;
 
 
@@ -69,19 +118,16 @@ public class QuantityController {
         /**
          * 借方发生额-数量
          */
-        @TableField(exist = false)
         private Long borrowNum;
 
         /**
          * 借方发生额-单价
          */
-        @TableField(exist = false)
         private Long borrowPrice;
 
         /**
          * 借方发生额-金额
          */
-        @TableField(exist = false)
         private Long borrowMoney;
 
 
@@ -90,19 +136,16 @@ public class QuantityController {
         /**
          * 贷方发生额-数量
          */
-        @TableField(exist = false)
         private Long loansNum;
 
         /**
          * 贷方发生额-单价
          */
-        @TableField(exist = false)
         private Long loansPrice;
 
         /**
          * 贷方发生额-金额
          */
-        @TableField(exist = false)
         private Long loansMoney;
 
 
@@ -111,19 +154,16 @@ public class QuantityController {
         /**
          * 余额-数量
          */
-        @TableField(exist = false)
         private Long surplusNum;
 
         /**
          * 余额-单价
          */
-        @TableField(exist = false)
         private Long surplusPrice;
 
         /**
          * 余额-金额
          */
-        @TableField(exist = false)
         private Long surplusMoney;
 
 

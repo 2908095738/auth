@@ -27,6 +27,7 @@ public class SearchAccountTree {
     @Resource
     private AccountService accountService;
 
+
     @GetMapping("/certificate/accountTree")
     public Result<List<Tree<Long>>> accountTree(@RequestParam("createTime") String certificateCreateTime) {
         List<Tree<Long>> list = accountService.selectTree(LoginUser.getCompanyId(), certificateCreateTime);
@@ -34,13 +35,21 @@ public class SearchAccountTree {
         return Result.success(list);
     }
 
+
+    @GetMapping("/certificate/quantity/accountTree")
+    public Result<List<Tree<Long>>> accountQuantityAmountTree(@RequestParam("createTime") String certificateCreateTime) {
+        List<Tree<Long>> list = accountService.selectQuantityAmountTree(LoginUser.getCompanyId(), certificateCreateTime);
+        return Result.success(list);
+    }
+
+
     @GetMapping("/certificate/account/abstract")
     public Result<Page<CertificateAbstract>> accountAbstract(@RequestParam("createTime") String certificateCreateTime,
                                                              @RequestParam("accountId")Long accountId,
                                                              @RequestParam("current")Integer current,
                                                              @RequestParam("size")Integer size) {
         Page<CertificateAbstract> list = certificateAbstractService.selectPage(LoginUser.getCompanyId(), certificateCreateTime, accountId, current, size);
-        certificateAbstractService.initDataByNo(list);
+        certificateAbstractService.initDataByMonth(list.getRecords());
         return Result.success(list);
     }
 
@@ -50,7 +59,7 @@ public class SearchAccountTree {
                                                              @RequestParam("current")Integer current,
                                                              @RequestParam("size")Integer size) {
         Page<CertificateAbstract> list = certificateAbstractService.selectPage(LoginUser.getCompanyId(), certificateCreateTime,null, current, size);
-        certificateAbstractService.initDataByNo(list);
+        certificateAbstractService.initDataByNo(list.getRecords());
         List<String> emnu = Lists.newArrayList("期初余额", "本期合计", "本年累计");
         list.setRecords(list.getRecords().stream().filter(item -> emnu.contains(item.getCertificateAbstract())).collect(Collectors.toList()));
         return Result.success(list);

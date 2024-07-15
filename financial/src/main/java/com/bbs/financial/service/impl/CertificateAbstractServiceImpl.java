@@ -3,6 +3,7 @@ package com.bbs.financial.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.financial.entity.Account;
+import com.bbs.financial.entity.AccountAuxiliary;
 import com.bbs.financial.entity.Certificate;
 import com.bbs.financial.entity.CertificateAbstract;
 import com.bbs.financial.mapper.CertificateAbstractMapper;
@@ -20,7 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-
+import static java.util.Objects.nonNull;
 
 
 /**
@@ -53,10 +54,9 @@ public class CertificateAbstractServiceImpl extends MPJBaseServiceImpl<Certifica
      * @param list
      */
     @Override
-    public void initDataByNo(Page<CertificateAbstract> list) {
-        if(CollUtil.isNotEmpty(list.getRecords())) {
-            List<CertificateAbstract> abstractList = list.getRecords();
-            Map<String, List<CertificateAbstract>> collect = abstractList.stream().collect(Collectors.groupingBy(o->o.getAccount().getNo()));
+    public void initDataByNo(List<CertificateAbstract> list) {
+        if(CollUtil.isNotEmpty(list)) {
+            Map<String, List<CertificateAbstract>> collect = list.stream().collect(Collectors.groupingBy(o->o.getAccount().getNo()));
             for (String accountId : collect.keySet()) {
                 List<CertificateAbstract> abstractListSorted = collect.get(accountId).stream().sorted(Comparator.comparing(o -> o.getCertificate().getCreateTime())).collect(Collectors.toList());
                 CertificateAbstract initialBalanceAbstract = new CertificateAbstract(),//期初
@@ -81,7 +81,7 @@ public class CertificateAbstractServiceImpl extends MPJBaseServiceImpl<Certifica
                         initialBalanceAbstract.setAccountId(certificateAbstract.getAccountId());
                         initialBalanceAbstract.setCertificateAbstract("期初余额");
                         initialBalanceAbstract.setAccount(certificateAbstract.getAccount());
-                        abstractList.add(initialBalanceAbstract);
+                        list.add(initialBalanceAbstract);
 
                         currentPeriodAbstract.setAccountId(certificateAbstract.getAccountId());
                         currentPeriodAbstract.setCertificateAbstract("本期合计");
@@ -89,7 +89,7 @@ public class CertificateAbstractServiceImpl extends MPJBaseServiceImpl<Certifica
                         currentPeriodAbstract.setLoansMoney(LoansMoney);
                         currentPeriodAbstract.setSurplusMoney(borrowMoney-LoansMoney);
                         currentPeriodAbstract.setAccount(certificateAbstract.getAccount());
-                        abstractList.add(currentPeriodAbstract);
+                        list.add(currentPeriodAbstract);
 
                         incurredYearAbstract.setAccountId(certificateAbstract.getAccountId());
                         incurredYearAbstract.setCertificateAbstract("本年累计");
@@ -97,7 +97,7 @@ public class CertificateAbstractServiceImpl extends MPJBaseServiceImpl<Certifica
                         incurredYearAbstract.setLoansMoney(LoansMoney);
                         incurredYearAbstract.setSurplusMoney(borrowMoney-LoansMoney);
                         incurredYearAbstract.setAccount(certificateAbstract.getAccount());
-                        abstractList.add(incurredYearAbstract);
+                        list.add(incurredYearAbstract);
                     }
                 }
             }
@@ -176,6 +176,28 @@ public class CertificateAbstractServiceImpl extends MPJBaseServiceImpl<Certifica
                 .eq(Certificate::getCompanyId,companyId)
                 .ge(Objects.nonNull(certificateStartCreateTime),Certificate::getCreateTime,certificateStartCreateTime)
                 .le(Objects.nonNull(certificateEndCreateTime),Certificate::getCreateTime,certificateEndCreateTime)
+                .orderByAsc(Certificate::getCreateTime)
+        );
+    }
+
+    @Override
+    public List<CertificateAbstract> selectQuantityAmountList(Long companyId, String certificateCreateTime, Long accountId) {
+        return selectJoinList(CertificateAbstract.class, new MPJLambdaWrapper<CertificateAbstract>()
+                .selectAll(CertificateAbstract.class)
+                .selectAssociation(Certificate.class, CertificateAbstract::getCertificate)
+                .rightJoin(Certificate.class, Certificate::getId, CertificateAbstract::getCertificateId)
+                .selectAssociation(Account.class, CertificateAbstract::getAccount)
+                .rightJoin(Account.class, Account::getId, CertificateAbstract::getAccountId)
+                .selectAssociation(AccountAuxiliary.class,CertificateAbstract::getAccountAuxiliary)
+                .leftJoin(AccountAuxiliary.class, on -> on
+                        .eq(AccountAuxiliary::getId, CertificateAbstract::getAccountId)
+                        .eq(AccountAuxiliary::getName, companyId)
+                        .eq(nonNull(companyId), AccountAuxiliary::getCompanyId, companyId)
+                )
+                .eq(Account::getQuantitativeAccount,"是")
+                .eq(Objects.nonNull(accountId),CertificateAbstract::getAccountId,accountId)
+                .eq(Certificate::getCompanyId,companyId)
+                .likeRight(Objects.nonNull(certificateCreateTime),Certificate::getCreateTime,certificateCreateTime)
                 .orderByAsc(Certificate::getCreateTime)
         );
     }
