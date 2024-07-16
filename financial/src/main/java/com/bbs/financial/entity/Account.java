@@ -141,6 +141,9 @@ public class Account implements Serializable {
     @TableField(exist = false)
     private AccountRemark remark;
 
+    @TableField(exist = false)
+    private List<AccountAuxiliary> accountAuxiliaryList;
+
     public static Map<Long, Account> converterToIdMap(List<Account> accounts) {
         return accounts.stream().collect(Collectors.toMap(Account::getId, account -> account));
     }

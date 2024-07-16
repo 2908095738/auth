@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.financial.entity.Account;
+import com.bbs.financial.entity.AccountAuxiliary;
 import com.bbs.financial.entity.AccountRemark;
 import com.bbs.financial.entity.Certificate;
 import com.bbs.financial.entity.CertificateAbstract;
@@ -20,7 +21,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
@@ -279,7 +281,52 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
         return tree(result);
     }
 
+    @Override
+    public List<Tree<Long>> selectQuantityAmountTree(Long companyId, String certificateCreateTime) {
+        List<Account> accountList = selectJoinList(Account.class, new MPJLambdaWrapper<Account>()
+                .selectAll(Account.class)
+                .selectCollection(AccountAuxiliary.class,Account::getAccountAuxiliaryList)
+                .leftJoin(CertificateAbstract.class, CertificateAbstract::getAccountId, Account::getId)
+                .leftJoin(Certificate.class, Certificate::getId, CertificateAbstract::getCertificateId)
+                .leftJoin(AccountAuxiliary.class, on -> on
+                        .eq(AccountAuxiliary::getId, CertificateAbstract::getAccountId)
+                        .eq(AccountAuxiliary::getName, companyId)
+                        .eq(nonNull(companyId), AccountAuxiliary::getCompanyId, companyId)
+                )
+                .eq(Account::getQuantitativeAccount,"是")
+                .eq(Certificate::getCompanyId,companyId)
+                .like(Certificate::getCreateTime,certificateCreateTime)
+        );
+        List<Tree<Long>> trees = new ArrayList<>();
+        if (accountList.size() > INTEGER_ZERO) {
+            for (Account account : accountList) {
+                Tree<Long> tree = new Tree<>();
+                tree.setId(account.getId());
+                tree.setParentId(0L);
+                tree.putExtra("label", account.getNo() + " " + account.getName());
+                tree.putExtra("accountSort", account.getAccountSort());
+                tree.putExtra("direction", account.getDirection());
+                tree.putExtra("account", account);
 
+                List<Tree<Long>> treeChildren = new ArrayList<>();
+
+                List<AccountAuxiliary> accountAuxiliaryList = account.getAccountAuxiliaryList();
+                if (accountAuxiliaryList.size() > INTEGER_ZERO) {
+                    //把accountAuxiliaryList转成数结构
+                    accountAuxiliaryList.forEach(accountAuxiliary -> {
+                        Tree<Long> child = new Tree<>();
+                        child.setId(accountAuxiliary.getId());
+                        child.putExtra("label", accountAuxiliary.getNo() + " " + accountAuxiliary.getName());
+                        child.putExtra("accountAuxiliary", accountAuxiliary);
+                        treeChildren.add(child);
+                    });
+                    tree.setChildren(treeChildren);
+                }
+                trees.add(tree);
+            }
+        }
+        return trees;
+    }
 
 
 }

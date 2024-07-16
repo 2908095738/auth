@@ -3,7 +3,6 @@ package com.bbs.financial.api.accountBook;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.financial.entity.CertificateAbstract;
@@ -34,7 +33,7 @@ public class BalanceAccount {
         List<Vo> result = new ArrayList<>();
 
         if(CollUtil.isNotEmpty(list.getRecords())){
-            certificateAbstractService.initDataByNo(list);
+            certificateAbstractService.initDataByMonth(list.getRecords());
             Map<Long, List<CertificateAbstract>> collect = list.getRecords().stream().collect(Collectors.groupingBy(CertificateAbstract::getAccountId));
             for (Long accountId : collect.keySet()) {
                 CertificateAbstract certificateAbstract = collect.get(accountId).get(0);
@@ -104,32 +103,27 @@ public class BalanceAccount {
         /**
          * 编号
          */
-        @TableField(value = "no")
         private String no;
 
         /**
          * 名称
          */
-        @TableField(value = "name")
         private String name;
 
         /**
          * 上级ID
          */
-        @TableField(value = "parent_id")
         private Long parentId;
 
 
         /**
          * 期初余额-借方金额
          */
-        @TableField(exist = false)
         private Long initialBalanceBorrowMoney;
 
         /**
          * 期初余额-贷方金额
          */
-        @TableField(exist = false)
         private Long initialBalanceLoansMoney;
 
 
@@ -139,13 +133,11 @@ public class BalanceAccount {
         /**
          * 本期发生额-借方金额
          */
-        @TableField(exist = false)
         private Long currentPeriodBorrowMoney;
 
         /**
          * 本期发生额-贷方金额
          */
-        @TableField(exist = false)
         private Long currentPeriodLoansMoney;
 
 
@@ -155,13 +147,11 @@ public class BalanceAccount {
         /**
          * 本年累计发生额-借方金额
          */
-        @TableField(exist = false)
         private Long incurredYearBorrowMoney;
 
         /**
          * 本年累计发生额-贷方金额
          */
-        @TableField(exist = false)
         private Long incurredYearLoansMoney;
 
 
@@ -172,16 +162,14 @@ public class BalanceAccount {
         /**
          * 期末余额-借方金额
          */
-        @TableField(exist = false)
         private Long endingBalanceBorrowMoney;
 
         /**
          * 期末余额-贷方金额
          */
-        @TableField(exist = false)
         private Long endingBalanceLoansMoney;
 
-        @TableField(exist = false)
+
         private List<Vo> children;
 
     }

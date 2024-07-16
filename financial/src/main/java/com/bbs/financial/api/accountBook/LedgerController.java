@@ -1,6 +1,5 @@
 package com.bbs.financial.api.accountBook;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.bbs.Result;
 import com.bbs.financial.entity.CertificateAbstract;
 import com.bbs.financial.service.CertificateAbstractService;
@@ -11,10 +10,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.Date;
 import java.util.List;
 
-
+/**
+ * 账簿-数量金额总账
+ */
 @RestController
 public class LedgerController {
 
@@ -23,11 +23,9 @@ public class LedgerController {
 
 
     @GetMapping("/certificate/account/ledger")
-    public Result<List<Vo>> ledgerAccount(@RequestParam("startCreateTime") Date certificateStartCreateTime,
-                                                             @RequestParam("endCreateTime") Date certificateEndCreateTime,
-                                                             @RequestParam("cAccountId")Long accountId) {
-        List<CertificateAbstract> list = certificateAbstractService.selectList(LoginUser.getCompanyId(), certificateStartCreateTime,certificateEndCreateTime, accountId);
-        certificateAbstractService.initDataByMonth(list);
+    public Result<List<Vo>> ledgerAccount(@RequestParam("createTime") String certificateCreateTime) {
+        List<CertificateAbstract> list = certificateAbstractService.selectQuantityAmountList(LoginUser.getCompanyId(), certificateCreateTime, null);
+        certificateAbstractService.initDataByNo(list);
         return Result.success(null);
     }
 
@@ -38,7 +36,6 @@ public class LedgerController {
         /**
          * 科目名称
          */
-        @TableField(exist = false)
         private String accountName;
 
 
@@ -50,10 +47,67 @@ public class LedgerController {
         /**
          * 单位
          */
-        @TableField(exist = false)
         private String unit;
 
 
+        /**
+         * 期初余额
+         */
+
+        private Integer initialBalanceNum;
+
+        private Long initialBalancePrice;
+
+
+
+        /**
+         * 本期发生额-借方
+         */
+
+        private Integer currentPeriodBorrowNum;
+
+        private Long currentPeriodBorrowMoney;
+
+
+        /**
+         * 本期发生额-贷方
+         */
+
+        private Integer currentPeriodLoansNum;
+
+        private Long currentPeriodLoansMoney;
+
+
+
+        /**
+         * 本年累计发生额-借方
+         */
+
+        private Integer incurredYearBorrowNum;
+
+        private Long incurredYearBorrowMoney;
+
+
+
+        /**
+         * 本年累计发生额-贷方
+         */
+
+        private Integer incurredYearLoansNum;
+
+        private Long incurredYearLoansMoney;
+
+
+
+        /**
+         * 期末余额
+         */
+
+        private Integer endingBalanceNum;
+
+        private Long endingBalanceMoney;
+
+        private Long endingBalancePrice;
 
 
     }

@@ -44,7 +44,7 @@ public class CertificateAbstract implements Serializable {
     private String certificateAbstract;
 
     /**
-     * 科目
+     * 科目 ID
      */
     @TableField(value = "account_id")
     private Long accountId;
@@ -79,6 +79,24 @@ public class CertificateAbstract implements Serializable {
     @TableField(value = "auxiliary")
     private String auxiliary;
 
+    /**
+     * 数量
+     */
+    @TableField(value = "num")
+    private Long num;
+
+    /**
+     * 单价
+     */
+    @TableField(value = "price")
+    private Long price;
+
+    /**
+     * 币别
+     */
+    @TableField(value = "currency")
+    private String currency;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
@@ -88,6 +106,9 @@ public class CertificateAbstract implements Serializable {
     @TableField(exist = false)
     @EntityMapping(thisField = Fields.accountId, joinField = Account.Fields.id)
     private Account account;
+
+    @TableField(exist = false)
+    private AccountAuxiliary accountAuxiliary;
 
     public Long getBorrowMoney() {
         return ofNullable(borrowMoney).orElseGet(LONG_ZERO::longValue);
