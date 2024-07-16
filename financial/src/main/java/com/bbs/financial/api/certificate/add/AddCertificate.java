@@ -4,12 +4,8 @@ import cn.hutool.core.date.DateUtil;
 import com.bbs.Result;
 import com.bbs.enums.financial.CertificateWordEnum;
 import com.bbs.financial.converter.CertificateConverter;
-import com.bbs.financial.entity.Certificate;
-import com.bbs.financial.entity.CertificateAbstract;
-import com.bbs.financial.entity.CertificateFile;
-import com.bbs.financial.service.CertificateAbstractService;
-import com.bbs.financial.service.CertificateFileService;
-import com.bbs.financial.service.CertificateService;
+import com.bbs.financial.entity.*;
+import com.bbs.financial.service.*;
 import com.bbs.financial.util.LoginUser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,12 +19,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
+import static org.apache.commons.lang3.math.NumberUtils.*;
 
 @RestController
 @RequestMapping
@@ -103,6 +98,10 @@ public class AddCertificate {
     private DataSourceTransactionManager transactionManager;
     @Resource
     private CertificateFileService certificateFileService;
+    @Resource
+    private LedgerGeneralService ledgerGeneralService;
+    @Resource
+    private AccountService accountService;
 
     @PutMapping("/certificate")
     public Result<Boolean> add(@RequestBody Param param) {
@@ -115,7 +114,9 @@ public class AddCertificate {
             // 保存凭证
             saveCertificate(certificate);
             // 保存具体科目信息
-            saveAbstracts(param, certificate);
+            List<CertificateAbstract> certificateAbstracts = saveAbstracts(param, certificate);
+            // 并更新总账（修改账户金额）、日记账
+            updateGeneralLedgerAndLedgerSubsidiary(certificate, certificateAbstracts);
             // 修改指定【凭证附件】的凭证 ID（原因：添加附件时，未创建凭证，只能先绑定到日期、凭证字、编号）
             updateFiles(param, certificate);
             transactionManager.commit(transaction);
@@ -130,8 +131,8 @@ public class AddCertificate {
         db.save(certificate);
     }
 
-    private void saveAbstracts(Param param, Certificate certificate) {
-        certificateAbstractService.saveBatch(param.abstracts.stream().map(certificateAbstract -> {
+    private List<CertificateAbstract> saveAbstracts(Param param, Certificate certificate) {
+        List<CertificateAbstract> certificateAbstracts = param.abstracts.stream().map(certificateAbstract -> {
             CertificateAbstract entity = new CertificateAbstract();
             entity.setCertificateId(certificate.getId());
             entity.setAccountId(certificateAbstract.getAccountId());
@@ -141,7 +142,53 @@ public class AddCertificate {
                 entity.setLoansMoney(Long.valueOf(certificateAbstract.getLoansMoney().replace(",", "")));
             entity.setCertificateAbstract(certificateAbstract.getCertificateAbstract());
             return entity;
-        }).collect(Collectors.toList()));
+        }).collect(Collectors.toList());
+        certificateAbstractService.saveBatch(certificateAbstracts);
+        return certificateAbstracts;
+    }
+
+    private void updateGeneralLedgerAndLedgerSubsidiary(Certificate certificate, List<CertificateAbstract> certificateAbstracts) {
+        // 准备工作 1：将凭证子项列表由 List 分组为 Map<需要更新的科目ID, List<凭证具体行>>
+        Map<Long, List<CertificateAbstract>> certificateAbstractAccountIdGroups = certificateAbstracts.stream().collect(Collectors.groupingBy(CertificateAbstract::getAccountId));
+        // 准备工作 2：Map<需要更新的科目ID, 会计科目> 用于后续总账，补充科目信息
+        Map<Long, Account> accountIdMap = Account.converterToIdMap(searchNeedUpdateAccount(certificateAbstractAccountIdGroups));
+        // 1. 查找总账中对应的科目记录，并分组为 Map<需要更新的科目ID, 总账记录>
+        Map<Long, LedgerGeneral> ledgerGeneralAccountIdGroups = searchNeedUpdateLedgerGeneralGroupByAccountId(certificateAbstractAccountIdGroups.keySet());
+
+        // 2. 根据需要变更的科目 ID 集合，遍历处理相关总账
+        for (Map.Entry<Long, List<CertificateAbstract>> accountIdGroup: certificateAbstractAccountIdGroups.entrySet()) {
+            Long accountId = accountIdGroup.getKey();
+            List<CertificateAbstract> abstracts = accountIdGroup.getValue();
+            Account account = accountIdMap.get(accountId);
+
+            // 2.1 计算需要增加的借方和贷方金额
+            long borrowMoney = LONG_ZERO;
+            long loansMoney = LONG_ZERO;
+            for (CertificateAbstract certificateAbstract : abstracts) {
+                loansMoney += certificateAbstract.getLoansMoney();
+                borrowMoney += certificateAbstract.getBorrowMoney();
+                // 2.2 记录日记账
+                LedgerSubsidiary.createLedgerSubsidiary(account, certificate, certificateAbstract, borrowMoney, loansMoney);
+            }
+            // 2.3 更新总账：查询总账中是否存在对应科目，如果存在则更新余额，不存在就插入初始数据
+            if(ledgerGeneralAccountIdGroups.containsKey(accountId)) {
+                // 2.3.1 更新余额
+                LedgerGeneral ledgerGeneral = ledgerGeneralAccountIdGroups.get(accountId);
+                ledgerGeneral.updateAccountBalance(borrowMoney, loansMoney);
+            } else {
+                // 2.3.2 插入初始数据
+                LedgerGeneral.initAccountLedgerGeneral(account);
+            }
+        }
+    }
+
+    private List<Account> searchNeedUpdateAccount(Map<Long, List<CertificateAbstract>> certificateAbstractAccountIdGroups) {
+        return accountService.listByIds(certificateAbstractAccountIdGroups.keySet());
+    }
+
+    private Map<Long, LedgerGeneral> searchNeedUpdateLedgerGeneralGroupByAccountId(Collection<Long> accountIds) {
+        return ledgerGeneralService.lambdaQuery().in(LedgerGeneral::getAccountId, accountIds).eq(LedgerGeneral::getCertificateAbstract, "本期合计")
+                .list().stream().collect(Collectors.toMap(LedgerGeneral::getAccountId, ledgerGeneral -> ledgerGeneral));
     }
 
     private void updateFiles(Param param, Certificate certificate) {

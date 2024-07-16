@@ -11,6 +11,9 @@ import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 科目
@@ -137,4 +140,8 @@ public class Account implements Serializable {
 
     @TableField(exist = false)
     private AccountRemark remark;
+
+    public static Map<Long, Account> converterToIdMap(List<Account> accounts) {
+        return accounts.stream().collect(Collectors.toMap(Account::getId, account -> account));
+    }
 }

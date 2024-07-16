@@ -12,6 +12,9 @@ import lombok.experimental.FieldNameConstants;
 
 import java.io.Serializable;
 
+import static cn.hutool.core.lang.Opt.ofNullable;
+import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
+
 /**
  * 记账凭证摘要
  * @TableName certificate_abstract
@@ -85,4 +88,12 @@ public class CertificateAbstract implements Serializable {
     @TableField(exist = false)
     @EntityMapping(thisField = Fields.accountId, joinField = Account.Fields.id)
     private Account account;
+
+    public Long getBorrowMoney() {
+        return ofNullable(borrowMoney).orElseGet(LONG_ZERO::longValue);
+    }
+
+    public Long getLoansMoney() {
+        return ofNullable(loansMoney).orElseGet(LONG_ZERO::longValue);
+    }
 }

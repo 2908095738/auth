@@ -1,5 +1,6 @@
 package com.bbs.financial.api.accountBook;
 
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.lang.tree.Tree;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
@@ -44,6 +45,16 @@ public class SearchAccountTree {
         return Result.success(list);
     }
 
+    /**
+     * 获取当月明细账（全部存在记录的科目）
+     */
+    public List<CertificateAbstract> currentMonthSubsidiaryLedger() {
+        DateTime now = DateTime.now();
+        List<CertificateAbstract> list = certificateAbstractService.selectList(LoginUser.getCompanyId(), now.toString("yyyy-MM"));
+        certificateAbstractService.initDataByNo(list);
+        return list;
+    }
+
 
     @GetMapping("/certificate/account/general")
     public Result<Page<CertificateAbstract>> accountAbstract(@RequestParam("createTime") String certificateCreateTime,
@@ -56,8 +67,14 @@ public class SearchAccountTree {
         return Result.success(list);
     }
 
-
-
-
-
+    /**
+     * 获取当月总账（全部存在记录的科目）
+     */
+    public List<CertificateAbstract> currentMonthGeneralLedger() {
+        DateTime now = DateTime.now();
+        List<CertificateAbstract> list = certificateAbstractService.selectList(LoginUser.getCompanyId(), now.toString("yyyy-MM"));
+        certificateAbstractService.initDataByNo(list);
+        List<String> enums = Lists.newArrayList("期初余额", "本期合计", "本年累计");
+        return list.stream().filter(item -> enums.contains(item.getCertificateAbstract())).collect(Collectors.toList());
+    }
 }

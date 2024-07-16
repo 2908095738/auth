@@ -1,0 +1,13 @@
+package com.bbs.financial.service;
+
+import com.bbs.financial.entity.ReportFlowsAccount;
+import com.baomidou.mybatisplus.extension.service.IService;
+
+/**
+* @author ludada
+* @description 针对表【report_flows_account(报表：现金流量项 & 科目关联)】的数据库操作Service
+* @createDate 2024-07-13 13:39:47
+*/
+public interface ReportFlowsAccountService extends IService<ReportFlowsAccount> {
+
+}

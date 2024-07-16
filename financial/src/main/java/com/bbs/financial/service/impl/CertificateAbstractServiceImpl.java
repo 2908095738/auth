@@ -47,69 +47,83 @@ public class CertificateAbstractServiceImpl extends MPJBaseServiceImpl<Certifica
         );
     }
 
+    @Override
+    public List<CertificateAbstract> selectList(Long companyId, String certificateCreateTime) {
+        return selectJoinList(CertificateAbstract.class, new MPJLambdaWrapper<CertificateAbstract>()
+                .selectAll(CertificateAbstract.class)
+                .selectAssociation(Certificate.class, CertificateAbstract::getCertificate)
+                .rightJoin(Certificate.class, Certificate::getId, CertificateAbstract::getCertificateId)
+                .selectAssociation(Account.class, CertificateAbstract::getAccount)
+                .rightJoin(Account.class, Account::getId, CertificateAbstract::getAccountId)
+                .eq(Certificate::getCompanyId,companyId)
+                .like(Certificate::getCreateTime,certificateCreateTime)
+                .orderByAsc(Certificate::getCreateTime)
+        );
+    }
+
 
     /**
      * 根据科目no合并数据，生成：期初余额，本期合计，本年合计
-     * @param list
      */
     @Override
     public void initDataByNo(Page<CertificateAbstract> list) {
         if(CollUtil.isNotEmpty(list.getRecords())) {
-            List<CertificateAbstract> abstractList = list.getRecords();
-            Map<String, List<CertificateAbstract>> collect = abstractList.stream().collect(Collectors.groupingBy(o->o.getAccount().getNo()));
-            for (String accountId : collect.keySet()) {
-                List<CertificateAbstract> abstractListSorted = collect.get(accountId).stream().sorted(Comparator.comparing(o -> o.getCertificate().getCreateTime())).collect(Collectors.toList());
-                CertificateAbstract initialBalanceAbstract = new CertificateAbstract(),//期初
-                        currentPeriodAbstract = new CertificateAbstract(),//本期
-                        incurredYearAbstract = new CertificateAbstract();//本年
-                Long borrowMoney = 0L,LoansMoney= 0L;//借和贷
-                for (int i = 0; i < abstractListSorted.size(); i++) {
-                    if(i == 0){
-                        CertificateAbstract certificateAbstract = abstractListSorted.get(i);
-                        borrowMoney = certificateAbstract.getBorrowMoney()!=null?certificateAbstract.getBorrowMoney():0L;
-                        LoansMoney = certificateAbstract.getLoansMoney()!=null?certificateAbstract.getLoansMoney():0L;
-                        certificateAbstract.setSurplusMoney(borrowMoney-LoansMoney);
-                    }else {
-                        CertificateAbstract certificateAbstract = abstractListSorted.get(i);
-                        borrowMoney = borrowMoney+(certificateAbstract.getBorrowMoney()!=null?certificateAbstract.getBorrowMoney():0L);
-                        LoansMoney = LoansMoney+(certificateAbstract.getLoansMoney()!=null?certificateAbstract.getLoansMoney():0L);
-                        certificateAbstract.setSurplusMoney(borrowMoney-LoansMoney);
-                    }
-                    if(i == abstractListSorted.size()-1){
-                        CertificateAbstract certificateAbstract = abstractListSorted.get(i);
+            initDataByNo(list.getRecords());
+        }
+    }
 
-                        initialBalanceAbstract.setAccountId(certificateAbstract.getAccountId());
-                        initialBalanceAbstract.setCertificateAbstract("期初余额");
-                        initialBalanceAbstract.setAccount(certificateAbstract.getAccount());
-                        abstractList.add(initialBalanceAbstract);
+    @Override
+    public void initDataByNo(List<CertificateAbstract> list) {
+        Map<String, List<CertificateAbstract>> collect = list.stream().collect(Collectors.groupingBy(o->o.getAccount().getNo()));
+        for (String accountId : collect.keySet()) {
+            List<CertificateAbstract> abstractListSorted = collect.get(accountId).stream().sorted(Comparator.comparing(o -> o.getCertificate().getCreateTime())).collect(Collectors.toList());
+            CertificateAbstract initialBalanceAbstract = new CertificateAbstract(),//期初
+                    currentPeriodAbstract = new CertificateAbstract(),//本期
+                    incurredYearAbstract = new CertificateAbstract();//本年
+            Long borrowMoney = 0L,LoansMoney= 0L;//借和贷
+            for (int i = 0; i < abstractListSorted.size(); i++) {
+                if(i == 0){
+                    CertificateAbstract certificateAbstract = abstractListSorted.get(i);
+                    borrowMoney = certificateAbstract.getBorrowMoney()!=null?certificateAbstract.getBorrowMoney():0L;
+                    LoansMoney = certificateAbstract.getLoansMoney()!=null?certificateAbstract.getLoansMoney():0L;
+                    certificateAbstract.setSurplusMoney(borrowMoney-LoansMoney);
+                }else {
+                    CertificateAbstract certificateAbstract = abstractListSorted.get(i);
+                    borrowMoney = borrowMoney+(certificateAbstract.getBorrowMoney()!=null?certificateAbstract.getBorrowMoney():0L);
+                    LoansMoney = LoansMoney+(certificateAbstract.getLoansMoney()!=null?certificateAbstract.getLoansMoney():0L);
+                    certificateAbstract.setSurplusMoney(borrowMoney-LoansMoney);
+                }
+                if(i == abstractListSorted.size()-1){
+                    CertificateAbstract certificateAbstract = abstractListSorted.get(i);
 
-                        currentPeriodAbstract.setAccountId(certificateAbstract.getAccountId());
-                        currentPeriodAbstract.setCertificateAbstract("本期合计");
-                        currentPeriodAbstract.setBorrowMoney(borrowMoney);
-                        currentPeriodAbstract.setLoansMoney(LoansMoney);
-                        currentPeriodAbstract.setSurplusMoney(borrowMoney-LoansMoney);
-                        currentPeriodAbstract.setAccount(certificateAbstract.getAccount());
-                        abstractList.add(currentPeriodAbstract);
+                    initialBalanceAbstract.setAccountId(certificateAbstract.getAccountId());
+                    initialBalanceAbstract.setCertificateAbstract("期初余额");
+                    initialBalanceAbstract.setAccount(certificateAbstract.getAccount());
+                    list.add(initialBalanceAbstract);
 
-                        incurredYearAbstract.setAccountId(certificateAbstract.getAccountId());
-                        incurredYearAbstract.setCertificateAbstract("本年累计");
-                        incurredYearAbstract.setBorrowMoney(borrowMoney);
-                        incurredYearAbstract.setLoansMoney(LoansMoney);
-                        incurredYearAbstract.setSurplusMoney(borrowMoney-LoansMoney);
-                        incurredYearAbstract.setAccount(certificateAbstract.getAccount());
-                        abstractList.add(incurredYearAbstract);
-                    }
+                    currentPeriodAbstract.setAccountId(certificateAbstract.getAccountId());
+                    currentPeriodAbstract.setCertificateAbstract("本期合计");
+                    currentPeriodAbstract.setBorrowMoney(borrowMoney);
+                    currentPeriodAbstract.setLoansMoney(LoansMoney);
+                    currentPeriodAbstract.setSurplusMoney(borrowMoney-LoansMoney);
+                    currentPeriodAbstract.setAccount(certificateAbstract.getAccount());
+                    list.add(currentPeriodAbstract);
+
+                    incurredYearAbstract.setAccountId(certificateAbstract.getAccountId());
+                    incurredYearAbstract.setCertificateAbstract("本年累计");
+                    incurredYearAbstract.setBorrowMoney(borrowMoney);
+                    incurredYearAbstract.setLoansMoney(LoansMoney);
+                    incurredYearAbstract.setSurplusMoney(borrowMoney-LoansMoney);
+                    incurredYearAbstract.setAccount(certificateAbstract.getAccount());
+                    list.add(incurredYearAbstract);
                 }
             }
         }
     }
 
 
-
-
     /**
      * 根据凭证创建月份合并数据，生成：期初余额，本期合计，本年合计
-     * @param list
      */
     @Override
     public void initDataByMonth(List<CertificateAbstract> list) {
