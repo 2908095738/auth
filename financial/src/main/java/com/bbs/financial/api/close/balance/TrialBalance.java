@@ -1,4 +1,4 @@
-package com.bbs.financial.api.close;
+package com.bbs.financial.api.close.balance;
 
 import com.bbs.financial.entity.Account;
 import com.bbs.financial.entity.CertificateAbstract;
@@ -6,8 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static cn.hutool.core.lang.Opt.ofNullable;
 import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
@@ -79,5 +78,36 @@ public class TrialBalance {
                     ofNullable(certificateAbstract.getLoansMoney()).orElseGet(LONG_ZERO::longValue)
             ;
         }
+    }
+
+
+    /**
+     * 编制试算平衡表
+     */
+    public static TrialBalance generateTrialBalance(List<CertificateAbstract> initialData) {
+        // 通过 Set 集合与科目的 no 字段（顶级科目的编号，相同父级科目的 no 相同）
+        long countBorrowMoney = LONG_ZERO;
+        long countLoansMoney = LONG_ZERO;
+        Map<String, Item> accountNoAndTrialBalanceItemMaps = new HashMap<>();
+        for (CertificateAbstract certificateAbstract : initialData) {
+            Account account = certificateAbstract.getAccount();
+            String no = account.getNo();
+            TrialBalance.Item trialBalanceItem;
+            if(accountNoAndTrialBalanceItemMaps.containsKey(no)) {
+                trialBalanceItem = accountNoAndTrialBalanceItemMaps.get(no);
+                // 求和借方金额：科目借方金额 = 凭证借方金额 + 科目借方金额
+                trialBalanceItem.setBorrowMoney(certificateAbstract);
+                // 求和贷方金额：科目贷方金额 = 凭证贷方金额 + 科目贷方金额
+                trialBalanceItem.setLoansMoney(certificateAbstract);
+            } else {
+                trialBalanceItem = new TrialBalance.Item(account, certificateAbstract);
+                accountNoAndTrialBalanceItemMaps.put(no, trialBalanceItem);
+            }
+            // 求和总计借/贷方金额
+            countBorrowMoney += trialBalanceItem.getBorrowMoney();
+            countLoansMoney += trialBalanceItem.getLoansMoney();
+        }
+        boolean isBalance = countBorrowMoney == countLoansMoney;
+        return new TrialBalance(new ArrayList<>(accountNoAndTrialBalanceItemMaps.values()), countBorrowMoney, countLoansMoney, isBalance);
     }
 }

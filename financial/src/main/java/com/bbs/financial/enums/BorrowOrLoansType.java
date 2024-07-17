@@ -3,11 +3,12 @@ package com.bbs.financial.enums;
 public enum BorrowOrLoansType {
 
     BORROW(1,"借"),
-    LOANS(0,"贷")
+    LOANS(0,"贷"),
+    FLAT(2,"平")
     ;
 
-    private int key;
-    private String value;
+    private final int key;
+    private final String value;
 
     BorrowOrLoansType(int key, String value) {
         this.key = key;
