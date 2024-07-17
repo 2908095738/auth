@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.bbs.financial.enums.AccountAbstractEnum;
 import com.bbs.financial.util.LoginUser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -106,6 +107,9 @@ public class LedgerGeneral extends Model<LedgerGeneral> implements Serializable 
      */
     @TableField(value = "balance")
     private Long balance;
+
+    @TableField(value = "company_id")
+    private Long companyId;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

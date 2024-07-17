@@ -5,6 +5,7 @@ import com.bbs.Result;
 import com.bbs.enums.financial.CertificateWordEnum;
 import com.bbs.financial.converter.CertificateConverter;
 import com.bbs.financial.entity.*;
+import com.bbs.financial.enums.AccountAbstractEnum;
 import com.bbs.financial.service.*;
 import com.bbs.financial.util.LoginUser;
 import lombok.AllArgsConstructor;
@@ -150,12 +151,13 @@ public class AddCertificate {
     }
 
     private void updateGeneralLedgerAndLedgerSubsidiary(Certificate certificate, List<CertificateAbstract> certificateAbstracts) {
+        Date now = new Date();
         // 准备工作 1：将凭证子项列表由 List 分组为 Map<需要更新的科目ID, List<凭证具体行>>
         Map<Long, List<CertificateAbstract>> certificateAbstractAccountIdGroups = certificateAbstracts.stream().collect(Collectors.groupingBy(CertificateAbstract::getAccountId));
         // 准备工作 2：Map<需要更新的科目ID, 会计科目> 用于后续总账，补充科目信息
         Map<Long, Account> accountIdMap = Account.converterToIdMap(searchNeedUpdateAccount(certificateAbstractAccountIdGroups));
         // 1. 查找总账中对应的科目记录，并分组为 Map<需要更新的科目ID, 总账记录>
-        Map<Long, LedgerGeneral> ledgerGeneralAccountIdGroups = searchNeedUpdateLedgerGeneralGroupByAccountId(certificateAbstractAccountIdGroups.keySet());
+        Map<Long, LedgerGeneral> ledgerGeneralAccountIdGroups = searchNeedUpdateLedgerGeneralGroupByAccountId(now, certificateAbstractAccountIdGroups.keySet());
 
         // 2. 根据需要变更的科目 ID 集合，遍历处理相关总账
         for (Map.Entry<Long, List<CertificateAbstract>> accountIdGroup: certificateAbstractAccountIdGroups.entrySet()) {
@@ -188,8 +190,17 @@ public class AddCertificate {
         return accountService.listByIds(certificateAbstractAccountIdGroups.keySet());
     }
 
-    private Map<Long, LedgerGeneral> searchNeedUpdateLedgerGeneralGroupByAccountId(Collection<Long> accountIds) {
-        return ledgerGeneralService.lambdaQuery().in(LedgerGeneral::getAccountId, accountIds).eq(LedgerGeneral::getCertificateAbstract, "本期合计")
+    private Map<Long, LedgerGeneral> searchNeedUpdateLedgerGeneralGroupByAccountId(Date date, Collection<Long> accountIds) {
+        return ledgerGeneralService.lambdaQuery()
+                // 筛选会计期间
+                .ge(LedgerGeneral::getCreateTime, DateUtil.beginOfMonth(date))
+                .lt(LedgerGeneral::getCreateTime, DateUtil.endOfMonth(date))
+                // 筛选公司
+                .eq(LedgerGeneral::getCompanyId, LoginUser.getCompanyId())
+                // 筛选科目
+                .in(LedgerGeneral::getAccountId, accountIds)
+                // 筛选【本期合计】
+                .eq(LedgerGeneral::getCertificateAbstract, AccountAbstractEnum.CURRENT_TOTAL.getName())
                 .list().stream().collect(Collectors.toMap(LedgerGeneral::getAccountId, ledgerGeneral -> ledgerGeneral));
     }
 
