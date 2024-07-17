@@ -31,8 +31,8 @@ public class AssetType implements Serializable {
     /**
      * 公司主键
      */
-    @TableField(value = "company_id")
-    private Long companyId;
+    @TableField(value = "accounting_set_id")
+    private Long accountingSetId;
 
     /**
      * 资产类别名称

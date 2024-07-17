@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 账簿-数量金额总账
@@ -24,7 +25,8 @@ public class LedgerController {
 
     @GetMapping("/certificate/account/ledger")
     public Result<List<Vo>> ledgerAccount(@RequestParam("createTime") String certificateCreateTime) {
-        List<CertificateAbstract> list = certificateAbstractService.selectQuantityAmountList(LoginUser.getCompanyId(), certificateCreateTime, null);
+        Long loginSetId = LoginUser.getLoginSetId();
+        List<CertificateAbstract> list = certificateAbstractService.selectQuantityAmountList(loginSetId, certificateCreateTime, null);
         certificateAbstractService.initDataByNo(list);
         return Result.success(null);
     }
@@ -32,6 +34,10 @@ public class LedgerController {
 
     @Data
     private static class Vo {
+        /**
+         * 科目id
+         */
+        private Long accountId;
 
         /**
          * 科目名称

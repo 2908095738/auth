@@ -4,9 +4,10 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.Date;
-import lombok.Data;
 
 /**
  * 工资导入记录
@@ -54,14 +55,14 @@ public class AssetImportRecord implements Serializable {
     /**
      * 公司ID
      */
-    @TableField(value = "company_id")
-    private Long companyId;
+    @TableField(value = "accounting_set_id")
+    private Long accountingSetId;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
-    public AssetImportRecord(Long companyId, Long createBy) {
-        this.companyId = companyId;
+    public AssetImportRecord(Long accountingSetId, Long createBy) {
+        this.accountingSetId = accountingSetId;
         this.createBy = createBy;
     }
 }

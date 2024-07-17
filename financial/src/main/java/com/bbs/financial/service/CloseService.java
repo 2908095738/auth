@@ -13,5 +13,5 @@ import java.util.List;
 */
 public interface CloseService extends IService<Close> {
 
-    List<CloseType> searchCloseType(Long companyId);
+    List<CloseType> searchCloseType(Long accountingSetId);
 }

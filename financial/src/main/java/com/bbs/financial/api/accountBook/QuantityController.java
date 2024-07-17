@@ -32,7 +32,7 @@ public class QuantityController {
     @GetMapping("/certificate/account/quantity")
     public Result<List<Vo>> quantityAccount(@RequestParam("createTime") String certificateCreateTime,
                                             @RequestParam("accountId")Long accountId) {
-        List<CertificateAbstract> list = certificateAbstractService.selectQuantityAmountList(LoginUser.getCompanyId(), certificateCreateTime, accountId);
+        List<CertificateAbstract> list = certificateAbstractService.selectQuantityAmountList(LoginUser.getLoginSetId(), certificateCreateTime, accountId);
         List<Vo> result = new ArrayList<>();
         if(CollUtil.isNotEmpty(list)){
             certificateAbstractService.initDataByMonth(list);

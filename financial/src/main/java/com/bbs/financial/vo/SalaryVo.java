@@ -21,8 +21,8 @@ public class SalaryVo {
     /**
      * 公司id
      */
-    @TableField(value = "company_id")
-    private Long cId;
+    @TableField(value = "accounting_set_id")
+    private Long accountingSetId;
 
     /**
      * 导入日期

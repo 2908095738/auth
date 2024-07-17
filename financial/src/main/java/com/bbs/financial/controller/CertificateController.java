@@ -67,15 +67,15 @@ public class CertificateController {
         Map<Long, List<Certificate>> companyIdAndCertificateMap = new HashMap<>();  // 存储公司 ID, 凭证列表的 map（用于查询到公司信息后，快速填充到每个凭证中）
         Set<Long> companyIds = new HashSet<>(); //存储公司 ID 的 set（用于查询公司信息）
         for (Certificate certificate : certificates) {
-            Long companyId = certificate.getCompanyId();
+            Long accountingSetId = certificate.getAccountingSetId();
 
             // 将公司信息，以 Map.Entity<公司ID, List<凭证>> 的格式存储
-            List<Certificate> certificateList = companyIdAndCertificateMap.getOrDefault(companyId, new ArrayList<>());
+            List<Certificate> certificateList = companyIdAndCertificateMap.getOrDefault(accountingSetId, new ArrayList<>());
             certificateList.add(certificate);
-            companyIdAndCertificateMap.putIfAbsent(companyId, certificateList);
+            companyIdAndCertificateMap.putIfAbsent(accountingSetId, certificateList);
 
             // 去重保存公司 ID
-            companyIds.add(companyId);
+            companyIds.add(accountingSetId);
         }
 
         // 查询公司信息，并回填到每个凭证中

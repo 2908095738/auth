@@ -33,8 +33,8 @@ public class SalaryType implements Serializable {
     /**
      * 公司id
      */
-    @TableField(value = "company_id")
-    private Long companyId;
+    @TableField(value = "accounting_set_id")
+    private Long accountingSetId;
 
     /**
      * 工资类型创建的时间

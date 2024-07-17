@@ -27,7 +27,7 @@ public class SalaryVoucherItemServiceImpl extends MPJBaseServiceImpl<SalaryVouch
                 .leftJoin(SalaryCalculate.class, SalaryCalculate::getId, SalaryVoucherItem::getAccountingItemTypeId, o-> o
                         .selectAs(SalaryCalculate::getName,SalaryVoucherItemVo::getTypeName)
                         .selectAs(SalaryCalculate::getId,SalaryVoucherItemVo::getTypeId))
-                .eq(SalaryVoucherItem::getCompanyId, cId)
+                .eq(SalaryVoucherItem::getAccountingSetId, cId)
                 .eq(Objects.nonNull(type),SalaryVoucherItem::getType, type)
         );
     }
@@ -39,7 +39,7 @@ public class SalaryVoucherItemServiceImpl extends MPJBaseServiceImpl<SalaryVouch
                 .leftJoin(SalaryCalculate.class, SalaryCalculate::getId, SalaryVoucherItem::getAccountingItemTypeId, o-> o
                         .selectAs(SalaryCalculate::getName,SalaryVoucherItemVo::getTypeName)
                         .selectAs(SalaryCalculate::getId,SalaryVoucherItemVo::getTypeId))
-                .eq(SalaryVoucherItem::getCompanyId, cId)
+                .eq(SalaryVoucherItem::getAccountingSetId, cId)
                 .eq(SalaryVoucherItem::getIsActive, isActive)
                 .orderByDesc(SalaryVoucherItem::getCreatedAt)
         );

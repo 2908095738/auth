@@ -31,8 +31,8 @@ public class AssetChangeLog implements Serializable {
     /**
      * 公司主键
      */
-    @TableField(value = "company_id")
-    private Long companyId;
+    @TableField(value = "accounting_set_id")
+    private Long accountingSetId;
 
     /**
      * 资产编码
@@ -85,8 +85,8 @@ public class AssetChangeLog implements Serializable {
     @TableField(value = "is_deleted")
     private Integer isDeleted;
 
-    public AssetChangeLog(Long companyId, String no, String name, String changeItem, String changeBeforValue, String changeAfterValue, Long createBy) {
-        this.companyId = companyId;
+    public AssetChangeLog(Long accountingSetId, String no, String name, String changeItem, String changeBeforValue, String changeAfterValue, Long createBy) {
+        this.accountingSetId = accountingSetId;
         this.no = no;
         this.name = name;
         this.changeItem = changeItem;

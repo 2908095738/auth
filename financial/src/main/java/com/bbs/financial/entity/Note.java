@@ -4,17 +4,16 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.Date;
-
 import com.bbs.api.auth.User;
 import com.github.yulichang.annotation.EntityMapping;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * 日记账
@@ -114,8 +113,8 @@ public class Note implements Serializable {
     /**
      * 公司ID
      */
-    @TableField(value = "company_id")
-    private Long companyId;
+    @TableField(value = "accounting_set_id")
+    private Long accountingSetId;
 
     @TableField(exist = false)
     @EntityMapping(thisField = Fields.heAccountId, joinField = Account.Fields.id)

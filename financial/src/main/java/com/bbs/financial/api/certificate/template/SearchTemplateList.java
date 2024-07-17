@@ -21,8 +21,9 @@ public class SearchTemplateList {
 
     @GetMapping("/certificate/template/list")
     public Result<List<CertificateTemplate>> search() {
+        Long loginSetId = LoginUser.getLoginSetId();
         return Result.success(
-                db.list(Wrappers.<CertificateTemplate>lambdaQuery().eq(CertificateTemplate::getCompanyId, LoginUser.getCompanyId()))
+                db.list(Wrappers.<CertificateTemplate>lambdaQuery().eq(CertificateTemplate::getAccountingSetId, loginSetId))
         );
     }
 }

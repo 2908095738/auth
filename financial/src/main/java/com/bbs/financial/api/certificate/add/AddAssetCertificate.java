@@ -77,18 +77,19 @@ public class AddAssetCertificate {
     public Result<Boolean> add(@RequestBody Param param) {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
+            Long loginSetId = LoginUser.getLoginSetId();
             // 获取资产:根据资产ID列表
             List<Asset> assets = assetService.selectJoinList(param.assetIds);
             if(CollUtil.isNotEmpty(assets)){
                 List<CertificateAbstract> certificateAbstracts = new ArrayList<>();
                 // 凭证号
-                long no = db.lambdaQuery().eq(Certificate::getCompanyId, LoginUser.getCompanyId())
+                long no = db.lambdaQuery().eq(Certificate::getAccountingSetId, loginSetId)
                         .ge(Certificate::getCreateTime, DateUtil.beginOfMonth(new Date()))
                         .lt(Certificate::getCreateTime, DateUtil.beginOfMonth(DateUtil.offsetMonth(new Date(), INTEGER_ONE)))
                         .count() + INTEGER_ONE;
                 for (Asset asset : assets) {
                     Certificate certificate = new Certificate();
-                    certificate.setCompanyId(LoginUser.getCompanyId());
+                    certificate.setAccountingSetId(loginSetId);
                     certificate.setCertificateWord(CertificateWordEnum.RECORD);
                     certificate.setNo(no);
                     certificate.setDate(param.date);

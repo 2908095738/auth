@@ -2,6 +2,7 @@ package com.bbs.financial.config;
 
 import com.bbs.Result;
 import com.bbs.exception.BusinessException;
+import com.bbs.exception.NoAccountingSetException;
 import com.bbs.exception.ReLoginException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -39,4 +40,13 @@ public class BusinessExceptionHandler {
         log.debug("[ExceptionHandler::IllegalArgumentException] error={}", message);
         response.sendError(400, message);
     }
+
+    @ResponseBody
+    @ExceptionHandler(value = NoAccountingSetException.class)
+    public void errorHandler(NoAccountingSetException exception) throws IOException {
+        response.sendError(501, "没有找到账套！");
+    }
+
+
+
 }

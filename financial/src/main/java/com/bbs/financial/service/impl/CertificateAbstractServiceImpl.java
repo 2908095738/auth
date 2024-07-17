@@ -33,7 +33,7 @@ public class CertificateAbstractServiceImpl extends MPJBaseServiceImpl<Certifica
     implements CertificateAbstractService{
 
     @Override
-    public Page<CertificateAbstract> selectPage(Long companyId, String certificateCreateTime, Long accountId, Integer current, Integer size) {
+    public Page<CertificateAbstract> selectPage(Long accountingSetId, String certificateCreateTime, Long accountId, Integer current, Integer size) {
         return selectJoinListPage(new Page<>(current, size), CertificateAbstract.class, new MPJLambdaWrapper<CertificateAbstract>()
                 .selectAll(CertificateAbstract.class)
                 .selectAssociation(Certificate.class, CertificateAbstract::getCertificate)
@@ -41,21 +41,21 @@ public class CertificateAbstractServiceImpl extends MPJBaseServiceImpl<Certifica
                 .selectAssociation(Account.class, CertificateAbstract::getAccount)
                 .rightJoin(Account.class, Account::getId, CertificateAbstract::getAccountId)
                 .eq(nonNull(accountId),CertificateAbstract::getAccountId,accountId)
-                .eq(Certificate::getCompanyId,companyId)
+                .eq(Certificate::getAccountingSetId,accountingSetId)
                 .like(Certificate::getCreateTime,certificateCreateTime)
                 .orderByAsc(Certificate::getCreateTime)
         );
     }
 
     @Override
-    public List<CertificateAbstract> selectList(Long companyId, String certificateCreateTime) {
+    public List<CertificateAbstract> selectList(Long accountingSetId, String certificateCreateTime) {
         return selectJoinList(CertificateAbstract.class, new MPJLambdaWrapper<CertificateAbstract>()
                 .selectAll(CertificateAbstract.class)
                 .selectAssociation(Certificate.class, CertificateAbstract::getCertificate)
                 .rightJoin(Certificate.class, Certificate::getId, CertificateAbstract::getCertificateId)
                 .selectAssociation(Account.class, CertificateAbstract::getAccount)
                 .rightJoin(Account.class, Account::getId, CertificateAbstract::getAccountId)
-                .eq(Certificate::getCompanyId,companyId)
+                .eq(Certificate::getAccountingSetId,accountingSetId)
                 .like(Certificate::getCreateTime,certificateCreateTime)
                 .orderByAsc(Certificate::getCreateTime)
         );
@@ -181,7 +181,7 @@ public class CertificateAbstractServiceImpl extends MPJBaseServiceImpl<Certifica
     }
 
     @Override
-    public List<CertificateAbstract> selectList(Long companyId, Date certificateStartCreateTime, Date certificateEndCreateTime, Long accountId) {
+    public List<CertificateAbstract> selectList(Long accountingSetId, Date certificateStartCreateTime, Date certificateEndCreateTime, Long accountId) {
         return selectJoinList(CertificateAbstract.class, new MPJLambdaWrapper<CertificateAbstract>()
                 .selectAll(CertificateAbstract.class)
                 .selectAssociation(Certificate.class, CertificateAbstract::getCertificate)
@@ -189,7 +189,7 @@ public class CertificateAbstractServiceImpl extends MPJBaseServiceImpl<Certifica
                 .selectAssociation(Account.class, CertificateAbstract::getAccount)
                 .rightJoin(Account.class, Account::getId, CertificateAbstract::getAccountId)
                 .eq(nonNull(accountId),CertificateAbstract::getAccountId,accountId)
-                .eq(Certificate::getCompanyId,companyId)
+                .eq(Certificate::getAccountingSetId,accountingSetId)
                 .ge(nonNull(certificateStartCreateTime),Certificate::getCreateTime,certificateStartCreateTime)
                 .le(nonNull(certificateEndCreateTime),Certificate::getCreateTime,certificateEndCreateTime)
                 .orderByAsc(Certificate::getCreateTime)
@@ -197,7 +197,7 @@ public class CertificateAbstractServiceImpl extends MPJBaseServiceImpl<Certifica
     }
 
     @Override
-    public List<CertificateAbstract> selectQuantityAmountList(Long companyId, String certificateCreateTime, Long accountId) {
+    public List<CertificateAbstract> selectQuantityAmountList(Long accountingSetId, String certificateCreateTime, Long accountId) {
         return selectJoinList(CertificateAbstract.class, new MPJLambdaWrapper<CertificateAbstract>()
                 .selectAll(CertificateAbstract.class)
                 .selectAssociation(Certificate.class, CertificateAbstract::getCertificate)
@@ -207,12 +207,12 @@ public class CertificateAbstractServiceImpl extends MPJBaseServiceImpl<Certifica
                 .selectAssociation(AccountAuxiliary.class,CertificateAbstract::getAccountAuxiliary)
                 .leftJoin(AccountAuxiliary.class, on -> on
                         .eq(AccountAuxiliary::getId, CertificateAbstract::getAccountId)
-                        .eq(AccountAuxiliary::getName, companyId)
-                        .eq(nonNull(companyId), AccountAuxiliary::getCompanyId, companyId)
+                        .eq(AccountAuxiliary::getName, accountingSetId)
+                        .eq(nonNull(accountingSetId), AccountAuxiliary::getAccountingSetId, accountingSetId)
                 )
                 .eq(Account::getQuantitativeAccount,"是")
                 .eq(nonNull(accountId),CertificateAbstract::getAccountId,accountId)
-                .eq(Certificate::getCompanyId,companyId)
+                .eq(Certificate::getAccountingSetId,accountingSetId)
                 .likeRight(nonNull(certificateCreateTime),Certificate::getCreateTime,certificateCreateTime)
                 .orderByAsc(Certificate::getCreateTime)
         );

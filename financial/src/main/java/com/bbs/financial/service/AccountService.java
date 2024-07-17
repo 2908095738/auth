@@ -44,15 +44,15 @@ public interface AccountService extends MPJBaseService<Account> {
      */
     void deleteAccountByIds(List<Long> ids);
 
-    List<Tree<Long>> tree(String accountSort, Long companyId, String name, String no);
+    List<Tree<Long>> tree(String accountSort, Long accountingSetId, String name, String no);
 
-    Page<Account> page(Page<Account> page, String accountSort, Long companyId, String name, String no);
+    Page<Account> page(Page<Account> page, String accountSort, Long accountingSetId, String name, String no);
 
     List<Tree<Long>> tree(List<Account> accounts);
 
-    Page<Account> join(String no, String name, String sort, Long companyId, Integer current, Integer size);
+    Page<Account> join(String no, String name, String sort, Long accountingSetId, Integer current, Integer size);
 
-    List<Tree<Long>> selectTree(Long companyId, String certificateCreateTime);
+    List<Tree<Long>> selectTree(Long accountingSetId, String certificateCreateTime);
 
-    List<Tree<Long>> selectQuantityAmountTree(Long companyId, String certificateCreateTime);
+    List<Tree<Long>> selectQuantityAmountTree(Long accountingSetId, String certificateCreateTime);
 }

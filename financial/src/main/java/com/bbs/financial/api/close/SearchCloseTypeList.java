@@ -30,7 +30,7 @@ public class SearchCloseTypeList {
     public Result<List<CloseType>> search() {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            List<CloseType> closeTypeList = closeService.searchCloseType(LoginUser.getCompanyId());
+            List<CloseType> closeTypeList = closeService.searchCloseType(LoginUser.getLoginSetId());
             transactionManager.commit(transaction);
             return Result.success(closeTypeList);
         } catch (Exception e) {

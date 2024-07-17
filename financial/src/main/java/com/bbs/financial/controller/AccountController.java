@@ -68,7 +68,7 @@ public class AccountController
         }
         return success(accountService.page(new Page<>(current, size),
                 param.getAccountSort(),
-                param.getCompanyId(),
+                param.getAccountingSetId(),
                 param.getName(),
                 param.getNo()
         ));
@@ -114,7 +114,7 @@ public class AccountController
             param.setAccountSort(null);
         }
 
-        List<Tree<Long>> tree = accountService.tree(param.getAccountSort(), param.getCompanyId(), param.getName(), param.getNo());
+        List<Tree<Long>> tree = accountService.tree(param.getAccountSort(), param.getAccountingSetId(), param.getName(), param.getNo());
 
         if(isSearchNo) {
             Tree<Long> result = tree.get(INTEGER_ZERO);
@@ -165,7 +165,7 @@ public class AccountController
                 .selectAll(Account.class)
                 .leftJoin(AccountRemark.class, on -> on
                         .eq(AccountRemark::getAccountId, Account::getId)
-                        .eq(nonNull(companyId), AccountRemark::getCompanyId, companyId)
+                        .eq(nonNull(companyId), AccountRemark::getAccountingSetId, companyId)
                 )
                 .selectAssociation(AccountRemark.class, Account::getRemark)
                 .and(
@@ -280,7 +280,7 @@ public class AccountController
 
     @GetMapping("/account/currency/list")
     public Result<List<AccountCurrency>> searchCurrencyList() {
-        return success(accountCurrencyService.lambdaQuery().eq(AccountCurrency::getCompanyId, LoginUser.getCompanyId()).list());
+        return success(accountCurrencyService.lambdaQuery().eq(AccountCurrency::getAccountingSetId, LoginUser.getLoginSetId()).list());
     }
 
     @GetMapping("/account/name")
@@ -299,7 +299,7 @@ public class AccountController
     {
         if(priceTypeService.lambdaQuery()
                 .eq(PriceType::getCode, priceType.getCode())
-                .eq(PriceType::getCompanyId, priceType.getCompanyId())
+                .eq(PriceType::getAccountingSetId, LoginUser.getLoginSetId())
                 .exists()) {
             return failed(400, "创建失败，币种已存在");
         }
@@ -309,7 +309,7 @@ public class AccountController
 
     @GetMapping("/money/type/list")
     public Result<List<PriceType>> searchMoneyTypeList() {
-        return success(priceTypeService.lambdaQuery().eq(PriceType::getCompanyId, LoginUser.getCompanyId()).list());
+        return success(priceTypeService.lambdaQuery().eq(PriceType::getAccountingSetId, LoginUser.getLoginSetId()).list());
     }
 
     @Resource
@@ -318,7 +318,7 @@ public class AccountController
     @PutMapping("/auxiliary/calculation")
     public Result<Boolean> addAuxiliaryCalculation(@RequestBody AccountAuxiliaryType auxiliaryCalculation) {
         if(accountAuxiliaryTypeService.lambdaQuery()
-                .eq(AccountAuxiliaryType::getCompanyId, auxiliaryCalculation.getCompanyId())
+                .eq(AccountAuxiliaryType::getAccountingSetId, auxiliaryCalculation.getAccountingSetId())
                 .eq(AccountAuxiliaryType::getName, auxiliaryCalculation.getName()).exists()) {
             return failed(400, "创建失败，辅助核算类型已存在");
         }
@@ -327,6 +327,6 @@ public class AccountController
 
     @GetMapping("/auxiliary/calculation/list")
     public Result<List<AccountAuxiliaryType>> searchAuxiliaryCalculationList() {
-        return success(accountAuxiliaryTypeService.lambdaQuery().eq(AccountAuxiliaryType::getCompanyId, LoginUser.getCompanyId()).list());
+        return success(accountAuxiliaryTypeService.lambdaQuery().eq(AccountAuxiliaryType::getAccountingSetId, LoginUser.getLoginSetId()).list());
     }
 }

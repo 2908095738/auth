@@ -26,7 +26,7 @@ public class PriceTypeController {
      */
     @PostMapping
     public Result<Boolean> add(@RequestBody PriceType priceType) {
-        priceType.setCompanyId(LoginUser.getCompanyId());
+        priceType.setAccountingSetId(LoginUser.getLoginSetId());
         priceTypeService.save(priceType);
         return success();
     }

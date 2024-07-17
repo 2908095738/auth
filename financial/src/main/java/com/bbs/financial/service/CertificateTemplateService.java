@@ -12,6 +12,6 @@ import java.util.List;
 */
 public interface CertificateTemplateService extends MPJBaseService<CertificateTemplate> {
 
-    List<CertificateTemplate> getJoinTemplate(Long companyId, List<String> templateNames);
+    List<CertificateTemplate> getJoinTemplate(Long accountingSetId, List<String> templateNames);
 
 }

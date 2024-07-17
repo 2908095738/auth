@@ -87,8 +87,8 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
 //    @Cacheable(cacheNames = "account-tree")
     @Transactional
     @Override
-    public List<Tree<Long>> tree(String accountSort, Long companyId, String name, String no) {
-        LambdaQueryWrapper<Account> wrapper = searchWrapperByNameOrNo(accountSort, companyId, name, no);
+    public List<Tree<Long>> tree(String accountSort, Long accountingSetId, String name, String no) {
+        LambdaQueryWrapper<Account> wrapper = searchWrapperByNameOrNo(accountSort, accountingSetId, name, no);
         List<Account> allAccount = list(wrapper);
         List<Account> accountParents = new ArrayList<>();
         List<String> ids = new ArrayList<>();
@@ -155,8 +155,8 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
         }
     }
 
-    private LambdaQueryWrapper<Account> searchWrapperByNameOrNo(String accountSort, Long companyId, String name, String no) {
-        LambdaQueryWrapper<Account> wrapper = baseWrapper(accountSort, companyId);
+    private LambdaQueryWrapper<Account> searchWrapperByNameOrNo(String accountSort, Long accountingSetId, String name, String no) {
+        LambdaQueryWrapper<Account> wrapper = baseWrapper(accountSort, accountingSetId);
         // 如果 param.name 为 no，而且并 param.no 为 null，则使用 name 的值，作为 no 字段查询
         if(StringUtils.isNotBlank(name)) {
             if(isNumber(name)) {
@@ -197,20 +197,20 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
     }
 
 
-    private LambdaQueryWrapper<Account> baseWrapper(String accountSort, Long companyId) {
+    private LambdaQueryWrapper<Account> baseWrapper(String accountSort, Long accountingSetId) {
         return Wrappers.lambdaQuery(Account.class)
                 .eq(StringUtils.isNotBlank(accountSort), Account::getAccountSort, accountSort)
-                .eq(isNull(companyId), Account::getCompanyId, INTEGER_ZERO)
-                .and(nonNull(companyId), wrapper -> wrapper
-                        .eq(Account::getCompanyId, INTEGER_ZERO)
+                .eq(isNull(accountingSetId), Account::getAccountingSetId, INTEGER_ZERO)
+                .and(nonNull(accountingSetId), wrapper -> wrapper
+                        .eq(Account::getAccountingSetId, INTEGER_ZERO)
                         .or()
-                        .eq(Account::getCompanyId, companyId)
+                        .eq(Account::getAccountingSetId, accountingSetId)
                 );
     }
 
     @Override
-    public Page<Account> page(Page<Account> page, String accountSort, Long companyId, String name, String no) {
-        return page(page, searchWrapperByNameOrNo(accountSort, companyId, name, no));
+    public Page<Account> page(Page<Account> page, String accountSort, Long accountingSetId, String name, String no) {
+        return page(page, searchWrapperByNameOrNo(accountSort, accountingSetId, name, no));
     }
 
     @Override
@@ -237,12 +237,12 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
 
     @Cacheable(cacheNames = "account-join")
     @Override
-    public Page<Account> join(String no, String name, String sort, Long companyId, Integer current, Integer size) {
+    public Page<Account> join(String no, String name, String sort, Long accountingSetId, Integer current, Integer size) {
         return selectJoinListPage(new Page<>(current, size), Account.class, new MPJLambdaWrapper<Account>()
                 .selectAll(Account.class)
                 .leftJoin(AccountRemark.class, on -> on
                         .eq(AccountRemark::getAccountId, Account::getId)
-                        .eq(nonNull(companyId), AccountRemark::getCompanyId, companyId)
+                        .eq(nonNull(accountingSetId), AccountRemark::getAccountingSetId, accountingSetId)
                 )
                 .selectAssociation(AccountRemark.class, Account::getRemark)
                 .like(StringUtils.isNotBlank(sort), Account::getSort, sort)
@@ -254,12 +254,12 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
     }
 
     @Override
-    public List<Tree<Long>> selectTree(Long companyId, String certificateCreateTime) {
+    public List<Tree<Long>> selectTree(Long accountingSetId, String certificateCreateTime) {
         List<Account> accountList = selectJoinList(Account.class, new MPJLambdaWrapper<Account>()
                 .selectAll(Account.class)
                 .leftJoin(CertificateAbstract.class, CertificateAbstract::getAccountId, Account::getId)
                 .leftJoin(Certificate.class, Certificate::getId, CertificateAbstract::getCertificateId)
-                .eq(Certificate::getCompanyId,companyId)
+                .eq(Certificate::getAccountingSetId,accountingSetId)
                 .like(Certificate::getCreateTime,certificateCreateTime)
         );
         List<Account> result = accountList;
@@ -282,7 +282,7 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
     }
 
     @Override
-    public List<Tree<Long>> selectQuantityAmountTree(Long companyId, String certificateCreateTime) {
+    public List<Tree<Long>> selectQuantityAmountTree(Long accountingSetId, String certificateCreateTime) {
         List<Account> accountList = selectJoinList(Account.class, new MPJLambdaWrapper<Account>()
                 .selectAll(Account.class)
                 .selectCollection(AccountAuxiliary.class,Account::getAccountAuxiliaryList)
@@ -290,11 +290,11 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
                 .leftJoin(Certificate.class, Certificate::getId, CertificateAbstract::getCertificateId)
                 .leftJoin(AccountAuxiliary.class, on -> on
                         .eq(AccountAuxiliary::getId, CertificateAbstract::getAccountId)
-                        .eq(AccountAuxiliary::getName, companyId)
-                        .eq(nonNull(companyId), AccountAuxiliary::getCompanyId, companyId)
+                        .eq(AccountAuxiliary::getName, accountingSetId)
+                        .eq(nonNull(accountingSetId), AccountAuxiliary::getAccountingSetId, accountingSetId)
                 )
                 .eq(Account::getQuantitativeAccount,"是")
-                .eq(Certificate::getCompanyId,companyId)
+                .eq(Certificate::getAccountingSetId,accountingSetId)
                 .like(Certificate::getCreateTime,certificateCreateTime)
         );
         List<Tree<Long>> trees = new ArrayList<>();

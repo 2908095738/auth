@@ -28,27 +28,27 @@ public class CloseServiceImpl extends ServiceImpl<AssetCloseMapper, Close>
     @Resource
     private CloseTypeService closeTypeService;
     @Override
-    public List<CloseType> searchCloseType(Long companyId) {
+    public List<CloseType> searchCloseType(Long accountingSetId) {
         List<CloseType> closeTypeList = closeTypeService.lambdaQuery()
-                .eq(CloseType::getCompanyId, companyId)
+                .eq(CloseType::getAccountingSetId, accountingSetId)
                 .list();
         if(isNull(closeTypeList) || closeTypeList.size() == INTEGER_ZERO) {
-            closeTypeList = loadCloseTypeByDefault(companyId);
+            closeTypeList = loadCloseTypeByDefault(accountingSetId);
         }
         return closeTypeList;
     }
     /**
      * 通过默认结账类型配置，设置当前公司的结账类型配置
      */
-    public List<CloseType> loadCloseTypeByDefault(Long companyId) {
+    public List<CloseType> loadCloseTypeByDefault(Long accountingSetId) {
         List<CloseType> defaultCloseTypeList = searchDefaultCloseTypeList();
         defaultCloseTypeList.forEach(assetCloseType -> {
             assetCloseType.setId(null);
-            assetCloseType.setCompanyId(companyId);
+            assetCloseType.setAccountingSetId(accountingSetId);
         });
         closeTypeService.saveBatch(defaultCloseTypeList);
         return closeTypeService.lambdaQuery()
-                .eq(CloseType::getCompanyId, companyId)
+                .eq(CloseType::getAccountingSetId, accountingSetId)
                 .list();
     }
 
@@ -57,7 +57,7 @@ public class CloseServiceImpl extends ServiceImpl<AssetCloseMapper, Close>
      */
     public List<CloseType> searchDefaultCloseTypeList() {
         List<CloseType> defaultCloseTypeList = closeTypeService.lambdaQuery()
-                .eq(CloseType::getCompanyId, LONG_ZERO)
+                .eq(CloseType::getAccountingSetId, LONG_ZERO)
                 .list();
         if(isNull(defaultCloseTypeList) || defaultCloseTypeList.size() == INTEGER_ZERO) {
             closeTypeService.saveBatch(Arrays.asList(
@@ -68,7 +68,7 @@ public class CloseServiceImpl extends ServiceImpl<AssetCloseMapper, Close>
                     new CloseType(LONG_ZERO, "loss_and_gain_brought_forward", "结转损益", LONG_ZERO, INTEGER_ONE, 4)
             ));
             defaultCloseTypeList = closeTypeService.lambdaQuery()
-                    .eq(CloseType::getCompanyId, LONG_ZERO)
+                    .eq(CloseType::getAccountingSetId, LONG_ZERO)
                     .list();
         }
         return defaultCloseTypeList;

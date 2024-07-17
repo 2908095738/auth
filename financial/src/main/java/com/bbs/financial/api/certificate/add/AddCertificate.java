@@ -37,6 +37,7 @@ public class AddCertificate {
     @AllArgsConstructor
     public static class Param {
 
+        private Long accountingSetId;
         /**
          * 凭证字
          */
@@ -106,10 +107,11 @@ public class AddCertificate {
     @PutMapping("/certificate")
     public Result<Boolean> add(@RequestBody Param param) {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
+        Long accountingSetId = LoginUser.getLoginSetId();
+        param.setAccountingSetId(accountingSetId);
         Certificate certificate = converter.toEntity(param);
         certificate.setCertificateWord(CertificateWordEnum.RECORD);
         certificate.setCreateBy(LoginUser.getId());
-        certificate.setCompanyId(LoginUser.getCompanyId());
         try {
             // 保存凭证
             saveCertificate(certificate);
@@ -194,7 +196,7 @@ public class AddCertificate {
     private void updateFiles(Param param, Certificate certificate) {
         certificateFileService.lambdaUpdate()
                 .set(CertificateFile::getCertificateId, certificate.getId())
-                .eq(CertificateFile::getCompanyId, LoginUser.getCompanyId())
+                .eq(CertificateFile::getAccountingSetId, param.getAccountingSetId())
                 .eq(CertificateFile::getCertificateWord, param.certificateWord)
                 .eq(CertificateFile::getNo, param.no)
                 .ge(CertificateFile::getDate, DateUtil.beginOfMonth(param.date))

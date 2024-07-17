@@ -31,7 +31,7 @@ public class ZhangHuController {
      */
     @PostMapping
     public Result<Boolean> add(@RequestBody ZhangHu zhanghu) {
-        zhanghu.setCompanyId(LoginUser.getCompanyId());
+        zhanghu.setAccountingSetId(LoginUser.getLoginSetId());
         zhangHuService.save(zhanghu);
         return success();
     }

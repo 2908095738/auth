@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Objects;
 
 @RequestMapping
 @RestController
@@ -21,9 +22,10 @@ public class SearchTemplateType {
 
     @GetMapping("/certificate/template/type/list")
     public Result<List<String>> search() {
+        Long loginSetId = LoginUser.getLoginSetId();
         return Result.success(db.listObjs(Wrappers.<CertificateTemplate>lambdaQuery()
                 .select(CertificateTemplate::getType)
-                .eq(CertificateTemplate::getCompanyId, LoginUser.getCompanyId())
+                .eq(CertificateTemplate::getAccountingSetId, loginSetId)
                 .groupBy(CertificateTemplate::getType)));
     }
 }

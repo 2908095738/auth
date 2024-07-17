@@ -43,10 +43,11 @@ public class RecomputeMoney {
     public Result<List<CloseType>> recomputeMoney() {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            List<CloseType> closeTypeList = closeService.searchCloseType(LoginUser.getCompanyId());
+            Long loginSetId = LoginUser.getLoginSetId();
+            List<CloseType> closeTypeList = closeService.searchCloseType(loginSetId);
             closeTypeList.forEach(closeType -> {
                 if(closeType.getTypeName().equals("asset_depreciation")) {
-                    Long allAssetMoney = computeAllAssetMoney(LoginUser.getCompanyId());
+                    Long allAssetMoney = computeAllAssetMoney(loginSetId);
                     closeType.setMoney(allAssetMoney);
                     closeTypeService.lambdaUpdate()
                             .eq(CloseType::getId, closeType.getId())
@@ -61,7 +62,7 @@ public class RecomputeMoney {
                             .leftJoin(CertificateAbstract.class, CertificateAbstract::getCertificateId, Certificate::getId)
                             .leftJoin(Account.class, Account::getId, CertificateAbstract::getAccountId)
                             // 筛选公司
-                            .eq(Certificate::getCompanyId, LoginUser.getCompanyId())
+                            .eq(Certificate::getAccountingSetId, loginSetId)
                             // 筛选增值税相关科目
                             .eq(Account::getNo, 2221)
                             // 筛选当月数据
@@ -79,9 +80,9 @@ public class RecomputeMoney {
         }
     }
 
-    private Long computeAllAssetMoney(Long companyId) {
+    private Long computeAllAssetMoney(Long accountingSetId) {
 
-        List<Asset> allAsset = searchAllAsset(companyId);
+        List<Asset> allAsset = searchAllAsset(accountingSetId);
 
         List<AssetDepreciationCertificate> allAssetCertificate = searchAllAssetCertificate(allAsset);
 
@@ -103,9 +104,9 @@ public class RecomputeMoney {
                 .list();
     }
 
-    private List<Asset> searchAllAsset(Long companyId) {
+    private List<Asset> searchAllAsset(Long accountingSetId) {
         return assetService.lambdaQuery()
-                .eq(Asset::getCompanyId, companyId)
+                .eq(Asset::getAccountingSetId, accountingSetId)
                 .eq(Asset::getStatus, LONG_ZERO)
                 .list();
     }

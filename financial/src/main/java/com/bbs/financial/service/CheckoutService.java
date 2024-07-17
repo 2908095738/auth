@@ -18,10 +18,10 @@ public interface CheckoutService extends IService<Checkout> {
     /**
      * 获取出纳启用期间
      *
-     * @param companyId 公司id
+     * @param accountingSetId 公司id
      * @return
      */
-    Result<Date> getOriByCheck(@RequestBody Long companyId);
+    Result<Date> getOriByCheck(@RequestBody Long accountingSetId);
 
     /**
      * 获取本年结账列表

@@ -26,10 +26,10 @@ public class CheckoutServiceImpl extends MPJBaseServiceImpl<CheckoutMapper, Chec
         implements CheckoutService {
 
     @Override
-    public Result<Date> getOriByCheck(Long companyId) {
+    public Result<Date> getOriByCheck(Long accountingSetId) {
         List<Date> dbDates = selectJoinList(Date.class, new MPJLambdaWrapper<Checkout>()
                 .select(Checkout::getDate)
-                .eq(Checkout::getCompanyId, companyId)
+                .eq(Checkout::getAccountingSetId, accountingSetId)
                 .eq(Checkout::getIsCheckout, 1)
                 .orderByAsc(Checkout::getDate)
         );
@@ -44,7 +44,7 @@ public class CheckoutServiceImpl extends MPJBaseServiceImpl<CheckoutMapper, Chec
     public List<Checkout> getCheckByYear(Date oriDateByYear, Date endDateByYear) {
         return selectJoinList(Checkout.class, new MPJLambdaWrapper<Checkout>()
                 .selectAll(Checkout.class)
-                .eq(Checkout::getCompanyId, LoginUser.getCompanyId())
+                .eq(Checkout::getAccountingSetId, LoginUser.getLoginSetId())
                 .ge(Checkout::getDate, oriDateByYear)
                 .lt(Checkout::getDate, endDateByYear)
                 .orderByAsc(Checkout::getDate)
@@ -57,7 +57,7 @@ public class CheckoutServiceImpl extends MPJBaseServiceImpl<CheckoutMapper, Chec
         Long id = selectJoinOne(Long.class, new MPJLambdaWrapper<Checkout>()
                 .select(Checkout::getId)
                 .eq(Checkout::getIsCheckout, 1)
-                .eq(Checkout::getCompanyId, LoginUser.getCompanyId())
+                .eq(Checkout::getAccountingSetId, LoginUser.getLoginSetId())
                 .ge(Checkout::getDate, DateUtil.beginOfMonth(date))
                 .lt(Checkout::getDate, DateUtil.beginOfMonth(DateUtil.offsetMonth(date, INTEGER_ONE)))
         );

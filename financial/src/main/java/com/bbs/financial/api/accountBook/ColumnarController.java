@@ -22,7 +22,7 @@ public class ColumnarController {
     public Result<List<CertificateAbstract>> columnarAccount(@RequestParam("startCreateTime") Date certificateStartCreateTime,
                                                                  @RequestParam("endCreateTime") Date certificateEndCreateTime,
                                                              @RequestParam("cAccountId")Long accountId) {
-        List<CertificateAbstract> list = certificateAbstractService.selectList(LoginUser.getCompanyId(), certificateStartCreateTime,certificateEndCreateTime, accountId);
+        List<CertificateAbstract> list = certificateAbstractService.selectList(LoginUser.getLoginSetId(), certificateStartCreateTime,certificateEndCreateTime, accountId);
         certificateAbstractService.initDataByMonth(list);
         return Result.success(list);
     }

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 
@@ -50,9 +51,10 @@ public class SearchFile {
     public Result<List<CertificateFile>> search(
             Param param
     ) {
+        Long loginSetId = LoginUser.getLoginSetId();
         Date date = new Date(Long.parseLong(param.date));
         return Result.success(db.lambdaQuery()
-                .eq(CertificateFile::getCompanyId, LoginUser.getCompanyId())
+                .eq(CertificateFile::getAccountingSetId, loginSetId)
                 .eq(CertificateFile::getCertificateWord, param.certificateWord)
                 .eq(CertificateFile::getNo, param.no)
                 .ge(CertificateFile::getDate, DateUtil.beginOfMonth(date))

@@ -48,8 +48,8 @@ public class CertificateTemplate implements Serializable {
     /**
      * 公司ID
      */
-    @TableField(value = "company_id")
-    private Long companyId;
+    @TableField(value = "accounting_set_id")
+    private Long accountingSetId;
 
     /**
      * 是否启用该项目：1启用，0关闭

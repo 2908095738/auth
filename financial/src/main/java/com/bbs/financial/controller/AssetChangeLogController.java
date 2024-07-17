@@ -65,8 +65,9 @@ public class AssetChangeLogController {
     @GetMapping("/change/list")
     public Result<Page<AssetChangeLog>> list(Param param)
     {
+        Long loginSetId = LoginUser.getLoginSetId();
         Page<AssetChangeLog> page = assetChangeLogService.page(param.toPage(), new QueryWrapper<AssetChangeLog>().lambda()
-                .eq(AssetChangeLog::getCompanyId, LoginUser.getCompanyId())
+                .eq(AssetChangeLog::getAccountingSetId, loginSetId)
                 .like(Objects.nonNull(param.getCreateTime()), AssetChangeLog::getCreateTime, param.getCreateTime())
                 .orderBy(true, false, AssetChangeLog::getCreateTime));
         Set<Long> userIds = new HashSet<>();

@@ -17,8 +17,8 @@ public class SalaryVoucherItemVo {
     /**
      * 关联的公司凭证ID
      */
-    @TableField(value = "company_id")
-    private Long companyId;
+    @TableField(value = "accounting_set_id")
+    private Long accountingSetId;
 
     /**
      * 核算项目的类型ID

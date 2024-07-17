@@ -29,7 +29,7 @@ public class BalanceAccount {
 
     @GetMapping("/certificate/account/balance")
     public Result<List<Vo>> balanceAccount(@RequestParam("createTime") String certificateCreateTime) {
-        Page<CertificateAbstract> list = certificateAbstractService.selectPage(LoginUser.getCompanyId(), certificateCreateTime, null, 1, 9999);
+        Page<CertificateAbstract> list = certificateAbstractService.selectPage(LoginUser.getLoginSetId(), certificateCreateTime, null, 1, 9999);
         List<Vo> result = new ArrayList<>();
 
         if(CollUtil.isNotEmpty(list.getRecords())){

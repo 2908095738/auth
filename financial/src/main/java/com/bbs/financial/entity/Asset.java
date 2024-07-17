@@ -40,8 +40,8 @@ public class Asset implements Serializable {
      * 公司主键
      */
     @PropIgnore
-    @TableField(value = "company_id")
-    private Long companyId;
+    @TableField(value = "accounting_set_id")
+    private Long accountingSetId;
 
     /**
      * 资产编码

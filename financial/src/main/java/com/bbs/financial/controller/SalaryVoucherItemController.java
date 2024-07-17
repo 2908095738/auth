@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Objects;
 
 import static com.bbs.Result.success;
 
@@ -54,7 +55,8 @@ public class SalaryVoucherItemController {
     @GetMapping("/item/list")
     public Result<Page<SalaryVoucherItemVo>> list(ListParam param)
     {
-        return success(salaryVoucherItemService.selectjoinPage(new Page(param.getCurrent(), param.getSize()), LoginUser.getCompanyId(),param.getType()));
+        Long loginSetId = LoginUser.getLoginSetId();
+        return success(salaryVoucherItemService.selectjoinPage(new Page(param.getCurrent(), param.getSize()), loginSetId,param.getType()));
     }
 
 //    /**
@@ -77,9 +79,10 @@ public class SalaryVoucherItemController {
     @PostMapping("/item")
     public Result<Boolean> add(@RequestBody AddParam addParam)
     {
-        SalaryCalculate salaryAccountingItemType = new SalaryCalculate().setName(addParam.name).setCompanyId(LoginUser.getCompanyId());
+        Long loginSetId = LoginUser.getLoginSetId();
+        SalaryCalculate salaryAccountingItemType = new SalaryCalculate().setName(addParam.name).setAccountingSetId(loginSetId);
         salaryCalculateService.save(salaryAccountingItemType);
-        salaryVoucherItemService.save(new SalaryVoucherItem().setAccountingItemTypeId(salaryAccountingItemType.getId()).setCompanyId(LoginUser.getCompanyId()).setIsActive(true));
+        salaryVoucherItemService.save(new SalaryVoucherItem().setAccountingItemTypeId(salaryAccountingItemType.getId()).setAccountingSetId(loginSetId).setIsActive(true));
         return success();
     }
 
@@ -88,12 +91,12 @@ public class SalaryVoucherItemController {
      * 启用/禁用企业核算项目
      */
     @PutMapping("/salary/item/status")
-    public Result<Boolean> edit(@RequestParam("salaryVoucherItemId") Long salaryVoucherItemId,@RequestParam("isActive") Boolean isActive,@RequestParam("companyId") Long companyId)
+    public Result<Boolean> edit(@RequestParam("salaryVoucherItemId") Long salaryVoucherItemId,@RequestParam("isActive") Boolean isActive)
     {
         salaryVoucherItemService.lambdaUpdate()
                 .set(SalaryVoucherItem::getIsActive,isActive)
                 .eq(SalaryVoucherItem::getAccountingItemTypeId,salaryVoucherItemId)
-                .eq(SalaryVoucherItem::getCompanyId,companyId)
+                .eq(SalaryVoucherItem::getAccountingSetId,LoginUser.getLoginSetId())
                 .update();
         return success();
     }

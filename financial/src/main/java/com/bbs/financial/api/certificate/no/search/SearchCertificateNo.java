@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.Objects;
 
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 
@@ -26,8 +27,9 @@ public class SearchCertificateNo {
 
     @GetMapping("/certificate/no")
     public Result<Long> search(Param param) {
+        Long loginSetId = LoginUser.getLoginSetId();
         Date date = new Date(param.getDate());
-        return Result.success(db.lambdaQuery().eq(Certificate::getCompanyId, LoginUser.getCompanyId())
+        return Result.success(db.lambdaQuery().eq(Certificate::getAccountingSetId, loginSetId)
                 .ge(Certificate::getCreateTime, DateUtil.beginOfMonth(date))
                 .lt(Certificate::getCreateTime, DateUtil.beginOfMonth(DateUtil.offsetMonth(date, INTEGER_ONE)))
                 .count() + INTEGER_ONE);

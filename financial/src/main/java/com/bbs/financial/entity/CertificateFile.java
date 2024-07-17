@@ -4,13 +4,13 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
-import java.util.Date;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+
+import java.io.Serializable;
+import java.util.Date;
 
 /**
  * 记账凭证附件
@@ -37,8 +37,8 @@ public class CertificateFile implements Serializable {
     /**
      * 公司ID
      */
-    @TableField(value = "company_id")
-    private Long companyId;
+    @TableField(value = "accounting_set_id")
+    private Long accountingSetId;
 
     /**
      * 凭证字
@@ -115,9 +115,9 @@ public class CertificateFile implements Serializable {
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
-    public CertificateFile(String name, Long companyId, String certificateWord, Long no, Date date, String url, String resourceId, Integer fileType, String contentType, Long createBy) {
+    public CertificateFile(String name, Long accountingSetId, String certificateWord, Long no, Date date, String url, String resourceId, Integer fileType, String contentType, Long createBy) {
         this.name = name;
-        this.companyId = companyId;
+        this.accountingSetId = accountingSetId;
         this.certificateWord = certificateWord;
         this.no = no;
         this.date = date;

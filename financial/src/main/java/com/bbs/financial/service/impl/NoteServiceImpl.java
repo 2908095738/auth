@@ -100,7 +100,7 @@ public class NoteServiceImpl extends MPJBaseServiceImpl<NoteMapper, Note>
      */
     private MPJLambdaWrapper<Note> getConditionByNoteList(MPJLambdaWrapper<Note> wrappers, boolean isZhId, Collection<Long> zhIdList, Integer voucherStatus, Integer noteType, String certificateAbstract, String remark, boolean isMonth, Long dateLong, Long startDateLong, Long endDateLong) {
         return wrappers
-                .eq(Note::getCompanyId, LoginUser.getCompanyId())
+                .eq(Note::getAccountingSetId, LoginUser.getLoginSetId())
                 .in(isZhId, Note::getZhId, zhIdList)
 
                 //凭证状态查询条件

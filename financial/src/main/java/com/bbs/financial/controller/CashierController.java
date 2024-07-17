@@ -115,10 +115,11 @@ public class CashierController {
      */
     @PutMapping("/initMoney/{zhangHuId}/{initMoney}/{dateLong}")
     public Result<Boolean> addInitMoney(@PathVariable Long zhangHuId, @PathVariable String initMoney, @PathVariable Long dateLong) {
+        Long loginSetId = LoginUser.getLoginSetId();
         Note tmpNote = noteService.selectJoinOne(Note.class, new MPJLambdaWrapper<Note>()
                 .eq(Note::getNoteType, INTEGER_ZERO)
                 .eq(Note::getZhId, zhangHuId)
-                .eq(Note::getCompanyId, LoginUser.getCompanyId()));
+                .eq(Note::getAccountingSetId, loginSetId));
         boolean isHas = Objects.nonNull(tmpNote);
 
         if (Objects.isNull(tmpNote)) {
@@ -129,7 +130,7 @@ public class CashierController {
             tmpNote.setCreateBy(LoginUser.getId());
             tmpNote.setNoteType(INTEGER_ZERO);
             tmpNote.setZhId(zhangHuId);
-            tmpNote.setCompanyId(LoginUser.getCompanyId());
+            tmpNote.setAccountingSetId(loginSetId);
         }
 
 
@@ -161,7 +162,7 @@ public class CashierController {
         List<BigDecimal> oriMoneyList = noteService.selectJoinList(BigDecimal.class,
                 new MPJLambdaWrapper<Note>()
                         .select(Note::getBorrowMoney)
-                        .eq(Note::getCompanyId, LoginUser.getCompanyId())
+                        .eq(Note::getAccountingSetId, LoginUser.getLoginSetId())
                         .eq(Note::getNoteType, INTEGER_ZERO)
                         .eq(!ObjectUtils.isEmpty(zhangHuId) && zhangHuId > 0, Note::getZhId, zhangHuId));
 
@@ -189,7 +190,7 @@ public class CashierController {
             @RequestParam(name = "endDate", required = false) Long endDateLong) {
 
         //获取凭证分页
-        Page<Certificate> certificatePage = cashierService.listCertificate(current, size, LoginUser.getCompanyId(), Collections.singletonList(zhangHuId), null, startDateLong, endDateLong, Boolean.TRUE, Boolean.TRUE);
+        Page<Certificate> certificatePage = cashierService.listCertificate(current, size, LoginUser.getLoginSetId(), Collections.singletonList(zhangHuId), null, startDateLong, endDateLong, Boolean.TRUE, Boolean.TRUE);
 
         //凭证摘要列表排序
 //        sortByNoteList(certificatePage.getRecords());
@@ -267,8 +268,8 @@ public class CashierController {
     public Result<Page<SubjectsNameDto>> listSubjects(@RequestParam Integer current, @RequestParam Integer size) {
         Page<SubjectsNameDto> page = accountService.selectJoinListPage(new Page<>(current, size), SubjectsNameDto.class, new MPJLambdaWrapper<Account>()
                 .select(Account::getId, Account::getNo, Account::getName)
-                .eq(Account::getCompanyId, INTEGER_ZERO)
-                .or().eq(Account::getCompanyId, LoginUser.getCompanyId())
+                .eq(Account::getAccountingSetId, INTEGER_ZERO)
+                .or().eq(Account::getAccountingSetId, LoginUser.getLoginSetId())
         );
         // 根据 no 中的 - 的数量，获取需要查询的科目 level
         // ps: value 的三元，可忽略，用于解决 IDEA Null 检查
@@ -337,7 +338,7 @@ public class CashierController {
         Long oriMoney = getOriMoney(zhangHuId, startDateLong).getData();
         Function<List<NoteDto>, List<ExcelNoteDto>> initExcelDataFunc = d -> {
             List<ExcelNoteDto> datas = getExcelDatasByNote(d, oriMoney);
-            initZhByNote(datas, LoginUser.getCompanyId());
+            initZhByNote(datas, LoginUser.getLoginSetId());
             return datas;
         };
 
@@ -498,7 +499,7 @@ public class CashierController {
         List<ZhangHu> tmpList = zhService.selectJoinList(ZhangHu.class,
                 new MPJLambdaWrapper<ZhangHu>()
                         .select(ZhangHu::getSubjectsId, ZhangHu::getZhangHuCode)
-                        .eq(ZhangHu::getCompanyId, companyId)
+                        .eq(ZhangHu::getAccountingSetId, companyId)
                         .in(ZhangHu::getSubjectsId, subjIdList)
         );
 
@@ -885,11 +886,11 @@ public class CashierController {
     /**
      * 获取当月凭证列表
      *
-     * @param companyId 公司id
+     * @param accountingSetId 账套id
      * @param startDateLong 起始时间时间戳
      * @param endDateLong   结束时间时间戳
      */
-    private List<Certificate> getCertListByNow(Long companyId, Long startDateLong, Long endDateLong) {
+    private List<Certificate> getCertListByNow(Long accountingSetId, Long startDateLong, Long endDateLong) {
         //TODO L 待修正调用注释的方法
         //        return cashierService.listCertificate(INTEGER_ZERO, INTEGER_ZERO, companyId, LONG_ZERO, dateStr, Boolean.TRUE, Boolean.FALSE).getRecords();
 
@@ -907,7 +908,7 @@ public class CashierController {
                 // left join 附件表
                 .leftJoin(CertificateFile.class, CertificateFile::getCertificateId, Certificate::getId)
 
-                .eq(Certificate::getCompanyId, companyId)
+                .eq(Certificate::getAccountingSetId, accountingSetId)
                 .ge(Certificate::getDate, DateUtil.date(startDateLong))
                 .lt(Certificate::getDate, DateUtil.date(endDateLong))
                 .orderByDesc(Certificate::getDate)
@@ -1148,7 +1149,7 @@ public class CashierController {
                 new MPJLambdaWrapper<ZhangHu>()
                         .select(ZhangHu::getSubjectsId)
                         .eq(ZhangHu::getIsActive, Boolean.TRUE)
-                        .eq(ZhangHu::getCompanyId, LoginUser.getCompanyId())
+                        .eq(ZhangHu::getAccountingSetId, LoginUser.getLoginSetId())
                         .groupBy(ZhangHu::getSubjectsId)
                 //TODO L 分组支持null
         );

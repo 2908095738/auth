@@ -6,7 +6,6 @@ import com.bbs.financial.service.AssetImportRecordService;
 import com.bbs.financial.util.LoginUser;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
@@ -21,6 +20,6 @@ public class SearchImportRecord {
 
     @GetMapping("/asset/import/record")
     public Result<List<AssetImportRecord>> search() {
-        return Result.success(recordService.lambdaQuery().eq(AssetImportRecord::getCompanyId, LoginUser.getCompanyId()).list());
+        return Result.success(recordService.lambdaQuery().eq(AssetImportRecord::getAccountingSetId, LoginUser.getLoginSetId()).list());
     }
 }

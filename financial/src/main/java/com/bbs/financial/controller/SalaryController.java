@@ -125,8 +125,7 @@ public class SalaryController {
     @GetMapping("/salary/list")
     public Result<Page<SalaryVo>> list(SalaryListParam param)
     {
-        Long loginSetId = LoginUser.setLoginSetId();
-        if(Objects.isNull(loginSetId))return Result.failed("需要重新选择账套！");
+        Long loginSetId = LoginUser.getLoginSetId();
         param.setLoginSetId(loginSetId);
         return success(salaryService.selectJoinList(param));
     }
@@ -146,12 +145,11 @@ public class SalaryController {
      */
     @PostMapping("/salary/import")
     public Result<Boolean> add(@RequestParam("importDate") String importDate,@RequestParam("typeId") Long typeId,@RequestParam("file") MultipartFile file){
-        Long loginSetId = LoginUser.setLoginSetId();
-        if(Objects.isNull(loginSetId))return Result.failed("需要重新选择账套！");
+        Long loginSetId = LoginUser.getLoginSetId();
         Long netAmountCount = 0L;
         List<EmployeeSalary> employeeSalaryArrayList = new ArrayList<>();
         List<EmployeeItemExtend> employeeItemExtends = new ArrayList<>();
-        Long companyId = loginSetId;
+        Long accountingSetId = loginSetId;
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
 
         try {
@@ -162,24 +160,24 @@ public class SalaryController {
             list = list.stream().filter(item->!StrUtil.equals(item.getName(),"合计")).collect(Collectors.toList());
             log.debug("list:{}",list);
             if(CollUtil.isNotEmpty(list)){
-                Map<Integer, List<SalaryVoucherItemVo>> groupByType = salaryVoucherItemService.selectjoinByIsActive(companyId, 1).stream().collect(Collectors.groupingBy(SalaryVoucherItemVo::getType));
+                Map<Integer, List<SalaryVoucherItemVo>> groupByType = salaryVoucherItemService.selectjoinByIsActive(accountingSetId, 1).stream().collect(Collectors.groupingBy(SalaryVoucherItemVo::getType));
                 List<SalaryVoucherItemVo> salaryVoucherItemVoBySalary = groupByType.get(0);
                 List<User> userQuery = new ArrayList<>();//待查询用户信息列表
                 Set<String> groupNameList = new HashSet<>();//待查询部门名称列表
                 //循环计算总金额，判断，将员工信息放入待查询用户信息列表中，将部门名称放入待查询部门名称列表中
                 netAmountCount = initEmployeeSalary(list,netAmountCount,userQuery,groupNameList);
                 //根据部门名称查询部门信息
-                List<CompanyStructure> companyStructureList = companyAPI.searchStructureNames(companyId,groupNameList);
+                List<CompanyStructure> companyStructureList = companyAPI.searchStructureNames(accountingSetId,groupNameList);
                 //查不到部门信息提示手动添加
                 if(CollUtil.isEmpty(companyStructureList)){
                     return Result.failed("部门信息未查询到，请手动添加");
                 }
                 //根据工号、名称、身份证号、手机号查询员工信息
-                List<User> users = userAPI.searchByUserOrSave(companyId,userQuery);
+                List<User> users = userAPI.searchByUserOrSave(accountingSetId,userQuery);
                 if(CollUtil.isEmpty(users)){
                     return Result.failed("员工信息自动添加失败或未查询到，请手动处理");
                 }
-                Salary salary = new Salary().setCompanyId(companyId).setImportDate(importDate).setTypeId(typeId).setNetAmount(netAmountCount).setStaffCount(list.size());
+                Salary salary = new Salary().setAccountingSetId(accountingSetId).setImportDate(importDate).setTypeId(typeId).setNetAmount(netAmountCount).setStaffCount(list.size());
                 salaryService.save(salary);
 
                 initEmployeeSalary(salary.getId(),list,employeeSalaryArrayList,salaryVoucherItemVoBySalary,employeeItemExtends,users);

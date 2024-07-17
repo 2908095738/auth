@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RequestMapping
@@ -110,8 +111,9 @@ public class AddTemplate {
 
     @PutMapping("/certificate/template")
     public Result<Boolean> add(@RequestBody Param param) {
+        Long loginSetId = LoginUser.getLoginSetId();
         CertificateTemplate entity = converter.toEntity(param);
-        entity.setCompanyId(LoginUser.getCompanyId());
+        entity.setAccountingSetId(loginSetId);
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             db.save(entity);

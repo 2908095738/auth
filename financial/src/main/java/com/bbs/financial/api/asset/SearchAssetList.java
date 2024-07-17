@@ -210,7 +210,7 @@ public class SearchAssetList {
     public Result<Page<Asset>> list(Param param) {
         Asset entity = converter.toEntity(param);
 
-        entity.setCompanyId(LoginUser.getCompanyId());
+        entity.setAccountingSetId(LoginUser.getLoginSetId());
 
         Date createTime = converter(param.getCreateTimeLong());
         Date assetsCleanTime = converter(param.getAssetsCleanTime());
@@ -222,7 +222,7 @@ public class SearchAssetList {
                 .leftJoin(AssetType.class, AssetType::getId, Asset::getAssetTypeId, ext -> ext
                         .selectAssociation(AssetType.class, Asset::getAssetType)
                 )
-                .eq(Asset::getCompanyId, entity.getCompanyId())
+                .eq(Asset::getAccountingSetId, entity.getAccountingSetId())
                 .eq(Asset::getStatus, INTEGER_ZERO)
                 .and(nonNull(createTime), wrapper -> wrapper
                         .ge(Asset::getCreateTime, nonNull(createTime) ? DateUtil.beginOfMonth(createTime) : null)
@@ -260,8 +260,8 @@ public class SearchAssetList {
         boolean userIdMapIsNull = nonNull(userIdMap);
         if(companyStructureIdMapIsNull || userIdMapIsNull) {
             for (Asset asset : result.getRecords()) {
-                if(companyStructureIdMapIsNull && nonNull(asset.getCompanyId())) {
-                    asset.setCompanyStructure(companyStructureIdMap.get(asset.getCompanyId()));
+                if(companyStructureIdMapIsNull && nonNull(asset.getAccountingSetId())) {
+                    asset.setCompanyStructure(companyStructureIdMap.get(asset.getAccountingSetId()));
                 }
                 if(userIdMapIsNull) {
                     asset.setCreateUser(userIdMap.get(asset.getCreateBy()));

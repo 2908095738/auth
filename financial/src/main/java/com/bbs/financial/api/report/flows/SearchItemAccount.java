@@ -32,7 +32,7 @@ public class SearchItemAccount extends MPJBaseServiceImpl<ReportFlowsAccountMapp
                 .selectAll(Account.class)
                 .rightJoin(ReportFlowsAccount.class, ReportFlowsAccount::getAccountId, Account::getId)
                 .eq(ReportFlowsAccount::getCode, code)
-                .eq(ReportFlowsAccount::getCompanyId, LONG_ZERO)
+                .eq(ReportFlowsAccount::getAccountingSetId, LONG_ZERO)
         ).stream().filter(Objects::nonNull).collect(Collectors.toList()));
     }
 }

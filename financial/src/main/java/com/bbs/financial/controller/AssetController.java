@@ -125,13 +125,14 @@ public class AssetController {
      */
     @GetMapping(value = "/asset/schedule")
     public Result<Page<Asset>> getSchedule(Param param){
+        Long loginSetId = LoginUser.getLoginSetId();
         Page<Asset> page = assetMapper.selectJoinPage(param.toPage(), Asset.class, new MPJLambdaWrapper<Asset>()
                 .selectAssociation(AssetType.class, Asset::getAssetTypeName, t -> t.result(AssetType::getName))
                 .leftJoin(AssetType.class, AssetType::getId, Asset::getAssetTypeId)
                 .leftJoin(AssetDepreciationCertificate.class, AssetDepreciationCertificate::getAssetId, Asset::getId)
                 .eq(Asset::getIsDeleted, 0)
                 .ne(AssetDepreciationCertificate::getAssetId, 0)
-                .eq(Asset::getCompanyId, LoginUser.getCompanyId())
+                .eq(Asset::getAccountingSetId, loginSetId)
                 .like(nonNull(param.entryMonth), Asset::getUpdateTime, param.entryMonth)
         );
 
@@ -149,10 +150,8 @@ public class AssetController {
         }
 
         for (Asset asset : page.getRecords()) {
-            if(nonNull(asset.getCompanyId())) {
                 //部门
-                asset.setStructureName(companyStructureIdMap.getOrDefault(asset.getStructureId(), new CompanyStructure().setName("全部")).getName());
-            }
+            asset.setStructureName(companyStructureIdMap.getOrDefault(asset.getStructureId(), new CompanyStructure().setName("全部")).getName());
         }
         return success(page);
     }
@@ -171,7 +170,7 @@ public class AssetController {
                 .leftJoin(AssetType.class, AssetType::getId, Asset::getAssetTypeId)
                 .eq(Asset::getIsDeleted, 0)
                 .ne(AssetDepreciationCertificate::getAssetId, 0)
-                .eq(Asset::getCompanyId, LoginUser.getCompanyId())
+                .eq(Asset::getAccountingSetId, LoginUser.getLoginSetId())
                 .like(nonNull(param.entryMonth),Asset::getUpdateTime, param.entryMonth)
         );
         if (CollUtil.isNotEmpty(list)){
@@ -234,7 +233,7 @@ public class AssetController {
             }
 
             for (Asset asset : resultSummary) {
-                if(nonNull(asset.getCompanyId())) {
+                if(nonNull(asset.getAccountingSetId())) {
                     //部门
                     asset.setStructureName(companyStructureIdMap.getOrDefault(asset.getStructureId(), new CompanyStructure().setName("全部")).getName());
                 }
@@ -276,7 +275,7 @@ public class AssetController {
     ) {
         return success(assetService.listObjs(new QueryWrapper<Asset>()
                 .select("DISTINCT storage_place")
-                .eq("company_id", LoginUser.getCompanyId())
+                .eq("accounting_set_id", LoginUser.getLoginSetId())
                 .like(StringUtils.isNotBlank(name), "storage_place", name)
                 .isNotNull("storage_place")
                 .orderByAsc("storage_place")

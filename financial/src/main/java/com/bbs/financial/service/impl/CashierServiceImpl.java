@@ -32,7 +32,7 @@ public class CashierServiceImpl implements CashierService {
     private NoteService noteService;
 
     @Override
-    public Page<Certificate> listCertificate(Integer current, Integer size, Long companyId, Collection<Long> zhIdList, Long pastDateLong, Long startDateLong, Long endDateLong, boolean isMonth, boolean isPage) {
+    public Page<Certificate> listCertificate(Integer current, Integer size, Long accountingSetId, Collection<Long> zhIdList, Long pastDateLong, Long startDateLong, Long endDateLong, boolean isMonth, boolean isPage) {
         //TODO L SQL合一
 
         //SQL待使用凭证id列表
@@ -42,10 +42,10 @@ public class CashierServiceImpl implements CashierService {
         MPJLambdaWrapper<Certificate> wrappers = getDataWrapperByCertList();
 
         if (isMonth && !isZhIdList && isPage) {
-            return certificateService.selectJoinListPage(new Page<>(current, size), Certificate.class, getConditionByCertList(wrappers, companyId, inCertId, isMonth, pastDateLong, startDateLong, endDateLong));
+            return certificateService.selectJoinListPage(new Page<>(current, size), Certificate.class, getConditionByCertList(wrappers, accountingSetId, inCertId, isMonth, pastDateLong, startDateLong, endDateLong));
         } else {
             return new Page<Certificate>().setRecords(certificateService.selectJoinList(Certificate.class,
-                    getConditionByCertList(wrappers, companyId, inCertId, isMonth, pastDateLong, startDateLong, endDateLong)));
+                    getConditionByCertList(wrappers, accountingSetId, inCertId, isMonth, pastDateLong, startDateLong, endDateLong)));
         }
         }
 
@@ -59,7 +59,7 @@ public class CashierServiceImpl implements CashierService {
                 new MPJLambdaWrapper<Note>()
                         .select(Note::getCertificateId)
                         .select(Note::getZhId)
-                        .eq(Note::getCompanyId, LoginUser.getCompanyId())
+                        .eq(Note::getAccountingSetId, LoginUser.getLoginSetId())
                         .in(isZhIdList, Note::getZhId, zhIdList));
     }
 
@@ -74,7 +74,7 @@ public class CashierServiceImpl implements CashierService {
                         .leftJoin(PriceType.class, PriceType::getId, ZhangHu::getMTypeId)
 
                         .eq(ZhangHu::getIsActive, Boolean.TRUE)
-                        .eq(ZhangHu::getCompanyId, LoginUser.getCompanyId())
+                        .eq(ZhangHu::getAccountingSetId, LoginUser.getLoginSetId())
                         .eq(isZhId, ZhangHu::getId, zhId)
         );
 
@@ -118,16 +118,16 @@ public class CashierServiceImpl implements CashierService {
     /**
      * 获取查询凭证列表条件
      *
-     * @param companyId 公司id
+     * @param accountingSetId 账套id
      * @param inCertId  SQL待使用凭证id列表
      * @param isMonth   true：当月；false：当月及之前
      * @param pastDateLong  当前日期之前时间戳
      * @param startDateLong 起始时间时间戳
      * @param endDateLong   结束时间时间戳
      */
-    private MPJLambdaWrapper<Certificate> getConditionByCertList(MPJLambdaWrapper<Certificate> wrappers, Long companyId, List<Long> inCertId, boolean isMonth, Long pastDateLong, Long startDateLong, Long endDateLong) {
+    private MPJLambdaWrapper<Certificate> getConditionByCertList(MPJLambdaWrapper<Certificate> wrappers, Long accountingSetId, List<Long> inCertId, boolean isMonth, Long pastDateLong, Long startDateLong, Long endDateLong) {
         return wrappers
-                .eq(Certificate::getCompanyId, companyId)
+                .eq(Certificate::getAccountingSetId, accountingSetId)
                 .in(inCertId.size() > 0, Certificate::getId, inCertId)
 
                 .and(nonNull(startDateLong), ext -> ext

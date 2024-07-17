@@ -73,6 +73,7 @@ public class SearchCertificate {
             @RequestParam(name = "startDate", required = false) Long startDateLong,
             @RequestParam(name = "endDate", required = false) Long endDateLong
     ) {
+        Long loginSetId = LoginUser.getLoginSetId();
         Page<Certificate> certificatePage = certificateService.selectJoinListPage(new Page<>(current, size), Certificate.class, new MPJLambdaWrapper<Certificate>()
                 .selectAll(Certificate.class)
 
@@ -85,7 +86,7 @@ public class SearchCertificate {
                 .leftJoin(Account.class, Account::getId, CertificateAbstract::getAccountId)
                 .leftJoin(CertificateFile.class, CertificateFile::getCertificateId, Certificate::getId)
 
-                .eq(Certificate::getCompanyId, LoginUser.getCompanyId())
+                .eq(Certificate::getAccountingSetId, loginSetId)
                 .eq(nonNull(no),Certificate::getNo,no)
                 .in(nonNull(words) && words.size() > INTEGER_ZERO, Certificate::getCertificateWord, words)
                 .in(nonNull(createUserIds) && createUserIds.size() > INTEGER_ZERO, Certificate::getCreateBy)
@@ -135,9 +136,10 @@ public class SearchCertificate {
     public Result<List<CertificateWordEnum.Item>> searchCertificateWord(
             @RequestParam(required = false) String word
     ) {
+        Long loginSetId = LoginUser.getLoginSetId();
         List<Object> wordObjs = certificateService.listObjs(new LambdaQueryWrapper<Certificate>()
                 .select(Certificate::getCertificateWord)
-                .eq(Certificate::getCompanyId, LoginUser.getCompanyId())
+                .eq(Certificate::getAccountingSetId, loginSetId)
                 .groupBy(Certificate::getCertificateWord)
         );
 

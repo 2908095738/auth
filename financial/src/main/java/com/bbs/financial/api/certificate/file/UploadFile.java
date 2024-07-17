@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.Objects;
 
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
@@ -40,6 +41,7 @@ public class UploadFile {
             @RequestParam MultipartFile file,
             @RequestParam(required = false) Long certificateId
     ) {
+        Long loginSetId = LoginUser.getLoginSetId();
         String contentType = file.getContentType();
         DFS.Upload.VO vo = upload.uploadFile(
                 BusinessCode.FINANCIAL_CERTIFICATE,
@@ -51,7 +53,7 @@ public class UploadFile {
                 FileType.IMAGE.getCode() : FileType.FILE.getCode();
         CertificateFile entity = new CertificateFile(
                 file.getOriginalFilename(),
-                LoginUser.getCompanyId(),
+                loginSetId,
                 certificateWord,
                 no,
                 new Date(Long.parseLong(date)),

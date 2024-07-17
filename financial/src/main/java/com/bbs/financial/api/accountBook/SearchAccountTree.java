@@ -31,7 +31,7 @@ public class SearchAccountTree {
 
     @GetMapping("/certificate/accountTree")
     public Result<List<Tree<Long>>> accountTree(@RequestParam("createTime") String certificateCreateTime) {
-        List<Tree<Long>> list = accountService.selectTree(LoginUser.getCompanyId(), certificateCreateTime);
+        List<Tree<Long>> list = accountService.selectTree(LoginUser.getLoginSetId(), certificateCreateTime);
 
         return Result.success(list);
     }
@@ -39,7 +39,7 @@ public class SearchAccountTree {
 
     @GetMapping("/certificate/quantity/accountTree")
     public Result<List<Tree<Long>>> accountQuantityAmountTree(@RequestParam("createTime") String certificateCreateTime) {
-        List<Tree<Long>> list = accountService.selectQuantityAmountTree(LoginUser.getCompanyId(), certificateCreateTime);
+        List<Tree<Long>> list = accountService.selectQuantityAmountTree(LoginUser.getLoginSetId(), certificateCreateTime);
         return Result.success(list);
     }
 
@@ -49,7 +49,7 @@ public class SearchAccountTree {
                                                              @RequestParam("accountId")Long accountId,
                                                              @RequestParam("current")Integer current,
                                                              @RequestParam("size")Integer size) {
-        Page<CertificateAbstract> list = certificateAbstractService.selectPage(LoginUser.getCompanyId(), certificateCreateTime, accountId, current, size);
+        Page<CertificateAbstract> list = certificateAbstractService.selectPage(LoginUser.getLoginSetId(), certificateCreateTime, accountId, current, size);
         certificateAbstractService.initDataByMonth(list.getRecords());
         return Result.success(list);
     }
@@ -59,7 +59,7 @@ public class SearchAccountTree {
      */
     public List<CertificateAbstract> currentMonthSubsidiaryLedger() {
         DateTime now = DateTime.now();
-        List<CertificateAbstract> list = certificateAbstractService.selectList(LoginUser.getCompanyId(), now.toString("yyyy-MM"));
+        List<CertificateAbstract> list = certificateAbstractService.selectList(LoginUser.getLoginSetId(), now.toString("yyyy-MM"));
         certificateAbstractService.initDataByNo(list);
         return list;
     }
@@ -69,7 +69,7 @@ public class SearchAccountTree {
     public Result<Page<CertificateAbstract>> accountAbstract(@RequestParam("createTime") String certificateCreateTime,
                                                              @RequestParam("current")Integer current,
                                                              @RequestParam("size")Integer size) {
-        Page<CertificateAbstract> list = certificateAbstractService.selectPage(LoginUser.getCompanyId(), certificateCreateTime,null, current, size);
+        Page<CertificateAbstract> list = certificateAbstractService.selectPage(LoginUser.getLoginSetId(), certificateCreateTime,null, current, size);
         certificateAbstractService.initDataByNo(list.getRecords());
         List<String> emnu = Lists.newArrayList("期初余额", "本期合计", "本年累计");
         list.setRecords(list.getRecords().stream().filter(item -> emnu.contains(item.getCertificateAbstract())).collect(Collectors.toList()));
@@ -81,7 +81,7 @@ public class SearchAccountTree {
      */
     public List<CertificateAbstract> currentMonthGeneralLedger() {
         DateTime now = DateTime.now();
-        List<CertificateAbstract> list = certificateAbstractService.selectList(LoginUser.getCompanyId(), now.toString("yyyy-MM"));
+        List<CertificateAbstract> list = certificateAbstractService.selectList(LoginUser.getLoginSetId(), now.toString("yyyy-MM"));
         certificateAbstractService.initDataByNo(list);
         List<String> enums = Lists.newArrayList("期初余额", "本期合计", "本年累计");
         return list.stream().filter(item -> enums.contains(item.getCertificateAbstract())).collect(Collectors.toList());

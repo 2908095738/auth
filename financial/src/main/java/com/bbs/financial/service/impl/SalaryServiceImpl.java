@@ -12,7 +12,6 @@ import com.bbs.financial.entity.Salary;
 import com.bbs.financial.entity.SalaryCalculate;
 import com.bbs.financial.mapper.SalaryMapper;
 import com.bbs.financial.service.SalaryService;
-import com.bbs.financial.util.LoginUser;
 import com.bbs.financial.vo.SalaryVo;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
@@ -58,7 +57,7 @@ public class SalaryServiceImpl extends MPJBaseServiceImpl<SalaryMapper, Salary>
                 .eq(Salary::getIsDeleted,0)
                 .eq(Objects.nonNull(param.getTypeId()),Salary::getTypeId,param.getTypeId())
                 .eq(Objects.nonNull(param.getImportDate()),Salary::getImportDate,param.getImportDate())
-                .eq(Salary::getCompanyId, LoginUser.getCompanyId())
+                .eq(Salary::getAccountingSetId, param.getLoginSetId())
                 .orderBy(true,true,Salary::getImportDate)
         );
     }

@@ -4,11 +4,11 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
 
 /**
  * 结账具体项
@@ -28,8 +28,8 @@ public class CloseType implements Serializable {
     /**
      * 公司ID
      */
-    @TableField(value = "company_id")
-    private Long companyId;
+    @TableField(value = "accounting_set_id")
+    private Long accountingSetId;
 
     /**
      * 结账项编码
@@ -61,8 +61,8 @@ public class CloseType implements Serializable {
     @TableField(value = "weight")
     private Integer weight;
 
-    public CloseType(Long companyId, String typeCode, String typeName, Long money, Integer isGenerateCertificate, Integer weight) {
-        this.companyId = companyId;
+    public CloseType(Long accountingSetId, String typeCode, String typeName, Long money, Integer isGenerateCertificate, Integer weight) {
+        this.accountingSetId = accountingSetId;
         this.typeCode = typeCode;
         this.typeName = typeName;
         this.money = money;

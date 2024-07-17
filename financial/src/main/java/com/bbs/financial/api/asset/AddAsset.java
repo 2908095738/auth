@@ -109,7 +109,7 @@ public class AddAsset {
                             beforValue = assetTypeMap.get((long) beforValue).getName();
                             value = assetTypeMap.get((long) value).getName();
                         }
-                        assetChangeLogs.add(new AssetChangeLog(dbAsset.getCompanyId(), dbAsset.getNo(), dbAsset.getName(),
+                        assetChangeLogs.add(new AssetChangeLog(dbAsset.getAccountingSetId(), dbAsset.getNo(), dbAsset.getName(),
                                 "变动 "+name,String.valueOf(beforValue), String.valueOf(value),LoginUser.getId()));
                     }
                 }
@@ -141,9 +141,9 @@ public class AddAsset {
 
     private void generateAndFillNo(Asset asset) {
         // 如果未设置编码，则使用【公司ID + 日期 + 已有资产数量（去重）】当作默认编码
-        Long count = assetService.lambdaQuery().eq(Asset::getCompanyId, asset.getCompanyId()).count();
+        Long count = assetService.lambdaQuery().eq(Asset::getAccountingSetId, asset.getAccountingSetId()).count();
         asset.setNo(
-                asset.getCompanyId() +
+                asset.getAccountingSetId() +
                         DateUtil.format(new Date(), "yyyyMMdd") +
                         (Objects.equals(count, LONG_ZERO) ? LONG_ONE : count+LONG_ONE)
         );

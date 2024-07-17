@@ -102,9 +102,9 @@ public class ImportAssetFile {
 
     @PostMapping("/asset/import/template")
     public Result<Boolean> importFile( @RequestParam MultipartFile file) throws IllegalArgumentException {
-
+        Long loginSetId = LoginUser.getLoginSetId();
         // 创建导入记录
-        AssetImportRecord record = new AssetImportRecord(LoginUser.getCompanyId(), LoginUser.getId());
+        AssetImportRecord record = new AssetImportRecord(loginSetId, LoginUser.getId());
 
         // 解析 excel
         List<Asset> assets = parseExcelToAssetList(file);
@@ -112,7 +112,7 @@ public class ImportAssetFile {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             // 填充各种字段（例如创建人，通过创建人名称查询用户信息，将 UID 回填）
-            fillProperty(assets, LoginUser.getCompanyId());
+            fillProperty(assets, loginSetId,LoginUser.getCompanyId());
 
             // 批量入库
             boolean addResult = assetService.saveBatch(assets);
@@ -170,11 +170,11 @@ public class ImportAssetFile {
         return assets;
     }
 
-    private void fillProperty(List<Asset> assets, Long companyId) {
+    private void fillProperty(List<Asset> assets, Long loginSetId, Long companyId) {
         assets.forEach(asset -> {
-            asset.setCompanyId(companyId);
-            // 如果未设置编码，则使用【公司ID + 日期 + 已有资产数量（去重）】当作默认编码
-            fillNo(asset, companyId);
+            asset.setAccountingSetId(loginSetId);
+            // 如果未设置编码，则使用【账套ID + 日期 + 已有资产数量（去重）】当作默认编码
+            fillNo(asset, loginSetId);
             fillAssetType(asset);
             fillStructure(asset, companyId);
             fillNumUnit(asset);
@@ -356,11 +356,11 @@ public class ImportAssetFile {
             if(nonNull(assetType)) asset.setAssetTypeId(assetType.getId());
         }
     }
-    private void fillNo(Asset asset, Long companyId) {
+    private void fillNo(Asset asset, Long accountingSetId) {
         if(isBlank(asset.getNo())) {
-            Long count = assetService.lambdaQuery().eq(Asset::getCompanyId, companyId).count();
+            Long count = assetService.lambdaQuery().eq(Asset::getAccountingSetId, accountingSetId).count();
             asset.setNo(
-                    companyId +
+                    accountingSetId +
                             DateUtil.format(new Date(), "yyyyMMdd") +
                             (Objects.equals(count, LONG_ZERO) ? LONG_ONE : count)
             );

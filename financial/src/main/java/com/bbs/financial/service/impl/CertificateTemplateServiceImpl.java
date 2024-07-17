@@ -23,7 +23,7 @@ public class CertificateTemplateServiceImpl extends MPJBaseServiceImpl<Certifica
     implements CertificateTemplateService{
 
     @Override
-    public List<CertificateTemplate> getJoinTemplate(Long companyId, List<String> templateNames) {
+    public List<CertificateTemplate> getJoinTemplate(Long accountingSetId, List<String> templateNames) {
         return selectJoinList(CertificateTemplate.class, new MPJLambdaWrapper<CertificateTemplate>()
                 .selectAll(CertificateTemplate.class)
                 .selectCollection(CertificateTemplateAbstract.class, CertificateTemplate::getTemplateAbstractList, collection -> collection
@@ -34,7 +34,7 @@ public class CertificateTemplateServiceImpl extends MPJBaseServiceImpl<Certifica
                 .leftJoin(PriceType.class, PriceType::getId, CertificateTemplateAbstract::getPriceTypeId)
                 .leftJoin(Account.class, Account::getId, CertificateTemplateAbstract::getAccountId)
                 .eq(CertificateTemplate::getIsActive, 1)
-                .eq(CertificateTemplate::getCompanyId, companyId)
+                .eq(CertificateTemplate::getAccountingSetId, accountingSetId)
                 .in(CollUtil.isNotEmpty(templateNames), CertificateTemplate::getType, templateNames)
         );
     }

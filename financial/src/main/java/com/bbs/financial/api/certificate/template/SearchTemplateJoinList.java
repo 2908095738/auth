@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.Objects;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -36,6 +37,7 @@ public class SearchTemplateJoinList {
             @RequestParam(defaultValue = "1") Integer current,
             @RequestParam(defaultValue = "10") Integer size
     ) {
+        Long loginSetId = LoginUser.getLoginSetId();
         return Result.success(
                 db.selectJoinListPage(new Page<>(current, size), CertificateTemplate.class, new MPJLambdaWrapper<CertificateTemplate>()
                         .selectAll(CertificateTemplate.class)
@@ -46,7 +48,7 @@ public class SearchTemplateJoinList {
                         .leftJoin(CertificateTemplateAbstract.class, CertificateTemplateAbstract::getTemplateId, CertificateTemplate::getId)
                         .leftJoin(PriceType.class, PriceType::getId, CertificateTemplateAbstract::getPriceTypeId)
                         .leftJoin(Account.class, Account::getId, CertificateTemplateAbstract::getAccountId)
-                        .eq(CertificateTemplate::getCompanyId, LoginUser.getCompanyId())
+                        .eq(CertificateTemplate::getAccountingSetId, loginSetId)
                         .like(isNotBlank(type), CertificateTemplate::getType, type)
                         .in(isNotBlank(typeNames), CertificateTemplate::getType, isNotBlank(typeNames) ? asList(typeNames.split(",")) : null)
                         .and(isNotBlank(name) || isNotBlank(comment), ext -> ext

@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.financial.entity.SalaryType;
 import com.bbs.financial.service.SalaryTypeService;
+import com.bbs.financial.util.LoginUser;
 import lombok.Data;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,7 +55,7 @@ public class SalaryTypeController {
     @PostMapping("/type")
     public Result<Boolean> add(@RequestBody ListParam param)
     {
-        salaryTypeService.save(new SalaryType().setTypeName(param.getTypeName()).setCompanyId(param.getCompanyId()));
+        salaryTypeService.save(new SalaryType().setTypeName(param.getTypeName()).setAccountingSetId(LoginUser.getLoginSetId()));
         return success();
     }
 

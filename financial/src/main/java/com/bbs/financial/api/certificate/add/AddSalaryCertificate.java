@@ -80,12 +80,13 @@ public class AddSalaryCertificate {
 
     @PutMapping("/salary/certificate")
     public Result<Boolean> add(@RequestBody Param param) {
+        Long loginSetId = LoginUser.getLoginSetId();
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-        List<CertificateTemplate> template = certificateTemplateService.getJoinTemplate(LoginUser.getCompanyId(), param.templateNames);
+        List<CertificateTemplate> template = certificateTemplateService.getJoinTemplate(loginSetId, param.templateNames);
         if (CollUtil.isEmpty(template)) {
             throw new RuntimeException("模板不存在");
         }
-        long no = db.lambdaQuery().eq(Certificate::getCompanyId, LoginUser.getCompanyId())
+        long no = db.lambdaQuery().eq(Certificate::getAccountingSetId, loginSetId)
                 .ge(Certificate::getCreateTime, DateUtil.beginOfMonth(new Date()))
                 .lt(Certificate::getCreateTime, DateUtil.beginOfMonth(DateUtil.offsetMonth(new Date(), INTEGER_ONE)))
                 .count() + INTEGER_ONE;
@@ -93,7 +94,7 @@ public class AddSalaryCertificate {
         try {
             for (CertificateTemplate certificateTemplate : template) {
                 Certificate certificate = new Certificate();
-                certificate.setCompanyId(LoginUser.getCompanyId());
+                certificate.setAccountingSetId(loginSetId);
                 certificate.setCertificateWord(CertificateWordEnum.RECORD);
                 certificate.setNo(no);
                 certificate.setDate(new Date());

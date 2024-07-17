@@ -14,9 +14,9 @@ import java.util.List;
 */
 public interface CertificateAbstractService extends MPJBaseService<CertificateAbstract> {
 
-    Page<CertificateAbstract> selectPage(Long companyId, String certificateCreateTime, Long accountId, Integer current, Integer size);
+    Page<CertificateAbstract> selectPage(Long accountingSetId, String certificateCreateTime, Long accountId, Integer current, Integer size);
 
-    List<CertificateAbstract> selectList(Long companyId, String certificateCreateTime);
+    List<CertificateAbstract> selectList(Long accountingSetId, String certificateCreateTime);
 
     void initDataByNo(Page<CertificateAbstract> list);
 
@@ -24,8 +24,8 @@ public interface CertificateAbstractService extends MPJBaseService<CertificateAb
 
     void initDataByMonth(List<CertificateAbstract> list);
 
-    List<CertificateAbstract> selectList(Long companyId, Date certificateStartCreateTime, Date certificateEndCreateTime, Long accountId);
+    List<CertificateAbstract> selectList(Long accountingSetId, Date certificateStartCreateTime, Date certificateEndCreateTime, Long accountId);
 
-    List<CertificateAbstract> selectQuantityAmountList(Long companyId, String certificateCreateTime, Long accountId);
+    List<CertificateAbstract> selectQuantityAmountList(Long accountingSetId, String certificateCreateTime, Long accountId);
 
 }

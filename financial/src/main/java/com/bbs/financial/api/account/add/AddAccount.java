@@ -132,8 +132,7 @@ public class AddAccount {
         String no = param.getNo();
         boolean isChild = no.indexOf("-") > -INTEGER_ONE;
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-
-
+        Long loginSetId = LoginUser.getLoginSetId();
         try {
             if(isChild) {
                 String[] split = no.split("-");
@@ -153,7 +152,7 @@ public class AddAccount {
             }
             db.save(account);
             accountCurrencyService.saveBatch(param.getCurrencyList().stream().peek(currency -> {
-                currency.setCompanyId(LoginUser.getCompanyId());
+                currency.setAccountingSetId(loginSetId);
                 currency.setCreateBy(LoginUser.getId());
             }).collect(Collectors.toList()));
             transactionManager.commit(transaction);

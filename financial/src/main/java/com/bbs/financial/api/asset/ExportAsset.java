@@ -71,7 +71,7 @@ public class ExportAsset {
         Date finalEndDate = endDate;
         List<Asset> assets = db.listDeep(new MPJLambdaWrapper<Asset>()
                 .selectAll(Asset.class)
-                .eq(Asset::getCompanyId, LoginUser.getCompanyId())
+                .eq(Asset::getAccountingSetId, LoginUser.getLoginSetId())
                 .or(nonNull(startDate), wrapper -> wrapper
                         .ge(Asset::getCreateTime, nonNull(finalStartDate) ? DateUtil.beginOfMonth(finalStartDate) : null)
                         // 最大时间使用传入的 endDate 取当月最后一天（如果只查单月，则 endDate 可空，并使用传入的 startDate 替换计算最后一天）

@@ -84,7 +84,7 @@ public class AddNote {
         Note note = noteConverter.toEntity(param);
         try {
             note.setCreateBy(LoginUser.getId());
-            note.setCompanyId(LoginUser.getCompanyId());
+            note.setAccountingSetId(LoginUser.getLoginSetId());
 
             orm.save(note);
             transactionManager.commit(transaction);

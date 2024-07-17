@@ -3,6 +3,7 @@ package com.bbs.financial.util;
 
 import cn.hutool.extra.spring.SpringUtil;
 import com.bbs.api.auth.User;
+import com.bbs.exception.NoAccountingSetException;
 import com.bbs.financial.enums.RedisKeys;
 import org.springframework.context.annotation.Configuration;
 
@@ -49,13 +50,13 @@ public class LoginUser {
     }
 
 
-    public static Long setLoginSetId(){
+    public static Long getLoginSetId(){
         RedisUtil redisUtil = SpringUtil.getBean(RedisUtil.class);
         User user = LoginUser.get();
         Object o = redisUtil.get(RedisKeys.FINANCIAL_USER_SET.key(user.getId() + "_" + user.getCompanyId()));
         if(Objects.isNull(o)){
             //返回需要重新选择账套
-            return null;
+            throw new NoAccountingSetException();
         }{
             return Long.valueOf(o.toString());
         }

@@ -4,8 +4,9 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
 import lombok.Data;
+
+import java.io.Serializable;
 
 /**
  * 报表：现金流量项 & 科目关联
@@ -41,16 +42,16 @@ public class ReportFlowsAccount implements Serializable {
     /**
      * 公司ID
      */
-    @TableField(value = "company_id")
-    private Long companyId;
+    @TableField(value = "accounting_set_id")
+    private Long accountingSetId;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
-    public ReportFlowsAccount(String code, Long accountId, Integer isDefault, Long companyId) {
+    public ReportFlowsAccount(String code, Long accountId, Integer isDefault, Long accountingSetId) {
         this.code = code;
         this.accountId = accountId;
         this.isDefault = isDefault;
-        this.companyId = companyId;
+        this.accountingSetId = accountingSetId;
     }
 }

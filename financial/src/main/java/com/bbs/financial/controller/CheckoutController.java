@@ -42,7 +42,7 @@ public class CheckoutController {
      */
     @GetMapping("/getOri")
     public Result<Date> getOriByCheck() {
-        return checkoutService.getOriByCheck(LoginUser.getCompanyId());
+        return checkoutService.getOriByCheck(LoginUser.getLoginSetId());
     }
 
     /**
