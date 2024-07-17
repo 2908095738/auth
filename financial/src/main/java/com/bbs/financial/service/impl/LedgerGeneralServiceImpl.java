@@ -6,15 +6,13 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.financial.entity.Account;
-import com.bbs.financial.entity.Certificate;
 import com.bbs.financial.entity.LedgerGeneral;
 import com.bbs.financial.enums.AccountAbstractEnum;
 import com.bbs.financial.enums.BorrowOrLoansType;
 import com.bbs.financial.exception.DataMissingException;
-import com.bbs.financial.service.LedgerGeneralService;
 import com.bbs.financial.mapper.LedgerGeneralMapper;
+import com.bbs.financial.service.LedgerGeneralService;
 import com.bbs.financial.util.LoginUser;
-import lombok.Data;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -22,7 +20,6 @@ import java.util.Date;
 import java.util.List;
 
 import static com.bbs.financial.enums.AccountAbstractEnum.*;
-import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.math.NumberUtils.*;
@@ -49,7 +46,7 @@ public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, L
         LedgerGeneral currentMonthAccountLedgerGeneralList = lambdaQuery()
                 .ge(LedgerGeneral::getCreateTime, DateUtil.beginOfMonth(date))
                 .lt(LedgerGeneral::getCreateTime, DateUtil.endOfMonth(date))
-                .eq(LedgerGeneral::getCompanyId, LoginUser.getCompanyId())
+                .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
                 .eq(LedgerGeneral::getCertificateAbstract, CURRENT_TOTAL.getName())
                 .one();
         List<LedgerGeneral> needSaveLedgerGeneral = new ArrayList<>();
@@ -58,7 +55,7 @@ public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, L
         // 没有【年初余额】就初始化
         if(isNull(yearBeginningBalance)) {
             List<LedgerGeneral> allCurrentYearCumulative = lambdaQuery()
-                    .eq(LedgerGeneral::getCompanyId, LoginUser.getCompanyId())
+                    .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
                     .eq(LedgerGeneral::getCertificateAbstract, CURRENT_YEAR_CUMULATIVE.getName())
                     .list();
             LedgerGeneral ledgerGeneral;
@@ -115,7 +112,7 @@ public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, L
             LedgerGeneral lastYearCurrentYearCumulative = lambdaQuery()
                     .ge(LedgerGeneral::getCreateTime, lastYearDateTime)
                     .lt(LedgerGeneral::getCreateTime, DateUtil.endOfYear(lastYearDateTime))
-                    .eq(LedgerGeneral::getCompanyId, LoginUser.getCompanyId())
+                    .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
                     .eq(LedgerGeneral::getCertificateAbstract, CURRENT_YEAR_CUMULATIVE.getName())
                     .one();
             // 2.2 如果上一年存在【本年累计】
@@ -135,7 +132,7 @@ public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, L
                 if (useOldData) {
                     // 2.2.2.1 如果使用旧数据，则使用最近年的【本年累计】作为本年【年初余额】
                     List<LedgerGeneral> allCurrentYearCumulative = lambdaQuery()    //查询历史【本年累计】
-                            .eq(LedgerGeneral::getCompanyId, LoginUser.getCompanyId())
+                            .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
                             .eq(LedgerGeneral::getCertificateAbstract, CURRENT_YEAR_CUMULATIVE.getName())
                             .list();
                     if (allCurrentYearCumulative.size() > INTEGER_ZERO) {
@@ -169,7 +166,7 @@ public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, L
             LedgerGeneral lastMonthOpeningBalance = lambdaQuery()
                     .ge(LedgerGeneral::getCreateTime, DateUtil.beginOfMonth(lastMonth))
                     .lt(LedgerGeneral::getCreateTime, DateUtil.endOfYear(lastMonth))
-                    .eq(LedgerGeneral::getCompanyId, LoginUser.getCompanyId())
+                    .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
                     .eq(LedgerGeneral::getCertificateAbstract, CURRENT_TOTAL.getName())
                     .one();
             // 2.2 如果上一月存在【本期合计】
@@ -189,7 +186,7 @@ public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, L
                 if (useOldData) {
                     // 2.2.2.1 如果使用旧数据，则使用最近年的【本年累计】作为本年【年初余额】
                     List<LedgerGeneral> allOpeningBalance = lambdaQuery()    //查询历史【本年累计】
-                            .eq(LedgerGeneral::getCompanyId, LoginUser.getCompanyId())
+                            .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
                             .eq(LedgerGeneral::getCertificateAbstract, CURRENT_TOTAL.getName())
                             .list();
                     if (allOpeningBalance.size() > INTEGER_ZERO) {
@@ -219,7 +216,7 @@ public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, L
         return lambdaQuery()
                 .ge(LedgerGeneral::getCreateTime, DateUtil.beginOfYear(date))
                 .lt(LedgerGeneral::getCreateTime, DateUtil.endOfYear(date))
-                .eq(LedgerGeneral::getCompanyId, LoginUser.getCompanyId())
+                .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
                 .eq(LedgerGeneral::getCertificateAbstract, BEGINNING_BALANCE.getName())
                 .one();
     }
@@ -231,7 +228,7 @@ public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, L
         return lambdaQuery()
                 .ge(LedgerGeneral::getCreateTime, DateUtil.beginOfMonth(date))
                 .lt(LedgerGeneral::getCreateTime, DateUtil.endOfMonth(date))
-                .eq(LedgerGeneral::getCompanyId, LoginUser.getCompanyId())
+                .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
                 .eq(LedgerGeneral::getCertificateAbstract, OPENING_BALANCE.getName())
                 .one();
     }
@@ -243,7 +240,7 @@ public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, L
         return lambdaQuery()
                 .ge(LedgerGeneral::getCreateTime, DateUtil.beginOfMonth(date))
                 .lt(LedgerGeneral::getCreateTime, DateUtil.endOfMonth(date))
-                .eq(LedgerGeneral::getCompanyId, LoginUser.getCompanyId())
+                .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
                 .eq(LedgerGeneral::getCertificateAbstract, CURRENT_TOTAL.getName())
                 .one();
     }
@@ -255,7 +252,7 @@ public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, L
         return lambdaQuery()
                 .ge(LedgerGeneral::getCreateTime, DateUtil.beginOfYear(date))
                 .lt(LedgerGeneral::getCreateTime, DateUtil.endOfYear(date))
-                .eq(LedgerGeneral::getCompanyId, LoginUser.getCompanyId())
+                .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
                 .eq(LedgerGeneral::getCertificateAbstract, CURRENT_YEAR_CUMULATIVE.getName())
                 .one();
     }

@@ -4,11 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
-import java.util.Date;
-
 import com.baomidou.mybatisplus.extension.activerecord.Model;
-import com.bbs.financial.enums.AccountAbstractEnum;
 import com.bbs.financial.util.LoginUser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,9 +12,11 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.Serializable;
+import java.util.Date;
+
 import static cn.hutool.core.lang.Opt.ofNullable;
 import static org.apache.commons.lang3.math.NumberUtils.*;
-import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
 
 /**
  * 总账
@@ -108,8 +106,8 @@ public class LedgerGeneral extends Model<LedgerGeneral> implements Serializable 
     @TableField(value = "balance")
     private Long balance;
 
-    @TableField(value = "company_id")
-    private Long companyId;
+    @TableField(value = "accounting_set_id")
+    private Long accountingSetId;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

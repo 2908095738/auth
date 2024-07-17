@@ -196,7 +196,7 @@ public class AddCertificate {
                 .ge(LedgerGeneral::getCreateTime, DateUtil.beginOfMonth(date))
                 .lt(LedgerGeneral::getCreateTime, DateUtil.endOfMonth(date))
                 // 筛选公司
-                .eq(LedgerGeneral::getCompanyId, LoginUser.getCompanyId())
+                .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
                 // 筛选科目
                 .in(LedgerGeneral::getAccountId, accountIds)
                 // 筛选【本期合计】
