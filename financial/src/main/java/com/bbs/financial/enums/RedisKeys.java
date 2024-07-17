@@ -14,77 +14,77 @@ import java.util.Map;
 @Getter
 public enum RedisKeys {
 
-//
-//    CONTENT_TMP_FILE_CLEAN("content:file:upload:tmp", "每日清除内容临时文件")
-//    ;
-//
-//    private final String prefix;
-//
-//    private final String description;
-//
-//    public final Lock LOCK;
-//
-//
-//    RedisKeys(String prefix, String description) {
-//        this.prefix = prefix;
-//        this.description = description;
-//        this.LOCK = new Lock(prefix, description);
-//    }
-//
-//    private static final String LOCK_SUFFIX = "lock";
-//
-//    public String key() {
-//        return prefix;
-//    }
-//
-//    /**
-//     * key
-//     * @param mark 业务标识 / 表名 / 主键
-//     * @return key
-//     */
-//    public String key(String mark) {
-//        return prefix + ":" + mark;
-//    }
-//
-//    @Override
-//    public String toString() {
-//        return key();
-//    }
-//
-//    @Data
-//    @AllArgsConstructor
-//    public static class Lock {
-//
-//        private final String prefix;
-//
-//        private final String description;
-//
-//        /**
-//         * 锁 key
-//         * @param mark 业务标识 / 表名 / 主键
-//         * @return key
-//         */
-//        public String key(String mark) {
-//            return prefix + mark + ":" + LOCK_SUFFIX;
-//        }
-//        public String key(Long mark) {
-//            return key(mark.toString());
-//        }
-//
-//        public String key(Integer mark) {
-//            return key(mark.toString());
-//        }
-//
-//        public String key() {
-//            return prefix + ":" + LOCK_SUFFIX;
-//        }
-//
-//        @Override
-//        public String toString() {
-//            return key();
-//        }
-//    }
-//
-//    public static final Map<String,RedisKeys> map = EnumUtil.getEnumMap(RedisKeys.class);
+
+    FINANCIAL_USER_SET("financial_user_set", "当前用户选中的账套id")
+    ;
+
+    private final String prefix;
+
+    private final String description;
+
+    public final Lock LOCK;
+
+
+    RedisKeys(String prefix, String description) {
+        this.prefix = prefix;
+        this.description = description;
+        this.LOCK = new Lock(prefix, description);
+    }
+
+    private static final String LOCK_SUFFIX = "lock";
+
+    public String key() {
+        return prefix;
+    }
+
+    /**
+     * key
+     * @param mark 业务标识 / 表名 / 主键
+     * @return key
+     */
+    public String key(String mark) {
+        return prefix + ":" + mark;
+    }
+
+    @Override
+    public String toString() {
+        return key();
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class Lock {
+
+        private final String prefix;
+
+        private final String description;
+
+        /**
+         * 锁 key
+         * @param mark 业务标识 / 表名 / 主键
+         * @return key
+         */
+        public String key(String mark) {
+            return prefix + mark + ":" + LOCK_SUFFIX;
+        }
+        public String key(Long mark) {
+            return key(mark.toString());
+        }
+
+        public String key(Integer mark) {
+            return key(mark.toString());
+        }
+
+        public String key() {
+            return prefix + ":" + LOCK_SUFFIX;
+        }
+
+        @Override
+        public String toString() {
+            return key();
+        }
+    }
+
+    public static final Map<String,RedisKeys> map = EnumUtil.getEnumMap(RedisKeys.class);
 
 }

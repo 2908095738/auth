@@ -57,6 +57,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -99,6 +100,7 @@ public class SalaryController {
     private DataSourceTransactionManager transactionManager;
 
 
+
     @Data
     public static class SalaryListParam extends BaseParam {
 
@@ -112,6 +114,8 @@ public class SalaryController {
          */
         private Integer typeId;
 
+        private Long LoginSetId;
+
 
     }
 
@@ -121,6 +125,9 @@ public class SalaryController {
     @GetMapping("/salary/list")
     public Result<Page<SalaryVo>> list(SalaryListParam param)
     {
+        Long loginSetId = LoginUser.setLoginSetId();
+        if(Objects.isNull(loginSetId))return Result.failed("需要重新选择账套！");
+        param.setLoginSetId(loginSetId);
         return success(salaryService.selectJoinList(param));
     }
 
@@ -139,10 +146,12 @@ public class SalaryController {
      */
     @PostMapping("/salary/import")
     public Result<Boolean> add(@RequestParam("importDate") String importDate,@RequestParam("typeId") Long typeId,@RequestParam("file") MultipartFile file){
+        Long loginSetId = LoginUser.setLoginSetId();
+        if(Objects.isNull(loginSetId))return Result.failed("需要重新选择账套！");
         Long netAmountCount = 0L;
         List<EmployeeSalary> employeeSalaryArrayList = new ArrayList<>();
         List<EmployeeItemExtend> employeeItemExtends = new ArrayList<>();
-        Long companyId = LoginUser.getCompanyId();
+        Long companyId = loginSetId;
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
 
         try {
@@ -317,4 +326,7 @@ public class SalaryController {
         employeeItemExtendService.remove(new QueryWrapper<EmployeeItemExtend>().in("salary_id",ids));
         return success();
     }
+
+
+
 }

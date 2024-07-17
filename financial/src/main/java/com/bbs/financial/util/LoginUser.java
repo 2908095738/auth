@@ -1,11 +1,16 @@
 package com.bbs.financial.util;
 
 
+import cn.hutool.extra.spring.SpringUtil;
 import com.bbs.api.auth.User;
+import com.bbs.financial.enums.RedisKeys;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.Objects;
 
 @Configuration
 public class LoginUser {
+
 
 
     private static final ThreadLocal<User> userThreadLocal = new ThreadLocal<>();
@@ -41,5 +46,18 @@ public class LoginUser {
      */
     public static void remove(){
         userThreadLocal.remove();
+    }
+
+
+    public static Long setLoginSetId(){
+        RedisUtil redisUtil = SpringUtil.getBean(RedisUtil.class);
+        User user = LoginUser.get();
+        Object o = redisUtil.get(RedisKeys.FINANCIAL_USER_SET.key(user.getId() + "_" + user.getCompanyId()));
+        if(Objects.isNull(o)){
+            //返回需要重新选择账套
+            return null;
+        }{
+            return Long.valueOf(o.toString());
+        }
     }
 }
