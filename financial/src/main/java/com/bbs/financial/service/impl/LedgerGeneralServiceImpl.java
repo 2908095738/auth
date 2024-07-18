@@ -7,15 +7,16 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.financial.entity.Account;
 import com.bbs.financial.entity.LedgerGeneral;
-import com.bbs.financial.enums.AccountAbstractEnum;
 import com.bbs.financial.enums.BorrowOrLoansType;
 import com.bbs.financial.exception.DataMissingException;
 import com.bbs.financial.mapper.LedgerGeneralMapper;
 import com.bbs.financial.service.LedgerGeneralService;
 import com.bbs.financial.util.LoginUser;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -33,77 +34,45 @@ import static org.apache.commons.lang3.math.NumberUtils.*;
 public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, LedgerGeneral>
     implements LedgerGeneralService{
 
-    @Override
-    public List<LedgerGeneral> searchByAccountId(List<Long> accountIds, AccountAbstractEnum abstractEnum) {
-//        return lambdaQuery()
-//                ;
-        return null;
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AccountLedgerGeneral {
+
+        /**
+         * 年初余额
+         */
+        private LedgerGeneral beginningBalance;
+
+        /**
+         * 期初余额
+         */
+        private LedgerGeneral openingBalance;
+
+        /**
+         * 本期合计
+         */
+        private LedgerGeneral currentTotal;
+
+        /**
+         * 本年累计
+         */
+        private LedgerGeneral currentYearCumulative;
     }
 
     @Override
-    public void tryInitCurrentPeriodAccountLedgerGeneral(Date date, Account account) {
-        // 指定月，指定科目的总账记录（可能含年初余额、期初余额、本期合计、本年累计）
-        LedgerGeneral currentMonthAccountLedgerGeneralList = lambdaQuery()
-                .ge(LedgerGeneral::getCreateTime, DateUtil.beginOfMonth(date))
-                .lt(LedgerGeneral::getCreateTime, DateUtil.endOfMonth(date))
-                .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
-                .eq(LedgerGeneral::getCertificateAbstract, CURRENT_TOTAL.getName())
-                .one();
-        List<LedgerGeneral> needSaveLedgerGeneral = new ArrayList<>();
-
-        LedgerGeneral yearBeginningBalance = searchBeginningBalance(date);
-        // 没有【年初余额】就初始化
-        if(isNull(yearBeginningBalance)) {
-            List<LedgerGeneral> allCurrentYearCumulative = lambdaQuery()
-                    .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
-                    .eq(LedgerGeneral::getCertificateAbstract, CURRENT_YEAR_CUMULATIVE.getName())
-                    .list();
-            LedgerGeneral ledgerGeneral;
-            if(allCurrentYearCumulative.size() > INTEGER_ZERO) {
-                // 将最后有【本年累计】的一年，的数据作为当前年的【年初余额】使用
-                LedgerGeneral lastCurrentYearCumulative = allCurrentYearCumulative.get(allCurrentYearCumulative.size() - INTEGER_ONE);
-
-                ledgerGeneral = new LedgerGeneral();
-                BeanUtil.copyProperties(lastCurrentYearCumulative, ledgerGeneral, true);
-                ledgerGeneral.setId(null);
-                ledgerGeneral.setCertificateAbstract(BEGINNING_BALANCE.getName());
-                ledgerGeneral.setCreateTime(null);
-                ledgerGeneral.setCreateBy(LoginUser.getId());
-                ledgerGeneral.setUpdateTime(null);
-                ledgerGeneral.setUpdateBy(null);
-
-                ledgerGeneral = lastCurrentYearCumulative;
-                // 补全【缺失数据】的年份的数据
-                for (int year = DateUtil.year(lastCurrentYearCumulative.getCreateTime()); year < DateUtil.year(date); year++) {
-                    tryInitCurrentPeriodAccountLedgerGeneral(DateUtil.parse(year + "-01-01", "yyyy-MM-dd"), account);
-                }
-            } else {
-                ledgerGeneral = new LedgerGeneral(account, BEGINNING_BALANCE.getName(), LONG_ZERO, LONG_ZERO, BorrowOrLoansType.FLAT.getKey(), LONG_ZERO);
-            }
-            needSaveLedgerGeneral.add(ledgerGeneral);
-        }
-        LedgerGeneral beginningBalance = searchOpeningBalance(date);
-        // 没有【期初余额】就初始化
-        if(isNull(beginningBalance)) {
-            needSaveLedgerGeneral.add(new LedgerGeneral(account, CURRENT_TOTAL.getName(), LONG_ZERO, LONG_ZERO, BorrowOrLoansType.FLAT.getKey(), LONG_ZERO));
-        }
-        LedgerGeneral currentTotal = searchCurrentTotal(date);
-        // 没有【本期合计】就初始化
-        if(isNull(currentTotal)) {
-            needSaveLedgerGeneral.add(new LedgerGeneral(account, CURRENT_TOTAL.getName(), LONG_ZERO, LONG_ZERO, BorrowOrLoansType.FLAT.getKey(), LONG_ZERO));
-        }
-        // 没有【本年累计】就初始化
-        LedgerGeneral currentYearCumulative = searchCurrentYearCumulative(date);
-        if(isNull(currentYearCumulative)) {
-            needSaveLedgerGeneral.add(new LedgerGeneral(account, CURRENT_TOTAL.getName(), LONG_ZERO, LONG_ZERO, BorrowOrLoansType.FLAT.getKey(), LONG_ZERO));
-        }
-        saveBatch(needSaveLedgerGeneral);
+    public AccountLedgerGeneral tryInitAccountLedgerGeneral(Date date, Account account, Boolean useOldData) {
+        LedgerGeneral beginningBalance = tryInitBeginningBalance(date, account, useOldData);                    //年初余额
+        LedgerGeneral openingBalance = tryInitOpeningBalance(date, account, useOldData);                        //期初余额
+        LedgerGeneral currentTotal = tryInitCurrentTotal(date, account);                                        //本期合计
+        LedgerGeneral currentYearCumulative = tryInitCurrentYearCumulative(date, account);                      //本年累计
+        return new AccountLedgerGeneral(beginningBalance, openingBalance, currentTotal, currentYearCumulative);
     }
 
     @Override
     public LedgerGeneral tryInitBeginningBalance(Date date, Account account, Boolean useOldData) throws DataMissingException {
         // 1. 查询指定日期的【年初余额】
-        LedgerGeneral beginningBalance = searchBeginningBalance(date);
+        LedgerGeneral beginningBalance = searchBeginningBalance(date, account);
         int lastYear = (DateUtil.year(date) - INTEGER_ONE);
         DateTime lastYearDateTime = DateUtil.parse((DateUtil.year(date) - INTEGER_ONE) + "-01-01", "yyyy-MM-dd");
         // 2. 如果不存在【年初余额】
@@ -158,7 +127,7 @@ public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, L
     @Override
     public LedgerGeneral tryInitOpeningBalance(Date date, Account account, Boolean useOldData) throws DataMissingException {
         // 1. 查询指定日期的【期初余额】
-        LedgerGeneral openingBalance = searchOpeningBalance(date);
+        LedgerGeneral openingBalance = searchOpeningBalance(date, account);
         // 2. 如果不存在【期初余额】
         if(isNull(openingBalance)) {
             // 2.1 则查询上一月的【本期合计】
@@ -209,52 +178,104 @@ public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, L
         return openingBalance;
     }
 
+    @Override
+    public LedgerGeneral tryInitCurrentTotal(Date date, Account account) {
+        LedgerGeneral ledgerGeneral = searchCurrentTotal(date, account);
+        if(isNull(ledgerGeneral)) {
+            ledgerGeneral = new LedgerGeneral(account, CURRENT_TOTAL.getName(), LONG_ZERO, LONG_ZERO, BorrowOrLoansType.FLAT.getKey(), LONG_ZERO);
+            ledgerGeneral.insert();
+        }
+        return ledgerGeneral;
+    }
+
+    @Override
+    public LedgerGeneral tryInitCurrentYearCumulative(Date date, Account account) {
+        LedgerGeneral ledgerGeneral = searchCurrentYearCumulative(date, account);
+        if(isNull(ledgerGeneral)) {
+            ledgerGeneral = new LedgerGeneral(account, CURRENT_YEAR_CUMULATIVE.getName(), LONG_ZERO, LONG_ZERO, BorrowOrLoansType.FLAT.getKey(), LONG_ZERO);
+            ledgerGeneral.insert();
+        }
+        return ledgerGeneral;
+    }
+
     /**
      * 年初余额
      */
-    private LedgerGeneral searchBeginningBalance(Date date) {
+    @Override
+    public LedgerGeneral searchBeginningBalance(Date date, Account account) {
         return lambdaQuery()
                 .ge(LedgerGeneral::getCreateTime, DateUtil.beginOfYear(date))
                 .lt(LedgerGeneral::getCreateTime, DateUtil.endOfYear(date))
                 .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
                 .eq(LedgerGeneral::getCertificateAbstract, BEGINNING_BALANCE.getName())
+                .eq(LedgerGeneral::getAccountId, account.getId())
                 .one();
     }
 
     /**
      * 期初余额
      */
-    private LedgerGeneral searchOpeningBalance(Date date) {
+    @Override
+    public LedgerGeneral searchOpeningBalance(Date date, Account account) {
         return lambdaQuery()
                 .ge(LedgerGeneral::getCreateTime, DateUtil.beginOfMonth(date))
                 .lt(LedgerGeneral::getCreateTime, DateUtil.endOfMonth(date))
                 .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
                 .eq(LedgerGeneral::getCertificateAbstract, OPENING_BALANCE.getName())
+                .eq(LedgerGeneral::getAccountId, account.getId())
                 .one();
     }
 
     /**
      * 本期合计
      */
-    private LedgerGeneral searchCurrentTotal(Date date) {
+    @Override
+    public LedgerGeneral searchCurrentTotal(Date date, Account account) {
         return lambdaQuery()
                 .ge(LedgerGeneral::getCreateTime, DateUtil.beginOfMonth(date))
                 .lt(LedgerGeneral::getCreateTime, DateUtil.endOfMonth(date))
                 .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
                 .eq(LedgerGeneral::getCertificateAbstract, CURRENT_TOTAL.getName())
+                .eq(LedgerGeneral::getAccountId, account.getId())
                 .one();
+    }
+
+    @Override
+    public List<LedgerGeneral> searchCurrentTotal(Date date, List<Long> accountIds) {
+        return lambdaQuery()
+                .ge(LedgerGeneral::getCreateTime, DateUtil.beginOfMonth(date))
+                .lt(LedgerGeneral::getCreateTime, DateUtil.endOfMonth(date))
+                .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
+                .eq(LedgerGeneral::getCertificateAbstract, CURRENT_TOTAL.getName())
+                .in(LedgerGeneral::getAccountId, accountIds)
+                .list();
     }
 
     /**
      * 本年累计
      */
-    private LedgerGeneral searchCurrentYearCumulative(Date date) {
+    @Override
+    public LedgerGeneral searchCurrentYearCumulative(Date date, Account account) {
         return lambdaQuery()
                 .ge(LedgerGeneral::getCreateTime, DateUtil.beginOfYear(date))
                 .lt(LedgerGeneral::getCreateTime, DateUtil.endOfYear(date))
                 .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
                 .eq(LedgerGeneral::getCertificateAbstract, CURRENT_YEAR_CUMULATIVE.getName())
+                .eq(LedgerGeneral::getAccountId, account.getId())
                 .one();
+    }
+
+    @Override
+    public List<LedgerGeneral> computeAccountCurrentTotal(Date date, Account account, LedgerGeneral currentAccountLedgerGeneral, Long addBorrowMoney, Long addLoansMoney) {
+        // 更新当前科目【本期合计】
+        currentAccountLedgerGeneral.computeAccountBalance(addBorrowMoney, addLoansMoney);
+        // 更新父级科目【本期合计】
+        List<LedgerGeneral> parentAccountLedgerGenerals = searchCurrentTotal(date, Account.getParents(account));
+        for (LedgerGeneral parentAccountLedgerGeneral: parentAccountLedgerGenerals) {
+            parentAccountLedgerGeneral.computeAccountBalance(addBorrowMoney, addLoansMoney);
+        }
+        parentAccountLedgerGenerals.add(currentAccountLedgerGeneral);
+        return parentAccountLedgerGenerals;
     }
 }
 

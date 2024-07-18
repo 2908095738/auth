@@ -10,7 +10,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -125,37 +124,8 @@ public class LedgerGeneral extends Model<LedgerGeneral> implements Serializable 
     }
 
 
-    public void updateAccountBalance(Long addBorrowMoney, long addLoansMoney) {
+    public void computeAccountBalance(Long addBorrowMoney, long addLoansMoney) {
         borrowMoney = addBorrowMoney + ofNullable(borrowMoney).orElseGet(LONG_ZERO::longValue);
         loansMoney = addLoansMoney + ofNullable(loansMoney).orElseGet(LONG_ZERO::longValue);
-        updateById();
-    }
-
-    public static void initAccountLedgerGeneral(Account account) {
-        long borrowMoney = LONG_ZERO;
-        long loansMoney = LONG_ZERO;
-        String accountDirection = account.getDirection();
-        Integer directionBorrowing;
-        long balance;
-        // 尝试通过科目信息获取借贷方向
-        // 如果是借方科目，增加借方金额；如果是贷方科目，增加贷方金额。
-        if(StringUtils.isNotBlank(accountDirection)) {
-            if(accountDirection.equals("借")) {
-                directionBorrowing = INTEGER_ZERO;
-                balance = borrowMoney;
-            } else {
-                directionBorrowing = INTEGER_ONE;
-                balance = loansMoney;
-            }
-        //通过借贷金额判断借贷方向
-        } else if(borrowMoney > INTEGER_ZERO) { // 借
-            directionBorrowing = INTEGER_ZERO;
-            balance = borrowMoney;
-        } else {    //贷
-            directionBorrowing = INTEGER_ONE;
-            balance = loansMoney;
-        }
-        LedgerGeneral ledgerGeneral = new LedgerGeneral(account, "本期合计", loansMoney, borrowMoney, directionBorrowing, balance);
-        ledgerGeneral.insert();
     }
 }

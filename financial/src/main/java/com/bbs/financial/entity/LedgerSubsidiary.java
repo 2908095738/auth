@@ -122,8 +122,7 @@ public class LedgerSubsidiary extends Model<LedgerSubsidiary> implements Seriali
         this.createBy = LoginUser.getId();
     }
 
-    public static void createLedgerSubsidiary(Account account, Certificate certificate, CertificateAbstract certificateAbstract, Long borrowMoney, Long loansMoney) {
-        LedgerSubsidiary ledgerSubsidiary = new LedgerSubsidiary(account, certificate, certificateAbstract, borrowMoney, loansMoney);
-        ledgerSubsidiary.insert();
+    public static LedgerSubsidiary createLedgerSubsidiary(Account account, Certificate certificate, CertificateAbstract certificateAbstract, Long borrowMoney, Long loansMoney) {
+        return new LedgerSubsidiary(account, certificate, certificateAbstract, borrowMoney, loansMoney);
     }
 }

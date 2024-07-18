@@ -1,6 +1,5 @@
 package com.bbs.financial.api.accountBook;
 
-import cn.hutool.core.date.DateTime;
 import cn.hutool.core.lang.tree.Tree;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
@@ -11,6 +10,7 @@ import com.bbs.financial.util.LoginUser;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
+@RequestMapping
 @Slf4j
 public class SearchAccountTree {
 
@@ -31,9 +32,7 @@ public class SearchAccountTree {
 
     @GetMapping("/certificate/accountTree")
     public Result<List<Tree<Long>>> accountTree(@RequestParam("createTime") String certificateCreateTime) {
-        List<Tree<Long>> list = accountService.selectTree(LoginUser.getLoginSetId(), certificateCreateTime);
-
-        return Result.success(list);
+        return Result.success(accountService.selectTree(LoginUser.getLoginSetId(), certificateCreateTime));
     }
 
 
@@ -54,17 +53,6 @@ public class SearchAccountTree {
         return Result.success(list);
     }
 
-    /**
-     * 获取当月明细账（全部存在记录的科目）
-     */
-    public List<CertificateAbstract> currentMonthSubsidiaryLedger() {
-        DateTime now = DateTime.now();
-        List<CertificateAbstract> list = certificateAbstractService.selectList(LoginUser.getLoginSetId(), now.toString("yyyy-MM"));
-        certificateAbstractService.initDataByNo(list);
-        return list;
-    }
-
-
     @GetMapping("/certificate/account/general")
     public Result<Page<CertificateAbstract>> accountAbstract(@RequestParam("createTime") String certificateCreateTime,
                                                              @RequestParam("current")Integer current,
@@ -74,16 +62,5 @@ public class SearchAccountTree {
         List<String> emnu = Lists.newArrayList("期初余额", "本期合计", "本年累计");
         list.setRecords(list.getRecords().stream().filter(item -> emnu.contains(item.getCertificateAbstract())).collect(Collectors.toList()));
         return Result.success(list);
-    }
-
-    /**
-     * 获取当月总账（全部存在记录的科目）
-     */
-    public List<CertificateAbstract> currentMonthGeneralLedger() {
-        DateTime now = DateTime.now();
-        List<CertificateAbstract> list = certificateAbstractService.selectList(LoginUser.getLoginSetId(), now.toString("yyyy-MM"));
-        certificateAbstractService.initDataByNo(list);
-        List<String> enums = Lists.newArrayList("期初余额", "本期合计", "本年累计");
-        return list.stream().filter(item -> enums.contains(item.getCertificateAbstract())).collect(Collectors.toList());
     }
 }

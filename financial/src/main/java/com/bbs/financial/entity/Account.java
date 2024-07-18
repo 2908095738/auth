@@ -1,11 +1,14 @@
 package com.bbs.financial.entity;
 
+import com.alibaba.fastjson2.JSONArray;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.activerecord.Model;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
@@ -14,6 +17,8 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 /**
  * 科目
@@ -25,7 +30,8 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldNameConstants
-public class Account implements Serializable {
+@EqualsAndHashCode(callSuper = true)
+public class Account extends Model<Account> implements Serializable {
     /**
      * 主键
      */
@@ -146,5 +152,25 @@ public class Account implements Serializable {
 
     public static Map<Long, Account> converterToIdMap(List<Account> accounts) {
         return accounts.stream().collect(Collectors.toMap(Account::getId, account -> account));
+    }
+
+
+
+    public static List<Long> getParents(Account account) {
+        List<String> ids = JSONArray.parseArray(account.getParentIds(), String.class);
+        List<String> notContainCurrentAccountIdList = ids.subList(INTEGER_ZERO, ids.size());
+        return notContainCurrentAccountIdList.stream()
+                .map(String::trim)
+                .map(Long::valueOf)
+                .collect(Collectors.toList());
+    }
+
+    public static List<Long> getParents(String idJSONArr) {
+        List<String> ids = JSONArray.parseArray(idJSONArr, String.class);
+        List<String> notContainCurrentAccountIdList = ids.subList(INTEGER_ZERO, ids.size());
+        return notContainCurrentAccountIdList.stream()
+                .map(String::trim)
+                .map(Long::valueOf)
+                .collect(Collectors.toList());
     }
 }

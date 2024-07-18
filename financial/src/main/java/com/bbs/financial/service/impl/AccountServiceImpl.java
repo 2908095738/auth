@@ -138,12 +138,7 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
     }
 
     private List<Account> searchByIds(String idJSONArr) {
-        List<String> ids = JSONArray.parseArray(idJSONArr, String.class);
-        List<String> notContainCurrentAccountIdList = ids.subList(INTEGER_ZERO, ids.size());
-        return listByIds(notContainCurrentAccountIdList.stream()
-                .map(String::trim)
-                .map(Long::valueOf)
-                .collect(Collectors.toList()));
+        return listByIds(Account.getParents(idJSONArr));
     }
 
     private void recursiveSearchParentAndFillToList(Account currentAccount, List<Account> parents, List<Long> parentIds) {
@@ -229,6 +224,7 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
                     tree.putExtra("accountSort", account.getAccountSort());
                     tree.putExtra("direction", account.getDirection());
                     tree.putExtra("account", account);
+                    tree.putExtra("parents", new ArrayList<>());
                 }
             });
         }
@@ -327,6 +323,4 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
         }
         return trees;
     }
-
-
 }
