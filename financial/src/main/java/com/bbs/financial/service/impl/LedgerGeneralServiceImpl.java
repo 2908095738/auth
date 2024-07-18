@@ -118,7 +118,7 @@ public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, L
                     }
                 }
                 // 否则抛出异常
-                DataMissingException.throwException(StrUtil.format("科目【{}】缺少 {} 年（上一年）的【本年累计】数据", account.getId(), lastYear));
+                DataMissingException.throwException(StrUtil.format("科目【{}】缺少 {} 年（上一年）的【本年累计】数据", account.getName(), lastYear));
             }
         }
         return beginningBalance;
@@ -172,7 +172,7 @@ public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, L
                     }
                 }
                 // 否则抛出异常
-                DataMissingException.throwException(StrUtil.format("科目【{}】缺少 {} 月（上个月）的【本年累计】数据", account.getId(), DateUtil.lastMonth()));
+                DataMissingException.throwException(StrUtil.format("科目【{}】缺少 {} 月（上个月）的【本年累计】数据", account.getName(), DateUtil.lastMonth()));
             }
         }
         return openingBalance;
