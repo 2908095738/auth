@@ -50,6 +50,12 @@ public class AssetDepreciationCertificate implements Serializable {
     @TableField(value = "month_money")
     private Long money;
 
+    /**
+     * 账套id
+     */
+    @TableField(value = "accounting_set_id")
+    private Long accountingSetId;
+
     @TableField(exist = false)
     private Certificate certificate;
 

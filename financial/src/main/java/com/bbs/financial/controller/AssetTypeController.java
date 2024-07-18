@@ -34,9 +34,9 @@ public class AssetTypeController {
      * 查询资产类别列表
      */
     @GetMapping("/asset/type/list")
-    public Result<Page<AssetType>> list(Long companyId, @RequestParam Integer current, @RequestParam Integer size)
+    public Result<Page<AssetType>> list(@RequestParam Integer current, @RequestParam Integer size)
     {
-        return success(assetTypeService.selectJoinPage(companyId, current, size));
+        return success(assetTypeService.selectJoinPage(LoginUser.getLoginSetId(), current, size));
     }
 
     /**
@@ -53,6 +53,7 @@ public class AssetTypeController {
      */
     @PutMapping("/asset/type")
     public Result<Long> add(@RequestBody AssetType assetType) {
+        assetType.setAccountingSetId(LoginUser.getLoginSetId());
         assetType.setCreateBy(LoginUser.getId());
         assetTypeService.save(assetType);
         return success(assetType.getId());

@@ -1,7 +1,6 @@
 package com.bbs.financial.controller;
 
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.financial.entity.SalaryType;
@@ -37,16 +36,21 @@ public class SalaryTypeController {
      * 查询工资类型列表
      */
     @GetMapping("/type/list")
-    public Result<Page<SalaryType>> list(SalaryType salaryType, @RequestParam Integer current, @RequestParam Integer size)
+    public Result<Page<SalaryType>> list(@RequestParam Integer current, @RequestParam Integer size)
     {
-        return success(salaryTypeService.page(new Page<>(current, size), new QueryWrapper<>(salaryType)));
+        return success(salaryTypeService.lambdaQuery()
+                .eq(SalaryType::getIsDeleted, 0)
+                .eq(SalaryType::getAccountingSetId, LoginUser.getLoginSetId())
+                .or()
+                .eq(SalaryType::getAccountingSetId, 0)
+                .page(new Page<>(current, size)));
     }
 
 
 
     @Data
-    private static class ListParam extends SalaryType {
-
+    private static class ListParam{
+        private String typeName;
     }
 
     /**

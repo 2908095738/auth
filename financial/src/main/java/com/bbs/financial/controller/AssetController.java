@@ -86,6 +86,7 @@ public class AssetController {
                 .leftJoin(AssetDepreciationCertificate.class, AssetDepreciationCertificate::getAssetId, Asset::getId)
                 .leftJoin(Certificate.class,Certificate::getId, AssetDepreciationCertificate::getDepreciationCertificateId)
                 .eq(Asset::getIsDeleted, 0)
+                .eq(Asset::getAccountingSetId, LoginUser.getLoginSetId())
                 .ne(Asset::getDepreciationMethod, 3)//排除折旧方法为不计提折旧的资产
                 .ne(AssetDepreciationCertificate::getAssetId, 0)//排除未生成折旧凭证的资产
         );

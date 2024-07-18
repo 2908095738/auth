@@ -17,14 +17,17 @@ public class AssetTypeServiceImpl extends MPJBaseServiceImpl<AssetTypeMapper, As
     implements AssetTypeService{
 
     @Override
-    public Page<AssetType> selectJoinPage(Long companyId, Integer current, Integer size) {
+    public Page<AssetType> selectJoinPage(Long loginSetId, Integer current, Integer size) {
         return selectJoinListPage(new Page<>(current, size), AssetType.class, new MPJLambdaWrapper<AssetType>()
                 .selectAll(AssetType.class)
                 .selectAssociation("FixedAssets",Account.class,  AssetType::getFixedAssetsAccount)
                 .selectAssociation( "Depreciation", Account.class,AssetType::getDepreciationAccount)
                 .leftJoin(Account.class, "FixedAssets", Account::getId, AssetType::getFixedAssetsAccountId)
                 .leftJoin(Account.class, "Depreciation", Account::getId, AssetType::getDepreciationAccountId)
-
+                .eq(AssetType::getIsDeleted, 0)
+                .eq(AssetType::getAccountingSetId, 0)
+                .or()
+                .eq(AssetType::getAccountingSetId, loginSetId)
         );
     }
 }
