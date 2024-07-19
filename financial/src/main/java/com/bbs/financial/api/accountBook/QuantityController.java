@@ -62,13 +62,13 @@ public class QuantityController {
                     }
                 }
                 if(Objects.nonNull(anAbstract.getLoansMoney())){
-                    vo.setBorrowNum(anAbstract.getNum());
-                    vo.setBorrowPrice(anAbstract.getPrice());
-                    vo.setBorrowMoney(anAbstract.getLoansMoney());
-                }else if (Objects.nonNull(anAbstract.getBorrowMoney())){
                     vo.setLoansNum(anAbstract.getNum());
                     vo.setLoansPrice(anAbstract.getPrice());
-                    vo.setLoansMoney(anAbstract.getBorrowMoney());
+                    vo.setLoansMoney(anAbstract.getLoansMoney());
+                }else if (Objects.nonNull(anAbstract.getBorrowMoney())){
+                    vo.setBorrowNum(anAbstract.getNum());
+                    vo.setBorrowPrice(anAbstract.getPrice());
+                    vo.setBorrowMoney(anAbstract.getBorrowMoney());
                 }else{
                     vo.setSurplusNum(anAbstract.getNum());
                     vo.setSurplusPrice(anAbstract.getPrice());

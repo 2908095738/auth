@@ -207,8 +207,7 @@ public class CertificateAbstractServiceImpl extends MPJBaseServiceImpl<Certifica
                 .selectAssociation(AccountAuxiliary.class,CertificateAbstract::getAccountAuxiliary)
                 .leftJoin(AccountAuxiliary.class, on -> on
                         .eq(AccountAuxiliary::getId, CertificateAbstract::getAccountId)
-                        .eq(AccountAuxiliary::getName, accountingSetId)
-                        .eq(nonNull(accountingSetId), AccountAuxiliary::getAccountingSetId, accountingSetId)
+                        .eq(AccountAuxiliary::getAccountingSetId, accountingSetId)
                 )
                 .eq(Account::getQuantitativeAccount,"是")
                 .eq(nonNull(accountId),CertificateAbstract::getAccountId,accountId)
