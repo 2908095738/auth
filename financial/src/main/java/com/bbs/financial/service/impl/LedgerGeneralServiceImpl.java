@@ -71,7 +71,7 @@ public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, L
 
     @Override
     public LedgerGeneral tryInitBeginningBalance(Date date, Account account, Boolean useOldData) throws DataMissingException {
-        // 1. 查询指定日期的【年初余额】
+        // 1. 查询指定日期的【年初余额】（指定日期的一年内）
         LedgerGeneral beginningBalance = searchBeginningBalance(date, account);
         int lastYear = (DateUtil.year(date) - INTEGER_ONE);
         DateTime lastYearDateTime = DateUtil.parse((DateUtil.year(date) - INTEGER_ONE) + "-01-01", "yyyy-MM-dd");
@@ -97,14 +97,17 @@ public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, L
                 beginningBalance.setUpdateBy(null);
                 beginningBalance.insert();
             } else {
-                // 2.2.2 否则，查看是否使用旧数据
-                if (useOldData) {
-                    // 2.2.2.1 如果使用旧数据，则使用最近年的【本年累计】作为本年【年初余额】
-                    List<LedgerGeneral> allCurrentYearCumulative = lambdaQuery()    //查询历史【本年累计】
-                            .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
-                            .eq(LedgerGeneral::getCertificateAbstract, CURRENT_YEAR_CUMULATIVE.getName())
-                            .list();
-                    if (allCurrentYearCumulative.size() > INTEGER_ZERO) {
+                List<LedgerGeneral> allCurrentYearCumulative = lambdaQuery()    //查询历史【本年累计】
+                        .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
+                        .eq(LedgerGeneral::getCertificateAbstract, CURRENT_YEAR_CUMULATIVE.getName())
+                        .list();
+                if(allCurrentYearCumulative.size() == INTEGER_ZERO) {
+                    LedgerGeneral ledgerGeneral = new LedgerGeneral(account, BEGINNING_BALANCE.getName(), LONG_ZERO, LONG_ZERO, BorrowOrLoansType.FLAT.getKey(), LONG_ZERO);
+                    ledgerGeneral.insert();
+                } else {
+                    // 2.2.2 否则，查看是否使用旧数据
+                    if (useOldData) {
+                        // 2.2.2.1 如果使用旧数据，则使用最近年的【本年累计】作为本年【年初余额】
                         LedgerGeneral lastCurrentYearCumulative = allCurrentYearCumulative.get(allCurrentYearCumulative.size() - INTEGER_ONE);
                         beginningBalance = new LedgerGeneral();
                         BeanUtil.copyProperties(lastCurrentYearCumulative, beginningBalance, true);
@@ -115,10 +118,10 @@ public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, L
                         beginningBalance.setUpdateTime(null);
                         beginningBalance.setUpdateBy(null);
                         beginningBalance.insert();
+                    } else {
+                        DataMissingException.throwException(StrUtil.format("科目【{}】缺少 {} 年（上一年）的【本年累计】数据", account.getName(), lastYear));
                     }
                 }
-                // 否则抛出异常
-                DataMissingException.throwException(StrUtil.format("科目【{}】缺少 {} 年（上一年）的【本年累计】数据", account.getName(), lastYear));
             }
         }
         return beginningBalance;
@@ -151,14 +154,17 @@ public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, L
                 openingBalance.setUpdateBy(null);
                 openingBalance.insert();
             } else {
-                // 2.2.2 否则，查看是否使用旧数据
-                if (useOldData) {
-                    // 2.2.2.1 如果使用旧数据，则使用最近年的【本年累计】作为本年【年初余额】
-                    List<LedgerGeneral> allOpeningBalance = lambdaQuery()    //查询历史【本年累计】
-                            .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
-                            .eq(LedgerGeneral::getCertificateAbstract, CURRENT_TOTAL.getName())
-                            .list();
-                    if (allOpeningBalance.size() > INTEGER_ZERO) {
+                List<LedgerGeneral> allOpeningBalance = lambdaQuery()    //查询历史【本年累计】
+                        .eq(LedgerGeneral::getAccountingSetId, LoginUser.getLoginSetId())
+                        .eq(LedgerGeneral::getCertificateAbstract, CURRENT_TOTAL.getName())
+                        .list();
+                if(allOpeningBalance.size() == INTEGER_ZERO) {
+                    LedgerGeneral ledgerGeneral = new LedgerGeneral(account, OPENING_BALANCE.getName(), LONG_ZERO, LONG_ZERO, BorrowOrLoansType.FLAT.getKey(), LONG_ZERO);
+                    ledgerGeneral.insert();
+                } else {
+                    // 2.2.2 否则，查看是否使用旧数据
+                    if (useOldData) {
+                        // 2.2.2.1 如果使用旧数据，则使用最近年的【本年累计】作为本年【年初余额】
                         LedgerGeneral lastOpeningBalance = allOpeningBalance.get(allOpeningBalance.size() - INTEGER_ONE);
                         openingBalance = new LedgerGeneral();
                         BeanUtil.copyProperties(lastOpeningBalance, openingBalance, true);
@@ -169,10 +175,11 @@ public class LedgerGeneralServiceImpl extends ServiceImpl<LedgerGeneralMapper, L
                         openingBalance.setUpdateTime(null);
                         openingBalance.setUpdateBy(null);
                         openingBalance.insert();
+                    } else {
+                        // 否则抛出异常
+                        DataMissingException.throwException(StrUtil.format("科目【{}】缺少 {} 月（上个月）的【本年累计】数据", account.getName(), DateUtil.lastMonth()));
                     }
                 }
-                // 否则抛出异常
-                DataMissingException.throwException(StrUtil.format("科目【{}】缺少 {} 月（上个月）的【本年累计】数据", account.getName(), DateUtil.lastMonth()));
             }
         }
         return openingBalance;
