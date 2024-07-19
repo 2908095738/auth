@@ -34,7 +34,7 @@ public class AccountAuxiliary implements Serializable {
     private Long typeId;
 
     /**
-     * 公司ID
+     * 账套ID
      */
     @TableField(value = "accounting_set_id")
     private Long accountingSetId;
@@ -43,7 +43,7 @@ public class AccountAuxiliary implements Serializable {
      * 编码
      */
     @TableField(value = "no")
-    private Integer no;
+    private String no;
 
     /**
      * 名称

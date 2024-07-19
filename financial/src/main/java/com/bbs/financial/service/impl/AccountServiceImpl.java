@@ -286,8 +286,7 @@ public class AccountServiceImpl extends MPJBaseServiceImpl<AccountMapper, Accoun
                 .leftJoin(Certificate.class, Certificate::getId, CertificateAbstract::getCertificateId)
                 .leftJoin(AccountAuxiliary.class, on -> on
                         .eq(AccountAuxiliary::getId, CertificateAbstract::getAccountId)
-                        .eq(AccountAuxiliary::getName, accountingSetId)
-                        .eq(nonNull(accountingSetId), AccountAuxiliary::getAccountingSetId, accountingSetId)
+                        .eq(AccountAuxiliary::getAccountingSetId, accountingSetId)
                 )
                 .eq(Account::getQuantitativeAccount,"是")
                 .eq(Certificate::getAccountingSetId,accountingSetId)
