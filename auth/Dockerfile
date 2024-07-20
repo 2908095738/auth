@@ -1,6 +1,11 @@
 # 基础镜像
-FROM openjdk:8u302-jdk
+#FROM openjdk:8u302-jdk
+FROM openjdk:8-jdk-alpine
 WORKDIR /app
+
+RUN apk update
+RUN apk add --no-cache vim curl wget bash
+
 # 设置时区
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN echo 'Asia/Shanghai' >/etc/timezone
