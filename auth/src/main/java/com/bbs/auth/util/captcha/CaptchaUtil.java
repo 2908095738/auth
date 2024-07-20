@@ -16,11 +16,18 @@ import static com.google.common.base.Preconditions.checkArgument;
 public abstract class CaptchaUtil {
 
 
-    @Value("${code.alibaba.sign}")
+//    @Value("${code.alibaba.sign}")
+//    private String signName;
+//
+//    @Value("${code.alibaba.template}")
+//    private String templateCode;
+
+    @Value("${code.feigeyun.sign}")
     private String signName;
 
-    @Value("${code.alibaba.template}")
+    @Value("${code.feigeyun.template}")
     private String templateCode;
+
 
     @Resource
     protected PhoneCodeCache cache;

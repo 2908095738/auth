@@ -28,7 +28,7 @@ import static java.util.Objects.isNull;
 @Slf4j
 @RestController
 @RequestMapping
-public class ALiYunCaptcha extends CaptchaUtil {
+public class ALiYunCaptcha {//extends CaptchaUtil
 
     private static final String REGION = "cn-hangzhou";
 
@@ -70,7 +70,7 @@ public class ALiYunCaptcha extends CaptchaUtil {
         private String requestId;
     }
 
-    @Override
+//    @Override
     public void send(String phoneNumber, String signName, String templateCode, String templateParam) throws Exception {
         log.debug("阿里云短信-{}发送短信: signName={}; templateCode={}; templateParam={}", phoneNumber, signName, templateCode, templateParam);
         StaticCredentialProvider provider = StaticCredentialProvider.create(Credential.builder()
