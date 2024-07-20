@@ -81,11 +81,12 @@ public class FeiGeYunCaptcha extends CaptchaUtil {
         map.put("template_id",templateCode);//模板id
         map.put("content",templateParam);//短信内容
         String json = JSON.toJSONString(map);
+        log.debug("飞鸽云短信-{}请求数据: {}", phoneNumber, json);
         httpPost.setEntity(new StringEntity(json,"UTF-8"));
         HttpResponse response = httpClient.execute(httpPost);
         HttpEntity entity = response.getEntity();
         String res = EntityUtils.toString(entity);
-        System.out.println(res);
+        log.debug(res);
         log.debug("飞鸽云短信-{}响应数据: {}", phoneNumber, res);
         Response respObj = JSON.parseObject(res, Response.class);
         if(isNull(respObj) || !Response.OK.equals(respObj.code)) {
