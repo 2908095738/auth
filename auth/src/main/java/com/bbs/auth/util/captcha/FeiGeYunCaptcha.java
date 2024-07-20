@@ -1,9 +1,7 @@
 package com.bbs.auth.util.captcha;
 
-import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.bbs.exception.BusinessException;
-import com.google.gson.Gson;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -89,7 +87,7 @@ public class FeiGeYunCaptcha extends CaptchaUtil {
         String res = EntityUtils.toString(entity);
         System.out.println(res);
         log.debug("飞鸽云短信-{}响应数据: {}", phoneNumber, res);
-        Response respObj = JSONUtil.toBean(new Gson().toJson(res), Response.class);
+        Response respObj = JSON.parseObject(res, Response.class);
         if(isNull(respObj) || !Response.OK.equals(respObj.code)) {
             log.error(
                     "飞鸽云短信-{}异常: 发送短信失败！！！需要联系工程师处理 config: accessKey={}; accessKeySecret={};",
