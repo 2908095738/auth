@@ -54,6 +54,21 @@ public class DrugServiceImpl extends ServiceImpl<DrugMapper, Drug>
         }
         return wrapper.page(param.toPage());
     }
+
+    @Override
+    public List<Drug> search(String val) {
+        return lambdaQuery()
+                .like(Drug::getName, val)
+                .or()
+                .like(Drug::getManufacturer, val)
+                .or()
+                .like(Drug::getDrugNo, val)
+                .or()
+                .like(Drug::getApprovalNumber, val)
+                .or()
+                .like(Drug::getRemark, val)
+                .list();
+    }
 }
 
 

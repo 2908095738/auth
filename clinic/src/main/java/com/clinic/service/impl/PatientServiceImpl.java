@@ -148,6 +148,18 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
         return success(patientPage);
     }
 
+    @Override
+    public List<Patient> select(String val) {
+        return lambdaQuery()
+                .eq(Patient::getUserId, LoginUser.getId())
+                .like(Patient::getName, val)
+                .or()
+                .like(Patient::getPhone, val)
+                .or()
+                .like(Patient::getAddress, val)
+                .list();
+    }
+
     private Page<Patient> defaultSearch(PatientParam param) {
         return getDefaultWrapper(converter.toEntity(param))
                 .selectCount(Dossier::getId,Patient::getDossierNum)

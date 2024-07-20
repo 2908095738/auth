@@ -9,6 +9,8 @@ import com.clinic.dto.param.EditPatientParam;
 import com.clinic.dto.param.PatientParam;
 import com.clinic.entity.Patient;
 
+import java.util.List;
+
 /**
 * @author 29080
 * @description 针对表【patient(病人信息登记表)】的数据库操作Service
@@ -21,4 +23,5 @@ public interface PatientService extends IService<Patient> {
 
     Result<Page<Patient>> select(PatientParam param);
 
+    List<Patient> select(String val);
 }

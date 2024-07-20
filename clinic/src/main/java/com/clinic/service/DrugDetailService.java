@@ -17,4 +17,5 @@ public interface DrugDetailService extends IService<DrugDetail> {
 
 //    List<DrugDetail> selectInfoDistinct();
 
+    List<DrugDetail> search(String val);
 }
