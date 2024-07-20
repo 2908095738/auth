@@ -1,13 +1,18 @@
 package com.bbs.auth.util.captcha;
 
-import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpResponse;
-import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSON;
 import com.bbs.exception.BusinessException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -65,9 +70,9 @@ public class FeiGeYunCaptcha extends CaptchaUtil {
     public void send(String phoneNumber, String signName, String templateCode, String templateParam) throws Exception {
         log.debug("飞鸽云短信-{}发送短信: signName={}; templateCode={}", phoneNumber, signName, templateParam);
 
-//        HttpClient httpClient = HttpClients.createSystem();
-//        HttpPost httpPost = new HttpPost("https://api.4321.sh/sms/template");
-//        httpPost.addHeader("Content-Type","application/json");
+        HttpClient httpClient = HttpClients.createDefault();
+        HttpPost httpPost = new HttpPost("https://api.4321.sh/sms/template");
+        httpPost.addHeader("Content-Type","application/json");
         Map<String,Object> map = new HashMap<>();
         map.put("apikey",apikey);//账号
         map.put("secret",accessKeySecret);//密钥
@@ -75,20 +80,16 @@ public class FeiGeYunCaptcha extends CaptchaUtil {
         map.put("sign_id",signName);//签名id
         map.put("template_id",templateCode);//模板id
         map.put("content",templateParam);//短信内容
-//        String json = JSON.toJSONString(map);
-
-        HttpResponse response = HttpRequest.post("https://api.4321.sh/sms/template").body(JSONUtil.toJsonPrettyStr(map))
-                .execute();
-        log.debug("飞鸽云短信-{}请求数据: {}", phoneNumber, map);
-//        httpPost.setEntity(new StringEntity(json,"UTF-8"));
-//        HttpResponse response = httpClient.execute(httpPost);
-//        HttpEntity entity = response.getEntity();
-//        String res = EntityUtils.toString(entity);
-//        log.debug(res);
-        String body = response.body();
-        log.debug("飞鸽云短信-{}响应数据: {}", phoneNumber, body);
-        Response result = JSONUtil.toBean(body, Response.class);
-        if(isNull(result) || !Response.OK.equals(result.code)) {
+        String json = JSON.toJSONString(map);
+        log.debug("飞鸽云短信-{}请求数据: {}", phoneNumber, json);
+        httpPost.setEntity(new StringEntity(json,"UTF-8"));
+        HttpResponse response = httpClient.execute(httpPost);
+        HttpEntity entity = response.getEntity();
+        String res = EntityUtils.toString(entity);
+        log.debug(res);
+        log.debug("飞鸽云短信-{}响应数据: {}", phoneNumber, res);
+        Response respObj = JSON.parseObject(res, Response.class);
+        if(isNull(respObj) || !Response.OK.equals(respObj.code)) {
             log.error(
                     "飞鸽云短信-{}异常: 发送短信失败！！！需要联系工程师处理 config: accessKey={}; accessKeySecret={};",
                     phoneNumber,
