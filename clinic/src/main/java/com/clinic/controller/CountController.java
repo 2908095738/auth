@@ -61,6 +61,7 @@ public class CountController {
         long queueNumber = 0;
         long currentDayTotalReceptionNumber = 0;
         Date now = new Date();
+        // 库存不足
         DrugExpiryGroup drugExpiryGroup = countAndUpdateDrugExpiryState();
         Map<String, List<AdmissionLog>> map = admissionLogService.list(new LambdaQueryWrapper<AdmissionLog>()
                 .eq(AdmissionLog::getUserId, LoginUser.getId())
@@ -148,7 +149,8 @@ public class CountController {
                 isDisinfection,
                 isSterilize,
                 receptionPeopleNumberChartData,
-                singularMonthSalesChartData
+                singularMonthSalesChartData,
+                drugExpiryGroup
         );
         if(existCriticalDrug) vo.setExistCriticalDrugNumber(AboutExpiresDrugNumber);
         if(existUnderStockDrug) vo.setExistCriticalDrugNumber(stockUnderDrugNumber);
@@ -209,6 +211,8 @@ public class CountController {
 
         private SingularMonthSalesChartData singularMonthSalesChartData;
 
+        private DrugExpiryGroup drugExpiryGroup;
+
         public VO(
                 Long queueNumber,
                 Long currentDayTotalReceptionNumber,
@@ -218,7 +222,8 @@ public class CountController {
                 Boolean isDisinfection,
                 Boolean isSterilize,
                 ReceptionPeopleNumberChartData receptionPeopleNumberChartData,
-                SingularMonthSalesChartData singularMonthSalesChartData
+                SingularMonthSalesChartData singularMonthSalesChartData,
+                DrugExpiryGroup drugExpiryGroup
         ) {
             this.queueNumber = queueNumber;
             this.currentDayTotalReceptionNumber = currentDayTotalReceptionNumber;
@@ -229,6 +234,7 @@ public class CountController {
             this.isSterilize = isSterilize;
             this.receptionPeopleNumberChartData = receptionPeopleNumberChartData;
             this.singularMonthSalesChartData = singularMonthSalesChartData;
+            this.drugExpiryGroup = drugExpiryGroup;
         }
     }
 
