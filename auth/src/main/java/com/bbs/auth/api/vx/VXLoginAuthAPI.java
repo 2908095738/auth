@@ -1,110 +1,97 @@
 package com.bbs.auth.api.vx;
 
-import cn.hutool.http.HttpUtil;
-import cn.hutool.json.JSONUtil;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.bbs.Result;
+import com.bbs.auth.service.WeiXinLoginService;
+import com.bbs.auth.util.VxUtil;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
+import javax.annotation.Resource;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.util.Map;
 
+@Api(tags = "微信登录相关接口")
+@RestController
 @Slf4j
 public class VXLoginAuthAPI {
 
-    private static final String LOGIN_API = "https://api.weixin.qq.com/sns/jscode2session";
+    @Resource
+    private WeiXinLoginService weiXinLoginService;
 
-    private final String appid;
-
-    private final String secret;
-
-    private volatile static VXLoginAuthAPI instance;
-
-    private static final String APP_ID_KEY = "appid";
-
-    private static final String SECRET_KEY = "secret";
-    private static final String GRANT_TYPE_KEY = "grant_type";
-    private static final String GRANT_TYPE = "authorization_code";
-
-    private static final String JS_CODE_KEY = "js_code";
-
-    public static final String OPEN_ID_KEY = "openid";
-
-    public static final String SESSION_KEY = "session_key";
-
-    private VXLoginAuthAPI(String appid, String secret) {
-        this.appid = appid;
-        this.secret = secret;
-    }
-
-    public static VXLoginAuthAPI getInstance(String appid, String secret) {
-        if(instance == null) {
-            synchronized (VXLoginAuthAPI.class) {
-                if(instance == null) {
-                    instance = new VXLoginAuthAPI(appid, secret);
-                }
-            }
-        }
-        return instance;
-    }
 
     /**
-     * 响应参数
+     * 微信用户token认证
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
      */
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Response {
+    @GetMapping(value = "/weixin/index")
+    public String doGet(String signature,String timestamp, String nonce, String echostr)
+            throws ServletException, IOException {
 
-        /**
-         * 会话密钥
-         */
-        private String session_key;
-
-        /**
-         * 用户唯一标识
-         */
-        private String openid;
-
-        /**
-         * 用户在开放平台的唯一标识符
-         * 若当前小程序已绑定到微信开放平台账号下会返回，详见 UnionID 机制说明。
-         */
-        private String unionid;
-
-        /**
-         * 错误信息
-         */
-        private String errmsg;
-
-        /**
-         * 错误码
-         */
-        private Integer errcode;
-    }
-
-    /**
-     * 登录凭证校验
-     * 通过 wx.login 接口获得临时登录凭证 code 后传到开发者服务器调用此接口完成登录流程。更多使用方法详见小程序登录
-     * @param jsCode 登录时获取的 code，可通过wx.login获取
-     * @return 微信登录凭证
-     * @see <a href=https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/user-login/code2Session.html>小程序登录接口</a>
-     */
-    public Response auth(String jsCode) {
-        Map<String, Object> param = new HashMap<String, Object>() {{
-            put(GRANT_TYPE_KEY, GRANT_TYPE);
-            put(APP_ID_KEY, appid);
-            put(SECRET_KEY, secret);
-            put(JS_CODE_KEY, jsCode);
-        }};
-        String resStr = HttpUtil.get(LOGIN_API, param);
-        if(StringUtils.isNotBlank(resStr)) {
-            Response response = JSONUtil.toBean(resStr, Response.class);
-            log.debug("请求微信登录凭证校验: param={}; response= {}", JSONUtil.toJsonPrettyStr(param), JSONUtil.toJsonPrettyStr(response));
-            return response;
+        // 接收微信服务器以Get请求发送的4个参数
+//        String signature = request.getParameter("signature");
+//        String timestamp = request.getParameter("timestamp");
+//        String nonce = request.getParameter("nonce");
+//        String echostr = request.getParameter("echostr");
+//
+//        PrintWriter out = response.getWriter();
+        if (VxUtil.checkSignature(signature, timestamp, nonce)) {
+            return echostr;        // 校验通过，原样返回echostr参数内容
+        } else {
+            System.out.println("不是微信发来的请求！");
         }
         return null;
     }
+
+
+
+    @ApiOperation("微信扫码登录，提供二维码")
+    @PostMapping(value = "/weixin/getQRCode")
+    public Result weinLogin(){
+        log.info("微信扫码登录接口开始执行：/weixin/getQRCode");
+        //获取ticket
+        Map<String, String> codeResult = weiXinLoginService.getQrCode();
+        log.info("微信扫码登录接口执行结束！");
+        return Result.success(codeResult);
+    }
+
+
+    @PostMapping(value = "/weixin/index")
+    @ApiOperation("接收微信消息事件,判断用户是否完成扫码关注")
+    public String postWxLoginReceive(HttpServletRequest request) throws IOException {
+        log.info("微信回调接口开始执行post请求/weixin/receive");
+        // 获取微信请求参数
+        String signature = request.getParameter("signature");
+        String timestamp = request.getParameter("timestamp");
+        String nonce = request.getParameter("nonce");
+        String echostr = request.getParameter("echostr");
+        log.info("开始校验此次消息是否来自微信服务器，param->signature:{},\ntimestamp:{},\nnonce:{},\nechostr:{}",
+                signature, timestamp, nonce, echostr);
+        String result = weiXinLoginService.receive(signature,timestamp,nonce,echostr,request);
+        System.out.println(result);
+        log.info("微信回调接口post请求执行结束！");
+        return result;
+    }
+
+    @GetMapping("/weixin/check")
+    @ApiOperation("获取扫码登录状态,前端进行轮询")
+    public Result checkLogin(@RequestParam String ticket) {
+        log.info("前端二维码轮询接口开始执行/weixin/check");
+        Map<String, Object> resultMap = weiXinLoginService.checkLogin(ticket);
+        log.info("前端二维码轮询接口执行结束！");
+        return Result.success(resultMap);
+    }
+
+
+
+
 }
