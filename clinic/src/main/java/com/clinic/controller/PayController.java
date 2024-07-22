@@ -13,8 +13,6 @@ import com.clinic.dto.PayRecordPatientDto;
 import com.clinic.dto.PrescriptionDto;
 import com.clinic.dto.param.CreateOrSetPayOtherParam;
 import com.clinic.dto.param.GetPayParam;
-import com.clinic.dto.param.IsPayRecordParam;
-import com.clinic.dto.param.NoPayRecordParam;
 import com.clinic.dto.param.PatientPayRecordParam;
 import com.clinic.dto.param.ReturnPayRecordParam;
 import com.clinic.dto.param.UpdatePayById;
@@ -24,6 +22,9 @@ import com.clinic.service.PayService;
 import com.clinic.util.LogUtil;
 import com.clinic.util.LoginUser;
 import com.clinic.util.PageUtil;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
+import static com.baomidou.mybatisplus.core.toolkit.ObjectUtils.isNull;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
@@ -78,21 +80,29 @@ public class PayController {
         return payCache.selectPayPatient(param);
     }
 
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AllIsPayParam {
+
+        private Integer current;
+        private Integer size;
+        private String val;
+        private Long startDate;
+        private  Long endDate;
+    }
+
     /**
      * 收费列表-已收费
      */
     @GetMapping("/all/is")
-    public Result<Page<PayAndRecordPageDto>> getPay(
-            @RequestParam(required = false, defaultValue = "1") Integer current,
-            @RequestParam(required = false, defaultValue = "10") Integer size,
-            @RequestParam(required = false) String val,
-            @RequestParam(required = false) Long startDate,
-            @RequestParam(required = false) Long endDate
-    ){
-        GetPayParam param = new GetPayParam(new Page<>(current, size), val, startDate, endDate);
-        param.setState(INTEGER_ONE);
-        List<PayAndRecordPageDto> data = payService.selectPayAndRecordDto(param);
-        return Result.success(PageUtil.execPage(current, size, data));
+    public Result<Page<PayAndRecordPageDto>> getPay(AllIsPayParam param){
+        if(isNull(param.getCurrent())) param.setCurrent(INTEGER_ONE);
+        if(isNull(param.getSize())) param.setCurrent(10);
+        GetPayParam getPayParam = new GetPayParam(new Page<>(param.getCurrent(), param.getSize()), param.getVal(), param.getStartDate(), param.getEndDate());
+        getPayParam.setState(INTEGER_ONE);
+        List<PayAndRecordPageDto> data = payService.selectPayAndRecordDto(getPayParam);
+        return Result.success(PageUtil.execPage(param.getCurrent(), param.getSize(), data));
     }
 
     /**

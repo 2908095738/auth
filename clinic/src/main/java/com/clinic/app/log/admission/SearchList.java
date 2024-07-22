@@ -12,17 +12,14 @@ import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.commons.collections4.ListUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 /**
  * 正在接诊页面接口
@@ -33,7 +30,7 @@ public class SearchList extends MPJBaseServiceImpl<AdmissionLogMapper, Admission
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    private static class Param {
+    public static class Param {
 
         /**
          * 日志记录 ID
@@ -62,7 +59,6 @@ public class SearchList extends MPJBaseServiceImpl<AdmissionLogMapper, Admission
                 .eq(AdmissionLog::getUserId, LoginUser.getId())
                 .likeRight(nonNull(param.createTime), AdmissionLog::getCreateTime, param.createTime)
                 .eq(nonNull(param.state),AdmissionLog::getState, param.state)
-                .eq(nonNull(param.state),Pay::getState,0)
                 .leftJoin(Pay.class, Pay::getId, AdmissionLog::getPayId)
                 .orderByDesc(AdmissionLog::getCreateTime)
         );

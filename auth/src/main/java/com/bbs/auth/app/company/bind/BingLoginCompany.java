@@ -1,4 +1,4 @@
-package com.bbs.auth.app.company;
+package com.bbs.auth.app.company.bind;
 
 import com.bbs.Result;
 import com.bbs.auth.cache.BindLoginCompanyCache;
