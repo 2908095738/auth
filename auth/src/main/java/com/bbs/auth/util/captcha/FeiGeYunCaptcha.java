@@ -86,10 +86,9 @@ public class FeiGeYunCaptcha extends CaptchaUtil {
         HttpResponse response = httpClient.execute(httpPost);
         HttpEntity entity = response.getEntity();
         String res = EntityUtils.toString(entity);
-        log.debug(res);
         log.debug("飞鸽云短信-{}响应数据: {}", phoneNumber, res);
         Response respObj = JSON.parseObject(res, Response.class);
-        if(isNull(respObj) || !Response.OK.equals(respObj.code)) {
+        if(isNull(respObj) || !Response.OK.equals(respObj.msg)) {
             log.error(
                     "飞鸽云短信-{}异常: 发送短信失败！！！需要联系工程师处理 config: accessKey={}; accessKeySecret={};",
                     phoneNumber,
