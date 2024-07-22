@@ -91,6 +91,9 @@ public class User implements Serializable {
     @TableField(value = "state")
     private Integer state;
 
+    @TableField(value = "open_id")
+    private String openId;
+
     /**
      * 账号状态
      */

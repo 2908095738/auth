@@ -8,7 +8,6 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.bbs.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
@@ -22,6 +21,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -35,8 +36,8 @@ import java.util.Map;
 @Component
 public class VxUtil {
 
-    private String appId = "自己的appId";
-    private String appSecret = "自己的appSecret";
+    private String appId = "wxbd377f32afa2d442";
+    private String appSecret = "9fe6c48d6689198f4d0022f3e809c3bb";
 
     @Resource
     private RedisUtil redisUtil;
@@ -121,30 +122,50 @@ public class VxUtil {
     }
 
 
-    private static final String token = "nKjjt1fBXVxyyLC4"; //这个token值要和服务器配置一致
-
-    public static boolean checkSignature(String signature, String timestamp, String nonce) {
-
+    /**
+     * 验证微信签名,确保接收到的消息来自微信官方
+     */
+    public boolean checkSignature(String signature, String timestamp,String nonce, String token) {
+        // 1.将token、timestamp、nonce三个参数进行字典序排序
         String[] arr = new String[]{token, timestamp, nonce};
-        // 排序
         Arrays.sort(arr);
-        // 生成字符串
+        // 2. 将三个参数字符串拼接成一个字符串进行sha1加密
         StringBuilder content = new StringBuilder();
         for (int i = 0; i < arr.length; i++) {
             content.append(arr[i]);
         }
-
-        // sha1加密
-        String temp = getSHA1String(content.toString());
-
-        return temp.equals(signature); // 与微信传递过来的签名进行比较
+        MessageDigest md = null;
+        String tmpStr = null;
+        try {
+            md = MessageDigest.getInstance("SHA-1");
+            // 将三个参数字符串拼接成一个字符串进行sha1加密
+            byte[] digest = md.digest(content.toString().getBytes());
+            tmpStr = byteToStr(digest);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        content = null;
+        // 3.将sha1加密后的字符串可与signature对比，标识该请求来源于微信
+        return tmpStr != null && tmpStr.equalsIgnoreCase(signature.toUpperCase());
     }
 
-    private static String getSHA1String(String data) {
-        // 使用commons codec生成sha1字符串
-        return DigestUtils.shaHex(data);
+    private String byteToStr(byte[] byteArray) {
+        StringBuilder strDigest = new StringBuilder();
+        for (int i = 0; i < byteArray.length; i++) {
+            strDigest.append(byteToHexStr(byteArray[i]));
+        }
+        return strDigest.toString();
     }
 
+    private String byteToHexStr(byte mByte) {
+        char[] Digit = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A',
+                'B', 'C', 'D', 'E', 'F'};
+        char[] tempArr = new char[2];
+        tempArr[0] = Digit[(mByte >>> 4) & 0X0F];
+        tempArr[1] = Digit[mByte & 0X0F];
+        String s = new String(tempArr);
+        return s;
+    }
 
 
     /**

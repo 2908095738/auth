@@ -110,4 +110,8 @@ public interface UserService extends MPJBaseService<User> {
     void loginUserIsAdmin() throws IllegalArgumentException, ReLoginException;
 
     void checkPhoneCodeThrow(Long phone, Integer code) throws IllegalArgumentException;
+
+    Integer countByOpenId(String fromUserName);
+
+    User searchIdByOpenId(String openId);
 }

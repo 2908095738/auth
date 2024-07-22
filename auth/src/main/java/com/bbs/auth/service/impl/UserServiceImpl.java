@@ -296,6 +296,16 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
     }
 
     @Override
+    public Integer countByOpenId(String fromUserName) {
+        return lambdaQuery().eq(User::getOpenId, fromUserName).count().intValue();
+    }
+
+    @Override
+    public User searchIdByOpenId(String openId) {
+        return lambdaQuery().eq(User::getOpenId, openId).one();
+    }
+
+    @Override
     public Result<Page<User>> search(UserParam param) {
         MPJLambdaWrapper<User> wrapper = new MPJLambdaWrapper<>(User.class);
         if(nonNull(param.getId())) {
