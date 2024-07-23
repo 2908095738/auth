@@ -181,24 +181,28 @@ public class VxUtil {
         // 登录用户
         Map<String, String> keyword3 = new HashMap<>();
         keyword3.put("value", userName);
-        data.put("模板信息.DATA前面的字符串",keyword3);
+        data.put("thing10",keyword3);
         // 登录时间
         Map<String, String> keyword4 = new HashMap<>();
         keyword4.put("value", new SimpleDateFormat("yyyy年MM月dd日 HH:mm").format(new Date()));
-        data.put("模板信息.DATA前面的字符串",keyword4);
-        // 登录网站
+        data.put("time4",keyword4);
+        //登录地址
+        Map<String, String> keyword5 = new HashMap<>();
+        keyword5.put("value", "未知");
+        data.put("thing5",keyword5);
+        // 软件名称
         Map<String, String> keyword1 = new HashMap<>();
-        keyword1.put("value", "网站名称");
-        data.put("模板信息.DATA前面的字符串",keyword1);
+        keyword1.put("value", "软件名称？");
+        data.put("thing8",keyword1);
         // 登录网址
-        Map<String, String> keyword2 = new HashMap<>();
-        keyword2.put("value", "www.123.com");
-        data.put("模板信息.DATA前面的字符串",keyword2);
+//        Map<String, String> keyword2 = new HashMap<>();
+//        keyword2.put("value", "www.123.com");
+//        data.put("模板信息.DATA前面的字符串",keyword2);
 
         Map<String, Object> jsonData = new HashMap<>();
         jsonData.put("touser", openId);
         jsonData.put("template_id", templateId);
-        // jsonData.put("client_msg_id", openId); // 防重入id（对于同一个openid + client_msg_id, 10分钟内只发送一条消息）
+        jsonData.put("client_msg_id", openId); // 防重入id（对于同一个openid + client_msg_id, 10分钟内只发送一条消息）
         jsonData.put("data", data);
         // 发送请求
         String result = HttpRequest.post(url).body(JSON.toJSONString(jsonData)).execute().body();

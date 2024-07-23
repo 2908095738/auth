@@ -25,9 +25,9 @@ import java.util.Map;
 @Slf4j
 public class WeiXinLoginServiceImpl implements WeiXinLoginService {
 
-    private String token = "nKjjt1fBXVxyyLC4";
+    private static final String token = "nKjjt1fBXVxyyLC4";
     //模板消息ID
-    private String loginTemplateId = "自己设置模板消息的ID";
+    private static final String loginTemplateId = "B9ucvtDqicNKYiOAW1MJji4bzSJVSwlBiu1gyMiculk";
 
     @Resource
     private TokenService tokenService;
@@ -112,7 +112,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
                 return "";
             }
             // 处理绑定微信号事件
-            if ("1".equals((String)redisUtil.get("WEI_XIN_TICKET"+ticket))){
+            if ("1".equals(redisUtil.get("WEI_XIN_TICKET"+ticket))){
                 //先删除
                 redisUtil.delete("WEI_XIN_TICKET"+ticket);
                 redisUtil.set("WEI_XIN_TICKET"+ticket,fromUserName,100000L);

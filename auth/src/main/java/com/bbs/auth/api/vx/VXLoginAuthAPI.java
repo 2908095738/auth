@@ -23,13 +23,6 @@ public class VXLoginAuthAPI {
     @Resource
     private WeiXinLoginService weiXinLoginService;
 
-//    @Data
-//    private static class WxMsgCheck {
-//        private String signature;//微信加密签名
-//        private String timestamp;//时间戳
-//        private String nonce;//随机数
-//        private String echostr;//随机字符串
-//    }
 
     @GetMapping(value = "/weixin/receive")
     @ApiOperation("接收微信消息事件,判断用户是否完成扫码关注")
@@ -43,26 +36,6 @@ public class VXLoginAuthAPI {
         log.info("开始校验此次消息是否来自微信服务器，param->signature:{},\ntimestamp:{},\nnonce:{},\nechostr:{}",
                 signature, timestamp, nonce, echostr);
         String result = weiXinLoginService.receive(signature, timestamp, nonce, echostr, request);
-        System.out.println(result);
-
-//
-//        List<String> list = new ArrayList<>();
-//        list.add("nKjjt1fBXVxyyLC4");
-//        list.add(wxMsgCheck.getTimestamp());
-//        list.add(wxMsgCheck.getNonce());
-//        Collections.sort(list);
-//        String Attr = "";
-//        for (String o : list) {
-//            Attr += o;
-//        }
-//        String tmpAttr = Tools.shaEncode(Attr);
-//        if (tmpAttr.equals(wxMsgCheck.getSignature())) {
-//            return wxMsgCheck.getEchostr();
-//        }
-
-
-
-
         log.info("微信回调接口get请求执行结束！");
         return result;
     }
