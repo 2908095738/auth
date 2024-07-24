@@ -29,7 +29,7 @@ public class Param {
     /**
      * 登录类型
      */
-    private Integer loginType;
+    private String loginType;
 
     /**
      * 是否查询用户公司信息
@@ -41,4 +41,9 @@ public class Param {
      * 注：需要 searchCompany = true
      */
     private Boolean checkCompanyStructure;
+
+    /**
+     * 是否查询用户公司信息
+     */
+    private Boolean is;
 }

@@ -28,7 +28,7 @@ public class Log {
     /**
      * 登录类型
      */
-    private Integer loginType;
+    private String loginType;
 
     /**
      * 服务端保存的手机验证码

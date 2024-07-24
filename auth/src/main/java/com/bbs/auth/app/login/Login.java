@@ -69,7 +69,7 @@ public class Login {
     public Result<VO> login(@Valid @RequestBody Param param) throws InterruptedException, IllegalArgumentException {
         String loginTime = DateUtil.now();
         String phone = param.getPhone();
-        Integer loginType = param.getLoginType();
+        String loginType = param.getLoginType();
         String paramCode = param.getCode();
         return redissonUtil.lockExec(
             () -> {
@@ -77,7 +77,6 @@ public class Login {
                     log.debug("[Login::login] param={}", JSONUtil.toJsonPrettyStr(param));
                     User user;
                     Integer code;
-                    checkArgument(LoginType.checkFormat(loginType), FAILED_LOGIN_TYPE_NOT_AVAILABLE);
                     if(LoginType.PHONE.getCode().equals(loginType)) {
                         checkPhoneFormat(phone);
                         checkPhoneCodeFormat(paramCode);
