@@ -1,6 +1,5 @@
 package com.bbs.auth.api.vx;
 
-import cn.hutool.http.HttpUtil;
 import com.bbs.Result;
 import com.bbs.auth.service.WeiXinLoginService;
 import io.swagger.annotations.Api;
@@ -67,8 +66,7 @@ public class VXLoginAuthAPI {
         //获取ticket
         Map<String, String> codeResult = weiXinLoginService.getQrCode();
         log.info("微信扫码登录接口执行结束！");
-        String ticket = codeResult.get("ticket");
-        return Result.success(HttpUtil.get("https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=" + ticket));
+        return Result.success(codeResult);
     }
 
     @GetMapping("/weixin/check")
