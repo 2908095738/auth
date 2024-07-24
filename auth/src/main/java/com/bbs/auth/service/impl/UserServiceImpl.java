@@ -309,7 +309,7 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
     public void bindUser(Long uid, String openId) {
         lambdaUpdate()
                 .eq(User::getId, uid)
-                .eq(User::getOpenId, openId)
+                .set(User::getOpenId, openId)
                 .update();
         cache.load(uid);
     }
