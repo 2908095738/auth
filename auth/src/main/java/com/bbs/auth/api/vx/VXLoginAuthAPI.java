@@ -70,7 +70,7 @@ public class VXLoginAuthAPI {
 
     @GetMapping("/weixin/check")
     @ApiOperation("获取扫码登录状态,前端进行轮询")
-    public Result<Map<String, Object>> checkLogin(@RequestParam String ticket, @RequestParam Integer expireNumber) {
+    public Result<Map<String, Object>> checkLogin(@RequestParam String ticket, @RequestParam(required = false) Integer expireNumber) {
         log.debug("前端二维码轮询接口开始执行/weixin/check");
         Map<String, Object> resultMap = weiXinLoginService.checkLogin(ticket, expireNumber);
         log.debug("前端二维码轮询接口执行结束！");
