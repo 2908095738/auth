@@ -46,4 +46,11 @@ public class Param {
      * 是否查询用户公司信息
      */
     private Boolean is;
+
+    private String openId;
+
+    /**
+     * 过期时间（单位默认天）
+     */
+    private Integer expireNumber;
 }

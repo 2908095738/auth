@@ -175,4 +175,11 @@ public class User implements Serializable {
     public Boolean isSupperAdmin() {
         return Objects.equals(isAdmin, INTEGER_ONE);
     }
+
+
+    public User(String name, Long phone, String openId) {
+        this.name = name;
+        this.phone = phone;
+        this.openId = openId;
+    }
 }

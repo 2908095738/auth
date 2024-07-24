@@ -57,9 +57,6 @@ public class UserCache {
     private UserCacheConf conf;
 
     @Resource
-    private UserCacheConf.WXOpenIDMap wxOpenIDMapConf;
-
-    @Resource
     private UserCacheConf.PhoneMap phoneMapConf;
 
     @Lazy
@@ -100,19 +97,6 @@ public class UserCache {
             put(phoneMapKey, user.getId().toString());
         }});
         expire(userCacheKey);
-        phoneCache.expire(phoneMapKey);
-    }
-
-    public void setUserAndPhoneAndOpenIDMap(User user, String openID) {
-        String userCacheKey = conf.key(user);
-        String openIDMapKey = wxOpenIDMapConf.key(openID);
-        String phoneMapKey = phoneMapConf.key(user);
-        redis.multiSet(new HashMap<String, String>() {{
-            put(openIDMapKey, user.getId().toString());
-            put(phoneMapKey, user.getId().toString());
-        }});
-        expire(userCacheKey);
-        wxOpenIdCache.expire(openIDMapKey);
         phoneCache.expire(phoneMapKey);
     }
 
@@ -239,8 +223,10 @@ public class UserCache {
     }
 
     public void expireUserAndPhoneMap(User user) {
+        // 设置用户信息的过期时间
         String userCacheKey = conf.key(user.getId());
         expire(userCacheKey);
+        // 设置用户手机号映射的过期时间
         String phoneMapKey = phoneMapConf.key(user.getPhone());
         phoneCache.expire(phoneMapKey);
 
@@ -258,6 +244,10 @@ public class UserCache {
         User user = db.searchByID(uid);
         redis.set(USER.key(uid), user, timeout, unit);
         return user;
+    }
+
+    public User load(Long uid) throws IllegalArgumentException {
+        return db.searchByID(uid);
     }
 
     public void load(User user, int timeout, TimeUnit unit) {

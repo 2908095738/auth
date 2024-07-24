@@ -22,9 +22,11 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static cn.hutool.core.bean.BeanUtil.toBean;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.math.NumberUtils.*;
@@ -78,7 +80,13 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public void setLoginFlag(Long uid) {
-        redisTemplate.opsForValue().set(getTokenKey(uid), DateUtil.now(), expireTime, TimeUnit.DAYS);
+        setLoginFlag(uid, expireTime, TimeUnit.DAYS);
+    }
+
+    @Override
+    public void setLoginFlag(Long uid, Integer expireNumber, TimeUnit expireUnit) {
+        if(isNull(expireNumber)) expireNumber = expireTime;
+        redisTemplate.opsForValue().set(getTokenKey(uid), DateUtil.now(), expireNumber, TimeUnit.DAYS);
     }
 
 

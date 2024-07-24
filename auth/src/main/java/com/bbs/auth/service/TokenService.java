@@ -5,6 +5,7 @@ import com.bbs.vo.UserVO;
 import com.bbs.exception.ReLoginException;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.concurrent.TimeUnit;
 
 public interface TokenService {
 
@@ -23,6 +24,8 @@ public interface TokenService {
      * @param uid 用户 ID（主键）
      */
     void setLoginFlag(Long uid);
+
+    void setLoginFlag(Long uid, Integer expireNumber, TimeUnit expireUnit);
 
     String getLoginFlag(Long uid);
 

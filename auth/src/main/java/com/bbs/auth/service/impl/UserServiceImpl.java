@@ -306,6 +306,14 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
     }
 
     @Override
+    public void bindUser(Long uid, String openId) {
+        lambdaUpdate()
+                .eq(User::getId, uid)
+                .eq(User::getOpenId, openId);
+        cache.load(uid);
+    }
+
+    @Override
     public Result<Page<User>> search(UserParam param) {
         MPJLambdaWrapper<User> wrapper = new MPJLambdaWrapper<>(User.class);
         if(nonNull(param.getId())) {

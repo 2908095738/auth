@@ -114,4 +114,6 @@ public interface UserService extends MPJBaseService<User> {
     Integer countByOpenId(String fromUserName);
 
     User searchIdByOpenId(String openId);
+
+    void bindUser(Long uid, String openId);
 }

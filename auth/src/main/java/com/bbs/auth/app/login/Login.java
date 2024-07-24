@@ -1,6 +1,8 @@
 package com.bbs.auth.app.login;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
+import cn.hutool.crypto.symmetric.SymmetricCrypto;
 import cn.hutool.json.JSONUtil;
 import com.bbs.auth.app.login.param.Param;
 import com.bbs.auth.app.login.vo.VO;
@@ -17,17 +19,20 @@ import com.bbs.auth.entity.User;
 import com.bbs.enums.LoginType;
 import com.bbs.enums.UserStateEnum;
 import com.bbs.auth.service.TokenService;
+import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.redisson.api.RDeque;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static com.bbs.Result.failed;
 import static com.bbs.Result.success;
@@ -65,6 +70,9 @@ public class Login {
     @Resource
     private CompanyService companyService;
 
+    @Value("${vx.token}")
+    private String token;
+
     @PostMapping("/login")
     public Result<VO> login(@Valid @RequestBody Param param) throws InterruptedException, IllegalArgumentException {
         String loginTime = DateUtil.now();
@@ -89,7 +97,30 @@ public class Login {
                         checkUserState(user);
 
                     } else if (LoginType.WX.getCode().equals(loginType)) {
-                        throw new IllegalArgumentException("微信登录未开通");
+                        // 场景1：未注册（手机号未注册，且微信未绑定）
+                        // 场景2：手机号已注册，但微信未绑定
+                        // PS：不需要【响应用户未绑定手机号，需要绑定手机号】步骤，已在上个步骤【轮询扫码状态】中判断并响应
+
+                        // 1. 校验手机号 & 验证码格式
+                        checkPhoneFormat(phone);
+                        checkPhoneCodeFormat(paramCode);
+                        // 2. 查询验证码，并比较
+                        code = phoneCodeCache.getCode(phone);
+                        checkArgument(nonNull(code) && code.equals(Integer.valueOf(paramCode)), FAILED_AUTH_PHONE_CODE_NOT_AVAILABLE);
+                        // 3. 删除验证码
+                        phoneCodeCache.delCode(phone);
+                        // 4. 解码 VXOpenId
+                        String openId = decryptOpenId(param);
+                        // 5. 根据手机号查询用户
+                        user = userCache.searchByPhoneNoLockNoLoad(phone);
+                        if(nonNull(user)) {
+                            // 存在用户，直接绑定 VX
+                            service.bindUser(user.getId(), openId);
+                        } else {
+                            // 不存在则注册用户
+                            user = new User(phone, Long.valueOf(phone), openId);
+                            service.save(user);
+                        }
 
                     } else if(LoginType.PASSWORD.getCode().equals(loginType)) {
                         checkPhoneAndPWDFormat(param);
@@ -114,10 +145,8 @@ public class Login {
                     List<UserCompany> userCompanyList = searchUserCompany(user.getId());
                     searchIsSetCompanyStructure(param.getCheckCompanyStructure(), userCompanyList);
 
-
-
                     String token = tokenService.createToken(user);
-                    tokenService.setLoginFlag(user.getId());
+                    tokenService.setLoginFlag(user.getId(), param.getExpireNumber(), TimeUnit.DAYS);
                     userCache.expireUserAndPhoneMap(user);
                     recordLoginSuccessLog(param, token, loginTime);
                     return success(new VO(user.getId(), user.getName(), token, userCompanyList));
@@ -132,6 +161,13 @@ public class Login {
                 50000,
                 MILLISECONDS
         );
+    }
+
+    private String decryptOpenId(Param param) {
+        String openId = param.getOpenId();
+        Preconditions.checkArgument(StringUtils.isNotBlank(param.getOpenId()), "缺少微信用户ID");
+        SymmetricCrypto aes = new SymmetricCrypto(SymmetricAlgorithm.AES, token.getBytes());
+        return new String(aes.decrypt(openId));
     }
 
     private void checkPhoneAndPWDFormat(Param param) {

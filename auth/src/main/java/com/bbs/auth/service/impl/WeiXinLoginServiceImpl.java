@@ -1,6 +1,8 @@
 package com.bbs.auth.service.impl;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
+import cn.hutool.crypto.symmetric.SymmetricCrypto;
 import cn.hutool.http.HttpException;
 import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson2.JSON;
@@ -14,6 +16,7 @@ import com.bbs.auth.util.RedisUtil;
 import com.bbs.auth.util.VxUtil;
 import com.bbs.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -26,7 +29,8 @@ import java.util.Map;
 @Slf4j
 public class WeiXinLoginServiceImpl implements WeiXinLoginService {
 
-    private static final String token = "nKjjt1fBXVxyyLC4";
+    @Value("${vx.token}")
+    private String token;
     //模板消息ID
     private static final String loginTemplateId = "30_oq_2GlEMfPkUunUk2HzXdbwF04aO1hjwMwymxA5Q";
 
@@ -183,7 +187,8 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
         // 判断用户是否存在
         if (dbUser == null){
             HashMap<String, Object> scanResultMap3 = new HashMap<>();
-            scanResultMap3.put("openId", MD5Utils.md5Hex(openId, token));
+            SymmetricCrypto aes = new SymmetricCrypto(SymmetricAlgorithm.AES, token.getBytes());
+            scanResultMap3.put("openId", aes.encrypt(openId));
             scanResultMap3.put("scanResult",0);
             return scanResultMap3;
         }
