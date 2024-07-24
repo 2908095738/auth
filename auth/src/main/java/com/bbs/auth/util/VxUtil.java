@@ -6,9 +6,9 @@ import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import com.bbs.auth.entity.User;
 import com.bbs.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
-import me.chanjar.weixin.mp.bean.result.WxMpUser;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
@@ -170,35 +170,31 @@ public class VxUtil {
 
 
     /**
-     * 发送卡片消息
+     * 发送登录消息
      */
-    public void sendLoginMassage(String openId, WxMpUser user, String templateId){
+    public void sendLoginMassage(String openId, User dbUser, String templateId){
         // 获取 AccessToken
         String accessToken = getAccessToken();
         String url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=" + accessToken;
         // 组织请求数据
         Map<String, Object> data = new HashMap<>();
 
-        // 登录用户
+        // 用户账号
         Map<String, String> keyword3 = new HashMap<>();
-        keyword3.put("value", user.getNickname());
-        data.put("thing10",keyword3);
+        keyword3.put("value", dbUser.getPhone()+"");
+        data.put("character_string6",keyword3);
         // 登录时间
         Map<String, String> keyword4 = new HashMap<>();
         keyword4.put("value", new SimpleDateFormat("yyyy年MM月dd日 HH:mm").format(new Date()));
-        data.put("time4",keyword4);
-        //登录地址
-        Map<String, String> keyword5 = new HashMap<>();
-        keyword5.put("value", Arrays.toString(user.getPrivileges()));
-        data.put("thing5",keyword5);
-        // 软件名称
-        Map<String, String> keyword1 = new HashMap<>();
-        keyword1.put("value", "码良科技");
-        data.put("thing8",keyword1);
-        // 登录网址
+        data.put("time1",keyword4);
+//        // 软件名称
+//        Map<String, String> keyword1 = new HashMap<>();
+//        keyword1.put("value", "诊所系统");
+//        data.put("thing8",keyword1);
+//        // 登录网址
 //        Map<String, String> keyword2 = new HashMap<>();
 //        keyword2.put("value", "www.123.com");
-//        data.put("模板信息.DATA前面的字符串",keyword2);
+//        data.put("thing5",keyword2);
 
         Map<String, Object> jsonData = new HashMap<>();
         jsonData.put("touser", openId);
