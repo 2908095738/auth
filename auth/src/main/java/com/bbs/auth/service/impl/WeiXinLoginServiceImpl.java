@@ -37,8 +37,6 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
 
     @Value("${vx.token}")
     private String token;
-    //模板消息ID
-    private static final String loginTemplateId = "30_oq_2GlEMfPkUunUk2HzXdbwF04aO1hjwMwymxA5Q";
 
     @Resource
     private UserService userService;  //用户
@@ -108,6 +106,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
 
     @Override
     public String receive(String signature, String timestamp, String nonce, String echostr, HttpServletRequest request) throws IOException {
+        String xml = "";
         log.info("微信回调方法开始执行");
         // 验证微信签名
         if (!wxUtil.checkSignature(signature, timestamp, nonce, token)){
@@ -123,22 +122,47 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
             Map<String, String> resXml = wxUtil.ResponseXmlToMap(xmlString);
             String ticket = resXml.get("Ticket"); // 获取二维码凭证
             String fromUserName = resXml.get("FromUserName"); // 获取OpenId
-            // 只处理带场景值的二维码事件推送
-            if(StrUtil.isEmpty(ticket)){
-                return "";
-            }
-            // 处理绑定微信号事件
-            if ("1".equals(redisUtil.get("WX:"+ticket))){
-                //先删除
-                redisUtil.delete("WX:"+ticket);
-                redisUtil.set("WX:"+ticket, fromUserName,100000L);
+            String event = resXml.get("Event");
+            switch (event){
+                case "subscribe": //扫描带参数二维码事件-未关注
+                    if(StrUtil.isEmpty(ticket)){
+                        return "";
+                    }
+                    // 处理绑定微信号事件
+                    if ("1".equals(redisUtil.get("WX:"+ticket))){
+                        //先删除
+                        redisUtil.delete("WX:"+ticket);
+                        redisUtil.set("WX:"+ticket, fromUserName,100000L);
+                    }
+                    xml ="<xml>\n" +
+                            "  <ToUserName><![CDATA[" + fromUserName + "]]></ToUserName>\n" +
+                            "  <CreateTime>" + System.currentTimeMillis() + "</CreateTime>\n" +
+                            "  <MsgType><![CDATA[关注成功]]></MsgType>\n" +
+                            "  <ArticleCount>2</ArticleCount>\n" +
+                            "</xml>\n";
+                    break;
+                case "unsubscribe": //取消关注
+
+                    break;
+                case "SCAN":// 扫描带参数二维码事件-已关注
+                    xml ="<xml>\n" +
+                            "  <ToUserName><![CDATA[" + fromUserName + "]]></ToUserName>\n" +
+                            "  <CreateTime>" + System.currentTimeMillis() + "</CreateTime>\n" +
+                            "  <MsgType><![CDATA[扫码成功]]></MsgType>\n" +
+                            "  <ArticleCount>2</ArticleCount>\n" +
+                            "</xml>\n";
+                    break;
+                case "CLICK":   //自定义菜单事件
+
+                default:
+                    break;
             }
         }catch (Exception e){
             e.printStackTrace();
             throw new BusinessException("系统异常");
         }
         log.info("微信回调方法执行结束！");
-        return "扫码成功";
+        return xml;
     }
 
 
@@ -194,7 +218,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
         resultMap.put("scanResult",1);
         resultMap.put("userCompanyList", userCompanyList);
         //公众号下发登录成功
-        wxUtil.sendLoginMassage(openId, dbUser, loginTemplateId);
+        wxUtil.sendLoginMassage(openId, dbUser);
         return resultMap;
     }
 }
