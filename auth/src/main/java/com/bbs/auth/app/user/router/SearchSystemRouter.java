@@ -3,10 +3,12 @@ package com.bbs.auth.app.user.router;
 import cn.hutool.core.lang.tree.Tree;
 import com.bbs.Result;
 import com.bbs.auth.cache.BindLoginCompanyCache;
+import com.bbs.auth.entity.System;
 import com.bbs.auth.entity.SystemCompany;
 import com.bbs.auth.entity.SystemRouter;
 import com.bbs.auth.service.SystemCompanyService;
 import com.bbs.auth.service.SystemRouterService;
+import com.bbs.auth.service.SystemService;
 import com.bbs.auth.service.UserService;
 import com.google.common.base.Preconditions;
 import lombok.AllArgsConstructor;
@@ -36,6 +38,8 @@ public class SearchSystemRouter {
     private BindLoginCompanyCache bindLoginCompanyCache;
     @Resource
     private SystemCompanyService systemCompanyService;
+    @Resource
+    private SystemService systemService;
 
     @Data
     @NoArgsConstructor
@@ -49,7 +53,9 @@ public class SearchSystemRouter {
 
 //    @Cacheable(cacheNames = "system::router::user")
     @GetMapping("/system/router/user")
-    public Result<VO> search(@RequestParam Long systemId) {
+    public Result<VO> search(@RequestParam String systemCode) {
+        System system = systemService.searchBySystemCode(systemCode);
+        Long systemId = system.getId();
         Long companyId = searchCompanyId();
         tryCreateSystemCompany(systemId, companyId);
         List<SystemRouter> systemRouters = searchRouter(systemId);

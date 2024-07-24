@@ -121,6 +121,9 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public UserVO verify(String token) throws ReLoginException {
+        if(StringUtils.isBlank(token)) {
+            throw new ReLoginException();
+        }
         String[] arr = token.split(TOKEN_PREFIX);
         // 前端 token 可能以【前缀 token】的格式，这里以空格为分隔符，尝试判断获取实际的 token 部分
         String tokenPart = arr.length == INTEGER_TWO ? arr[INTEGER_ONE] : arr[INTEGER_ZERO];

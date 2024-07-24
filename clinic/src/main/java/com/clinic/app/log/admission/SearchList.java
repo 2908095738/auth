@@ -45,6 +45,8 @@ public class SearchList extends MPJBaseServiceImpl<AdmissionLogMapper, Admission
         private String createTime;
 
         private Integer state;
+
+        private String value;
     }
     @GetMapping("/log/admission/list")
     public Result<Page<AdmissionLog>> search(Param param) {

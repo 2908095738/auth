@@ -10,4 +10,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface SystemService extends IService<System> {
 
+
+    System searchBySystemCode(String code);
+
 }

@@ -15,7 +15,8 @@ public class SpringCacheConf {
                 "companyStructure",
                 "city",
                 "back::system",
-                "system::router::user"
+                "system::router::user",
+                "system::code"
         );
     }
 }
