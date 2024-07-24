@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.Objects.isNull;
+
 @Service
 @Slf4j
 public class WeiXinLoginServiceImpl implements WeiXinLoginService {
@@ -171,7 +173,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
         User dbUser = userService.searchIdByOpenId(openId);
         log.info("checkLogin方法执行结束！");
         // 判断用户是否存在
-        if (dbUser == null){
+        if (isNull(dbUser) || isNull(dbUser.getPhone())){
             HashMap<String, Object> scanResultMap3 = new HashMap<>();
             SymmetricCrypto aes = new SymmetricCrypto(SymmetricAlgorithm.AES, token.getBytes());
             scanResultMap3.put("openId", aes.encrypt(openId));
