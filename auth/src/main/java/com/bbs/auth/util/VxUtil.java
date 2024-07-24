@@ -170,9 +170,95 @@ public class VxUtil {
 
 
     /**
+     * 发送注册消息
+     */
+    public void sendRegisterMassage(String openId, User dbUser){
+        // 获取 AccessToken
+        String accessToken = getAccessToken();
+        String url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=" + accessToken;
+        // 组织请求数据
+        Map<String, Object> data = new HashMap<>();
+
+        // 注册姓名
+        Map<String, String> keyword3 = new HashMap<>();
+        keyword3.put("value", dbUser.getPhone()+"");
+        data.put("thing2",keyword3);
+        // 注册手机号
+        Map<String, String> keyword2 = new HashMap<>();
+        keyword2.put("value", dbUser.getPhone()+"");
+        data.put("phone_number1",keyword2);
+        // 注册平台
+        Map<String, String> keyword1 = new HashMap<>();
+        keyword1.put("value", "诊所系统");
+        data.put("thing4",keyword1);
+        // 注册日期
+        Map<String, String> keyword4 = new HashMap<>();
+        keyword4.put("value", new SimpleDateFormat("yyyy年MM月dd日 HH:mm").format(new Date()));
+        data.put("time5",keyword4);
+
+        Map<String, Object> jsonData = new HashMap<>();
+        jsonData.put("touser", openId);
+        jsonData.put("template_id", "fJFF_ZdFeD-35UQnlWbcTiCVbPCfzmwjK28hGKlf4zU");
+        jsonData.put("client_msg_id", openId); // 防重入id（对于同一个openid + client_msg_id, 10分钟内只发送一条消息）
+        jsonData.put("data", data);
+        // 发送请求
+        String result = HttpRequest.post(url).body(JSON.toJSONString(jsonData)).execute().body();
+        // 结果处理
+        JSONObject ticketJson = JSONObject.parseObject(result);
+        Integer errcode = ticketJson.getInteger("errcode");
+        if (errcode != 0){
+            log.error(errcode + ":" + ticketJson.getString("errmsg"));
+            throw new BusinessException("消息发送失败！");
+        }
+    }
+
+    /**
+     * 发送绑定消息
+     */
+    public void sendBindingMassage(String openId, User dbUser){
+        // 获取 AccessToken
+        String accessToken = getAccessToken();
+        String url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=" + accessToken;
+        // 组织请求数据
+        Map<String, Object> data = new HashMap<>();
+
+        // 姓名
+        Map<String, String> keyword3 = new HashMap<>();
+        keyword3.put("value", dbUser.getName());
+        data.put("thing2",keyword3);
+        // 绑定时间
+        Map<String, String> keyword4 = new HashMap<>();
+        keyword4.put("value", new SimpleDateFormat("yyyy年MM月dd日 HH:mm").format(new Date()));
+        data.put("time4",keyword4);
+//        // 软件名称
+//        Map<String, String> keyword1 = new HashMap<>();
+//        keyword1.put("value", "诊所系统");
+//        data.put("thing8",keyword1);
+        // 手机号
+        Map<String, String> keyword2 = new HashMap<>();
+        keyword2.put("value", dbUser.getPhone()+"");
+        data.put("phone_number3",keyword2);
+
+        Map<String, Object> jsonData = new HashMap<>();
+        jsonData.put("touser", openId);
+        jsonData.put("template_id", "adLInV-JT06goQSynlfrUBZl7MDLyHUrkrnVPd0F4Uw");
+        jsonData.put("client_msg_id", openId); // 防重入id（对于同一个openid + client_msg_id, 10分钟内只发送一条消息）
+        jsonData.put("data", data);
+        // 发送请求
+        String result = HttpRequest.post(url).body(JSON.toJSONString(jsonData)).execute().body();
+        // 结果处理
+        JSONObject ticketJson = JSONObject.parseObject(result);
+        Integer errcode = ticketJson.getInteger("errcode");
+        if (errcode != 0){
+            log.error(errcode + ":" + ticketJson.getString("errmsg"));
+            throw new BusinessException("消息发送失败！");
+        }
+    }
+
+    /**
      * 发送登录消息
      */
-    public void sendLoginMassage(String openId, User dbUser, String templateId){
+    public void sendLoginMassage(String openId, User dbUser){
         // 获取 AccessToken
         String accessToken = getAccessToken();
         String url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=" + accessToken;
@@ -198,7 +284,7 @@ public class VxUtil {
 
         Map<String, Object> jsonData = new HashMap<>();
         jsonData.put("touser", openId);
-        jsonData.put("template_id", templateId);
+        jsonData.put("template_id", "30_oq_2GlEMfPkUunUk2HzXdbwF04aO1hjwMwymxA5Q");
         jsonData.put("client_msg_id", openId); // 防重入id（对于同一个openid + client_msg_id, 10分钟内只发送一条消息）
         jsonData.put("data", data);
         // 发送请求
@@ -211,5 +297,6 @@ public class VxUtil {
             throw new BusinessException("消息发送失败！");
         }
     }
+
 
 }
