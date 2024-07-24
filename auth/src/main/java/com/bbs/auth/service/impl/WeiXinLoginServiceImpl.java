@@ -5,14 +5,14 @@ import cn.hutool.http.HttpException;
 import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.bbs.auth.entity.User;
-import com.bbs.auth.service.TokenService;
-import com.bbs.auth.service.UserService;
 import com.bbs.auth.service.WeiXinLoginService;
 import com.bbs.auth.util.RedisUtil;
 import com.bbs.auth.util.VxUtil;
 import com.bbs.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
+import me.chanjar.weixin.common.error.WxErrorException;
+import me.chanjar.weixin.mp.api.WxMpService;
+import me.chanjar.weixin.mp.bean.result.WxMpUser;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -30,16 +30,13 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
     private static final String loginTemplateId = "B9ucvtDqicNKYiOAW1MJji4bzSJVSwlBiu1gyMiculk";
 
     @Resource
-    private TokenService tokenService;
-
-    @Resource
     private RedisUtil redisUtil;
 
     @Resource
-    private UserService usetService;  //用户
+    private VxUtil wxUtil;
 
     @Resource
-    private VxUtil wxUtil;
+    private WxMpService wxMpService;
 
 
     @Override
@@ -117,24 +114,6 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
                 redisUtil.delete("WEI_XIN_TICKET"+ticket);
                 redisUtil.set("WEI_XIN_TICKET"+ticket,fromUserName,100000L);
             }
-            //数据库去查找是否存在该openId,如果没有就新创建一个新用户设置一下基本信息
-            Integer count = usetService.countByOpenId(fromUserName);
-            //说明数据库中没有这个人，创建一个新用户
-            if (!StrUtil.isEmpty(ticket) && count == 0){
-                String username = "U-"+fromUserName.substring(fromUserName.length() - 6);
-                User sysUser = new User();
-                sysUser.setName(username);
-                sysUser.setOpenId(fromUserName);
-                sysUser.setSign("聚变让你变的不一样");
-                //上传图像
-                sysUser.setAvatar("https://img2.baidu.com/it/u=4260815398,3507716568&fm=253&fmt=auto&app=138&f=JPEG?w=888&h=500");
-                //保存用户
-                usetService.save(sysUser);
-            }
-            //说明之前关注过，直接回调结束
-            if(!StrUtil.isEmpty(ticket) && count != 0){
-                return "";
-            }
         }catch (Exception e){
             e.printStackTrace();
             throw new BusinessException("系统异常");
@@ -145,7 +124,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
 
 
     @Override
-    public Map<String, Object> checkLogin(String ticket) {
+    public Map<String, Object> checkLogin(String ticket){
         log.info("checkLogin方法开始执行，入参ticket：{}",ticket);
         // 从缓存获取扫码状态
         String openId = null;
@@ -173,23 +152,18 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
             scanResultMap.put("scanResult",-1);
             return scanResultMap;
         }
-
-        // 验证用户注册信息
-        User dbUser = null;
+        //获取微信用户信息
+        WxMpUser user = null;
         try {
-            //根据openId查用户
-            dbUser = usetService.searchIdByOpenId(openId);
-        } catch (Exception e) {
+            user = wxMpService.getUserService().userInfo(openId,"zh_CN");
+        } catch (WxErrorException e) {
             throw new RuntimeException(e);
         }
+        log.info("获取到的用户信息为：{}",user);
         //公众号下发欢迎消息
-        wxUtil.sendLoginMassage(openId, dbUser.getName(), loginTemplateId);
-        //生成token
-        String token = tokenService.createToken(dbUser);
+        wxUtil.sendLoginMassage(openId, user, loginTemplateId);
         HashMap<String, Object> resultMap = new HashMap<>();
-
-        resultMap.put("token", token);
-        resultMap.put("user", dbUser);
+        resultMap.put("openId", openId);
         resultMap.put("scanResult",1);
         log.info("checkLogin方法执行结束！");
         return resultMap;

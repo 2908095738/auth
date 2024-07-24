@@ -193,7 +193,23 @@
             <artifactId>spring-context-support</artifactId>
             <version>1.0.11</version>
         </dependency>
+
+        <!--微信支付SDK-->
+        <dependency>
+            <groupId>com.github.wechatpay-apiv3</groupId>
+            <artifactId>wechatpay-java</artifactId>
+            <version>0.2.12</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.binarywang</groupId>
+            <artifactId>weixin-java-mp</artifactId>
+            <version>4.6.3.B</version>
+        </dependency>
+
     </dependencies>
+
+
 
     <dependencyManagement>
         <dependencies>

@@ -8,6 +8,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.bbs.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
+import me.chanjar.weixin.mp.bean.result.WxMpUser;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
@@ -171,7 +172,7 @@ public class VxUtil {
     /**
      * 发送卡片消息
      */
-    public void sendLoginMassage(String openId,String userName,String templateId){
+    public void sendLoginMassage(String openId, WxMpUser user, String templateId){
         // 获取 AccessToken
         String accessToken = getAccessToken();
         String url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=" + accessToken;
@@ -180,7 +181,7 @@ public class VxUtil {
 
         // 登录用户
         Map<String, String> keyword3 = new HashMap<>();
-        keyword3.put("value", userName);
+        keyword3.put("value", user.getNickname());
         data.put("thing10",keyword3);
         // 登录时间
         Map<String, String> keyword4 = new HashMap<>();
@@ -188,11 +189,11 @@ public class VxUtil {
         data.put("time4",keyword4);
         //登录地址
         Map<String, String> keyword5 = new HashMap<>();
-        keyword5.put("value", "未知");
+        keyword5.put("value", Arrays.toString(user.getPrivileges()));
         data.put("thing5",keyword5);
         // 软件名称
         Map<String, String> keyword1 = new HashMap<>();
-        keyword1.put("value", "软件名称？");
+        keyword1.put("value", "码良科技");
         data.put("thing8",keyword1);
         // 登录网址
 //        Map<String, String> keyword2 = new HashMap<>();

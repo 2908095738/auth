@@ -53,7 +53,6 @@ public class VXLoginAuthAPI {
         log.info("开始校验此次消息是否来自微信服务器，param->signature:{},\ntimestamp:{},\nnonce:{},\nechostr:{}",
                 signature, timestamp, nonce, echostr);
         String result = weiXinLoginService.receive(signature,timestamp,nonce,echostr,request);
-        System.out.println(result);
         log.info("微信回调接口post请求执行结束！");
         return result;
     }
