@@ -7,8 +7,10 @@ import cn.hutool.http.HttpException;
 import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.alibaba.nacos.common.utils.MD5Utils;
+import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.entity.User;
+import com.bbs.auth.entity.UserCompany;
+import com.bbs.auth.service.CompanyService;
 import com.bbs.auth.service.TokenService;
 import com.bbs.auth.service.UserService;
 import com.bbs.auth.service.WeiXinLoginService;
@@ -23,7 +25,9 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -35,7 +39,10 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
     private static final String loginTemplateId = "30_oq_2GlEMfPkUunUk2HzXdbwF04aO1hjwMwymxA5Q";
 
     @Resource
-    private UserService usetService;  //用户
+    private UserService userService;  //用户
+
+    @Resource
+    private UserCache userCache;
 
     @Resource
     private TokenService tokenService;
@@ -45,9 +52,8 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
 
     @Resource
     private VxUtil wxUtil;
-//
-//    @Resource
-//    private WxMpService wxMpService;
+    @Resource
+    private CompanyService companyService;
 
 
 
@@ -55,7 +61,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
     public Map<String,String> getQrCode() {
         log.info("getQrCode方法开始执行！");
         // 获取 AccessToken
-        String accessToken = null;
+        String accessToken;
         try {
             accessToken = wxUtil.getAccessToken();
             log.info("获取到的acesstoken为：‘{}’",accessToken);
@@ -64,8 +70,8 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
             throw new BusinessException("获取AccessToken异常");
         }
         // 获取ticket
-        String ticket = null;
-        String expireSeconds = null;
+        String ticket;
+        String expireSeconds;
         try {
             String url = "https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token=" + accessToken;
             // 组织请求数据
@@ -89,7 +95,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
             throw new BusinessException("获取tikect异常");
         }
 
-        redisUtil.set("WEI_XIN_TICKET" + ticket, "1", Long.parseLong(expireSeconds));
+        redisUtil.set("WX:"+ticket, "1", Long.parseLong(expireSeconds));
         // 通过ticket换取二维码 https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=
         HashMap<String, String> map = new HashMap<>();
         map.put("ticket", ticket);
@@ -115,52 +121,32 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
             Map<String, String> resXml = wxUtil.ResponseXmlToMap(xmlString);
             String ticket = resXml.get("Ticket"); // 获取二维码凭证
             String fromUserName = resXml.get("FromUserName"); // 获取OpenId
-            String event = resXml.get("Event"); // 获取事件类型
             // 只处理带场景值的二维码事件推送
             if(StrUtil.isEmpty(ticket)){
                 return "";
             }
             // 处理绑定微信号事件
-            if ("1".equals(redisUtil.get("WEI_XIN_TICKET"+ticket))){
+            if ("1".equals(redisUtil.get("WX:"+ticket))){
                 //先删除
-                redisUtil.delete("WEI_XIN_TICKET"+ticket);
-                redisUtil.set("WEI_XIN_TICKET"+ticket,fromUserName,100000L);
+                redisUtil.delete("WX:"+ticket);
+                redisUtil.set("WX:"+ticket, fromUserName,100000L);
             }
-            //发送关注通知
-            //数据库去查找是否存在该openId,如果没有就新创建一个新用户设置一下基本信息
-//            Integer count = usetService.countByOpenId(fromUserName);
-//            //说明数据库中没有这个人，创建一个新用户
-//            if (!StrUtil.isEmpty(ticket) && count == 0){
-//
-//                //获取微信用户信息
-//                log.info("获取到的用户信息为：{}",user);
-//                String username = "U-"+fromUserName.substring(fromUserName.length() - 6);
-//                User sysUser = new User();
-//                sysUser.setName(user.getNickname());
-//                sysUser.setOpenId(user.getOpenId());
-//                sysUser.setSign("科技改变生活");
-//                sysUser.setEmail(username+"@qq.com");
-//                //上传图像
-//                sysUser.setAvatar(user.getHeadImgUrl());
-//                //保存用户
-//                usetService.save(sysUser);
-//            }
         }catch (Exception e){
             e.printStackTrace();
             throw new BusinessException("系统异常");
         }
         log.info("微信回调方法执行结束！");
-        return "";
+        return "扫码成功";
     }
 
 
     @Override
-    public Map<String, Object> checkLogin(String ticket){
+    public Map<String, Object> checkLogin(String ticket, Integer expireNumber){
         log.info("checkLogin方法开始执行，入参ticket：{}",ticket);
         // 从缓存获取扫码状态
-        String openId = null;
+        String openId;
         try {
-            openId = redisUtil.get("WEI_XIN_TICKET" + ticket);
+            openId = redisUtil.get("WX:"+ticket);
             System.out.println(openId+"哈哈");
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -168,7 +154,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
         log.info(openId);
         // 判断扫码状态
         if (StrUtil.isEmpty(ticket)){
-            throw new BusinessException("WEI_XIN_TICKET"+ticket+"的值为空");
+            throw new BusinessException("WX:"+ticket+"的值为空");
         }
         if (openId == null){
             //说明二维码过期了，停止轮询
@@ -182,7 +168,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
             scanResultMap.put("scanResult",-1);
             return scanResultMap;
         }
-        User dbUser = usetService.searchIdByOpenId(openId);
+        User dbUser = userService.searchIdByOpenId(openId);
         log.info("checkLogin方法执行结束！");
         // 判断用户是否存在
         if (dbUser == null){
@@ -196,9 +182,15 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
         String token = tokenService.createToken(dbUser);
         HashMap<String, Object> resultMap = new HashMap<>();
 
+        tokenService.setLoginFlag(dbUser.getId(), expireNumber, TimeUnit.DAYS);
+        userCache.expireUserAndPhoneMap(dbUser);
+
+        List<UserCompany> userCompanyList = companyService.searchCompany(dbUser.getId());
+
         resultMap.put("token", token);
         resultMap.put("user", dbUser);
         resultMap.put("scanResult",1);
+        resultMap.put("userCompanyList", userCompanyList);
         //公众号下发登录成功
         wxUtil.sendLoginMassage(openId, dbUser, loginTemplateId);
         return resultMap;

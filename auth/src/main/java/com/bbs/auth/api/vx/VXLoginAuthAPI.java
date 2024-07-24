@@ -27,16 +27,16 @@ public class VXLoginAuthAPI {
     @GetMapping(value = "/weixin/receive")
     @ApiOperation("接收微信消息事件,判断用户是否完成扫码关注")
     public String getWxLoginReceive(HttpServletRequest request) throws IOException {
-        log.info("微信回调接口开始执行get请求/weixin/receive");
+        log.debug("微信回调接口开始执行get请求/weixin/receive");
         // 获取微信请求参数
         String signature = request.getParameter("signature");
         String timestamp = request.getParameter("timestamp");
         String nonce = request.getParameter("nonce");
         String echostr = request.getParameter("echostr");
-        log.info("开始校验此次消息是否来自微信服务器，param->signature:{},\ntimestamp:{},\nnonce:{},\nechostr:{}",
+        log.debug("开始校验此次消息是否来自微信服务器，param->signature:{},\ntimestamp:{},\nnonce:{},\nechostr:{}",
                 signature, timestamp, nonce, echostr);
         String result = weiXinLoginService.receive(signature, timestamp, nonce, echostr, request);
-        log.info("微信回调接口get请求执行结束！");
+        log.debug("微信回调接口get请求执行结束！");
         return result;
     }
 
@@ -44,36 +44,36 @@ public class VXLoginAuthAPI {
     @PostMapping(value = "/weixin/receive")
     @ApiOperation("接收微信消息事件,判断用户是否完成扫码关注")
     public String postWxLoginReceive(HttpServletRequest request) throws IOException {
-        log.info("微信回调接口开始执行post请求/weixin/receive");
+        log.debug("微信回调接口开始执行post请求/weixin/receive");
         // 获取微信请求参数
         String signature = request.getParameter("signature");
         String timestamp = request.getParameter("timestamp");
         String nonce = request.getParameter("nonce");
         String echostr = request.getParameter("echostr");
-        log.info("开始校验此次消息是否来自微信服务器，param->signature:{},\ntimestamp:{},\nnonce:{},\nechostr:{}",
+        log.debug("开始校验此次消息是否来自微信服务器，param->signature:{},\ntimestamp:{},\nnonce:{},\nechostr:{}",
                 signature, timestamp, nonce, echostr);
         String result = weiXinLoginService.receive(signature,timestamp,nonce,echostr,request);
-        log.info("微信回调接口post请求执行结束！");
+        log.debug("微信回调接口post请求执行结束！");
         return result;
     }
 
 
     @ApiOperation("微信扫码登录，提供二维码")
     @PostMapping(value = "/weixin/getQRCode")
-    public Result weinLogin(){
-        log.info("微信扫码登录接口开始执行：/weixin/getQRCode");
+    public Result<Map<String, String>> weinLogin(){
+        log.debug("微信扫码登录接口开始执行：/weixin/getQRCode");
         //获取ticket
         Map<String, String> codeResult = weiXinLoginService.getQrCode();
-        log.info("微信扫码登录接口执行结束！");
+        log.debug("微信扫码登录接口执行结束！");
         return Result.success(codeResult);
     }
 
     @GetMapping("/weixin/check")
     @ApiOperation("获取扫码登录状态,前端进行轮询")
-    public Result checkLogin(@RequestParam String ticket) {
-        log.info("前端二维码轮询接口开始执行/weixin/check");
-        Map<String, Object> resultMap = weiXinLoginService.checkLogin(ticket);
-        log.info("前端二维码轮询接口执行结束！");
+    public Result<Map<String, Object>> checkLogin(@RequestParam String ticket, @RequestParam Integer expireNumber) {
+        log.debug("前端二维码轮询接口开始执行/weixin/check");
+        Map<String, Object> resultMap = weiXinLoginService.checkLogin(ticket, expireNumber);
+        log.debug("前端二维码轮询接口执行结束！");
         return Result.success(resultMap);
     }
 
