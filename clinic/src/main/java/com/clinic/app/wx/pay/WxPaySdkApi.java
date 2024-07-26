@@ -36,7 +36,7 @@ public class WxPaySdkApi {
         // 初始化服务
         service = new NativePayService.Builder().config(config.getWxMlConfig()).build();
         try {
-            String orderId = "trade_no_"+System.currentTimeMillis()+"_"+config.merchantId;
+            String orderId = "tradeNo_"+System.currentTimeMillis()/1000+"_"+config.merchantId;
             PrepayResponse prepay = prepay(orderId);
             Map<String, Object> resultMap = new HashMap<>();
             resultMap.put("orderId", orderId);
