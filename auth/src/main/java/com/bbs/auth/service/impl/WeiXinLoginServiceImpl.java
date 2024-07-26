@@ -64,7 +64,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
         String accessToken;
         try {
             accessToken = wxUtil.getAccessToken();
-            log.info("获取到的acesstoken为：‘{}’",accessToken);
+            log.debug("获取到的acesstoken为：‘{}’",accessToken);
         } catch (Exception e) {
             e.printStackTrace();
             throw new BusinessException("获取AccessToken异常");
@@ -85,7 +85,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
             jsonData.put("action_info", actionInfo);
             // 发送请求
             String result = HttpRequest.post(url).body(JSON.toJSONString(jsonData)).execute().body();
-            log.info("请求微信接口的结果:'{}'",result);
+            log.debug("请求微信接口的结果:'{}'",result);
             // 结果处理
             JSONObject ticketJson = JSONObject.parseObject(result);
             ticket = ticketJson.getString("ticket");
@@ -132,6 +132,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
                         if(StrUtil.isEmpty(ticket)){
                             return xml;
                         }
+                        log.debug("处理“扫描带参数二维码事件-未关注”事件");
                         // 处理绑定微信号事件
                         if ("1".equals(redisUtil.get("WX:"+ticket))){
                             //先删除
@@ -152,6 +153,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
                         if(StrUtil.isEmpty(ticket)){
                             return xml;
                         }
+                        log.debug("处理“扫描带参数二维码事件-已关注”事件");
                         // 处理绑定微信号事件
                         if ("1".equals(redisUtil.get("WX:"+ticket))){
                             //先删除
@@ -192,11 +194,10 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
         String openId;
         try {
             openId = redisUtil.get("WX:"+ticket);
-            System.out.println(openId+"哈哈");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        log.info(openId);
+        log.debug("redis中的openid：{}，1表达没有扫码或没有回调或没有关注关注号",openId);
         // 判断扫码状态
         if (StrUtil.isEmpty(ticket)){
             throw new BusinessException("WX:"+ticket+"的值为空");
@@ -214,7 +215,6 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
             return scanResultMap;
         }
         User dbUser = userService.searchIdByOpenId(openId);
-        log.info("checkLogin方法执行结束！");
         // 判断用户是否存在
         if (isNull(dbUser) || isNull(dbUser.getPhone())){
             HashMap<String, Object> scanResultMap3 = new HashMap<>();
@@ -238,6 +238,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
         resultMap.put("userCompanyList", userCompanyList);
         //公众号下发登录成功
         wxUtil.sendLoginMassage(openId, dbUser);
+        log.info("checkLogin方法执行结束！");
         return resultMap;
     }
 }
