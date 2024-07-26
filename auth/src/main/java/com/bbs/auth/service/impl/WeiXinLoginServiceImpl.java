@@ -15,7 +15,7 @@ import com.bbs.auth.service.TokenService;
 import com.bbs.auth.service.UserService;
 import com.bbs.auth.service.WeiXinLoginService;
 import com.bbs.auth.util.RedisUtil;
-import com.bbs.auth.util.VxUtil;
+import com.bbs.auth.util.WxUtil;
 import com.bbs.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,7 +51,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
     private RedisUtil redisUtil;
 
     @Resource
-    private VxUtil wxUtil;
+    private WxUtil wxUtil;
     @Resource
     private CompanyService companyService;
 

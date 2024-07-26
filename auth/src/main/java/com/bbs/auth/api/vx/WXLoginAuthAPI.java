@@ -18,7 +18,7 @@ import java.util.Map;
 @Api(tags = "微信登录相关接口")
 @RestController
 @Slf4j
-public class VXLoginAuthAPI {
+public class WXLoginAuthAPI {
 
     @Resource
     private WeiXinLoginService weiXinLoginService;

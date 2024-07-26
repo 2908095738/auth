@@ -35,7 +35,7 @@ import java.util.Map;
 
 @Slf4j
 @Component
-public class VxUtil {
+public class WxUtil {
 
     private String appId = "wxbd377f32afa2d442";
     private String appSecret = "9fe6c48d6689198f4d0022f3e809c3bb";
