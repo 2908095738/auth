@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.bbs.auth.entity.User;
@@ -173,6 +174,7 @@ public class WxUtil {
      * 发送注册消息
      */
     public void sendRegisterMassage(String openId, User dbUser){
+        log.debug("注册成功![Login::login] user={}", JSONUtil.toJsonPrettyStr(dbUser));
         // 获取 AccessToken
         String accessToken = getAccessToken();
         String url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=" + accessToken;
@@ -199,7 +201,7 @@ public class WxUtil {
         Map<String, Object> jsonData = new HashMap<>();
         jsonData.put("touser", openId);
         jsonData.put("template_id", "fJFF_ZdFeD-35UQnlWbcTiCVbPCfzmwjK28hGKlf4zU");
-        jsonData.put("client_msg_id", openId); // 防重入id（对于同一个openid + client_msg_id, 10分钟内只发送一条消息）
+//        jsonData.put("client_msg_id", openId); // 防重入id（对于同一个openid + client_msg_id, 10分钟内只发送一条消息）
         jsonData.put("data", data);
         // 发送请求
         String result = HttpRequest.post(url).body(JSON.toJSONString(jsonData)).execute().body();
@@ -216,6 +218,7 @@ public class WxUtil {
      * 发送绑定消息
      */
     public void sendBindingMassage(String openId, User dbUser){
+        log.debug("绑定成功![Login::login] user={}", JSONUtil.toJsonPrettyStr(dbUser));
         // 获取 AccessToken
         String accessToken = getAccessToken();
         String url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=" + accessToken;
@@ -242,7 +245,7 @@ public class WxUtil {
         Map<String, Object> jsonData = new HashMap<>();
         jsonData.put("touser", openId);
         jsonData.put("template_id", "adLInV-JT06goQSynlfrUBZl7MDLyHUrkrnVPd0F4Uw");
-        jsonData.put("client_msg_id", openId); // 防重入id（对于同一个openid + client_msg_id, 10分钟内只发送一条消息）
+//        jsonData.put("client_msg_id", openId); // 防重入id（对于同一个openid + client_msg_id, 10分钟内只发送一条消息）
         jsonData.put("data", data);
         // 发送请求
         String result = HttpRequest.post(url).body(JSON.toJSONString(jsonData)).execute().body();
@@ -259,6 +262,7 @@ public class WxUtil {
      * 发送登录消息
      */
     public void sendLoginMassage(String openId, User dbUser){
+        log.debug("登录成功![Login::login] user={}", JSONUtil.toJsonPrettyStr(dbUser));
         // 获取 AccessToken
         String accessToken = getAccessToken();
         String url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=" + accessToken;
@@ -285,7 +289,7 @@ public class WxUtil {
         Map<String, Object> jsonData = new HashMap<>();
         jsonData.put("touser", openId);
         jsonData.put("template_id", "30_oq_2GlEMfPkUunUk2HzXdbwF04aO1hjwMwymxA5Q");
-        jsonData.put("client_msg_id", openId); // 防重入id（对于同一个openid + client_msg_id, 10分钟内只发送一条消息）
+//        jsonData.put("client_msg_id", openId); // 防重入id（对于同一个openid + client_msg_id, 10分钟内只发送一条消息）
         jsonData.put("data", data);
         // 发送请求
         String result = HttpRequest.post(url).body(JSON.toJSONString(jsonData)).execute().body();
