@@ -10,11 +10,10 @@ import com.clinic.entity.AdmissionLog;
 import com.clinic.entity.OperationLog;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.OperationLogService;
-import com.clinic.util.LogUtil;
+import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.slf4j.event.Level;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -58,7 +57,7 @@ public class LogController {
         try {
             Long logId = admissionLogCache.save(param);
 
-            LogUtil.Operation.record("门诊日志", LoginUser.get().getName() + "通过已有病人添加了门诊日志：病人id=" + param.getPatientId() + ", 门诊日志id=" + logId, Level.INFO);
+            LogUtil.Operation.recordAdmissionInfoLog("{}通过已有病人添加了门诊日志：病人id={}, 门诊日志id={}", LoginUser.get().getName(), param.getPatientId(), logId);
             transactionManager.commit(transaction);
             return Result.success(logId);
         } catch (RuntimeException e) {

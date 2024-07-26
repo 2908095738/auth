@@ -11,9 +11,8 @@ import com.clinic.dto.param.SearchSterilizeLogParam;
 import com.clinic.entity.SterilizeLog;
 import com.clinic.mapper.SterilizeLogMapper;
 import com.clinic.service.SterilizeLogService;
-import com.clinic.util.LogUtil;
+import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
-import org.slf4j.event.Level;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionDefinition;
@@ -45,7 +44,7 @@ public class SterilizeLogServiceImpl extends ServiceImpl<SterilizeLogMapper, Ste
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             if(!save(sterilizeLog))throw new DbRuntimeException("添加失败！");
-            LogUtil.Operation.record("消毒记录",LoginUser.get().getName()+"新增一条消毒记录：记录id="+sterilizeLog.getId(), Level.INFO);
+            LogUtil.Operation.recordSterilizeInfoLog("{}新增一条消毒记录：记录id={}", LoginUser.get().getName(), sterilizeLog.getId());
             transactionManager.commit(transaction);
             return Result.success();
         } catch (RuntimeException e) {

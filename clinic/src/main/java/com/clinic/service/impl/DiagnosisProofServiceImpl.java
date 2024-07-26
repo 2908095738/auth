@@ -9,12 +9,11 @@ import com.clinic.entity.Clinic;
 import com.clinic.entity.DiagnosisProof;
 import com.clinic.mapper.DiagnosisProofMapper;
 import com.clinic.service.DiagnosisProofService;
-import com.clinic.util.LogUtil;
+import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.event.Level;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionDefinition;
@@ -39,7 +38,7 @@ public class DiagnosisProofServiceImpl extends MPJBaseServiceImpl<DiagnosisProof
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             if(!save(param))throw new DbRuntimeException("添加失败！");
-            LogUtil.Operation.record("诊断证明",LoginUser.get().getName()+"新增一条诊断证明：证明id="+param.getId(), Level.INFO);
+            LogUtil.Operation.recordDiagnosisProofInfoLog("{}新增一条诊断证明：证明id={}", LoginUser.get().getName(), param.getId());
             transactionManager.commit(transaction);
             return Result.success(param.getId());
         } catch (RuntimeException e) {

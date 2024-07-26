@@ -12,9 +12,8 @@ import com.clinic.dto.param.SearchDisinfectionLogParam;
 import com.clinic.entity.DisinfectionLog;
 import com.clinic.mapper.DisinfectionLogMapper;
 import com.clinic.service.DisinfectionLogService;
-import com.clinic.util.LogUtil;
+import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
-import org.slf4j.event.Level;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionDefinition;
@@ -45,7 +44,7 @@ public class DisinfectionLogServiceImpl extends ServiceImpl<DisinfectionLogMappe
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             if(!save(log))throw new DbRuntimeException("添加失败！");
-            LogUtil.Operation.record("消杀记录",LoginUser.get().getName()+"新增一条消杀记录：记录id=="+log.getId(), Level.INFO);
+            LogUtil.Operation.recordDisinfectionInfoLog("{}新增一条消杀记录：记录id={}", LoginUser.get().getName(), log.getId());
             transactionManager.commit(transaction);
             return Result.success(true);
         } catch (RuntimeException e) {

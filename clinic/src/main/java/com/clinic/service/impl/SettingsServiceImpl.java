@@ -9,9 +9,8 @@ import com.clinic.dto.param.UpdateSettingsParam;
 import com.clinic.entity.Settings;
 import com.clinic.mapper.SettingsMapper;
 import com.clinic.service.SettingsService;
-import com.clinic.util.LogUtil;
+import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
-import org.slf4j.event.Level;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
@@ -52,7 +51,7 @@ public class SettingsServiceImpl extends ServiceImpl<SettingsMapper, Settings>
                 //同步添加redis中的数据
                 if(save)redis.opsForValue().set(getKey(userId), JSONUtil.toJsonPrettyStr(settings));
             }
-            LogUtil.Operation.record("用户设置",LoginUser.get().getName()+"新增设置：设置Id="+settings.getId(), Level.INFO);
+            LogUtil.Operation.recordUserSettingInfoLog("{}新增设置：设置Id={}", LoginUser.get().getName(), settings.getId());
             transactionManager.commit(transaction);
             return Result.success(true);
         } catch (RuntimeException e) {
@@ -75,7 +74,7 @@ public class SettingsServiceImpl extends ServiceImpl<SettingsMapper, Settings>
                     redis.opsForValue().set(getKey(userId),JSONUtil.toJsonPrettyStr(dbSettings));
                 }
             }
-            LogUtil.Operation.record("用户设置",LoginUser.get().getName()+"修改设置：设置Id="+settings.getId(), Level.INFO);
+            LogUtil.Operation.recordUserSettingInfoLog("{}修改设置：设置Id={}", LoginUser.get().getName(), settings.getId());
             transactionManager.commit(transaction);
             return Result.success(true);
         } catch (RuntimeException e) {

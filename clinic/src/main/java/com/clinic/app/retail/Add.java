@@ -9,12 +9,11 @@ import com.clinic.entity.StockBatch;
 import com.clinic.service.RetailDrugRecordService;
 import com.clinic.service.RetailRecordService;
 import com.clinic.service.StockBatchService;
-import com.clinic.util.LogUtil;
+import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.util.validation.metadata.DatabaseException;
-import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -113,7 +112,7 @@ public class Add {
             fillRetailIdToDrugRecords(retailDrugRecords, retailRecord);
 
             if(!drugRecordService.saveBatch(retailDrugRecords))  throw new DatabaseException("零售药品记录入库失败");
-            LogUtil.Operation.record("零售",LoginUser.get().getName()+"新增一条零售记录：零售记录id="+retailRecord.getId(), Level.INFO);
+            LogUtil.Operation.recordRetailInfoLog("{}新增一条零售记录：零售记录id={}", LoginUser.get().getName(), retailRecord.getId());
             return true;
         }
         return false;
@@ -123,8 +122,8 @@ public class Add {
         return redis.opsForValue().setIfAbsent(lockKey, LoginUser.getId().toString());
     }
 
-    private Boolean removeLock(String lockKey) {
-        return redis.delete(lockKey);
+    private void removeLock(String lockKey) {
+        redis.delete(lockKey);
     }
 
     @Resource

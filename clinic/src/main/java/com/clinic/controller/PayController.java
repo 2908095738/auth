@@ -19,14 +19,13 @@ import com.clinic.dto.param.UpdatePayById;
 import com.clinic.entity.PayRecord;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.PayService;
-import com.clinic.util.LogUtil;
+import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
 import com.clinic.util.PageUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -140,7 +139,7 @@ public class PayController {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             if(!service.createPayOther(param.getPayOther(), param.getPayId())) throw new RuntimeException();
-            LogUtil.Operation.record("收费", LoginUser.get().getName()+"其他收费项创建：收费id="+param.getPayId(), Level.INFO);
+            LogUtil.Operation.recordPayInfoLog("{}其他收费项创建：收费id={}", LoginUser.get().getName(), param.getPayId());
             transactionManager.commit(transaction);
             return Result.success(true);
         } catch (Exception e) {
@@ -159,7 +158,7 @@ public class PayController {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             List<PayRecord> payRecordList = service.updatePayOther(param.getPayOther(), param.getPayId());
-            LogUtil.Operation.record("收费",LoginUser.get().getName()+"其他收费项修改：收费id="+param.getPayId(), Level.INFO);
+            LogUtil.Operation.recordPayInfoLog("{}其他收费项修改：收费id={}", LoginUser.get().getName(), param.getPayId());
             transactionManager.commit(transaction);
             return Result.success(payRecordList);
         } catch (Exception e) {
@@ -185,7 +184,7 @@ public class PayController {
             if(!appStockService.updateNum(prescriptionDto))throw new RuntimeException();
             //修改门诊日志状态
             if (!admissionLogService.updateEndState(param.getAdmissionId()))throw new RuntimeException();
-            LogUtil.Operation.record("收费",LoginUser.get().getName()+"本次收费-修改收费状态和收费方式：收费id="+param.getId()+", 处方id="+prescriptionDto.getId(), Level.INFO);
+            LogUtil.Operation.recordPayInfoLog("{}本次收费-修改收费状态和收费方式：收费id={}, 处方id={}", LoginUser.get().getName(), param.getId(), prescriptionDto.getId());
             transactionManager.commit(transaction);
             return Result.success(true);
         } catch (Exception e) {

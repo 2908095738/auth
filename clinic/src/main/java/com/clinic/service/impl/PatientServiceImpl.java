@@ -18,14 +18,13 @@ import com.clinic.entity.Dossier;
 import com.clinic.entity.Patient;
 import com.clinic.mapper.PatientMapper;
 import com.clinic.service.PatientService;
-import com.clinic.util.LogUtil;
+import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.toolkit.JoinWrappers;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.event.Level;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionDefinition;
@@ -76,7 +75,7 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
         try {
             save(patient);
             Long logId = admissionLogCache.saveLogFormAddPatient(patient);
-            LogUtil.Operation.record("病人", user.getName()+"添加病人：病人id="+patient.getId()+", 门诊日志id="+logId, Level.INFO);
+            LogUtil.Operation.recordPatientInfoLog("{}添加病人：病人id={}, 门诊日志id={}", user.getName(), patient.getId(), logId);
             transactionManager.commit(transaction);
             return success(new AddOrEditPatientVo(patient.getId(), logId));
         } catch (Exception e) {
@@ -92,7 +91,7 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             updateById(patient);
-            LogUtil.Operation.record("病人", LoginUser.get().getName()+"修改病人："+patient.getName(), Level.INFO);
+            LogUtil.Operation.recordPatientInfoLog("{}修改病人：{}", LoginUser.get().getName(), patient.getName());
             return success(patient.getId());
         } catch (Exception e) {
             transactionManager.rollback(transaction);

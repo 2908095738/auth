@@ -21,9 +21,8 @@ import com.clinic.entity.Unit;
 import com.clinic.entity.Usage;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.DossierService;
-import com.clinic.util.LogUtil;
+import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
-import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -90,7 +89,7 @@ public class PrescriptionController {
             Dossier dossier = dossierService.getDossierByPrescriptionId(prescription.getId());
             Long payId = payCache.createPayAndPrescriptionRecord(prescription,dossier);
             admissionLogService.update(param.getAdmissionId(),prescription.getId(),payId);
-            LogUtil.Operation.record("处方", LoginUser.get().getName()+"添加处方并创建收费记录：处方id="+prescription.getId()+", 支付id="+payId, Level.INFO);
+            LogUtil.Operation.recordPrescriptionInfoLog("{}添加处方并创建收费记录：处方id={}, 支付id={}", LoginUser.get().getName(), prescription.getId(), payId);
             transactionManager.commit(transaction);
             return Result.success(new PrescriptionAndPayIdVo(prescription.getId(), payId));
         } catch (RuntimeException e) {
@@ -110,7 +109,7 @@ public class PrescriptionController {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             if(service.update(param))if(!appPayService.updatePayPrescriptionRecord(param.getPayId(), param.getPrice()) )throw new RuntimeException();
-            LogUtil.Operation.record("处方",LoginUser.get().getName()+"修改处方和处方收费记录：处方id="+param.getId()+", 支付id="+param.getPayId(), Level.INFO);
+            LogUtil.Operation.recordPrescriptionInfoLog("{}修改处方和处方收费记录：处方id={}, 支付id={}", LoginUser.get().getName(), param.getId(), param.getPayId());
             transactionManager.commit(transaction);
             return Result.success();
         } catch (RuntimeException e) {
@@ -146,7 +145,7 @@ public class PrescriptionController {
      */
     @GetMapping("/file")
     public void getFile(@NotNull Long id, @NotNull Integer templateIndex) throws Exception {
-        LogUtil.Operation.record("处方",LoginUser.get().getName()+"下载处方：处方id="+id+", 模板id="+templateIndex, Level.INFO);
+        LogUtil.Operation.recordPrescriptionInfoLog("{}下载处方：处方id={}, 模板id={}", LoginUser.get().getName(), id, templateIndex);
         createPrescriptionFile.generation(id, templateIndex);
     }
 

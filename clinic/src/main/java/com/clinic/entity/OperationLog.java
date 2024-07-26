@@ -60,6 +60,8 @@ public class OperationLog implements Serializable {
 
     /**
      * 级别
+     * @see org.slf4j.event.Level
+     * @see org.slf4j.event.EventConstants
      */
     @TableField(value = "level")
     private Integer level;

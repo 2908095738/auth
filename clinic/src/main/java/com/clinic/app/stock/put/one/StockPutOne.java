@@ -7,10 +7,9 @@ import com.clinic.app.stock.put.one.action.UpdateStockAction;
 import com.clinic.dto.param.PutStockParam;
 import com.clinic.entity.StockBatch;
 import com.clinic.service.StockBatchService;
-import com.clinic.util.LogUtil;
+import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
 import com.clinic.util.RedisUtil;
-import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -51,7 +50,7 @@ public class StockPutOne {
             String stockNo = generateStockInNO();
 
             putStock(param, stockNo);
-            LogUtil.Operation.record("库存", LoginUser.get().getName()+"新增一条药品库存：库存批次编号="+stockNo, Level.INFO);
+            LogUtil.Operation.recordStockInfoLog("{}新增一条药品库存：库存批次编号={}", LoginUser.get().getName(), stockNo);
             transactionManager.commit(transaction);
             return success(stockNo);
         } catch (Exception e) {

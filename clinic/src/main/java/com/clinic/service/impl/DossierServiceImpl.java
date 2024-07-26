@@ -18,11 +18,10 @@ import com.clinic.entity.DossierPrescription;
 import com.clinic.mapper.DossierMapper;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.DossierService;
-import com.clinic.util.LogUtil;
+import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
-import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -68,7 +67,7 @@ public class DossierServiceImpl extends MPJBaseServiceImpl<DossierMapper, Dossie
         try {
             if(!save(dossier)) throw new BusinessException();
             updateLog(dossier, param.getAdmissionID());
-            LogUtil.Operation.record("病例",user.getName()+"添加病例：病例id="+dossier.getId()+", 门诊日志id="+param.getAdmissionID(), Level.INFO);
+            LogUtil.Operation.recordDossierInfoLog("{}添加病例：病例id={}, 门诊日志id={}", user.getName(), dossier.getId(), param.getAdmissionID());
             transactionManager.commit(transaction);
             return Result.success(dossier.getId());
         } catch (Exception e) {
@@ -90,7 +89,7 @@ public class DossierServiceImpl extends MPJBaseServiceImpl<DossierMapper, Dossie
                     .eq(AdmissionLog::getDossierId, dossier.getId())
                     .update();
             admissionLogCache.remove();
-            LogUtil.Operation.record("病例", LoginUser.get().getName()+"修改病例：病例id="+param.getId(), Level.INFO);
+            LogUtil.Operation.recordDossierInfoLog("{}修改病例：病例id={}", LoginUser.get().getName(), param.getId());
             transactionManager.commit(transaction);
             return Result.success(dossier.getId());
         } catch (Exception e) {
