@@ -13,6 +13,10 @@ import java.security.Security;
 @Data
 public class WxPaySdkConfig implements InitializingBean {
 
+    /** 微信支付域名 */
+    @Value(value = "${wx.appId}")
+    public String appId;//"wxbd377f32afa2d442"
+
     /** 商户号 */
     @Value(value = "${wx.pay.merchantId}")
     public String merchantId;//"1681624897"

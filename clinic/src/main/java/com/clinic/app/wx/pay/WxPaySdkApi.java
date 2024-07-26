@@ -62,6 +62,8 @@ public class WxPaySdkApi {
      */
     public PrepayResponse prepay() {
         PrepayRequest request = new PrepayRequest();
+        request.setAppid(config.appId);
+        request.setMchid(config.merchantId);
         Amount amount = new Amount();
         amount.setTotal(100);
         request.setAmount(amount);
