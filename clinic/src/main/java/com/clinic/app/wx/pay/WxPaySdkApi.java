@@ -8,7 +8,6 @@ import com.wechat.pay.java.service.payments.model.Transaction;
 import com.wechat.pay.java.service.payments.nativepay.NativePayService;
 import com.wechat.pay.java.service.payments.nativepay.model.Amount;
 import com.wechat.pay.java.service.payments.nativepay.model.CloseOrderRequest;
-import com.wechat.pay.java.service.payments.nativepay.model.Detail;
 import com.wechat.pay.java.service.payments.nativepay.model.PrepayRequest;
 import com.wechat.pay.java.service.payments.nativepay.model.PrepayResponse;
 import com.wechat.pay.java.service.payments.nativepay.model.QueryOrderByIdRequest;
@@ -93,9 +92,6 @@ public class WxPaySdkApi {
         Amount amount = new Amount();
         amount.setTotal(1);
         request.setAmount(amount);
-        Detail detail = new Detail();
-        detail.setCostPrice(36800);
-        request.setDetail(detail);
         request.setDescription("码良科技-支付-诊所系统");
         request.setAttach("码良科技-支付-诊所系统");
         request.setNotifyUrl("https://maliang.work/api/weixin/pay/notification");//回调地址
