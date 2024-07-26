@@ -54,9 +54,10 @@ public class SearchSystemRouter {
 //    @Cacheable(cacheNames = "system::router::user")
     @GetMapping("/system/router/user")
     public Result<VO> search(@RequestParam String systemCode) {
+        Long uid = userService.loginUser().getId();
         System system = systemService.searchBySystemCode(systemCode);
         Long systemId = system.getId();
-        Long companyId = searchCompanyId();
+        Long companyId = searchCompanyId(uid);
         tryCreateSystemCompany(systemId, companyId);
         List<SystemRouter> systemRouters = searchRouter(systemId);
         return Result.success(new VO(systemRouters, systemRouterService.toTree(systemRouters)));
@@ -66,8 +67,8 @@ public class SearchSystemRouter {
         return systemRouterService.searchBySystemId(systemId);
     }
 
-    private Long searchCompanyId() throws IllegalArgumentException {
-        Long companyId = bindLoginCompanyCache.get(userService.loginEntityUser().getId());
+    private Long searchCompanyId(Long uid) throws IllegalArgumentException {
+        Long companyId = bindLoginCompanyCache.get(uid);
         userIsBindCompany(companyId);
         return companyId;
     }
