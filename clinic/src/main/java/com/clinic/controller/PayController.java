@@ -184,7 +184,7 @@ public class PayController {
             if(!appStockService.updateNum(prescriptionDto))throw new RuntimeException();
             //修改门诊日志状态
             if (!admissionLogService.updateEndState(param.getAdmissionId()))throw new RuntimeException();
-            LogUtil.Operation.recordPayInfoLog("{}本次收费-修改收费状态和收费方式：收费id={}, 处方id={}", LoginUser.get().getName(), param.getId(), prescriptionDto.getId());
+            LogUtil.Operation.recordPayInfoLog("{}就诊收费-修改收费状态和收费方式：收费id={}, 处方id={}", LoginUser.get().getName(), param.getId(), prescriptionDto.getId());
             transactionManager.commit(transaction);
             return Result.success(true);
         } catch (Exception e) {

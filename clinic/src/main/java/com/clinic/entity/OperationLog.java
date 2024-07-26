@@ -35,6 +35,12 @@ public class OperationLog implements Serializable {
     private Date createTime;
 
     /**
+     * 业务编码
+     */
+    @TableField(value = "service_code")
+    private Integer serviceCode;
+
+    /**
      * 业务
      */
     @TableField(value = "service")
@@ -66,7 +72,8 @@ public class OperationLog implements Serializable {
     @TableField(value = "level")
     private Integer level;
 
-    public OperationLog(String location, String service, String operation, Level level) {
+    public OperationLog(String location, Integer serviceCode, String service, String operation, Level level) {
+        this.serviceCode = serviceCode;
         this.createTime = new Date();
         this.location = location;
         this.service = service;

@@ -10,7 +10,7 @@ public class LogUtil {
     /**
      * 操作日志
      * <p>
-     *     注意：操作需要视为事务的一部分！（如果一个重要操作的执行，没有痕迹，则无法溯源可能发生的问题）
+     *     注意：操作需要视为事务的一部分！！！！！（如果一个重要操作的执行，没有痕迹，则无法溯源可能发生的问题）
      * </p>
      */
     public static class Operation {
@@ -21,12 +21,12 @@ public class LogUtil {
          * @param operation 操作
          * @param level     级别
          */
-        public static void record(String service, String operation, Level level) {
-            Db.save(new OperationLog(getExecLocation(), service, operation, level));
+        public static void record(Integer serviceCode, String service, String operation, Level level) {
+            Db.save(new OperationLog(getExecLocation(), serviceCode, service, operation, level));
         }
 
         public static void record(ServiceLogEnums serviceLogEnum, Level level, CharSequence template, Object... params) {
-            record(serviceLogEnum.getServiceName(), StrUtil.format(template, params), level);
+            record(serviceLogEnum.getServiceCode(), serviceLogEnum.getServiceName(), StrUtil.format(template, params), level);
         }
 
         public static void recordStockInfoLog(CharSequence template, Object... params) {
