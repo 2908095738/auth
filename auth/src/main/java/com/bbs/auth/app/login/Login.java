@@ -4,21 +4,22 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
 import cn.hutool.crypto.symmetric.SymmetricCrypto;
 import cn.hutool.json.JSONUtil;
+import com.bbs.Result;
 import com.bbs.auth.app.login.param.Param;
 import com.bbs.auth.app.login.vo.VO;
+import com.bbs.auth.cache.code.PhoneCodeCache;
 import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.dao.UserDao;
 import com.bbs.auth.entity.Company;
+import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.UserCompany;
 import com.bbs.auth.service.CompanyService;
+import com.bbs.auth.service.TokenService;
 import com.bbs.auth.service.UserService;
 import com.bbs.auth.util.RedisUtil;
-import com.bbs.Result;
-import com.bbs.auth.cache.code.PhoneCodeCache;
-import com.bbs.auth.entity.User;
+import com.bbs.auth.util.WxUtil;
 import com.bbs.enums.LoginType;
 import com.bbs.enums.UserStateEnum;
-import com.bbs.auth.service.TokenService;
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -26,19 +27,21 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.redisson.api.RDeque;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
-
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static com.bbs.Result.failed;
 import static com.bbs.Result.success;
+import static com.bbs.auth.enums.RedisKeys.USER_LOGIN_PHONE;
 import static com.bbs.auth.util.PhoneUtil.checkPhoneCodeFormat;
 import static com.bbs.auth.util.PhoneUtil.checkPhoneFormat;
-import static com.bbs.auth.enums.RedisKeys.USER_LOGIN_PHONE;
 import static com.bbs.enums.CodeEnum.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.isNull;
@@ -69,6 +72,9 @@ public class Login {
     private UserDao db;
     @Resource
     private CompanyService companyService;
+
+    @Resource
+    private WxUtil wxUtil;
 
     @Value("${vx.token}")
     private String token;
@@ -116,10 +122,14 @@ public class Login {
                         if(nonNull(user)) {
                             // 存在用户，直接绑定 VX
                             service.bindUser(user.getId(), openId);
+                            //公众号下发绑定成功
+                            wxUtil.sendBindingMassage(openId, user);
                         } else {
                             // 不存在则注册用户
                             user = new User(phone, Long.valueOf(phone), openId);
                             service.save(user);
+                            //公众号下发注册成功
+                            wxUtil.sendRegisterMassage(openId, user);
                         }
 
                     } else if(LoginType.PASSWORD.getCode().equals(loginType)) {
