@@ -12,11 +12,12 @@ import com.wechat.pay.java.service.payments.nativepay.model.PrepayRequest;
 import com.wechat.pay.java.service.payments.nativepay.model.PrepayResponse;
 import com.wechat.pay.java.service.payments.nativepay.model.QueryOrderByIdRequest;
 import com.wechat.pay.java.service.payments.nativepay.model.QueryOrderByOutTradeNoRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-
+@Slf4j
 @RestController
 public class WxPaySdkApi {
 
@@ -34,13 +35,16 @@ public class WxPaySdkApi {
             PrepayResponse prepay = prepay();
             return Result.success(prepay.getCodeUrl());
         } catch (HttpException e) { // 发送HTTP请求失败
+            log.error("请求失败", e);
             // 调用e.getHttpRequest()获取请求打印日志或上报监控，更多方法见HttpException定义
         } catch (ServiceException e) { // 服务返回状态小于200或大于等于300，例如500
+            log.error("服务失败", e);
             // 调用e.getResponseBody()获取返回体打印日志或上报监控，更多方法见ServiceException定义
         } catch (MalformedMessageException e) { // 服务返回成功，返回体类型不合法，或者解析返回体失败
+            log.error("解析失败", e);
             // 调用e.getMessage()获取信息打印日志或上报监控，更多方法见MalformedMessageException定义
         }
-        return null;
+        return Result.failed("支付失败");
     }
 
 
@@ -62,7 +66,7 @@ public class WxPaySdkApi {
         amount.setTotal(100);
         request.setAmount(amount);
         request.setDescription("测试商品标题");
-        request.setNotifyUrl("https://notify_url");//回调地址
+        request.setNotifyUrl("https://maliang.work/weixin/pay/notification");//回调地址
         request.setOutTradeNo("out_trade_no_001");//商户订单号
         // 调用接口
         return service.prepay(request);
