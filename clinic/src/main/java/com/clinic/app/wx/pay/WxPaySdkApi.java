@@ -35,7 +35,7 @@ public class WxPaySdkApi {
         // 初始化服务
         service = new NativePayService.Builder().config(config.getWxMlConfig()).build();
         try {
-            String orderId = "tradeNo_"+System.currentTimeMillis()/1000+"_"+config.merchantId;
+            String orderId = "tradeNo"+System.currentTimeMillis()/1000+config.merchantId;
             PrepayResponse prepay = prepay(orderId);
             Map<String, Object> resultMap = new HashMap<>();
             resultMap.put("orderId", orderId);
@@ -94,7 +94,7 @@ public class WxPaySdkApi {
         request.setAmount(amount);
         request.setDescription("码良科技-支付-诊所系统");
         request.setAttach("码良科技-支付-诊所系统");
-        request.setNotifyUrl("https://maliang.work/api/weixin/pay/notification");//回调地址
+        request.setNotifyUrl("https://maliang.work/api/clinic/weixin/pay/notification");//回调地址
         request.setOutTradeNo(outTradeNo);//商户订单号
         // 调用接口
         return service.prepay(request);
