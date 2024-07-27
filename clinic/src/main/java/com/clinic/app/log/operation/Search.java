@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 import static com.clinic.util.log.ServiceLogEnums.*;
 import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 @RestController("searchOperationLog")
@@ -62,8 +63,15 @@ public class Search {
     private void fillPatient(List<OperationLog> logs) {
         if(logs.size() > INTEGER_ZERO) {
             // 填充病人信息
+            Date now = new Date();
             List<OperationLog> needFillPatientLogs = new ArrayList<>();
-            Set<Long> needFillPatientLogIds = logs.stream().filter(log -> {
+            Set<Long> needFillPatientLogIds = logs.stream().peek(log -> {
+                Date createTime = log.getCreateTime();
+                log.setIsCurrentDay(DateUtil.isSameDay(now, createTime));
+                log.setCreateYMD(DateUtil.format(createTime, "yyyy/MM/dd"));
+                log.setCreateHMS(DateUtil.format(createTime, "HH:mm:ss"));
+
+            }).filter(log -> {
                 Integer serviceCode = log.getServiceCode();
                 // 零售药品
                 return (
@@ -79,7 +87,12 @@ public class Search {
             if(needFillPatientLogIds.size() > INTEGER_ZERO) {
                 Map<Long, Patient> patientIdMap = patientService.listByIds(needFillPatientLogIds)
                         .stream().collect(Collectors.toMap(Patient::getId, patient -> patient));
-                needFillPatientLogs.forEach(log -> log.setPatient(patientIdMap.get(log.getPatientId())));
+                needFillPatientLogs.forEach(log -> {
+                    Patient patient = patientIdMap.get(log.getPatientId());
+                    if(nonNull(patient.getSex())) patient.setSexStr(Objects.equals(patient.getSex(), INTEGER_ONE) ? "男" : "女");
+                    if(nonNull(patient.getAge())) patient.setAgeStr(patient.getAge() + "岁");
+                    log.setPatient(patientIdMap.get(log.getPatientId()));
+                });
             }
         }
     }

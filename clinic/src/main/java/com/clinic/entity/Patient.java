@@ -35,11 +35,17 @@ public class Patient implements Serializable {
     @TableField(value = "sex")
     private Integer sex;
 
+    @TableField(exist = false)
+    private String sexStr;
+
     /**
      * 年龄
      */
     @TableField(value = "age")
     private Integer age;
+
+    @TableField(exist = false)
+    private String ageStr;
 
     /**
      * 出生年月

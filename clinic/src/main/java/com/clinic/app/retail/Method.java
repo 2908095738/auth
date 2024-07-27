@@ -37,7 +37,7 @@ public class Method {
      * @return 售卖后的库存数量是否正常
      */
     public static Boolean sellAfterStockNumberIsNormal(Long stockNumber) {
-        return stockNumber > 0;
+        return stockNumber >= 0;
     }
 
     /**

@@ -34,6 +34,15 @@ public class OperationLog implements Serializable {
     @TableField(value = "create_time")
     private Date createTime;
 
+    @TableField(exist = false)
+    private String createYMD;
+
+    @TableField(exist = false)
+    private String createHMS;
+
+    @TableField(exist = false)
+    private Boolean isCurrentDay;
+
     /**
      * 业务编码
      */
