@@ -91,6 +91,12 @@ public class RetailRecord implements Serializable {
     private Date createTime;
 
     /**
+     * 顾客ID
+     */
+    @TableField(value = "patient_id")
+    private Long patientId;
+
+    /**
      * 用户ID
      */
     @TableField(value = "user_id")

@@ -1,11 +1,14 @@
 package com.clinic.app.retail;
 
 import com.bbs.Result;
+import com.clinic.converter.PatientConverter;
 import com.clinic.converter.RetailConverter;
 import com.clinic.dto.param.AddRetailParams;
+import com.clinic.entity.Patient;
 import com.clinic.entity.RetailDrugRecord;
 import com.clinic.entity.RetailRecord;
 import com.clinic.entity.StockBatch;
+import com.clinic.service.PatientService;
 import com.clinic.service.RetailDrugRecordService;
 import com.clinic.service.RetailRecordService;
 import com.clinic.service.StockBatchService;
@@ -30,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.clinic.app.retail.Method.*;
+import static java.util.Objects.isNull;
 
 @Slf4j
 @RestController
@@ -47,6 +51,12 @@ public class Add {
     private final DataSourceTransactionManager transactionManager;
 
     private final TransactionDefinition transactionDefinition;
+
+    @Resource
+    private PatientService patientService;
+
+    @Resource
+    private PatientConverter patientConverter;
 
     @Resource(name = "protoStuffTemplate")
     private RedisTemplate<String, String> redis;
@@ -88,6 +98,16 @@ public class Add {
 
         List<RetailDrugRecord> retailDrugRecords = converter.toEntity(params.getDrugList());
         List<StockBatch> stockBatches = stockService.searchWaitUpdateStocks(params);
+
+        // 保存顾客 ID（病人）
+        Long phone = params.getPhone();
+        Patient patient = patientService.selectByPhone(String.valueOf(phone));
+        if(isNull(patient)) {
+            patient = patientConverter.toEntity(retailRecord);
+            patientService.save(patient);
+        }
+        retailRecord.setId(patient.getId());
+
         if(updateTargetStockIsPresent(params, stockBatches)) {
 
             List<StockBatch> waitUpdateStockBatch = new ArrayList<>(stockBatches.size());
@@ -112,7 +132,7 @@ public class Add {
             fillRetailIdToDrugRecords(retailDrugRecords, retailRecord);
 
             if(!drugRecordService.saveBatch(retailDrugRecords))  throw new DatabaseException("零售药品记录入库失败");
-            LogUtil.Operation.recordRetailInfoLog("{}新增一条零售记录：零售记录id={}", LoginUser.get().getName(), retailRecord.getId());
+            LogUtil.Operation.retailDrug(patient.getId(), retailRecord.getTotalPrice(), "{}新增一条零售记录：零售记录id={}", LoginUser.get().getName(), retailRecord.getId());
             return true;
         }
         return false;

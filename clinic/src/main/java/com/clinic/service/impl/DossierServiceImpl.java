@@ -22,6 +22,7 @@ import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import com.google.common.base.Preconditions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -33,6 +34,8 @@ import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static java.util.Objects.nonNull;
 
 /**
  * 病历
@@ -67,7 +70,7 @@ public class DossierServiceImpl extends MPJBaseServiceImpl<DossierMapper, Dossie
         try {
             if(!save(dossier)) throw new BusinessException();
             updateLog(dossier, param.getAdmissionID());
-            LogUtil.Operation.recordDossierInfoLog("{}添加病例：病例id={}, 门诊日志id={}", user.getName(), dossier.getId(), param.getAdmissionID());
+            LogUtil.Operation.addDossier(param.getPatientId(), dossier.getId(), "{}添加病例：病例id={}, 门诊日志id={}", user.getName(), dossier.getId(), param.getAdmissionID());
             transactionManager.commit(transaction);
             return Result.success(dossier.getId());
         } catch (Exception e) {
@@ -83,13 +86,15 @@ public class DossierServiceImpl extends MPJBaseServiceImpl<DossierMapper, Dossie
         Dossier dossier = converter.toEntity(param);
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
+            Dossier dossierDB = getById(param.getId());
+            Preconditions.checkArgument(nonNull(dossierDB), "病例不存在，可能已删除");
             if(!updateById(dossier)) throw new BusinessException("更新病历失败！");
             admissionLogService.lambdaUpdate()
                     .set(AdmissionLog::getDiagnosis, dossier.getDiagnosis())
                     .eq(AdmissionLog::getDossierId, dossier.getId())
                     .update();
             admissionLogCache.remove();
-            LogUtil.Operation.recordDossierInfoLog("{}修改病例：病例id={}", LoginUser.get().getName(), param.getId());
+            LogUtil.Operation.updateDossier(dossierDB.getPatientId(), dossierDB.getId(), "{}修改病例：病例id={}", LoginUser.get().getName(), param.getId());
             transactionManager.commit(transaction);
             return Result.success(dossier.getId());
         } catch (Exception e) {

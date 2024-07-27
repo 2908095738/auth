@@ -38,7 +38,7 @@ public class DiagnosisProofServiceImpl extends MPJBaseServiceImpl<DiagnosisProof
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             if(!save(param))throw new DbRuntimeException("添加失败！");
-            LogUtil.Operation.recordDiagnosisProofInfoLog("{}新增一条诊断证明：证明id={}", LoginUser.get().getName(), param.getId());
+            LogUtil.Operation.addDiagnosisProof(null, param.getId(), "{}新增一条诊断证明：证明id={}", LoginUser.get().getName(), param.getId());
             transactionManager.commit(transaction);
             return Result.success(param.getId());
         } catch (RuntimeException e) {

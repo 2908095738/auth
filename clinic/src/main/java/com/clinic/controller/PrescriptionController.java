@@ -89,7 +89,7 @@ public class PrescriptionController {
             Dossier dossier = dossierService.getDossierByPrescriptionId(prescription.getId());
             Long payId = payCache.createPayAndPrescriptionRecord(prescription,dossier);
             admissionLogService.update(param.getAdmissionId(),prescription.getId(),payId);
-            LogUtil.Operation.recordPrescriptionInfoLog("{}添加处方并创建收费记录：处方id={}, 支付id={}", LoginUser.get().getName(), prescription.getId(), payId);
+            LogUtil.Operation.addPrescription(param.getPatientId(), prescription.getId(), "{}添加处方并创建收费记录：处方id={}, 支付id={}", LoginUser.get().getName(), prescription.getId(), payId);
             transactionManager.commit(transaction);
             return Result.success(new PrescriptionAndPayIdVo(prescription.getId(), payId));
         } catch (RuntimeException e) {
@@ -109,7 +109,7 @@ public class PrescriptionController {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             if(service.update(param))if(!appPayService.updatePayPrescriptionRecord(param.getPayId(), param.getPrice()) )throw new RuntimeException();
-            LogUtil.Operation.recordPrescriptionInfoLog("{}修改处方和处方收费记录：处方id={}, 支付id={}", LoginUser.get().getName(), param.getId(), param.getPayId());
+            LogUtil.Operation.updatePrescription(param.getPatientId(), param.getPayId(), "{}修改处方和处方收费记录：处方id={}, 支付id={}", LoginUser.get().getName(), param.getId(), param.getPayId());
             transactionManager.commit(transaction);
             return Result.success();
         } catch (RuntimeException e) {
@@ -145,7 +145,7 @@ public class PrescriptionController {
      */
     @GetMapping("/file")
     public void getFile(@NotNull Long id, @NotNull Integer templateIndex) throws Exception {
-        LogUtil.Operation.recordPrescriptionInfoLog("{}下载处方：处方id={}, 模板id={}", LoginUser.get().getName(), id, templateIndex);
+        LogUtil.Operation.downloadPrescription(id, "{}下载处方：处方id={}, 模板id={}", LoginUser.get().getName(), id, templateIndex);
         createPrescriptionFile.generation(id, templateIndex);
     }
 

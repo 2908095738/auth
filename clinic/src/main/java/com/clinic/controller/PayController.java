@@ -139,7 +139,7 @@ public class PayController {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             if(!service.createPayOther(param.getPayOther(), param.getPayId())) throw new RuntimeException();
-            LogUtil.Operation.recordPayInfoLog("{}其他收费项创建：收费id={}", LoginUser.get().getName(), param.getPayId());
+            LogUtil.Operation.newPayItem(param.getPayId(), "{}其他收费项创建：收费id={}", LoginUser.get().getName(), param.getPayId());
             transactionManager.commit(transaction);
             return Result.success(true);
         } catch (Exception e) {
@@ -158,7 +158,7 @@ public class PayController {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             List<PayRecord> payRecordList = service.updatePayOther(param.getPayOther(), param.getPayId());
-            LogUtil.Operation.recordPayInfoLog("{}其他收费项修改：收费id={}", LoginUser.get().getName(), param.getPayId());
+            LogUtil.Operation.updatePayItem(param.getPayId(),"{}其他收费项修改：收费id={}", LoginUser.get().getName(), param.getPayId());
             transactionManager.commit(transaction);
             return Result.success(payRecordList);
         } catch (Exception e) {
@@ -180,11 +180,12 @@ public class PayController {
             if(!payCache.updatePayById(param))throw new RuntimeException();
             //根据支付id,查出处方数据
             PrescriptionDto prescriptionDto = appPrescriptionService.getByPayId(param.getId());
+            Long patientId = prescriptionDto.getPatientId();
             //根据处方数据，扣库存
             if(!appStockService.updateNum(prescriptionDto))throw new RuntimeException();
             //修改门诊日志状态
             if (!admissionLogService.updateEndState(param.getAdmissionId()))throw new RuntimeException();
-            LogUtil.Operation.recordPayInfoLog("{}就诊收费-修改收费状态和收费方式：收费id={}, 处方id={}", LoginUser.get().getName(), param.getId(), prescriptionDto.getId());
+            LogUtil.Operation.pay(patientId, param.getAdmissionId(), "{}就诊收费-修改收费状态和收费方式：收费id={}, 处方id={}", LoginUser.get().getName(), param.getId(), prescriptionDto.getId());
             transactionManager.commit(transaction);
             return Result.success(true);
         } catch (Exception e) {

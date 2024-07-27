@@ -1,9 +1,9 @@
 package com.clinic.service.impl;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.clinic.entity.OperationLog;
 import com.clinic.service.OperationLogService;
 import com.clinic.mapper.OperationLogMapper;
+import com.github.yulichang.base.MPJBaseServiceImpl;
 import org.springframework.stereotype.Service;
 
 /**
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 * @createDate 2023-12-30 18:34:19
 */
 @Service
-public class OperationLogServiceImpl extends ServiceImpl<OperationLogMapper, OperationLog>
+public class OperationLogServiceImpl extends MPJBaseServiceImpl<OperationLogMapper, OperationLog>
     implements OperationLogService{
 
 }

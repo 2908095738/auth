@@ -24,4 +24,6 @@ public interface PatientService extends IService<Patient> {
     Result<Page<Patient>> select(PatientParam param);
 
     List<Patient> select(String val);
+
+    Patient selectByPhone(String phone);
 }

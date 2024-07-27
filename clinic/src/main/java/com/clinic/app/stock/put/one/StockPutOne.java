@@ -50,7 +50,7 @@ public class StockPutOne {
             String stockNo = generateStockInNO();
 
             putStock(param, stockNo);
-            LogUtil.Operation.recordStockInfoLog("{}新增一条药品库存：库存批次编号={}", LoginUser.get().getName(), stockNo);
+            LogUtil.Operation.addStock(stockNo, "{}新增一条药品库存：库存批次编号={}", LoginUser.get().getName(), stockNo);
             transactionManager.commit(transaction);
             return success(stockNo);
         } catch (Exception e) {

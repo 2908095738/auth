@@ -44,7 +44,7 @@ public class DisinfectionLogServiceImpl extends ServiceImpl<DisinfectionLogMappe
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             if(!save(log))throw new DbRuntimeException("添加失败！");
-            LogUtil.Operation.recordDisinfectionInfoLog("{}新增一条消杀记录：记录id={}", LoginUser.get().getName(), log.getId());
+            LogUtil.Operation.addDisinfection(log.getId(), "{}新增一条消杀记录：记录id={}", LoginUser.get().getName(), log.getId());
             transactionManager.commit(transaction);
             return Result.success(true);
         } catch (RuntimeException e) {

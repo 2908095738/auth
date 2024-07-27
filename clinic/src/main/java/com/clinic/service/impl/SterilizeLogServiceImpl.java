@@ -44,7 +44,7 @@ public class SterilizeLogServiceImpl extends ServiceImpl<SterilizeLogMapper, Ste
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             if(!save(sterilizeLog))throw new DbRuntimeException("添加失败！");
-            LogUtil.Operation.recordSterilizeInfoLog("{}新增一条消毒记录：记录id={}", LoginUser.get().getName(), sterilizeLog.getId());
+            LogUtil.Operation.addSterilize(sterilizeLog.getId(), "{}新增一条消毒记录：记录id={}", LoginUser.get().getName(), sterilizeLog.getId());
             transactionManager.commit(transaction);
             return Result.success();
         } catch (RuntimeException e) {

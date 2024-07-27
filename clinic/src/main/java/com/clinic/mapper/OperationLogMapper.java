@@ -1,7 +1,7 @@
 package com.clinic.mapper;
 
 import com.clinic.entity.OperationLog;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 
 /**
 * @author 路晨霖
@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2023-12-30 18:34:19
 * @Entity com.clinic.entity.OperationLog
 */
-public interface OperationLogMapper extends BaseMapper<OperationLog> {
+public interface OperationLogMapper extends MPJBaseMapper<OperationLog> {
 
 }
 

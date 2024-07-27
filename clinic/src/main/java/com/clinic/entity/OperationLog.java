@@ -47,6 +47,12 @@ public class OperationLog implements Serializable {
     private String service;
 
     /**
+     * 操作简介
+     */
+    @TableField(value = "about")
+    private String about;
+
+    /**
      * 位置
      */
     @TableField(value = "location")
@@ -72,14 +78,32 @@ public class OperationLog implements Serializable {
     @TableField(value = "level")
     private Integer level;
 
-    public OperationLog(String location, Integer serviceCode, String service, String operation, Level level) {
+    /**
+     * 病人 or 顾客 ID
+     */
+    @TableField(value = "patient_id")
+    private Long patientId;
+
+    /**
+     * 参数
+     */
+    @TableField(value = "param")
+    private String param;
+
+    @TableField(exist = false)
+    private Patient patient;
+
+    public OperationLog(String location, Integer serviceCode, String service, String about, String operation, Level level, Long patientId, String param) {
         this.serviceCode = serviceCode;
         this.createTime = new Date();
         this.location = location;
         this.service = service;
+        this.about = about;
         this.userId = LoginUser.getId();
         this.operation = operation;
         this.level = level.toInt();
+        this.patientId = patientId;
+        this.param = param;
     }
 
     @TableField(exist = false)

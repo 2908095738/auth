@@ -75,7 +75,7 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
         try {
             save(patient);
             Long logId = admissionLogCache.saveLogFormAddPatient(patient);
-            LogUtil.Operation.recordPatientInfoLog("{}添加病人：病人id={}, 门诊日志id={}", user.getName(), patient.getId(), logId);
+            LogUtil.Operation.addPatient(patient.getId(), "{}添加病人：病人id={}, 门诊日志id={}", user.getName(), patient.getId(), logId);
             transactionManager.commit(transaction);
             return success(new AddOrEditPatientVo(patient.getId(), logId));
         } catch (Exception e) {
@@ -91,7 +91,7 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             updateById(patient);
-            LogUtil.Operation.recordPatientInfoLog("{}修改病人：{}", LoginUser.get().getName(), patient.getName());
+            LogUtil.Operation.updatePatient(patient.getId(), "{}修改病人：{}", LoginUser.get().getName(), patient.getName());
             return success(patient.getId());
         } catch (Exception e) {
             transactionManager.rollback(transaction);
@@ -157,6 +157,14 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
                 .or()
                 .like(Patient::getAddress, val)
                 .list();
+    }
+
+    @Override
+    public Patient selectByPhone(String phone) {
+        return lambdaQuery()
+                .eq(Patient::getUserId, LoginUser.getId())
+                .eq(Patient::getPhone, phone)
+                .one();
     }
 
     private Page<Patient> defaultSearch(PatientParam param) {

@@ -51,7 +51,7 @@ public class SettingsServiceImpl extends ServiceImpl<SettingsMapper, Settings>
                 //同步添加redis中的数据
                 if(save)redis.opsForValue().set(getKey(userId), JSONUtil.toJsonPrettyStr(settings));
             }
-            LogUtil.Operation.recordUserSettingInfoLog("{}新增设置：设置Id={}", LoginUser.get().getName(), settings.getId());
+            LogUtil.Operation.addClinicSetting("{}新增设置：设置Id={}", LoginUser.get().getName(), settings.getId());
             transactionManager.commit(transaction);
             return Result.success(true);
         } catch (RuntimeException e) {
@@ -74,7 +74,7 @@ public class SettingsServiceImpl extends ServiceImpl<SettingsMapper, Settings>
                     redis.opsForValue().set(getKey(userId),JSONUtil.toJsonPrettyStr(dbSettings));
                 }
             }
-            LogUtil.Operation.recordUserSettingInfoLog("{}修改设置：设置Id={}", LoginUser.get().getName(), settings.getId());
+            LogUtil.Operation.updateClinicSetting("{}修改设置：设置Id={}", LoginUser.get().getName(), settings.getId());
             transactionManager.commit(transaction);
             return Result.success(true);
         } catch (RuntimeException e) {

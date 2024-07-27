@@ -57,7 +57,7 @@ public class LogController {
         try {
             Long logId = admissionLogCache.save(param);
 
-            LogUtil.Operation.recordAdmissionInfoLog("{}通过已有病人添加了门诊日志：病人id={}, 门诊日志id={}", LoginUser.get().getName(), param.getPatientId(), logId);
+            LogUtil.Operation.reception(param.getPatientId(), logId, "{}通过已有病人添加了门诊日志：病人id={}, 门诊日志id={}", LoginUser.get().getName(), param.getPatientId(), logId);
             transactionManager.commit(transaction);
             return Result.success(logId);
         } catch (RuntimeException e) {
