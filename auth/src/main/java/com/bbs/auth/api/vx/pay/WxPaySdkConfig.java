@@ -1,4 +1,4 @@
-package com.clinic.app.wx.pay;
+package com.bbs.auth.api.vx.pay;
 
 import com.wechat.pay.java.core.Config;
 import com.wechat.pay.java.core.RSAAutoCertificateConfig;

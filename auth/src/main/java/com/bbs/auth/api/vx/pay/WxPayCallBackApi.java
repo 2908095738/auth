@@ -1,4 +1,4 @@
-package com.clinic.app.wx.pay;
+package com.bbs.auth.api.vx.pay;
 
 import com.wechat.pay.java.core.exception.ValidationException;
 import com.wechat.pay.java.core.notification.NotificationConfig;
@@ -28,7 +28,7 @@ public class WxPayCallBackApi {
     /**
      *支付成功通知
      */
-    @RequestMapping("/weixin/pay/notification")
+    @RequestMapping("/weixin/clinic/pay/notification")
     public ResponseEntity notification(HttpServletRequest request, @RequestBody String body) {
         log.debug("微信回调request: {}", request);
         parser = new NotificationParser((NotificationConfig) config.getWxMlConfig());

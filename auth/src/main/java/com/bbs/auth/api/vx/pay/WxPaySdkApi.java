@@ -1,4 +1,4 @@
-package com.clinic.app.wx.pay;
+package com.bbs.auth.api.vx.pay;
 
 import com.bbs.Result;
 import com.wechat.pay.java.core.exception.HttpException;
@@ -30,7 +30,7 @@ public class WxPaySdkApi {
     private WxPaySdkConfig config;
 
 
-    @GetMapping("/weixin/pay/qrcode")
+    @GetMapping("/weixin/clinic/pay/qrcode")
     public Result<Map<String, Object>> getPayCode() {
         // 初始化服务
         service = new NativePayService.Builder().config(config.getWxMlConfig()).build();
@@ -54,7 +54,7 @@ public class WxPaySdkApi {
         return Result.failed("支付失败");
     }
 
-    @GetMapping("/weixin/pay/WxOrder")
+    @GetMapping("/weixin/clinic/pay/WxOrder")
     public Result<Transaction> getByWxOrder(String orderId) {
         // 初始化服务
         service = new NativePayService.Builder().config(config.getWxMlConfig()).build();
@@ -94,7 +94,7 @@ public class WxPaySdkApi {
         request.setAmount(amount);
         request.setDescription("码良科技-支付-诊所系统");
         request.setAttach("码良科技-支付-诊所系统");
-        request.setNotifyUrl("https://maliang.work/api/clinic/weixin/pay/notification");//回调地址
+        request.setNotifyUrl("https://maliang.work/api/auth/clinic/weixin/pay/notification");//回调地址
         request.setOutTradeNo(outTradeNo);//商户订单号
         // 调用接口
         return service.prepay(request);
