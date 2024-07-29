@@ -10,7 +10,7 @@ ADD clinic/target/clinic-1.0.jar app.jar
 ADD clinic/target/classes/templates /app/templates
 ADD clinic/target/classes/diagnosis /app/diagnosis
 ADD clinic/target/classes/preview /app/preview
-ADD clinic/target/classes/wx /app/wx
+
 
 #&& apk --no-cache add ttf-dejavu fontconfig
 COPY clinic/fonts /usr/share/fonts
