@@ -23,6 +23,7 @@ import com.clinic.service.StockBatchService;
 import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -88,12 +89,14 @@ public class PrescriptionController {
                 .eq(StockBatch::getUserId, LoginUser.class)
         ;
 
-        if (name.matches("[a-zA-Z]+")) {
-            // 如果是纯英文，进行拼音或首字母模糊匹配
-            queryWrapper.apply("LOWER(CONVERT(name USING gbk)) LIKE LOWER(CONVERT({0} USING gbk)) OR LOWER(name) LIKE LOWER({0})", "%" + name + "%");
-        } else {
-            // 否则进行普通 LIKE 查询
-            queryWrapper.like("name", name);
+        if(StringUtils.isNotBlank(name)) {
+            if (name.matches("[a-zA-Z]+")) {
+                // 如果是纯英文，进行拼音或首字母模糊匹配
+                queryWrapper.apply("LOWER(CONVERT(name USING gbk)) LIKE LOWER(CONVERT({0} USING gbk)) OR LOWER(name) LIKE LOWER({0})", "%" + name + "%");
+            } else {
+                // 否则进行普通 LIKE 查询
+                queryWrapper.like("name", name);
+            }
         }
 
         List<StockBatch> stockBatches = stockBatchService.selectJoinList(StockBatch.class, queryWrapper);
