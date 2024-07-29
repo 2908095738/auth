@@ -103,7 +103,7 @@ public class AppPayServiceImpl implements AppPayService {
     }
 
     private void removePayOtherThrowable(Long payId) throws BusinessException {
-        if(!payRecordService.lambdaUpdate().eq(PayRecord::getPayId,payId).remove())
+        if(!payRecordService.lambdaUpdate().eq(PayRecord::getPayId,payId).ne(PayRecord::getName,"处方").remove())
             throw new BusinessException("删除其他收费记录失败！");
     }
 

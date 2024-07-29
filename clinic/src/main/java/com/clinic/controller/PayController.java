@@ -44,7 +44,6 @@ import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 @Slf4j
 @RestController
-@RequestMapping("/pay")
 public class PayController {
 
     private final AdmissionLogService admissionLogService;
@@ -66,7 +65,7 @@ public class PayController {
     /**
      * 本次收费-数据回显
      */
-    @GetMapping
+    @GetMapping("/pay")
     public Result<GetPayDto> getPay(@NotNull Long id){
         return service.getPay(id);
     }
@@ -74,7 +73,7 @@ public class PayController {
     /**
      * 病人收费记录
      */
-    @GetMapping("/patient")
+    @GetMapping("/pay/patient")
     public Result<Page<PayRecordPatientDto>> getPayPatient(PatientPayRecordParam param) throws InterruptedException {
         return payCache.selectPayPatient(param);
     }
@@ -94,7 +93,7 @@ public class PayController {
     /**
      * 收费列表-已收费
      */
-    @GetMapping("/all/is")
+    @GetMapping("/pay/all/is")
     public Result<Page<PayAndRecordPageDto>> getPay(AllIsPayParam param){
         if(isNull(param.getCurrent())) param.setCurrent(INTEGER_ONE);
         if(isNull(param.getSize())) param.setCurrent(10);
@@ -107,7 +106,7 @@ public class PayController {
     /**
      * 收费列表-未收费
      */
-    @GetMapping("/all/no")
+    @GetMapping("/pay/all/no")
     public Result<Page<PayAndRecordPageDto>> getNoPay(
             @RequestParam(required = false, defaultValue = "1") Integer current,
             @RequestParam(required = false, defaultValue = "10") Integer size,
@@ -124,7 +123,7 @@ public class PayController {
     /**
      * 收费列表-退费
      */
-    @GetMapping("/all/return")
+    @GetMapping("/pay/all/return")
     public Result<Page<PayAndRecordPageDto>> getPay(ReturnPayRecordParam param){
         GetPayParam p = payConverter.toParam(param);
         return service.selectPayRecord(p);
@@ -134,7 +133,7 @@ public class PayController {
     /**
      * 其他收费-项目创建
      */
-    @PutMapping("/other")
+    @PutMapping("/pay/other")
     public Result<Boolean> createPayOther(@RequestBody @Valid CreateOrSetPayOtherParam param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
@@ -153,7 +152,7 @@ public class PayController {
     /**
      * 其他收费-项目修改
      */
-    @PostMapping("/other")
+    @PostMapping("/pay/other")
     public Result<List<PayRecord>> updatePayOther(@RequestBody @Valid CreateOrSetPayOtherParam param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
@@ -172,7 +171,7 @@ public class PayController {
     /**
      * 本次收费-修改收费状态和收费方式
      */
-    @PostMapping
+    @PostMapping("/pay")
     public Result<Boolean> updatePayById(@RequestBody UpdatePayById param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {

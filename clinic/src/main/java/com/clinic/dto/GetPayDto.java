@@ -1,5 +1,6 @@
 package com.clinic.dto;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -67,6 +68,7 @@ public class GetPayDto {
     /**
      * 其他收费列表
      */
+    @TableField(exist = false)
     private List<PayRecordDto> payRecordDtos;
 
 
