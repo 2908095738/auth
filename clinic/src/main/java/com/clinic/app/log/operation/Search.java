@@ -54,7 +54,6 @@ public class Search {
                         STERILIZE_ADD.getServiceCode(),
                         DOSSIER_ADD.getServiceCode()
                 ))
-                .orderByDesc(OperationLog::getCreateTime)
                 .list();
         fillPatient(logs);
         return Result.success(logs);
@@ -102,7 +101,7 @@ public class Search {
         if(nonNull(startDateLong)) {
             startDate = new Date(startDateLong);
         } else {
-            startDate = new Date();
+            startDate = DateUtil.offsetDay(new Date(), -3);
         }
         return startDate;
     }

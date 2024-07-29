@@ -3,77 +3,110 @@ package com.clinic.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
+import com.bbs.util.PageUtil;
 import com.clinic.app.AppPayService;
 import com.clinic.app.AppPrescriptionService;
 import com.clinic.app.porescription.file.create.CreatePrescriptionFile;
 import com.clinic.cache.pay.PayCache;
-import com.clinic.cache.prescription.CureCache;
 import com.clinic.cache.unit.UnitCache;
 import com.clinic.cache.usage.UsageCache;
+import com.clinic.converter.StockConverter;
 import com.clinic.dto.PrescriptionAndPayIdVo;
 import com.clinic.dto.PrescriptionDto;
 import com.clinic.dto.param.SavePrescription;
 import com.clinic.dto.param.UpdatePrescription;
 import com.clinic.dto.vo.PrescriptionSearchDrugVO;
-import com.clinic.entity.Dossier;
-import com.clinic.entity.Prescription;
-import com.clinic.entity.Unit;
-import com.clinic.entity.Usage;
+import com.clinic.entity.*;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.DossierService;
+import com.clinic.service.StockBatchService;
 import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.List;
-
+import java.util.stream.Collectors;
 
 
 /**
  * 处方
  */
 @RestController
-@RequestMapping("prescription")
 public class PrescriptionController {
 
 
-    private final AppPrescriptionService service;
-
-    private final AppPayService appPayService;
-
-    private final PayCache payCache;
-
-    private final DossierService dossierService;
-
-    private final AdmissionLogService admissionLogService;
-
-    private final DataSourceTransactionManager transactionManager;
-
-    private final TransactionDefinition transactionDefinition;
-
-    private final CureCache cache;
-
-    private final UsageCache usageCache;
-
-    private final UnitCache unitCache;
+    @Resource
+    private AppPrescriptionService service;
+    @Resource
+    private AppPayService appPayService;
+    @Resource
+    private PayCache payCache;
+    @Resource
+    private DossierService dossierService;
+    @Resource
+    private AdmissionLogService admissionLogService;
+    @Resource
+    private DataSourceTransactionManager transactionManager;
+    @Resource
+    private TransactionDefinition transactionDefinition;
+    @Resource
+    private UsageCache usageCache;
+    @Resource
+    private UnitCache unitCache;
+    @Resource
+    private StockBatchService stockBatchService;
+    @Resource
+    private StockConverter converter;
 
     /**
      * 药品查询
      */
-    @GetMapping("/drug")
-    public Result<Page<PrescriptionSearchDrugVO>> searchDrug(String name) throws InterruptedException {
-        return cache.search(name);
+    @GetMapping("/prescription/drug")
+    public Result<Page<PrescriptionSearchDrugVO>> searchDrug(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false, defaultValue = "1") Integer current,
+            @RequestParam(required = false, defaultValue = "10") Integer size
+    ) {
+        MPJLambdaWrapper<StockBatch> queryWrapper = new MPJLambdaWrapper<StockBatch>()
+                .selectAll(StockBatch.class)
+                .leftJoin(Unit.class, Unit::getId, StockBatch::getUnitId, ext -> ext
+                        .selectAssociation(Unit.class, StockBatch::getUnit)
+                )
+                .leftJoin(Unit.class, Unit::getId, StockBatch::getCostUnit, ext -> ext
+                        .selectAssociation(Unit.class, StockBatch::getCostUnit)
+                )
+                .leftJoin(Unit.class, Unit::getId, StockBatch::getSingleDoseUnit, ext -> ext
+                        .selectAssociation(Unit.class, StockBatch::getSingleDoseUnitObj)
+                )
+                .eq(StockBatch::getUserId, LoginUser.class)
+        ;
+
+        if (name.matches("[a-zA-Z]+")) {
+            // 如果是纯英文，进行拼音或首字母模糊匹配
+            queryWrapper.apply("LOWER(CONVERT(name USING gbk)) LIKE LOWER(CONVERT({0} USING gbk)) OR LOWER(name) LIKE LOWER({0})", "%" + name + "%");
+        } else {
+            // 否则进行普通 LIKE 查询
+            queryWrapper.like("name", name);
+        }
+
+        List<StockBatch> stockBatches = stockBatchService.selectJoinList(StockBatch.class, queryWrapper);
+
+        Page<StockBatch> stockBatchPage = PageUtil.paginateWithInfo(stockBatches, current, size);
+
+        Page<PrescriptionSearchDrugVO> result = new Page<>(stockBatchPage.getCurrent(), stockBatchPage.getSize(), stockBatchPage.getTotal());
+        result.setRecords(
+                stockBatchPage.getRecords().stream().map(converter::toPrescriptionSearchDrugVO)
+                        .collect(Collectors.toList())
+        );
+
+        return Result.success(result);
     }
 
     /**
@@ -81,7 +114,7 @@ public class PrescriptionController {
      * @param param 处方信息
      * @return PrescriptionAndPayIdVo
      */
-    @PutMapping
+    @PutMapping("/prescription")
     public Result<PrescriptionAndPayIdVo> add(@RequestBody @Valid SavePrescription param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
@@ -104,7 +137,7 @@ public class PrescriptionController {
      * @param param 处方信息
      * @return Long
      */
-    @PostMapping
+    @PostMapping("/prescription")
     public Result<Boolean> update(@RequestBody @Valid UpdatePrescription param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
@@ -128,7 +161,7 @@ public class PrescriptionController {
      * @param size 条数
      * @return null
      */
-    @GetMapping
+    @GetMapping("/prescription")
     public Result<IPage<PrescriptionDto>> selectOr(Long dossierId, Long patientId, Integer current, Integer size){
         return service.selectOr(dossierId, patientId, current, size);
     }
@@ -143,7 +176,7 @@ public class PrescriptionController {
      * @see PrescriptionController
      * @throws Exception 下载异常
      */
-    @GetMapping("/file")
+    @GetMapping("/prescription/file")
     public void getFile(@NotNull Long id, @NotNull Integer templateIndex) throws Exception {
         LogUtil.Operation.downloadPrescription(id, "{}下载处方：处方id={}, 模板id={}", LoginUser.get().getName(), id, templateIndex);
         createPrescriptionFile.generation(id, templateIndex);
@@ -153,33 +186,19 @@ public class PrescriptionController {
      * 获取模板名称列表
      * @return 模板名称列表
      */
-    @GetMapping("/template/name/list")
+    @GetMapping("/prescription/template/name/list")
     public Result<List<String>> getTemplates() {
         return Result.success(createPrescriptionFile.getTemplates());
     }
 
-    @GetMapping("/usage/list")
+    @GetMapping("/prescription/usage/list")
     public Result<List<Usage>> searchUsage(String name) {
         return Result.success(usageCache.search(name));
     }
 
-    @GetMapping("/unit/list")
+    @GetMapping("/prescription/unit/list")
     public Result<List<Unit>> searchUnit(String name) {
         return Result.success(unitCache.search(name));
     }
 
-
-    @Autowired
-    public PrescriptionController(AppPrescriptionService service, AppPayService appPayService, PayCache payCache, DossierService dossierService, AdmissionLogService admissionLogService, DataSourceTransactionManager transactionManager, TransactionDefinition transactionDefinition, CureCache cache, UsageCache usageCache, UnitCache unitCache) {
-        this.service = service;
-        this.appPayService = appPayService;
-        this.payCache = payCache;
-        this.dossierService = dossierService;
-        this.admissionLogService = admissionLogService;
-        this.transactionManager = transactionManager;
-        this.transactionDefinition = transactionDefinition;
-        this.cache = cache;
-        this.usageCache = usageCache;
-        this.unitCache = unitCache;
-    }
 }

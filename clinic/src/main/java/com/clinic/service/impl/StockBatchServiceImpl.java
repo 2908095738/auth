@@ -3,7 +3,6 @@ package com.clinic.service.impl;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.clinic.dto.param.AddRetailParams;
 import com.clinic.entity.Settings;
 import com.clinic.entity.Stock;
@@ -14,6 +13,7 @@ import com.clinic.mapper.StockBatchMapper;
 import com.clinic.service.SettingsService;
 import com.clinic.service.StockBatchService;
 import com.clinic.util.LoginUser;
+import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,11 +30,11 @@ import static java.util.Objects.nonNull;
 * @createDate 2023-09-27 12:44:37
 */
 @Service
-public class StockBatchServiceImpl extends ServiceImpl<StockBatchMapper, StockBatch>
+public class StockBatchServiceImpl extends MPJBaseServiceImpl<StockBatchMapper, StockBatch>
     implements StockBatchService{
 
     private final SettingsService settingService;
-
+    
     @Override
     public List<StockBatch> searchByApprovalNumbers(List<String> approvalNumbers, List<String> batchNumbers) {
         return lambdaQuery()

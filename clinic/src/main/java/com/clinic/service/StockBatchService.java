@@ -1,8 +1,8 @@
 package com.clinic.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.clinic.dto.param.AddRetailParams;
 import com.clinic.entity.StockBatch;
+import com.github.yulichang.base.MPJBaseService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -12,7 +12,7 @@ import java.util.List;
 * @description 针对表【stock_batch】的数据库操作Service
 * @createDate 2023-09-27 12:44:37
 */
-public interface StockBatchService extends IService<StockBatch> {
+public interface StockBatchService extends MPJBaseService<StockBatch> {
 
     List<StockBatch> searchByApprovalNumbers(List<String> approvalNumbers, List<String> batchNumbers);
 

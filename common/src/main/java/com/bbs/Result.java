@@ -1,12 +1,16 @@
 package com.bbs;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.enums.CodeEnum;
 import com.bbs.exception.BusinessException;
+import com.bbs.util.PageUtil;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+
+import java.util.List;
 
 @Data
 @NoArgsConstructor

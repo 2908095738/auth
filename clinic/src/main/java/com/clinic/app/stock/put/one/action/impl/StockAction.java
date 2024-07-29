@@ -1,12 +1,17 @@
 package com.clinic.app.stock.put.one.action.impl;
 
+import cn.hutool.extra.spring.SpringUtil;
 import com.clinic.app.stock.put.one.action.AddStockAction;
 import com.clinic.app.stock.put.one.action.UpdateStockAction;
+import com.clinic.cache.stock.drug.StockDrugCache;
+import com.clinic.cache.stock.drug.StockDrugNameCache;
 import com.clinic.dto.param.PutStockParam;
 import com.clinic.entity.Stock;
 import com.clinic.entity.StockBatch;
 import com.clinic.service.StockBatchService;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
 
 import static cn.hutool.extra.spring.SpringUtil.getBean;
 import static com.clinic.app.stock.put.one.method.StockMethod.*;
@@ -14,6 +19,9 @@ import static java.util.Objects.nonNull;
 
 @Component
 public class StockAction implements AddStockAction, UpdateStockAction {
+
+    @Resource
+    private StockDrugCache cache;
 
     @Override
     public Long add(PutStockParam param, String stockNo, Long drugNumber) {
@@ -45,6 +53,7 @@ public class StockAction implements AddStockAction, UpdateStockAction {
 
         stockBatchService().save(stockBatch);
 
+        SpringUtil.getBean(StockDrugNameCache.class).set(stockBatch);
         return stockBatch.getId();
     }
 
@@ -54,6 +63,8 @@ public class StockAction implements AddStockAction, UpdateStockAction {
         StockBatchService service = getBean(StockBatchService.class);
 
         service.updateById(fillNumber(drugNumber, stock));
+
+        cache.remove(stock.getId());
 
         return stock.getId();
     }

@@ -11,9 +11,6 @@ import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
 import com.clinic.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -38,25 +35,13 @@ public class StockPutOne {
 
     private final AddStockRecordAction addStockRecordAction;
 
-    private final DataSourceTransactionManager transactionManager;
-
-    private final TransactionDefinition transactionDefinition;
-
     @Transactional
     @PutMapping("/stock")
     public Result<String> put(@RequestBody PutStockParam param) {
-        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-        try {
-            String stockNo = generateStockInNO();
-
-            putStock(param, stockNo);
-            LogUtil.Operation.addStock(stockNo, "{}新增一条药品库存：库存批次编号={}", LoginUser.get().getName(), stockNo);
-            transactionManager.commit(transaction);
-            return success(stockNo);
-        } catch (Exception e) {
-            transactionManager.rollback(transaction);
-            throw new RuntimeException(e);
-        }
+        String stockNo = generateStockInNO();
+        putStock(param, stockNo);
+        LogUtil.Operation.addStock(stockNo, "{}新增一条药品库存：库存批次编号={}", LoginUser.get().getName(), stockNo);
+        return success(stockNo);
     }
 
     private String generateStockInNO() {
@@ -78,16 +63,15 @@ public class StockPutOne {
     private void putStock(PutStockParam param, String stockNo) {
         StockBatch stockBatch = search(param);
 
-        Long drugNumber = computeMinUnitDrugNumber(param);
+        Long addDrugNumber = computeMinUnitDrugNumber(param);   //计算需要增加的药品数量（转换为最小单位）
         Long stockBatchID;
         if(exists(stockBatch)) {
-            drugNumber = getUpdateDrugNumber(drugNumber, stockBatch);
+            Long drugNumber = getUpdateDrugNumber(addDrugNumber, stockBatch);
             stockBatchID = updateStockAction.update(param, stockBatch, drugNumber);
         } else {
-            stockBatchID = addStockAction.add(param, stockNo, drugNumber);
+            stockBatchID = addStockAction.add(param, stockNo, addDrugNumber);
         }
-
-        putStockRecord(param, stockNo, drugNumber,stockBatchID);
+        putStockRecord(param, stockNo, addDrugNumber, stockBatchID);
     }
 
     private Long getUpdateDrugNumber(Long stockDrugNumber, StockBatch stockBatch) {
@@ -103,13 +87,11 @@ public class StockPutOne {
     }
 
     @Autowired
-    public StockPutOne(StockBatchService batchService, RedisUtil redis, UpdateStockAction updateStockAction, AddStockAction addStockAction, AddStockRecordAction addStockRecordAction, DataSourceTransactionManager transactionManager, TransactionDefinition transactionDefinition) {
+    public StockPutOne(StockBatchService batchService, RedisUtil redis, UpdateStockAction updateStockAction, AddStockAction addStockAction, AddStockRecordAction addStockRecordAction) {
         this.batchService = batchService;
         this.redis = redis;
         this.updateStockAction = updateStockAction;
         this.addStockAction = addStockAction;
         this.addStockRecordAction = addStockRecordAction;
-        this.transactionManager = transactionManager;
-        this.transactionDefinition = transactionDefinition;
     }
 }
