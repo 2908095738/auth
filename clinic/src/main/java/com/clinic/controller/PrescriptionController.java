@@ -80,22 +80,24 @@ public class PrescriptionController {
                 .leftJoin(Unit.class, Unit::getId, StockBatch::getUnitId, ext -> ext
                         .selectAssociation(Unit.class, StockBatch::getUnit)
                 )
-                .leftJoin(Unit.class, Unit::getId, StockBatch::getCostUnit, ext -> ext
+                .leftJoin(Unit.class, Unit::getId, StockBatch::getCostUnitId, ext -> ext
                         .selectAssociation(Unit.class, StockBatch::getCostUnit)
                 )
                 .leftJoin(Unit.class, Unit::getId, StockBatch::getSingleDoseUnit, ext -> ext
                         .selectAssociation(Unit.class, StockBatch::getSingleDoseUnitObj)
                 )
-                .eq(StockBatch::getUserId, LoginUser.class)
+                .selectAssociation(Stock.class , StockBatch::getName,ext->ext.result(Stock::getName))
+                .leftJoin(Stock.class, "st",Stock::getId, StockBatch::getStockId)
+                .eq(StockBatch::getUserId, LoginUser.getId())
         ;
 
         if(StringUtils.isNotBlank(name)) {
             if (name.matches("[a-zA-Z]+")) {
                 // 如果是纯英文，进行拼音或首字母模糊匹配
-                queryWrapper.apply("LOWER(CONVERT(name USING gbk)) LIKE LOWER(CONVERT({0} USING gbk)) OR LOWER(name) LIKE LOWER({0})", "%" + name + "%");
+                queryWrapper.apply("LOWER(CONVERT(st.name USING gbk)) LIKE LOWER(CONVERT({0} USING gbk)) OR LOWER(st.name) LIKE LOWER({0})", "%" + name + "%");
             } else {
                 // 否则进行普通 LIKE 查询
-                queryWrapper.like("name", name);
+                queryWrapper.like("st.name", name);
             }
         }
 

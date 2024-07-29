@@ -5,11 +5,9 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.clinic.dto.PrescriptionDrugDto;
-import com.clinic.dto.param.PutStockParam;
 import com.clinic.enums.DrugStockRule;
 import com.clinic.enums.DrugTypeEnum;
 import com.clinic.enums.StockStateEnum;
-import com.clinic.util.LoginUser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -251,8 +249,13 @@ public class StockBatch implements Serializable {
      * 进价单位
      */
     @TableField(value = "cost_unit")
-    private Long costUnit;
+    private Long costUnitId;
 
+    /**
+     * 进价单位
+     */
+    @TableField(exist = false)
+    private Unit costUnit;
     /**
      * 药品类型（字母）
      */
