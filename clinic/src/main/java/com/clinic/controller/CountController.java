@@ -111,10 +111,18 @@ public class CountController {
                 ).list();
         Map<Date, List<Pay>> singularMonthEveryDayPayMap = currentMonthPayList.stream()
                 .collect(Collectors.groupingBy(Pay::getCreateTime));
-        Map<String, BigDecimal> singularMonthEveryDayFeeMap = singularMonthEveryDayPayMap.entrySet().stream().collect(Collectors.toMap(
-                entry -> DateUtil.formatDate(entry.getKey()),
-                entry -> entry.getValue().stream().map(Pay::getFee).reduce(BigDecimal.ZERO, BigDecimal::add)
-        ));
+        Map<String, BigDecimal> singularMonthEveryDayFeeMap = singularMonthEveryDayPayMap.entrySet().stream()
+                .map(entry -> new AbstractMap.SimpleEntry<>(DateUtil.formatDate(entry.getKey()), entry.getValue()))
+                .collect(Collectors.groupingBy(AbstractMap.SimpleEntry::getKey))
+                .entrySet().stream()
+                .map(entry -> {
+                    BigDecimal singularMonthFee = entry.getValue().stream().map(AbstractMap.SimpleEntry::getValue)
+                            .flatMap(List::stream).map(Pay::getFee).reduce(BigDecimal.ZERO, BigDecimal::add);
+                    return new AbstractMap.SimpleEntry<>(entry.getKey(), singularMonthFee);
+                }).collect(Collectors.toMap(
+                        AbstractMap.SimpleEntry::getKey,
+                        AbstractMap.SimpleEntry::getValue
+                ));
         BigDecimal currentDayEarnings = singularMonthEveryDayFeeMap.getOrDefault(DateUtil.formatDate(now), BigDecimal.ZERO);
 
         List<BigDecimal> singularMonthSalesList = new ArrayList<>();
