@@ -1,13 +1,10 @@
 package com.bbs.auth.api.vx.pay;
 
 import com.wechat.pay.java.core.Config;
-import com.wechat.pay.java.core.RSAAutoCertificateConfig;
 import lombok.Data;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import java.security.Security;
 
 @Component
 @Data
@@ -32,19 +29,19 @@ public class WxPaySdkConfig implements InitializingBean {
     /** 商户APIV3密钥 */
     @Value(value = "${wx.pay.apiV3Key}")
     public String apiV3Key;//"jhdfhen274612BDGFSndcVBS6BD5r4ds"
-
+//
     private Config wxMlConfig;
-
+//
     @Override
     public void afterPropertiesSet() throws Exception {
-        Security.setProperty("crypto.policy", "unlimited");
-        wxMlConfig = new RSAAutoCertificateConfig.Builder()
-                .merchantId(merchantId)
-                // 使用 com.wechat.pay.java.core.util 中的函数从本地文件中加载商户私钥，商户私钥会用来生成请求的签名
-                .privateKeyFromPath(privateKeyPath)
-                .merchantSerialNumber(merchantSerialNumber)
-                .apiV3Key(apiV3Key)
-                .build();
+//        Security.setProperty("crypto.policy", "unlimited");
+//        wxMlConfig = new RSAAutoCertificateConfig.Builder()
+//                .merchantId(merchantId)
+//                // 使用 com.wechat.pay.java.core.util 中的函数从本地文件中加载商户私钥，商户私钥会用来生成请求的签名
+//                .privateKeyFromPath(privateKeyPath)
+//                .merchantSerialNumber(merchantSerialNumber)
+//                .apiV3Key(apiV3Key)
+//                .build();
     }
 
 }

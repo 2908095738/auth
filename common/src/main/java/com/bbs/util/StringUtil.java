@@ -147,8 +147,19 @@ public class StringUtil {
         str = StringUtils.replace(str, "?", "_");  
         str = StringUtils.replace(str, "*", "%");  
         return str;  
-    }  
+    }
 
+	/**
+	 * 判断字符串是否是数字
+	 * @param s
+	 * @return
+	 */
+	public final static boolean isNumeric(String s) {
+		if (s != null && !"".equals(s.trim()))
+			return s.matches("^[0-9]*$");
+		else
+			return false;
+	}
     
     
 }
