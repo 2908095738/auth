@@ -32,9 +32,9 @@ public class WxPaySdkConfig implements InitializingBean {
     /** 商户APIV3密钥 */
     @Value(value = "${wx.pay.apiV3Key}")
     public String apiV3Key;//"jhdfhen274612BDGFSndcVBS6BD5r4ds"
-
+//
     private Config wxMlConfig;
-
+//
     @Override
     public void afterPropertiesSet() throws Exception {
         Security.setProperty("crypto.policy", "unlimited");

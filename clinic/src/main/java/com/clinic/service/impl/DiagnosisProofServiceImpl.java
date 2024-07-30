@@ -51,7 +51,8 @@ public class DiagnosisProofServiceImpl extends MPJBaseServiceImpl<DiagnosisProof
     public Result<Page<DiagnosisProof>> queryList(QueryDiagnosisProofParam param) {
         return Result.success(lambdaQuery()
                 .eq(DiagnosisProof::getUserId,LoginUser.getId())
-                .eq(StringUtils.isNotBlank(param.getName()),DiagnosisProof::getName,param.getName())
+                .likeRight(StringUtils.isNotBlank(param.getVal()),DiagnosisProof::getName,param.getVal())
+                .eq(StringUtils.isNotBlank(param.getCreateTime()),DiagnosisProof::getVisitDate, param.getCreateTime())
                 .page(param.toPage()));
     }
 

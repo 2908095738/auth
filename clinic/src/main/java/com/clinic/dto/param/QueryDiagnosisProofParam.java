@@ -9,7 +9,11 @@ public class QueryDiagnosisProofParam extends BaseParam {
     /**
      * 姓名
      */
-    private String name;
+    private String val;
 
+    /**
+     * 消杀时间
+     */
+    private String createTime;
 
 }

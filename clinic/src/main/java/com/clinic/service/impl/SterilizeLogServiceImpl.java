@@ -59,8 +59,8 @@ public class SterilizeLogServiceImpl extends ServiceImpl<SterilizeLogMapper, Ste
         if(nonNull(param.getId())) {
             wrapper.eq(SterilizeLog::getId, param.getId());
         } else {
-            if(nonNull(param.getSterilizeTime())) {
-                wrapper.eq(SterilizeLog::getSterilizeTime, param.getSterilizeTime());
+            if(nonNull(param.getCreateTime())) {
+                wrapper.eq(SterilizeLog::getSterilizeTime, param.getCreateTime());
             } else {
                 wrapper.between(
                         nonNull(param.getStartSterilizeTime()) && nonNull(param.getEndSterilizeTime()),

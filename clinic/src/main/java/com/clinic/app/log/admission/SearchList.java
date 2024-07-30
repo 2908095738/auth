@@ -1,7 +1,9 @@
 package com.clinic.app.log.admission;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
+import com.bbs.util.StringUtil;
 import com.clinic.entity.AdmissionLog;
 import com.clinic.entity.Pay;
 import com.clinic.mapper.AdmissionLogMapper;
@@ -50,20 +52,25 @@ public class SearchList extends MPJBaseServiceImpl<AdmissionLogMapper, Admission
     }
     @GetMapping("/log/admission/list")
     public Result<Page<AdmissionLog>> search(Param param) {
-        List<AdmissionLog> admissionLogs = selectJoinList(AdmissionLog.class, new MPJLambdaWrapper<AdmissionLog>()
+        MPJLambdaWrapper<AdmissionLog> admissionLogMPJLambdaWrapper = new MPJLambdaWrapper<AdmissionLog>()
                 .selectAll(AdmissionLog.class)
                 .selectAssociation(Pay.class, AdmissionLog::getPay)
                 .eq(AdmissionLog::getUserId, LoginUser.getId())
                 .likeRight(nonNull(param.createTime), AdmissionLog::getCreateTime, param.createTime)
-                .eq(nonNull(param.state),AdmissionLog::getState, param.state)
-                .isNull(nonNull(param.state),Pay::getState)
-                .or()
+                .eq(nonNull(param.state), AdmissionLog::getState, param.state)
                 .eq(AdmissionLog::getUserId, LoginUser.getId())
                 .likeRight(nonNull(param.createTime), AdmissionLog::getCreateTime, param.createTime)
-                .eq(nonNull(param.state),AdmissionLog::getState, param.state)
+                .and(nonNull(param.state), w -> w.isNull(nonNull(param.state), Pay::getState).or().eq(nonNull(param.state), AdmissionLog::getState, param.state))
                 .leftJoin(Pay.class, Pay::getId, AdmissionLog::getPayId)
-                .orderByDesc(AdmissionLog::getCreateTime)
-        );
+                .orderByDesc(AdmissionLog::getCreateTime);
+        if(StrUtil.isNotBlank(param.value)){
+            if(StringUtil.isNumeric(param.value)){
+                admissionLogMPJLambdaWrapper.eq(AdmissionLog::getPhone, Long.valueOf(param.value));
+            }else{
+                admissionLogMPJLambdaWrapper.likeRight(AdmissionLog::getName, param.value);
+            }
+        }
+        List<AdmissionLog> admissionLogs = selectJoinList(AdmissionLog.class, admissionLogMPJLambdaWrapper);
         return Result.success(PageUtil.execPage(param.getCurrent(), param.getSize(), admissionLogs));
     }
 }
