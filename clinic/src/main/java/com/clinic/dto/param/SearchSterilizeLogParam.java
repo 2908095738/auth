@@ -28,7 +28,7 @@ public class SearchSterilizeLogParam extends BaseParam {
     /**
      * 消毒时间
      */
-    private Date sterilizeTime;
+    private String createTime;
 
     /**
      * 消毒时间

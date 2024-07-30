@@ -1,6 +1,7 @@
 package com.clinic.service.impl;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.db.DbRuntimeException;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -12,8 +13,8 @@ import com.clinic.dto.param.SearchDisinfectionLogParam;
 import com.clinic.entity.DisinfectionLog;
 import com.clinic.mapper.DisinfectionLogMapper;
 import com.clinic.service.DisinfectionLogService;
-import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
+import com.clinic.util.log.LogUtil;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionDefinition;
@@ -57,6 +58,7 @@ public class DisinfectionLogServiceImpl extends ServiceImpl<DisinfectionLogMappe
     public Result<Page<DisinfectionLog>> search(SearchDisinfectionLogParam param) {
         LambdaQueryChainWrapper<DisinfectionLog> wrapper = lambdaQuery();
         wrapper.eq(DisinfectionLog::getUserId, LoginUser.getId());
+        wrapper.eq(StrUtil.isNotBlank(param.getCreateTime()),DisinfectionLog::getCreateTime, param.getCreateTime());
         return Result.success(wrapper.page(param.toPage()));
     }
 
