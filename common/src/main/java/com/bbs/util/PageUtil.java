@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class PageUtil {
 
@@ -42,7 +41,7 @@ public class PageUtil {
      */
     public static <T> Page<T> paginateWithInfo(List<T> list, int current, int size) {
         if (list == null || list.isEmpty() || current <= 0 || size <= 0) {
-            throw new IllegalArgumentException("Invalid input parameters");
+            return new Page<>(current, size, 0);
         }
 
         int totalItems = list.size();
