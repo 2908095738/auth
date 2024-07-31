@@ -112,6 +112,10 @@ public class PrescriptionSearchDrugVO {
      */
     private Unit maxUnit;
 
+    /**
+     * 是否是库存
+     */
+    private Boolean isStock;
 
     @Data
     @NoArgsConstructor

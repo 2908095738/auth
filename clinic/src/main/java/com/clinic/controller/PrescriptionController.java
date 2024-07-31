@@ -115,8 +115,11 @@ public class PrescriptionController {
             result = new Page<>(stockBatchPage.getCurrent(), stockBatchPage.getSize(), stockBatchPage.getTotal());
             result.setRecords(
                     stockBatchPage.getRecords().stream()
-                            .map(converter::toPrescriptionSearchDrugVO)
-                            .collect(Collectors.toList())
+                            .map(o->{
+                                PrescriptionSearchDrugVO prescriptionSearchDrugVO = converter.toPrescriptionSearchDrugVO(o);
+                                prescriptionSearchDrugVO.setIsStock(true);
+                                return prescriptionSearchDrugVO;
+                            }).collect(Collectors.toList())
             );
         }
         return Result.success(result);
