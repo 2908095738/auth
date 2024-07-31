@@ -72,7 +72,7 @@ public class DrugServiceImpl extends ServiceImpl<DrugMapper, Drug>
 
     @Override
     public Page<Drug> search(String name,  Page<Drug> tPage) {
-        return lambdaQuery().eq(Drug::getName, name).page(tPage);
+        return lambdaQuery().like(Drug::getName, name).page(tPage);
     }
 }
 
