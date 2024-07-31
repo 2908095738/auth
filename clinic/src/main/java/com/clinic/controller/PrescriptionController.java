@@ -16,19 +16,30 @@ import com.clinic.dto.PrescriptionDto;
 import com.clinic.dto.param.SavePrescription;
 import com.clinic.dto.param.UpdatePrescription;
 import com.clinic.dto.vo.PrescriptionSearchDrugVO;
-import com.clinic.entity.*;
+import com.clinic.entity.Dossier;
+import com.clinic.entity.Drug;
+import com.clinic.entity.Prescription;
+import com.clinic.entity.Stock;
+import com.clinic.entity.StockBatch;
+import com.clinic.entity.Unit;
+import com.clinic.entity.Usage;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.DossierService;
 import com.clinic.service.DrugService;
 import com.clinic.service.StockBatchService;
-import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
+import com.clinic.util.log.LogUtil;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
@@ -76,7 +87,7 @@ public class PrescriptionController {
     public Result<Page<PrescriptionSearchDrugVO>> searchDrug(
             @RequestParam(required = false) String name,
             @RequestParam(required = false, defaultValue = "1") Integer current,
-            @RequestParam(required = false, defaultValue = "10") Integer size
+            @RequestParam(required = false, defaultValue = "50") Integer size
     ) {
         Page<PrescriptionSearchDrugVO> result = null;
         MPJLambdaWrapper<StockBatch> queryWrapper = new MPJLambdaWrapper<StockBatch>()
@@ -106,24 +117,24 @@ public class PrescriptionController {
         }
 
         List<StockBatch> stockBatches = stockBatchService.selectJoinList(StockBatch.class, queryWrapper);
-        if(stockBatches.isEmpty()){
-            Page<Drug> search = drugService.search(name, new Page<>(current,size));
-            result = new Page<>(search.getCurrent(), search.getSize(), search.getTotal());
-            result.setRecords(converter.toPrescriptionSearchDrugVOList(search.getRecords()));
-        }else{
-            Page<StockBatch> stockBatchPage = PageUtil.paginateWithInfo(stockBatches, current, size);
-            result = new Page<>(stockBatchPage.getCurrent(), stockBatchPage.getSize(), stockBatchPage.getTotal());
-            result.setRecords(
-                    stockBatchPage.getRecords().stream()
-                            .map(o->{
-                                PrescriptionSearchDrugVO prescriptionSearchDrugVO = converter.toPrescriptionSearchDrugVO(o);
-                                prescriptionSearchDrugVO.setIsStock(true);
-                                return prescriptionSearchDrugVO;
-                            }).collect(Collectors.toList())
-            );
+        Page<StockBatch> stockBatchPage = PageUtil.paginateWithInfo(stockBatches, current, size);
+        result = new Page<>(stockBatchPage.getCurrent(), stockBatchPage.getSize(), stockBatchPage.getTotal());
+        result.setRecords(
+                stockBatchPage.getRecords().stream()
+                        .map(o->{
+                            PrescriptionSearchDrugVO prescriptionSearchDrugVO = converter.toPrescriptionSearchDrugVO(o);
+                            prescriptionSearchDrugVO.setIsStock(true);
+                            return prescriptionSearchDrugVO;
+                        }).collect(Collectors.toList())
+        );
+        if(stockBatches.isEmpty()||stockBatches.size() != size){
+            Page<Drug> search = drugService.search(name, new Page<>(current,size-stockBatches.size()));
+            List<PrescriptionSearchDrugVO> records = result.getRecords();
+            records.addAll(converter.toPrescriptionSearchDrugVOList(search.getRecords()));
         }
         return Result.success(result);
     }
+
 
     /**
      * 添加处方
