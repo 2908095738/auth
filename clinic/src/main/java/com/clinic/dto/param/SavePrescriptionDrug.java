@@ -77,7 +77,6 @@ public class SavePrescriptionDrug {
     /**
      * 成本
      */
-    @NotNull(message = "成本不能为空")
     private BigDecimal cost;
 
 

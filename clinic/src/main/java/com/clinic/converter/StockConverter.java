@@ -2,11 +2,14 @@ package com.clinic.converter;
 
 import com.clinic.dto.param.PutStockParam;
 import com.clinic.dto.vo.PrescriptionSearchDrugVO;
+import com.clinic.entity.Drug;
 import com.clinic.entity.Stock;
 import com.clinic.entity.StockBatch;
 import com.clinic.entity.StockInDrug;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+
+import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface StockConverter {
@@ -28,4 +31,6 @@ public interface StockConverter {
     @Mapping(target = "expiryDate", ignore = true)
     @Mapping(source = "number", target = "stockNumber")
     PrescriptionSearchDrugVO toPrescriptionSearchDrugVO(StockBatch stockBatch);
+
+    List<PrescriptionSearchDrugVO> toPrescriptionSearchDrugVOList(List<Drug> records);
 }

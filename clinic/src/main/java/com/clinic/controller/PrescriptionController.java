@@ -19,6 +19,7 @@ import com.clinic.dto.vo.PrescriptionSearchDrugVO;
 import com.clinic.entity.*;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.DossierService;
+import com.clinic.service.DrugService;
 import com.clinic.service.StockBatchService;
 import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
@@ -65,6 +66,8 @@ public class PrescriptionController {
     private StockBatchService stockBatchService;
     @Resource
     private StockConverter converter;
+    @Resource
+    private DrugService drugService;
 
     /**
      * 药品查询
@@ -75,6 +78,7 @@ public class PrescriptionController {
             @RequestParam(required = false, defaultValue = "1") Integer current,
             @RequestParam(required = false, defaultValue = "10") Integer size
     ) {
+        Page<PrescriptionSearchDrugVO> result = null;
         MPJLambdaWrapper<StockBatch> queryWrapper = new MPJLambdaWrapper<StockBatch>()
                 .selectAll(StockBatch.class)
                 .leftJoin(Unit.class, Unit::getId, StockBatch::getUnitId, ext -> ext
@@ -102,15 +106,19 @@ public class PrescriptionController {
         }
 
         List<StockBatch> stockBatches = stockBatchService.selectJoinList(StockBatch.class, queryWrapper);
-
-        Page<StockBatch> stockBatchPage = PageUtil.paginateWithInfo(stockBatches, current, size);
-
-        Page<PrescriptionSearchDrugVO> result = new Page<>(stockBatchPage.getCurrent(), stockBatchPage.getSize(), stockBatchPage.getTotal());
-        result.setRecords(
-                stockBatchPage.getRecords().stream().map(converter::toPrescriptionSearchDrugVO)
-                        .collect(Collectors.toList())
-        );
-
+        if(stockBatches.isEmpty()){
+            Page<Drug> search = drugService.search(name, new Page<>(current,size));
+            result = new Page<>(search.getCurrent(), search.getSize(), search.getTotal());
+            result.setRecords(converter.toPrescriptionSearchDrugVOList(search.getRecords()));
+        }else{
+            Page<StockBatch> stockBatchPage = PageUtil.paginateWithInfo(stockBatches, current, size);
+            result = new Page<>(stockBatchPage.getCurrent(), stockBatchPage.getSize(), stockBatchPage.getTotal());
+            result.setRecords(
+                    stockBatchPage.getRecords().stream()
+                            .map(converter::toPrescriptionSearchDrugVO)
+                            .collect(Collectors.toList())
+            );
+        }
         return Result.success(result);
     }
 

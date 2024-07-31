@@ -5,12 +5,15 @@ import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.Result;
+import com.clinic.converter.StockConverter;
 import com.clinic.dto.PrescriptionDrugDto;
 import com.clinic.dto.PrescriptionDto;
 import com.clinic.dto.param.PutStock;
 import com.clinic.dto.param.PutStockList;
 import com.clinic.dto.param.QueryStockInParam;
 import com.clinic.dto.param.StockSearchParam;
+import com.clinic.dto.vo.PrescriptionSearchDrugVO;
+import com.clinic.entity.Drug;
 import com.clinic.entity.Settings;
 import com.clinic.entity.Stock;
 import com.clinic.entity.StockBatch;
@@ -19,11 +22,14 @@ import com.clinic.entity.StockInDrug;
 import com.clinic.entity.StockUnit;
 import com.clinic.entity.Unit;
 import com.clinic.enums.DrugExpiryStateEnum;
-import com.clinic.enums.DrugStockRule;
 import com.clinic.enums.DrugTypeEnum;
-import com.clinic.enums.StockStateEnum;
 import com.clinic.mapper.StockMapper;
-import com.clinic.service.*;
+import com.clinic.service.DrugService;
+import com.clinic.service.SettingsService;
+import com.clinic.service.StockBatchService;
+import com.clinic.service.StockInDrugService;
+import com.clinic.service.StockInService;
+import com.clinic.service.StockService;
 import com.clinic.util.LoginUser;
 import com.clinic.util.RedisUtil;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
@@ -39,7 +45,6 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -53,7 +58,7 @@ import static com.clinic.enums.DrugExpiryStateEnum.EXPIRES;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.commons.lang3.math.NumberUtils.*;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 @Slf4j
 @Service
@@ -80,6 +85,10 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
 
     @Value("${setting.stock.expiry.alert.month}")
     private Integer stockDefaultExpiryAlertMonth;
+    @Resource
+    private DrugService drugService;
+    @Resource
+    private StockConverter converter;
 
     public Result search(StockSearchParam param) {
         if(nonNull(param.getId())) {
@@ -117,7 +126,16 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
                 )
         ;
         List<Stock> stocks = baseMapper.selectJoinList(Stock.class, wrapper);
-        return Result.success(countStockStateAndPage(param.toPage(), stocks));
+
+        if(stocks.isEmpty()){
+            Page<Drug> search = drugService.search(param.getName(), param.toPage());
+            Page<PrescriptionSearchDrugVO> result  = new Page<>(search.getCurrent(), search.getSize(), search.getTotal());
+            result.setRecords(converter.toPrescriptionSearchDrugVOList(search.getRecords()));
+            return Result.success(result);
+        }else{
+            return Result.success(countStockStateAndPage(param.toPage(), stocks));
+        }
+
     }
 
 
