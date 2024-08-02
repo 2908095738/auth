@@ -29,6 +29,12 @@ public class AuxiliaryType implements Serializable {
     @TableField(value = "name")
     private String name;
 
+    /**
+     * 单位名称
+     */
+    @TableField(value = "unit_name")
+    private String unitName;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

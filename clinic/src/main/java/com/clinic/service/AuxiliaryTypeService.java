@@ -10,5 +10,5 @@ import java.util.List;
  */
 public interface AuxiliaryTypeService extends IService<AuxiliaryType> {
 
-    List<AuxiliaryType> search();
+    List<AuxiliaryType> search(String name, String unitName);
 }
