@@ -118,8 +118,10 @@ public class AppPrescriptionServiceImpl implements AppPrescriptionService {
         List<PrescriptionDrug> prescriptionDrugs = prescriptionDrugService.searchDrug(id);
         if (CollectionUtils.isNotEmpty(prescriptionDrugs)) {
             return  prescriptionConverter.toDto(prescriptionDrugs.stream().peek(o2 -> {
-                StockBatch stockBatch = o2.getBatchList().get(0);
-                o2.setNumber(stockBatch.getNumber());
+                if(CollectionUtils.isNotEmpty(o2.getBatchList())){
+                    StockBatch stockBatch = o2.getBatchList().get(0);
+                    o2.setNumber(stockBatch.getNumber());
+                }
             }).collect(Collectors.toList()));
         }
         return  prescriptionConverter.toDto(prescriptionDrugs);

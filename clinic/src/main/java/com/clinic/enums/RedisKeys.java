@@ -21,7 +21,8 @@ public enum RedisKeys {
     PRESCRIPTION_ID_MAP("prescription:map:id", "病历ID与数据映射缓存"),
     USAGE("drug:sig:", "药品用法缓存"),
     STOCK_DRUG("stock:drug:", "库存药品缓存"),
-    STOCK_DRUG_NAME("stock:drug:", "库存药品名称 & ID 映射缓存")
+    STOCK_DRUG_NAME("stock:drug:", "库存药品名称 & ID 映射缓存"),
+    AUXILIARY_TYPE("auxiliary_type:", "辅助类型缓存")
     ;
 
     private final String prefix;
