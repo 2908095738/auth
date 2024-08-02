@@ -30,6 +30,7 @@ public interface StockConverter {
     @Mapping(target = "singleDoseUnit", ignore = true)
     @Mapping(target = "expiryDate", ignore = true)
     @Mapping(source = "number", target = "stockNumber")
+    @Mapping(source = "number", target = "stockNumberUnit")
     PrescriptionSearchDrugVO toPrescriptionSearchDrugVO(StockBatch stockBatch);
 
     List<PrescriptionSearchDrugVO> toPrescriptionSearchDrugVOList(List<Drug> records);

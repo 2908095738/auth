@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 @RestController("searchAdmissionJoin")
 @RequestMapping
@@ -78,16 +79,26 @@ public class Search extends MPJBaseServiceImpl<AdmissionLogMapper, AdmissionLog>
         if(nonNull(log)) {
             log.setCreateTimeStr(DateUtil.formatDateTime(log.getCreateTime()));
 
-            log.getPrescriptionDrugs().forEach(prescriptionDrug -> {
-                List<Unit> units = new ArrayList<>();
-                prescriptionDrug.getStockBatch().getStockUnitList().forEach(stockUnit -> {
-                    Unit unit = stockUnit.getUnit();
-                    unit.setSort(stockUnit.getSort());
-                    unit.setStepSize(stockUnit.getStepSize());
-                    units.add(unit);
+            List<PrescriptionDrug> prescriptionDrugs = log.getPrescriptionDrugs();
+
+            if(prescriptionDrugs.size() > INTEGER_ZERO) {
+                log.getPrescriptionDrugs().forEach(prescriptionDrug -> {
+                    StockBatch stockBatch = prescriptionDrug.getStockBatch();
+                    List<Unit> units = new ArrayList<>();
+                    if(nonNull(stockBatch)) {
+                        List<StockUnit> stockUnitList = stockBatch.getStockUnitList();
+                        if(nonNull(stockUnitList) && stockUnitList.size() > INTEGER_ZERO) {
+                            stockUnitList.forEach(stockUnit -> {
+                                Unit unit = stockUnit.getUnit();
+                                unit.setSort(stockUnit.getSort());
+                                unit.setStepSize(stockUnit.getStepSize());
+                                units.add(unit);
+                            });
+                        }
+                    }
+                    prescriptionDrug.setUnits(units);
                 });
-                prescriptionDrug.setUnits(units);
-            });
+            }
 
             if(nonNull(log.getPayId())) log.setPayRecords(payRecordService.searchByPayId(log.getPayId()));
         }

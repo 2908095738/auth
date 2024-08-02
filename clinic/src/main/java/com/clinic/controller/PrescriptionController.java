@@ -89,7 +89,7 @@ public class PrescriptionController {
             @RequestParam(required = false, defaultValue = "1") Integer current,
             @RequestParam(required = false, defaultValue = "50") Integer size
     ) {
-        Page<PrescriptionSearchDrugVO> result = null;
+        Page<PrescriptionSearchDrugVO> result;
         MPJLambdaWrapper<StockBatch> queryWrapper = new MPJLambdaWrapper<StockBatch>()
                 .selectAll(StockBatch.class)
                 .leftJoin(Unit.class, Unit::getId, StockBatch::getUnitId, ext -> ext
@@ -121,9 +121,10 @@ public class PrescriptionController {
         result = new Page<>(stockBatchPage.getCurrent(), stockBatchPage.getSize(), stockBatchPage.getTotal());
         result.setRecords(
                 stockBatchPage.getRecords().stream()
-                        .map(o->{
-                            PrescriptionSearchDrugVO prescriptionSearchDrugVO = converter.toPrescriptionSearchDrugVO(o);
+                        .map(stockBatch ->{
+                            PrescriptionSearchDrugVO prescriptionSearchDrugVO = converter.toPrescriptionSearchDrugVO(stockBatch);
                             prescriptionSearchDrugVO.setIsStock(true);
+                            prescriptionSearchDrugVO.setStockNumberUnit(stockBatch.getUnit().getName());
                             return prescriptionSearchDrugVO;
                         }).collect(Collectors.toList())
         );
