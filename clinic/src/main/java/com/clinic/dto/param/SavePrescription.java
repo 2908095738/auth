@@ -25,33 +25,8 @@ public class SavePrescription {
     /**
      * 病列编号
      */
-    @NotNull(message = "病列编号不能为空！")
-    private Long dossierId;
-
-    /**
-     * 药物过敏史
-     */
-    private String drugAllergyHistory;
-
-    /**
-     * 体重
-     */
-    private Double weight;
-
-    /**
-     * 体温
-     */
-    private Double temperature;
-
-    /**
-     * 血压
-     */
-    private Integer bloodPressure;
-
-    /**
-     * 血糖
-     */
-    private Double bloodGlucose;
+    @Valid
+    private SaveDossierParam dossier;
 
     /**
      * 总价，药方药品总价之和

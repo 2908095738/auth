@@ -29,29 +29,10 @@ public class UpdatePrescription {
     private Long payId;
 
     /**
-     * 药物过敏史
+     * 病列信息
      */
-    private String drugAllergyHistory;
-
-    /**
-     * 体重
-     */
-    private Double weight;
-
-    /**
-     * 体温
-     */
-    private Double temperature;
-
-    /**
-     * 血压
-     */
-    private Integer bloodPressure;
-
-    /**
-     * 血糖
-     */
-    private Double bloodGlucose;
+    @Valid
+    private UpdateDossierParam dossier;
 
     /**
      * 总价，药方药品总价之和

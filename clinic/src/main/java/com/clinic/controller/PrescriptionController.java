@@ -12,8 +12,12 @@ import com.clinic.dto.PrescriptionAndPayIdVo;
 import com.clinic.dto.PrescriptionDto;
 import com.clinic.dto.param.SavePrescription;
 import com.clinic.dto.param.UpdatePrescription;
-import com.clinic.entity.*;
-import com.clinic.service.*;
+import com.clinic.entity.Dossier;
+import com.clinic.entity.Prescription;
+import com.clinic.entity.Unit;
+import com.clinic.entity.Usage;
+import com.clinic.service.AdmissionLogService;
+import com.clinic.service.DossierService;
 import com.clinic.util.LoginUser;
 import com.clinic.util.log.LogUtil;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -28,9 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.*;
-
-import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
+import java.util.List;
 
 
 /**
@@ -68,6 +70,7 @@ public class PrescriptionController {
     public Result<PrescriptionAndPayIdVo> add(@RequestBody @Valid SavePrescription param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
+            dossierService.createDossier(param.getDossier());
             Prescription prescription = service.save(param);
             Dossier dossier = dossierService.getDossierByPrescriptionId(prescription.getId());
             Long payId = payCache.createPayAndPrescriptionRecord(prescription,dossier);
@@ -91,6 +94,7 @@ public class PrescriptionController {
     public Result<Boolean> update(@RequestBody @Valid UpdatePrescription param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
+            dossierService.updateDossier(param.getDossier());
             if(service.update(param))if(!appPayService.updatePayPrescriptionRecord(param.getPayId(), param.getPrice()) )throw new RuntimeException();
             LogUtil.Operation.updatePrescription(param.getPatientId(), param.getPayId(), "{}修改处方和处方收费记录：处方id={}, 支付id={}", LoginUser.get().getName(), param.getId(), param.getPayId());
             transactionManager.commit(transaction);
