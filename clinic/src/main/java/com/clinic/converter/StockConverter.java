@@ -34,4 +34,7 @@ public interface StockConverter {
     PrescriptionSearchDrugVO toPrescriptionSearchDrugVO(StockBatch stockBatch);
 
     List<PrescriptionSearchDrugVO> toPrescriptionSearchDrugVOList(List<Drug> records);
+
+    @Mapping(source = "type", target = "dosageForm")
+    PrescriptionSearchDrugVO drugToPrescriptionSearchDrugVO(Drug drug);
 }

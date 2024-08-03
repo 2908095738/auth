@@ -1,5 +1,6 @@
 package com.clinic.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -72,7 +73,18 @@ public class DrugServiceImpl extends ServiceImpl<DrugMapper, Drug>
 
     @Override
     public Page<Drug> search(String name,  Page<Drug> tPage) {
-        return lambdaQuery().like(Drug::getName, name).page(tPage);
+        QueryWrapper<Drug> queryWrapper = new QueryWrapper<>();
+        if(StringUtils.isNotBlank(name)) {
+            if (name.matches("[a-zA-Z]+")) {
+                // 如果是纯英文，进行拼音或首字母模糊匹配
+                queryWrapper.apply("LOWER(CONVERT(name USING gbk)) LIKE LOWER(CONVERT({0} USING gbk)) OR LOWER(name) LIKE LOWER({0})", "%" + name + "%");
+            } else {
+                // 否则进行普通 LIKE 查询
+                queryWrapper.like("name", name);
+            }
+        }
+
+        return page(tPage, queryWrapper);
     }
 }
 
