@@ -4,10 +4,9 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Data;
-
 import java.io.Serializable;
 import java.util.Date;
+import lombok.Data;
 
 /**
  * 诊所设置
@@ -69,6 +68,18 @@ public class Settings implements Serializable {
      */
     @TableField(value = "create_time")
     private Date createTime;
+
+    /**
+     * 显示在处方单上的诊所名
+     */
+    @TableField(value = "alternate_name")
+    private String alternateName;
+
+    /**
+     * 医师姓名
+     */
+    @TableField(value = "physician")
+    private String physician;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

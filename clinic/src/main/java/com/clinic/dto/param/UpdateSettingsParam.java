@@ -44,5 +44,15 @@ public class UpdateSettingsParam {
      */
     private String clinicName;
 
+    /**
+     * 显示在处方单上的诊所名
+     */
+    private String alternateName;
+
+    /**
+     * 医师姓名
+     */
+    private String physician;
+
 
 }

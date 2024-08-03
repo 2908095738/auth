@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
@@ -19,7 +18,6 @@ import javax.validation.Valid;
 
 @Slf4j
 @RestController
-@RequestMapping("/settings")
 public class SettingsController {
 
     @Resource
@@ -30,7 +28,7 @@ public class SettingsController {
      * @param param AddSettingsParam
      * @return 添加结果
      */
-    @PutMapping
+    @PutMapping("/settings")
     public Result<Boolean> add(@RequestBody @Valid AddSettingsParam param){
         return service.add(param);
     }
@@ -41,7 +39,7 @@ public class SettingsController {
      * @param param UpdateSettingsParam
      * @return 修改结果
      */
-    @PostMapping
+    @PostMapping("/settings")
     public Result<Boolean> update(@RequestBody @Valid UpdateSettingsParam param){
         return service.update(param);
     }
@@ -50,7 +48,7 @@ public class SettingsController {
      * 用户设置查询
      * @return Settings
      */
-    @GetMapping
+    @GetMapping("/settings")
     public Result<Settings> getByUserId(){
         return Result.success(service.getByUserId());
     }

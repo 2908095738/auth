@@ -8,28 +8,14 @@ import javax.validation.constraints.NotNull;
 public class AddSettingsParam {
 
     /**
-     * 过期预提醒时间（月）
+     * 显示在处方单上的诊所名
      */
-    @NotNull(message = "过期预提醒时间（月）不能为空")
-    private Integer expiryAlertMonth;
+    private String alternateName;
 
     /**
-     * 库存统计规则
+     * 医师姓名
      */
-    @NotNull(message = "库存统计规则不能为空")
-    private Integer stateCountRule;
-
-    /**
-     * 统计值（统计方式值，如百分比 10%； 数量）
-     */
-    @NotNull(message = "统计值不能为空")
-    private Integer countVal;
-
-    /**
-     * 统计单位(0最小单位1最大单位)
-     */
-    @NotNull(message = "统计单位不能为空")
-    private Integer countUnit;
+    private String physician;
 
 
     /**
