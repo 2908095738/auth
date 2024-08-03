@@ -21,7 +21,6 @@ public class AddSettingsParam {
     /**
      * 科别：内科，中西医结合，中医
      */
-    @NotNull(message = "科别不能为空")
     private String division;
 
     /**
