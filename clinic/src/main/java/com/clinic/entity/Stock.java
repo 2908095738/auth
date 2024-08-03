@@ -46,6 +46,19 @@ public class Stock implements Serializable {
     @TableField(value = "name")
     private String name;
 
+    /**
+     * 拼音全拼
+     */
+    @TableField(value = "pin_yin")
+    private String pinYin;
+
+    /**
+     * 拼音首字母
+     */
+    @TableField(value = "pin_yin_first_letter")
+    private String pinYinFirstLetter;
+
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 

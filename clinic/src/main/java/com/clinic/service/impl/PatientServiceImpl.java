@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapp
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.api.auth.User;
-import com.bbs.util.FisrtWordsSqlUtils;
+import com.bbs.util.FirstWordsSqlUtils;
 import com.bbs.util.MyStringUtil;
 import com.clinic.cache.log.admission.AdmissionLogCache;
 import com.clinic.converter.PatientConverter;
@@ -121,7 +121,7 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
                 .like(nonNull(address) && address.length() <= 500, Patient::getAddress, address);
         if(StringUtils.isNotBlank(name)){
             if(!MyStringUtil.isContainChinese(name)){
-                String sql = FisrtWordsSqlUtils.getSql(name);
+                String sql = FirstWordsSqlUtils.getSql(name);
                 wrapper.apply(sql);
             }else{
                 wrapper.like(Patient::getName,name);

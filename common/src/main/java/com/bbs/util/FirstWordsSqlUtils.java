@@ -5,11 +5,14 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
+
 /**
  * @author WYH
  */
 @Component
-public class FisrtWordsSqlUtils {
+public class FirstWordsSqlUtils {
 
     //依次从小到大排序
     private static Map<String,String> wordsMap;
@@ -31,11 +34,11 @@ public class FisrtWordsSqlUtils {
     public static String getSql(String str){
         String wordsStr = str.toLowerCase();
         //排除该三个首字母，因为中文就没有以他们开头的拼音
-        if(str.contains("i")||str.contains("u")||str.contains("v")){
-            System.out.println("暂无数据");
+        String firstStr = str.substring(INTEGER_ZERO, INTEGER_ONE);
+        if(firstStr.equals("i") || firstStr.equals("u") || firstStr.equals("v")){
             return null;
         }
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < wordsStr.length(); i++) {
             String c = wordsStr.charAt(i)+"";
             String wordsASC  = wordsMap.get(c);
@@ -43,9 +46,9 @@ public class FisrtWordsSqlUtils {
             int ASC01 = Integer.parseInt(asc[0]);
             int ASC02 = Integer.parseInt(asc[1]);
             if(i!=wordsStr.length()-1){
-                sb.append("CONV(HEX(SUBSTRING(CONVERT(name USING gbk ), "+(i+1)+",1)), 16, 10) BETWEEN "+ASC01+" AND "+ASC02 + " and ");
+                sb.append("CONV(HEX(SUBSTRING(CONVERT(name USING gbk ), ").append(i + 1).append(",1)), 16, 10) BETWEEN ").append(ASC01).append(" AND ").append(ASC02).append(" and ");
             }else{
-                sb.append("CONV(HEX(SUBSTRING(CONVERT(name USING gbk ), "+(i+1)+",1)), 16, 10) BETWEEN "+ASC01+" AND "+ASC02);
+                sb.append("CONV(HEX(SUBSTRING(CONVERT(name USING gbk ), ").append(i + 1).append(",1)), 16, 10) BETWEEN ").append(ASC01).append(" AND ").append(ASC02);
             }
         }
         return sb.toString();

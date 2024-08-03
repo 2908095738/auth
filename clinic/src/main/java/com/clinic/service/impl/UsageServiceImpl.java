@@ -2,7 +2,7 @@ package com.clinic.service.impl;
 
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.bbs.util.FisrtWordsSqlUtils;
+import com.bbs.util.FirstWordsSqlUtils;
 import com.bbs.util.MyStringUtil;
 import com.clinic.entity.Usage;
 import com.clinic.mapper.UsageMapper;
@@ -26,7 +26,7 @@ public class UsageServiceImpl extends ServiceImpl<UsageMapper, Usage>
         LambdaQueryChainWrapper<Usage> wrapper = lambdaQuery();
         if(StringUtils.isNotBlank(name)){
             if(!MyStringUtil.isContainChinese(name)){
-                String sql = FisrtWordsSqlUtils.getSql(name);
+                String sql = FirstWordsSqlUtils.getSql(name);
                 wrapper.apply(sql);
             }else{
                 wrapper.like(Usage::getName, name);

@@ -83,9 +83,9 @@ public class PrescriptionSearchDrugVO {
     private BigDecimal cost;
 
     /**
-     * 库存状态是否正常
+     * 库存状态
      */
-    private Boolean stockStateIsNotNormal;
+    private Integer stockState;
 
     /**
      * 过期时间
@@ -93,9 +93,9 @@ public class PrescriptionSearchDrugVO {
     private String expiryDate;
 
     /**
-     * 过期时间是否正常
+     * 过期状态
      */
-    private Boolean expiryStateIsNotNormal;
+    private Integer expiryState;
 
     /**
      * 单位列表
@@ -116,6 +116,11 @@ public class PrescriptionSearchDrugVO {
      * 是否是库存
      */
     private Boolean isStock;
+
+    /**
+     * 库存统计规则
+     */
+    private Integer stateCountRule;
 
     @Data
     @NoArgsConstructor

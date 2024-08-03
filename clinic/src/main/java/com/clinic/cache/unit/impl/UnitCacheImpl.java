@@ -15,9 +15,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -71,6 +69,11 @@ public class UnitCacheImpl implements UnitCache, ApplicationListener<ContextRefr
     @Override
     public Map<Integer, Unit> getUnitMap(List<Integer> ids) {
         return getUnit(ids).stream().collect(Collectors.toMap(Unit::getId, unit -> unit));
+    }
+
+    @Override
+    public Map<Integer, Unit> getUnitMap(Set<Integer> ids) {
+        return getUnitMap(new ArrayList<>(ids));
     }
 
     private List<String> getByRedis(List<String> ids) {

@@ -34,6 +34,18 @@ public class Drug implements Serializable {
     private String name;
 
     /**
+     * 拼音全拼
+     */
+    @TableField(value = "pin_yin")
+    private String pinYin;
+
+    /**
+     * 拼音首字母
+     */
+    @TableField(value = "pin_yin_first_letter")
+    private String pinYinFirstLetter;
+
+    /**
      * 剂型（药品类型）
      */
     @Excel(name = "剂型", orderNum = "3",fixedIndex = 3)

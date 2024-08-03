@@ -16,6 +16,7 @@ public interface StockConverter {
 
     Stock toEntity(PutStockParam param);
 
+    @Mapping(target = "singleDoseUnit", ignore = true)
     @Mapping(source = "type", target = "dosageForm")
     @Mapping(source = "countNumber", target = "countVal")
     @Mapping(source = "countUnitId", target = "countUnitId")
@@ -27,10 +28,11 @@ public interface StockConverter {
     @Mapping(source = "type", target = "dosageForm")
     StockInDrug toStockInDrugEntity(PutStockParam param);
 
-    @Mapping(target = "singleDoseUnit", ignore = true)
     @Mapping(target = "expiryDate", ignore = true)
     @Mapping(source = "number", target = "stockNumber")
     @Mapping(source = "number", target = "stockNumberUnit")
+    @Mapping(target = "singleDoseUnit", ignore = true)
+    @Mapping(target = "stateCountRule", ignore = true)
     PrescriptionSearchDrugVO toPrescriptionSearchDrugVO(StockBatch stockBatch);
 
     List<PrescriptionSearchDrugVO> toPrescriptionSearchDrugVOList(List<Drug> records);

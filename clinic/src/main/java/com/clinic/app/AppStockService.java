@@ -164,7 +164,7 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
 
     private Page countStockStateAndPage(Page<Stock> page, List<Stock> records) {
         Settings settings = settingsService.getByUserId();
-        Integer stockExpiryAlertMonth = getUserSettingStockExpiryAlertMonth(settings);  //用户设置的库存药品过期提醒时间
+        Integer stockExpiryAlertMonth = settingsService.getUserSettingStockExpiryAlertMonth(settings);  //用户设置的库存药品过期提醒时间
         List<Stock> stocks = records.stream()
                 .skip((page.getCurrent() - 1) * page.getSize())
                 .limit(page.getSize())
@@ -195,11 +195,6 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
         }
         return EXPIRES;
     }
-
-    public Integer getUserSettingStockExpiryAlertMonth(Settings settings) {
-        return nonNull(settings) && nonNull(settings.getExpiryAlertMonth()) ? settings.getExpiryAlertMonth() : stockDefaultExpiryAlertMonth;
-    }
-
 
     public Result<Boolean> putStock(PutStock param) {
         StockBatch batch = batchService.searchBatchAndUnitByID(param.getId());

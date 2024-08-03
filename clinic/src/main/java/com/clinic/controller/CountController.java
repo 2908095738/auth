@@ -286,7 +286,7 @@ public class CountController {
 
     public DrugExpiryGroup countAndUpdateDrugExpiryState(){
         Settings settings = settingsService.getByUserId();
-        Integer stockExpiryAlertMonth = appStockService.getUserSettingStockExpiryAlertMonth(settings);  //用户设置的库存药品过期提醒时间'
+        Integer stockExpiryAlertMonth = settingsService.getUserSettingStockExpiryAlertMonth(settings);  //用户设置的库存药品过期提醒时间'
 
         List<StockBatch> allDrugBatch = stockBatchService.lambdaQuery()
                 .eq(StockBatch::getUserId, LoginUser.getId())

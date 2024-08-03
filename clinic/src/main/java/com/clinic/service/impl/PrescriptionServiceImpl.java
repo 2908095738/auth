@@ -5,7 +5,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.resource.ClassPathResource;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.bbs.util.FisrtWordsSqlUtils;
+import com.bbs.util.FirstWordsSqlUtils;
 import com.bbs.util.MyStringUtil;
 import com.clinic.cache.unit.UnitCache;
 import com.clinic.converter.StockConverter;
@@ -26,8 +26,6 @@ import com.clinic.entity.StockUnit;
 import com.clinic.entity.Unit;
 import com.clinic.mapper.PrescriptionMapper;
 import com.clinic.service.PrescriptionService;
-import com.clinic.service.StockBatchService;
-import com.clinic.service.StockService;
 import com.clinic.util.LoginUser;
 import com.deepoove.poi.XWPFTemplate;
 import com.deepoove.poi.config.Configure;
@@ -38,7 +36,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -65,11 +62,8 @@ public class PrescriptionServiceImpl extends MPJBaseServiceImpl<PrescriptionMapp
     @Resource
     private StockConverter converter;
 
-    private final StockBatchService stockBatchService;
-
-    private final StockService stockService;
-
-    private final UnitCache unitCache;
+    @Resource
+    private UnitCache unitCache;
 
     @Override
     public IPage<PrescriptionDto> selectPage(Long id, Long dossierId, Long patientId, Integer current, Integer size) {
@@ -159,7 +153,7 @@ public class PrescriptionServiceImpl extends MPJBaseServiceImpl<PrescriptionMapp
                 .eq(Stock::getUserId, LoginUser.getId());
                 if(StringUtils.isNotBlank(drugName)){
                     if(!MyStringUtil.isContainChinese(drugName)){
-                        String sql = FisrtWordsSqlUtils.getSql(drugName);
+                        String sql = FirstWordsSqlUtils.getSql(drugName);
                         wrapper.apply(sql);
                     }else{
                         wrapper.likeRight(Stock::getName, drugName);
@@ -174,12 +168,12 @@ public class PrescriptionServiceImpl extends MPJBaseServiceImpl<PrescriptionMapp
         vo.setName(stockBatch.getName());
 
 
-        vo.setStockStateIsNotNormal(stockService.stockNumberStateIsNotNormal(stockBatch));
+        vo.setStockState(stockBatch.getState().getCode());
 
         vo.setExpiryDate(DateUtil.formatDate(stockBatch.getExpiryDate()));
-        vo.setExpiryStateIsNotNormal(stockBatchService.stockIsExpiry(stockBatch));
+        vo.setExpiryState(stockBatch.getExpiryState());
 
-        List<Unit> units = unitCache.getUnit(Arrays.asList(stockBatch.getSingleDoseUnit(), stockBatch.getUnitId()));
+        List<Unit> units = unitCache.getUnit(Arrays.asList(stockBatch.getSingleDoseUnitId(), stockBatch.getUnitId()));
         Unit singleDoseUnit = units.get(INTEGER_ZERO);
         if(nonNull(singleDoseUnit)) vo.setSingleDoseUnit(singleDoseUnit.getName());
         Unit stockNumberUnit = units.get(INTEGER_ONE);
@@ -228,13 +222,6 @@ public class PrescriptionServiceImpl extends MPJBaseServiceImpl<PrescriptionMapp
     private static class Content {
         private String drug;
         private String sig;
-    }
-
-    @Autowired
-    public PrescriptionServiceImpl(StockBatchService stockBatchService, StockService stockService, UnitCache unitCache) {
-        this.stockBatchService = stockBatchService;
-        this.stockService = stockService;
-        this.unitCache = unitCache;
     }
 }
 

@@ -1,36 +1,21 @@
 package com.clinic.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
-import com.bbs.util.PageUtil;
 import com.clinic.app.AppPayService;
 import com.clinic.app.AppPrescriptionService;
 import com.clinic.app.porescription.file.create.CreatePrescriptionFile;
 import com.clinic.cache.pay.PayCache;
 import com.clinic.cache.unit.UnitCache;
 import com.clinic.cache.usage.UsageCache;
-import com.clinic.converter.StockConverter;
 import com.clinic.dto.PrescriptionAndPayIdVo;
 import com.clinic.dto.PrescriptionDto;
 import com.clinic.dto.param.SavePrescription;
 import com.clinic.dto.param.UpdatePrescription;
-import com.clinic.dto.vo.PrescriptionSearchDrugVO;
-import com.clinic.entity.Dossier;
-import com.clinic.entity.Drug;
-import com.clinic.entity.Prescription;
-import com.clinic.entity.Stock;
-import com.clinic.entity.StockBatch;
-import com.clinic.entity.Unit;
-import com.clinic.entity.Usage;
-import com.clinic.service.AdmissionLogService;
-import com.clinic.service.DossierService;
-import com.clinic.service.DrugService;
-import com.clinic.service.StockBatchService;
+import com.clinic.entity.*;
+import com.clinic.service.*;
 import com.clinic.util.LoginUser;
 import com.clinic.util.log.LogUtil;
-import com.github.yulichang.wrapper.MPJLambdaWrapper;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -38,14 +23,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.*;
+
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 
 /**
@@ -73,69 +58,6 @@ public class PrescriptionController {
     private UsageCache usageCache;
     @Resource
     private UnitCache unitCache;
-    @Resource
-    private StockBatchService stockBatchService;
-    @Resource
-    private StockConverter converter;
-    @Resource
-    private DrugService drugService;
-
-    /**
-     * 药品查询
-     */
-    @GetMapping("/prescription/drug")
-    public Result<Page<PrescriptionSearchDrugVO>> searchDrug(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false, defaultValue = "1") Integer current,
-            @RequestParam(required = false, defaultValue = "50") Integer size
-    ) {
-        Page<PrescriptionSearchDrugVO> result;
-        MPJLambdaWrapper<StockBatch> queryWrapper = new MPJLambdaWrapper<StockBatch>()
-                .selectAll(StockBatch.class)
-                .leftJoin(Unit.class, Unit::getId, StockBatch::getUnitId, ext -> ext
-                        .selectAssociation(Unit.class, StockBatch::getUnit)
-                )
-                .leftJoin(Unit.class, Unit::getId, StockBatch::getCostUnitId, ext -> ext
-                        .selectAssociation(Unit.class, StockBatch::getCostUnit)
-                )
-                .leftJoin(Unit.class, Unit::getId, StockBatch::getSingleDoseUnit, ext -> ext
-                        .selectAssociation(Unit.class, StockBatch::getSingleDoseUnitObj)
-                )
-                .selectAssociation(Stock.class , StockBatch::getName,ext->ext.result(Stock::getName))
-                .leftJoin(Stock.class, "st",Stock::getId, StockBatch::getStockId)
-                .eq(StockBatch::getUserId, LoginUser.getId())
-        ;
-
-        if(StringUtils.isNotBlank(name)) {
-            if (name.matches("[a-zA-Z]+")) {
-                // 如果是纯英文，进行拼音或首字母模糊匹配
-                queryWrapper.apply("LOWER(CONVERT(st.name USING gbk)) LIKE LOWER(CONVERT({0} USING gbk)) OR LOWER(st.name) LIKE LOWER({0})", "%" + name + "%");
-            } else {
-                // 否则进行普通 LIKE 查询
-                queryWrapper.like("st.name", name);
-            }
-        }
-
-        List<StockBatch> stockBatches = stockBatchService.selectJoinList(StockBatch.class, queryWrapper);
-        Page<StockBatch> stockBatchPage = PageUtil.paginateWithInfo(stockBatches, current, size);
-        result = new Page<>(stockBatchPage.getCurrent(), stockBatchPage.getSize(), stockBatchPage.getTotal());
-        result.setRecords(
-                stockBatchPage.getRecords().stream()
-                        .map(stockBatch ->{
-                            PrescriptionSearchDrugVO prescriptionSearchDrugVO = converter.toPrescriptionSearchDrugVO(stockBatch);
-                            prescriptionSearchDrugVO.setIsStock(true);
-                            prescriptionSearchDrugVO.setStockNumberUnit(stockBatch.getUnit().getName());
-                            return prescriptionSearchDrugVO;
-                        }).collect(Collectors.toList())
-        );
-        if(stockBatches.isEmpty()||stockBatches.size() != size){
-            Page<Drug> search = drugService.search(name, new Page<>(current,size-stockBatches.size()));
-            List<PrescriptionSearchDrugVO> records = result.getRecords();
-            records.addAll(converter.toPrescriptionSearchDrugVOList(search.getRecords()));
-        }
-        return Result.success(result);
-    }
-
 
     /**
      * 添加处方
@@ -228,5 +150,4 @@ public class PrescriptionController {
     public Result<List<Unit>> searchUnit(String name) {
         return Result.success(unitCache.search(name));
     }
-
 }

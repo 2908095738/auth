@@ -11,6 +11,7 @@ import com.clinic.mapper.SettingsMapper;
 import com.clinic.service.SettingsService;
 import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,8 @@ import org.springframework.transaction.TransactionStatus;
 
 import javax.annotation.Resource;
 import java.util.Objects;
+
+import static java.util.Objects.nonNull;
 
 /**
  *
@@ -38,6 +41,9 @@ public class SettingsServiceImpl extends ServiceImpl<SettingsMapper, Settings>
     private TransactionDefinition transactionDefinition;
 
     private static final String SETTING_KEY_PREFIX = "SETTING_USER_ID=";
+
+    @Value("${setting.stock.expiry.alert.month}")
+    private Integer stockDefaultExpiryAlertMonth;
 
     @Override
     public Result<Boolean> add(AddSettingsParam param) {
@@ -96,6 +102,11 @@ public class SettingsServiceImpl extends ServiceImpl<SettingsMapper, Settings>
         } else {
             return JSONUtil.toBean(str, Settings.class);
         }
+    }
+
+    @Override
+    public Integer getUserSettingStockExpiryAlertMonth(Settings settings) {
+        return nonNull(settings) && nonNull(settings.getExpiryAlertMonth()) ? settings.getExpiryAlertMonth() : stockDefaultExpiryAlertMonth;
     }
 
     private Boolean hasKey(String key){

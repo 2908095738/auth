@@ -2,7 +2,7 @@ package com.clinic.dao;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.bbs.util.FisrtWordsSqlUtils;
+import com.bbs.util.FirstWordsSqlUtils;
 import com.bbs.util.MyStringUtil;
 import com.clinic.entity.Dossier;
 import com.clinic.entity.Patient;
@@ -56,7 +56,7 @@ public class PatientDao extends ServiceImpl<PatientMapper, Patient> {
                 .like(nonNull(address) && address.length() <= 500, Patient::getAddress, address);
         if(StringUtils.isNotBlank(name)){
             if(!MyStringUtil.isContainChinese(name)){
-                String sql = FisrtWordsSqlUtils.getSql(name);
+                String sql = FirstWordsSqlUtils.getSql(name);
                 wrapper.apply(sql);
             }else{
                 wrapper.like(Patient::getName,name);
