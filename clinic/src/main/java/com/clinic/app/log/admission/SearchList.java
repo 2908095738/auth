@@ -3,12 +3,12 @@ package com.clinic.app.log.admission;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
+import com.bbs.util.PageUtil;
 import com.bbs.util.StringUtil;
 import com.clinic.entity.AdmissionLog;
 import com.clinic.entity.Pay;
 import com.clinic.mapper.AdmissionLogMapper;
 import com.clinic.util.LoginUser;
-import com.clinic.util.PageUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.AllArgsConstructor;
@@ -71,6 +71,6 @@ public class SearchList extends MPJBaseServiceImpl<AdmissionLogMapper, Admission
             }
         }
         List<AdmissionLog> admissionLogs = selectJoinList(AdmissionLog.class, admissionLogMPJLambdaWrapper);
-        return Result.success(PageUtil.execPage(param.getCurrent(), param.getSize(), admissionLogs));
+        return Result.success(PageUtil.paginateWithInfo(admissionLogs,param.getCurrent(), param.getSize()));
     }
 }
