@@ -1,11 +1,10 @@
 package com.clinic.service.impl;
 
 import cn.hutool.core.date.DateUtil;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.clinic.cache.log.admission.AdmissionLogCache;
 import com.clinic.dto.param.RecordAdmissionLogParam;
 import com.clinic.dto.param.SearchAdmissionParam;
-import com.clinic.dto.param.StatsParam;
 import com.clinic.entity.AdmissionLog;
 import com.clinic.entity.Patient;
 import com.clinic.enums.AdmissionStateEnum;
@@ -39,6 +38,9 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
 
 
     private PatientService patientService;
+
+    @Resource
+    private AdmissionLogCache admissionLogCache;
 
     @Override
     public Page<AdmissionLog> search(SearchAdmissionParam param) throws ParseException {
@@ -81,13 +83,6 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
     }
 
     @Override
-    public Long countPatientNum(StatsParam param) {
-        QueryWrapper<AdmissionLog> wrapper = new QueryWrapper<>();
-        wrapper.select("distinct patient_id").between("create_time",param.getStartTime(),param.getEndTime());
-        return baseMapper.selectCount(wrapper);
-    }
-
-    @Override
     public boolean updateEndState(Long admissionId) {
         return lambdaUpdate().set(AdmissionLog::getState, AdmissionStateEnum.END.getCode()).eq(AdmissionLog::getId, admissionId).update();
     }
@@ -103,9 +98,13 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
     }
 
     @Override
-    public Boolean update(Long admissionId, Long id, Long payId) {
-        return lambdaUpdate().set(AdmissionLog::getPrescriptionId,id).set(AdmissionLog::getPayId,payId)
-                .eq(AdmissionLog::getId,admissionId).update();
+    public void update(Long id, Long prescriptionId, Long payId, Long dossierId) {
+        lambdaUpdate()
+                .set(AdmissionLog::getPrescriptionId, id)
+                .set(AdmissionLog::getPayId, payId)
+                .set(AdmissionLog::getDossierId, dossierId)
+                .eq(AdmissionLog::getId, id).update();
+        admissionLogCache.remove();
     }
 
 

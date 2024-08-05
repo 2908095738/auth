@@ -41,8 +41,8 @@ public class AppPrescriptionServiceImpl implements AppPrescriptionService {
 
     private PrescriptionConverter prescriptionConverter;
 
-    public Prescription save(SavePrescription param) {
-        return initAndCreate(param);
+    public Prescription save(SavePrescription param, Long dossierId) {
+        return initAndCreate(param, dossierId);
     }
 
 
@@ -65,14 +65,14 @@ public class AppPrescriptionServiceImpl implements AppPrescriptionService {
         return prescriptionDrugService.saveBatch(drugList);
     }
 
-    private Prescription initAndCreate(SavePrescription param) {
+    private Prescription initAndCreate(SavePrescription param, Long dossierId) {
         List<PrescriptionDrug> drugList = prescriptionConverter.toEntityDrugList(param.getDrugList());
         Prescription prescription = prescriptionConverter.toEntity(param);
         fillPrescription(prescription);
         if(prescriptionService.save(prescription)) {
             Long id = prescription.getId();
             drugList.forEach(drug-> drug.setPrescriptionId(id));
-            if(saveDrug(drugList) && saveDossierPrescription(param, id)) {
+            if(saveDrug(drugList) && saveDossierPrescription(id, dossierId)) {
                 return prescription;
             }
         }
@@ -91,8 +91,8 @@ public class AppPrescriptionServiceImpl implements AppPrescriptionService {
 
     private Boolean saveDrug(List<PrescriptionDrug> drugList) { return prescriptionDrugService.saveBatch(drugList); }
 
-    private Boolean saveDossierPrescription(SavePrescription param, Long id) {
-        return dossierPrescriptionService.save(new DossierPrescription(param.getDossierId(), id));
+    private Boolean saveDossierPrescription(Long id, Long dossierId) {
+        return dossierPrescriptionService.save(new DossierPrescription(dossierId, id));
     }
 
 

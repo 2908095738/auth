@@ -3,9 +3,7 @@ package com.clinic.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.clinic.dto.param.RecordAdmissionLogParam;
 import com.clinic.dto.param.SearchAdmissionParam;
-import com.clinic.dto.param.StatsParam;
 import com.clinic.entity.AdmissionLog;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.github.yulichang.base.MPJBaseService;
 
 import java.text.ParseException;
@@ -21,9 +19,7 @@ public interface AdmissionLogService extends MPJBaseService<AdmissionLog> {
 
     Long save(RecordAdmissionLogParam param);
 
-    Boolean update(Long admissionId, Long id, Long payId);
-
-    Long countPatientNum(StatsParam param);
+    void update(Long id, Long prescriptionId, Long payId, Long dossierId);
 
     boolean updateEndState(Long admissionId);
 }
