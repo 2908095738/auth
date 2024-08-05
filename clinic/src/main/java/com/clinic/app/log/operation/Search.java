@@ -1,6 +1,7 @@
 package com.clinic.app.log.operation;
 
 import cn.hutool.core.date.DateUtil;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.clinic.entity.OperationLog;
 import com.clinic.entity.Patient;
@@ -9,12 +10,16 @@ import com.clinic.service.PatientService;
 import com.clinic.util.LoginUser;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.clinic.util.log.ServiceLogEnums.*;
@@ -33,14 +38,14 @@ public class Search {
 
     @GetMapping("/log/operation/list")
     public Result<List<OperationLog>> search(
-            @RequestParam(required = false) Long startDateLong,
-            @RequestParam(required = false) Long endDateLong
+//            @RequestParam(required = false) Long startDateLong,
+//            @RequestParam(required = false) Long endDateLong
     ) {
-        Date startDate = getStartDate(startDateLong);
-        Date endDate = getEndDate(endDateLong);
+//        Date startDate = getStartDate(startDateLong);
+//        Date endDate = getEndDate(endDateLong);
         List<OperationLog> logs = operationLogService.lambdaQuery()
-                .ge(OperationLog::getCreateTime, DateUtil.beginOfDay(startDate))
-                .lt(OperationLog::getCreateTime, DateUtil.endOfDay(endDate))
+//                .ge(OperationLog::getCreateTime, DateUtil.beginOfDay(startDate))
+//                .lt(OperationLog::getCreateTime, DateUtil.endOfDay(endDate))
                 .eq(OperationLog::getUserId, LoginUser.getId())
                 // 只筛选部分，对诊所医生有用的操作日志类型
                 .in(OperationLog::getServiceCode, Arrays.asList(
@@ -53,8 +58,7 @@ public class Search {
                         DISINFECTION_ADD.getServiceCode(),
                         STERILIZE_ADD.getServiceCode(),
                         DOSSIER_ADD.getServiceCode()
-                ))
-                .list();
+                )).page(new Page<>(1, 10)).getRecords();
         fillPatient(logs);
         return Result.success(logs);
     }
