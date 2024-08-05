@@ -17,12 +17,6 @@ public class SavePrescription {
     private Long admissionId;
 
     /**
-     * 病人编号
-     */
-    @NotNull(message = "病人编号不能为空！")
-    private Long patientId;
-
-    /**
      * 病列编号
      */
     @Valid
@@ -44,5 +38,4 @@ public class SavePrescription {
     @Valid
     @NotNull
     private List<SavePrescriptionDrug> drugList;
-
 }

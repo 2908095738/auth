@@ -69,7 +69,6 @@ public class DossierServiceImpl extends MPJBaseServiceImpl<DossierMapper, Dossie
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             if(!save(dossier)) throw new BusinessException();
-            updateLog(dossier, param.getAdmissionID());
             LogUtil.Operation.addDossier(param.getPatientId(), dossier.getId(), "{}添加病例：病例id={}, 门诊日志id={}", user.getName(), dossier.getId(), param.getAdmissionID());
             transactionManager.commit(transaction);
             return Result.success(dossier.getId());
@@ -102,16 +101,6 @@ public class DossierServiceImpl extends MPJBaseServiceImpl<DossierMapper, Dossie
             e.printStackTrace();
             throw new RuntimeException(e);
         }
-    }
-
-
-    private void updateLog(Dossier dossier, Long admissionID) throws BusinessException {
-        if(!admissionLogService.lambdaUpdate()
-                .eq(AdmissionLog::getId, admissionID)
-                .set(AdmissionLog::getDossierId, dossier.getId())
-                .set(AdmissionLog::getDiagnosis,dossier.getDiagnosis())
-                .update()) throw new BusinessException();
-        admissionLogCache.remove();
     }
 
     @Override

@@ -12,10 +12,7 @@ import com.clinic.dto.PrescriptionAndPayIdVo;
 import com.clinic.dto.PrescriptionDto;
 import com.clinic.dto.param.SavePrescription;
 import com.clinic.dto.param.UpdatePrescription;
-import com.clinic.entity.Dossier;
-import com.clinic.entity.Prescription;
-import com.clinic.entity.Unit;
-import com.clinic.entity.Usage;
+import com.clinic.entity.*;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.DossierService;
 import com.clinic.util.LoginUser;
@@ -70,13 +67,14 @@ public class PrescriptionController {
     public Result<PrescriptionAndPayIdVo> add(@RequestBody @Valid SavePrescription param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            Result<Long> dossierId = dossierService.createDossier(param.getDossier());
-            param.setDossierId(dossierId.getData());
-            Prescription prescription = service.save(param);
+            AdmissionLog admissionLog = admissionLogService.getById(param.getAdmissionId());
+
+            Long dossierId = dossierService.createDossier(param.getDossier()).getData();
+            Prescription prescription = service.save(param, dossierId);
             Dossier dossier = dossierService.getDossierByPrescriptionId(prescription.getId());
             Long payId = payCache.createPayAndPrescriptionRecord(prescription,dossier);
-            admissionLogService.update(param.getAdmissionId(),prescription.getId(),payId);
-            LogUtil.Operation.addPrescription(param.getPatientId(), prescription.getId(), "{}添加处方并创建收费记录：处方id={}, 支付id={}", LoginUser.get().getName(), prescription.getId(), payId);
+            admissionLogService.update(param.getAdmissionId(),prescription.getId(), payId, dossierId);
+            LogUtil.Operation.addPrescription(admissionLog.getPatientId(), prescription.getId(), "{}添加处方并创建收费记录：处方id={}, 支付id={}", LoginUser.get().getName(), prescription.getId(), payId);
             transactionManager.commit(transaction);
             return Result.success(new PrescriptionAndPayIdVo(prescription.getId(), payId));
         } catch (RuntimeException e) {
