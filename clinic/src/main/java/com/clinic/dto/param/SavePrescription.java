@@ -28,6 +28,8 @@ public class SavePrescription {
     @Valid
     private SaveDossierParam dossier;
 
+    private Long dossierId;
+
     /**
      * 总价，药方药品总价之和
      */

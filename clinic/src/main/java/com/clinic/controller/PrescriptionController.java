@@ -70,7 +70,8 @@ public class PrescriptionController {
     public Result<PrescriptionAndPayIdVo> add(@RequestBody @Valid SavePrescription param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            dossierService.createDossier(param.getDossier());
+            Result<Long> dossierId = dossierService.createDossier(param.getDossier());
+            param.setDossierId(dossierId.getData());
             Prescription prescription = service.save(param);
             Dossier dossier = dossierService.getDossierByPrescriptionId(prescription.getId());
             Long payId = payCache.createPayAndPrescriptionRecord(prescription,dossier);
