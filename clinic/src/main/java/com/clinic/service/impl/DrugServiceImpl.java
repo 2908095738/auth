@@ -1,7 +1,6 @@
 package com.clinic.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -77,11 +76,9 @@ public class DrugServiceImpl extends ServiceImpl<DrugMapper, Drug>
         if(StringUtils.isNotBlank(val)) {
             if(val.matches("[a-zA-Z]+")){
                 queryWrapper = queryWrapper
-                        .likeRight(Drug::getPinYin, val)
-                        .or()
-                        .likeRight(Drug::getPinYinFirstLetter, val);
+                        .or().and(ext -> ext.likeRight(Drug::getPinYin, val).or().likeRight(Drug::getPinYinFirstLetter, val));
             } else {
-                queryWrapper = queryWrapper.like(Drug::getName, val);
+                queryWrapper = queryWrapper.or().like(Drug::getName, val);
             }
         }
         return queryWrapper;
