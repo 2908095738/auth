@@ -12,6 +12,9 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableAsync;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+
 @Slf4j
 @MapperScan({"com.bbs.auth.mapper"})
 @EnableAsync
