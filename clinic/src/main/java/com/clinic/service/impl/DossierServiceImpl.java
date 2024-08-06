@@ -12,14 +12,13 @@ import com.clinic.dao.DossierDao;
 import com.clinic.dto.PrescriptionDto;
 import com.clinic.dto.param.SaveDossierParam;
 import com.clinic.dto.param.UpdateDossierParam;
-import com.clinic.entity.AdmissionLog;
 import com.clinic.entity.Dossier;
 import com.clinic.entity.DossierPrescription;
 import com.clinic.mapper.DossierMapper;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.DossierService;
-import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
+import com.clinic.util.log.LogUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import com.google.common.base.Preconditions;
@@ -62,16 +61,17 @@ public class DossierServiceImpl extends MPJBaseServiceImpl<DossierMapper, Dossie
     private TransactionDefinition transactionDefinition;
 
     @Override
-    public Result<Long> createDossier(SaveDossierParam param) throws BusinessException {
+    public Dossier createDossier(Long admissionID, Long patientId, SaveDossierParam param) throws BusinessException {
         User user = LoginUser.get();
         Dossier dossier = converter.toEntity(param);
         dossier.setUserId(user.getId());
+        dossier.setPatientId(patientId);
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             if(!save(dossier)) throw new BusinessException();
-            LogUtil.Operation.addDossier(param.getPatientId(), dossier.getId(), "{}添加病例：病例id={}, 门诊日志id={}", user.getName(), dossier.getId(), param.getAdmissionID());
+            LogUtil.Operation.addDossier(patientId ,dossier.getId(), "{}添加病例：病例id={}, 门诊日志id={}", user.getName(), dossier.getId(), admissionID);
             transactionManager.commit(transaction);
-            return Result.success(dossier.getId());
+            return dossier;
         } catch (Exception e) {
             transactionManager.rollback(transaction);
             e.printStackTrace();
@@ -81,21 +81,16 @@ public class DossierServiceImpl extends MPJBaseServiceImpl<DossierMapper, Dossie
 
 
     @Override
-    public Result<Long> updateDossier(UpdateDossierParam param) throws BusinessException {
+    public Dossier updateDossier(UpdateDossierParam param) throws BusinessException {
         Dossier dossier = converter.toEntity(param);
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            Dossier dossierDB = getById(param.getId());
+            Dossier dossierDB = getById(param.getDossierId());
             Preconditions.checkArgument(nonNull(dossierDB), "病例不存在，可能已删除");
             if(!updateById(dossier)) throw new BusinessException("更新病历失败！");
-            admissionLogService.lambdaUpdate()
-                    .set(AdmissionLog::getDiagnosis, dossier.getDiagnosis())
-                    .eq(AdmissionLog::getDossierId, dossier.getId())
-                    .update();
-            admissionLogCache.remove();
-            LogUtil.Operation.updateDossier(dossierDB.getPatientId(), dossierDB.getId(), "{}修改病例：病例id={}", LoginUser.get().getName(), param.getId());
+            LogUtil.Operation.updateDossier(dossierDB.getPatientId(), dossierDB.getId(), "{}修改病例：病例id={}", LoginUser.get().getName(), param.getDossierId());
             transactionManager.commit(transaction);
-            return Result.success(dossier.getId());
+            return dossier;
         } catch (Exception e) {
             transactionManager.rollback(transaction);
             e.printStackTrace();

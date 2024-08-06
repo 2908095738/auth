@@ -3,18 +3,10 @@ package com.clinic.dto.param;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 
 @Data
 public class SaveDossierParam {
-    /**
-     * 病人id
-     */
-    @NotNull
-    @Min(value = 1, message = "病人ID格式错误！")
-    private Long patientId;
 
     /**
      * 既往史 (含药物过敏史)
@@ -65,10 +57,5 @@ public class SaveDossierParam {
     @Length(max = 255, message = "备注不能大于 255 个字符！")
     private String notes;
 
-    /**
-     * 接诊日志 ID
-     */
-    @NotNull(message = "接诊日志ID不能为空！")
-    @Min(value = 1, message = "接诊日志ID格式错误！")
-    private Long admissionID;
+
 }

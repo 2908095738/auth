@@ -55,7 +55,7 @@ public class AppPrescriptionServiceImpl implements AppPrescriptionService {
         List<PrescriptionDrug> drugList = prescriptionConverter.toEntityDrug(param.getDrugList());
         Prescription prescription = prescriptionConverter.toEntity(param);
         if(!prescriptionService.updateById(prescription))throw new RuntimeException();
-        if(!updateDrug(drugList,param.getId()))throw new RuntimeException();
+        if(!updateDrug(drugList,param.getPrescriptionId()))throw new RuntimeException();
         return true;
     }
 

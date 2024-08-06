@@ -69,11 +69,10 @@ public class PrescriptionController {
         try {
             AdmissionLog admissionLog = admissionLogService.getById(param.getAdmissionId());
 
-            Long dossierId = dossierService.createDossier(param.getDossier()).getData();
-            Prescription prescription = service.save(param, dossierId);
-            Dossier dossier = dossierService.getDossierByPrescriptionId(prescription.getId());
+            Dossier dossier = dossierService.createDossier(admissionLog.getId(), admissionLog.getPatientId(),param.getDossier());
+            Prescription prescription = service.save(param, dossier.getId());
             Long payId = payCache.createPayAndPrescriptionRecord(prescription,dossier);
-            admissionLogService.update(param.getAdmissionId(),prescription.getId(), payId, dossierId);
+            admissionLogService.update(param.getAdmissionId(),prescription.getId(), payId, dossier.getId(), dossier.getDiagnosis());
             LogUtil.Operation.addPrescription(admissionLog.getPatientId(), prescription.getId(), "{}添加处方并创建收费记录：处方id={}, 支付id={}", LoginUser.get().getName(), prescription.getId(), payId);
             transactionManager.commit(transaction);
             return Result.success(new PrescriptionAndPayIdVo(prescription.getId(), payId));
@@ -93,9 +92,12 @@ public class PrescriptionController {
     public Result<Boolean> update(@RequestBody @Valid UpdatePrescription param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            dossierService.updateDossier(param.getDossier());
+            AdmissionLog admissionLog = admissionLogService.getById(param.getAdmissionId());
+            Dossier dossier = dossierService.updateDossier(param.getDossier());
             if(service.update(param))if(!appPayService.updatePayPrescriptionRecord(param.getPayId(), param.getPrice()) )throw new RuntimeException();
-            LogUtil.Operation.updatePrescription(param.getPatientId(), param.getPayId(), "{}修改处方和处方收费记录：处方id={}, 支付id={}", LoginUser.get().getName(), param.getId(), param.getPayId());
+            admissionLogService.update(param.getAdmissionId(), param.getPrescriptionId(), param.getPayId(), dossier.getId(), dossier.getDiagnosis());
+            LogUtil.Operation.updatePrescription(admissionLog.getPatientId(), param.getPayId(), "{}修改处方和处方收费记录：处方id={}, 支付id={}",
+                    LoginUser.get().getName(), admissionLog.getPrescriptionId(), param.getPayId());
             transactionManager.commit(transaction);
             return Result.success();
         } catch (RuntimeException e) {

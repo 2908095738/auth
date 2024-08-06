@@ -11,16 +11,17 @@ import java.util.List;
 public class UpdatePrescription {
 
     /**
-     *
+     * 接诊日志id
      */
-    @NotNull(message = "主键不能为空！")
-    private Long id;
+    @NotNull(message = "接诊日志id不能为空！")
+    private Long admissionId;
 
     /**
-     * 病人编号
+     *
      */
-    @NotNull(message = "病人编号不能为空！")
-    private Long patientId;
+    @NotNull(message = "处方主键不能为空！")
+    private Long prescriptionId;
+
 
     /**
      * 支付编号
@@ -44,6 +45,7 @@ public class UpdatePrescription {
      * 备注
      */
     private String remark;
+
     @Valid
     @NotNull
     private List<UpdatePrescriptionDrug> drugList;

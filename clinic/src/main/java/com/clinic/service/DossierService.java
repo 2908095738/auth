@@ -13,11 +13,11 @@ import com.clinic.entity.Dossier;
  */
 public interface DossierService extends IService<Dossier> {
 
-    Result<Long> createDossier(SaveDossierParam param) throws BusinessException;
+    Dossier createDossier(Long admissionID, Long patientId, SaveDossierParam param) throws BusinessException;
 
     Result<Page<Dossier>> select(Long userId, String id, Integer current, Integer size);
 
     Dossier getDossierByPrescriptionId(Long prescriptionId);
 
-    Result<Long> updateDossier(UpdateDossierParam dossier);
+    Dossier updateDossier(UpdateDossierParam dossier);
 }

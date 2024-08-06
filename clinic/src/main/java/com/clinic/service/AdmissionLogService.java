@@ -19,7 +19,7 @@ public interface AdmissionLogService extends MPJBaseService<AdmissionLog> {
 
     Long save(RecordAdmissionLogParam param);
 
-    void update(Long id, Long prescriptionId, Long payId, Long dossierId);
+    void update(Long id, Long prescriptionId, Long payId, Long dossierId,String diagnosis);
 
     boolean updateEndState(Long admissionId);
 }
