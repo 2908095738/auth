@@ -6,6 +6,8 @@ WORKDIR /app
 RUN apk update
 RUN apk add --no-cache vim curl wget bash
 
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && apk update && apk add busybox-extras
+
 # 设置时区
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN echo 'Asia/Shanghai' >/etc/timezone
