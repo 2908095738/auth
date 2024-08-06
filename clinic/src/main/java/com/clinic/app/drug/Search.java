@@ -3,7 +3,6 @@ package com.clinic.app.drug;
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
-import com.bbs.util.PageUtil;
 import com.clinic.cache.unit.UnitCache;
 import com.clinic.converter.StockConverter;
 import com.clinic.dto.vo.PrescriptionSearchDrugVO;
@@ -160,8 +159,8 @@ public class Search {
             prescriptionSearchDrugVO.setStockNumberUnit(stockBatch.getUnit().getName());
             prescriptionSearchDrugVO.setExpiryDate(DateUtil.format(stockBatch.getExpiryDate(), "yyyy/MM/dd"));
             List<PrescriptionSearchDrugVO.Unit> voUnits = prescriptionSearchDrugVO.getUnits();
-            prescriptionSearchDrugVO.setMinUnit(voUnits.get(voUnits.size() - INTEGER_ONE));
-            prescriptionSearchDrugVO.setMaxUnit(voUnits.get(INTEGER_ZERO));
+            prescriptionSearchDrugVO.setMinUnit(voUnits.get(INTEGER_ZERO));
+            prescriptionSearchDrugVO.setMaxUnit(voUnits.get(voUnits.size() - INTEGER_ONE));
             prescriptionSearchDrugVO.setSingleDoseUnit(stockBatch.getSingleDoseUnit().getName());
             prescriptionSearchDrugVO.setStockState(stockBatch.getState().getCode());
             prescriptionSearchDrugVO.setExpiryState(stockBatch.getExpiryState());
