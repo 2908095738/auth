@@ -11,7 +11,6 @@ public class SavePrescriptionDrug {
     /**
      * 批次编号
      */
-    @NotNull(message = "批次编号不能为空")
     private Long stockBatchId;
 
     /**

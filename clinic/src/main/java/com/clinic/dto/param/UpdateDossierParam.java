@@ -13,7 +13,7 @@ public class UpdateDossierParam {
      * id
      */
     @NotNull(message = "ID不能为空！")
-    private Long id;
+    private Long dossierId;
 
     /**
      * 既往史 (含药物过敏史)

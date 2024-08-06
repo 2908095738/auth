@@ -39,6 +39,7 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
 
     private PatientService patientService;
 
+    @Lazy
     @Resource
     private AdmissionLogCache admissionLogCache;
 
@@ -98,11 +99,12 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
     }
 
     @Override
-    public void update(Long id, Long prescriptionId, Long payId, Long dossierId) {
+    public void update(Long id, Long prescriptionId, Long payId, Long dossierId,String diagnosis) {
         lambdaUpdate()
                 .set(AdmissionLog::getPrescriptionId, id)
                 .set(AdmissionLog::getPayId, payId)
                 .set(AdmissionLog::getDossierId, dossierId)
+                .set(AdmissionLog::getDiagnosis, diagnosis)
                 .eq(AdmissionLog::getId, id).update();
         admissionLogCache.remove();
     }
