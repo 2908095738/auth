@@ -1,6 +1,7 @@
 package com.clinic.app.log.operation;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.ObjUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.clinic.entity.OperationLog;
@@ -10,11 +11,13 @@ import com.clinic.service.PatientService;
 import com.clinic.util.LoginUser;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +26,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.clinic.util.log.ServiceLogEnums.*;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
@@ -38,17 +42,19 @@ public class Search {
 
     @GetMapping("/log/operation/list")
     public Result<List<OperationLog>> search(
-//            @RequestParam(required = false) Long startDateLong,
-//            @RequestParam(required = false) Long endDateLong
+            @RequestParam(required = false) Long patientId,
+            @RequestParam(required = false) Integer current,
+            @RequestParam(required = false) Integer size
     ) {
-//        Date startDate = getStartDate(startDateLong);
-//        Date endDate = getEndDate(endDateLong);
+        if(isNull(current) && isNull(size)) {
+            current = INTEGER_ONE;
+            size = 10;
+        }
         List<OperationLog> logs = operationLogService.lambdaQuery()
-//                .ge(OperationLog::getCreateTime, DateUtil.beginOfDay(startDate))
-//                .lt(OperationLog::getCreateTime, DateUtil.endOfDay(endDate))
                 .eq(OperationLog::getUserId, LoginUser.getId())
+                .and(ObjUtil.isNotEmpty(patientId),o->o.eq(OperationLog::getPatientId, patientId).in(OperationLog::getServiceCode, Collections.singletonList(ADMISSION.getServiceCode())))
                 // 只筛选部分，对诊所医生有用的操作日志类型
-                .in(OperationLog::getServiceCode, Arrays.asList(
+                .in(ObjUtil.isEmpty(patientId),OperationLog::getServiceCode, Arrays.asList(
                         STOCK_ADD.getServiceCode(),
                         RETAIL.getServiceCode(),
                         ADMISSION.getServiceCode(),
@@ -58,7 +64,8 @@ public class Search {
                         DISINFECTION_ADD.getServiceCode(),
                         STERILIZE_ADD.getServiceCode(),
                         DOSSIER_ADD.getServiceCode()
-                )).page(new Page<>(1, 10)).getRecords();
+                )).page(new Page<>(current, size)).getRecords();
+
         fillPatient(logs);
         return Result.success(logs);
     }
