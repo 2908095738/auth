@@ -76,7 +76,7 @@ public class DrugServiceImpl extends ServiceImpl<DrugMapper, Drug>
         if(StringUtils.isNotBlank(val)) {
             if(val.matches("[a-zA-Z]+")){
                 queryWrapper = queryWrapper
-                        .or().and(ext -> ext.likeRight(Drug::getPinYin, val).or().likeRight(Drug::getPinYinFirstLetter, val));
+                        .or().likeRight(Drug::getPinYin, val).or().likeRight(Drug::getPinYinFirstLetter, val);
             } else {
                 queryWrapper = queryWrapper.or().like(Drug::getName, val);
             }
