@@ -1,5 +1,6 @@
 package com.clinic.app.log.admission;
 
+import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
@@ -49,6 +50,7 @@ public class SearchList extends MPJBaseServiceImpl<AdmissionLogMapper, Admission
         private Integer state;
 
         private String value;
+        private Long patientId;
     }
     @GetMapping("/log/admission/list")
     public Result<Page<AdmissionLog>> search(Param param) {
@@ -59,6 +61,7 @@ public class SearchList extends MPJBaseServiceImpl<AdmissionLogMapper, Admission
                 .likeRight(nonNull(param.createTime), AdmissionLog::getCreateTime, param.createTime)
                 .eq(nonNull(param.state), AdmissionLog::getState, param.state)
                 .eq(AdmissionLog::getUserId, LoginUser.getId())
+                .eq(nonNull(param.patientId),AdmissionLog::getPatientId,param.patientId)
                 .likeRight(nonNull(param.createTime), AdmissionLog::getCreateTime, param.createTime)
                 .and(nonNull(param.state), w -> w.isNull(nonNull(param.state), Pay::getState).or().eq(nonNull(param.state), AdmissionLog::getState, param.state))
                 .leftJoin(Pay.class, Pay::getId, AdmissionLog::getPayId)
@@ -71,6 +74,10 @@ public class SearchList extends MPJBaseServiceImpl<AdmissionLogMapper, Admission
             }
         }
         List<AdmissionLog> admissionLogs = selectJoinList(AdmissionLog.class, admissionLogMPJLambdaWrapper);
-        return Result.success(PageUtil.paginateWithInfo(admissionLogs,param.getCurrent(), param.getSize()));
+        if(ObjUtil.isEmpty(param.current)&&ObjUtil.isEmpty(param.size)){
+            return Result.success(new Page<AdmissionLog>().setRecords(admissionLogs));
+        }
+        Page<AdmissionLog> admissionLogPage = PageUtil.paginateWithInfo(admissionLogs, param.getCurrent(), param.getSize());
+        return Result.success(admissionLogPage);
     }
 }
