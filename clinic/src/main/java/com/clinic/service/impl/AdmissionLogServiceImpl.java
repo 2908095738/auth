@@ -101,7 +101,7 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
     @Override
     public void update(Long id, Long prescriptionId, Long payId, Long dossierId,String diagnosis) {
         lambdaUpdate()
-                .set(AdmissionLog::getPrescriptionId, id)
+                .set(AdmissionLog::getPrescriptionId, prescriptionId)
                 .set(AdmissionLog::getPayId, payId)
                 .set(AdmissionLog::getDossierId, dossierId)
                 .set(AdmissionLog::getDiagnosis, diagnosis)

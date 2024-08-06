@@ -12,7 +12,7 @@ import java.util.List;
 
 public interface AppPrescriptionService {
 
-    Prescription save(SavePrescription param, Long dossierId);
+    Prescription save(SavePrescription param, Long patientId, Long dossierId);
     boolean update(UpdatePrescription param);
 
     Result<IPage<PrescriptionDto>> selectOr(Long dossierId, Long patientId, Integer current, Integer size);

@@ -94,7 +94,7 @@ public class PrescriptionDrug implements Serializable {
      * 天数（周期）单位
      */
     @TableField(value = "period_unit")
-    private Integer periodUnit;
+    private String periodUnit;
 
     /**
      * 单价

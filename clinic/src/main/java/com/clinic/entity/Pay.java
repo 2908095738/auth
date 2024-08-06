@@ -100,7 +100,7 @@ public class Pay implements Serializable {
 
     public Pay(Long userId, Dossier dossier, Prescription prescription) {
         this.prescriptionId = prescription.getId();
-        this.dossierTime = dossier.getCreateTime();
+        this.dossierTime = dossier.getCreateTime()==null?new Date():dossier.getCreateTime();
         this.diagnosis = dossier.getDiagnosis();
         this.creator = userId;
         this.fee = prescription.getPrice();

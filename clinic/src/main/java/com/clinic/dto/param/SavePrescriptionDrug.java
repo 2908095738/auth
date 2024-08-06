@@ -71,7 +71,7 @@ public class SavePrescriptionDrug {
      * 天数（周期）单位
      */
     @NotNull(message = "天数（周期）单位不能为空")
-    private Integer periodUnit;
+    private String periodUnit;
 
     /**
      * 成本

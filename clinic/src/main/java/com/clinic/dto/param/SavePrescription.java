@@ -14,15 +14,13 @@ public class SavePrescription {
      * 接诊日志id
      */
     @NotNull(message = "接诊日志id不能为空！")
-    private Long admissionId;
+    private Long admissionLogId;
 
     /**
      * 病列编号
      */
     @Valid
     private SaveDossierParam dossier;
-
-    private Long dossierId;
 
     /**
      * 总价，药方药品总价之和

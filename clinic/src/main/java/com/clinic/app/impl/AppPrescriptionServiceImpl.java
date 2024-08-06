@@ -41,8 +41,8 @@ public class AppPrescriptionServiceImpl implements AppPrescriptionService {
 
     private PrescriptionConverter prescriptionConverter;
 
-    public Prescription save(SavePrescription param, Long dossierId) {
-        return initAndCreate(param, dossierId);
+    public Prescription save(SavePrescription param, Long patientId, Long dossierId) {
+        return initAndCreate(param,patientId, dossierId);
     }
 
 
@@ -65,10 +65,11 @@ public class AppPrescriptionServiceImpl implements AppPrescriptionService {
         return prescriptionDrugService.saveBatch(drugList);
     }
 
-    private Prescription initAndCreate(SavePrescription param, Long dossierId) {
+    private Prescription initAndCreate(SavePrescription param, Long patientId, Long dossierId) {
         List<PrescriptionDrug> drugList = prescriptionConverter.toEntityDrugList(param.getDrugList());
-        Prescription prescription = prescriptionConverter.toEntity(param);
-        fillPrescription(prescription);
+        Prescription prescription = new Prescription();
+
+        fillPrescription(prescription, param, patientId);
         if(prescriptionService.save(prescription)) {
             Long id = prescription.getId();
             drugList.forEach(drug-> drug.setPrescriptionId(id));
@@ -79,10 +80,12 @@ public class AppPrescriptionServiceImpl implements AppPrescriptionService {
         return null;
     }
 
-    private void fillPrescription(Prescription prescription) {
+    private void fillPrescription(Prescription prescription,SavePrescription param, Long patientId) {
         LocalDate tomorrow = LocalDateTime.now().plusDays(NumberUtils.INTEGER_ONE).toLocalDate();
         Date tomo =Date.from(tomorrow.atStartOfDay(ZoneId.systemDefault()).toInstant());
-
+        prescription.setPatientId(patientId);
+        prescription.setPrice(param.getPrice());
+        prescription.setRemark(param.getRemark());
         prescription.setCreator(LoginUser.getId());
         prescription.setUpdator(prescription.getCreator());
         prescription.setExpiryDate(NumberUtils.INTEGER_ONE);

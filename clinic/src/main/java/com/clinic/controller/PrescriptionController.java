@@ -67,12 +67,12 @@ public class PrescriptionController {
     public Result<PrescriptionAndPayIdVo> add(@RequestBody @Valid SavePrescription param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            AdmissionLog admissionLog = admissionLogService.getById(param.getAdmissionId());
+            AdmissionLog admissionLog = admissionLogService.getById(param.getAdmissionLogId());
 
             Dossier dossier = dossierService.createDossier(admissionLog.getId(), admissionLog.getPatientId(),param.getDossier());
-            Prescription prescription = service.save(param, dossier.getId());
+            Prescription prescription = service.save(param,admissionLog.getPatientId(), dossier.getId());
             Long payId = payCache.createPayAndPrescriptionRecord(prescription,dossier);
-            admissionLogService.update(param.getAdmissionId(),prescription.getId(), payId, dossier.getId(), dossier.getDiagnosis());
+            admissionLogService.update(param.getAdmissionLogId(),prescription.getId(), payId, dossier.getId(), dossier.getDiagnosis());
             LogUtil.Operation.addPrescription(admissionLog.getPatientId(), prescription.getId(), "{}添加处方并创建收费记录：处方id={}, 支付id={}", LoginUser.get().getName(), prescription.getId(), payId);
             transactionManager.commit(transaction);
             return Result.success(new PrescriptionAndPayIdVo(prescription.getId(), payId));

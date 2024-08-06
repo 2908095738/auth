@@ -66,7 +66,7 @@ public class PrescriptionDrugDto {
     /**
      * 天数（周期）单位
      */
-    private Integer periodUnit;
+    private String periodUnit;
 
     /**
      * 最新库存数
