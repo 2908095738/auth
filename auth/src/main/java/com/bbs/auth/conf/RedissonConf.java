@@ -26,7 +26,7 @@ public class RedissonConf {
 
         String address = "redis://" + host + ":" + port;
 
-        log.info("RedissonClient init: address={}; password={};", address, password);
+        log.info("初始化 Redisson init: address={}; password={};", address, password);
         Config config = new Config();
         config.useSingleServer().setAddress(address).setPassword(password);
         return Redisson.create(config);
