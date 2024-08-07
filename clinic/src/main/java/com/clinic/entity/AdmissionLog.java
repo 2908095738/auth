@@ -139,7 +139,7 @@ public class AdmissionLog implements Serializable {
     private Pay pay;
 
     @TableField(exist = false)
-    private List<PayRecord> payRecords;
+    private PayRecord payRecords;
 
     /**
      * 就诊日期（创建日期）
