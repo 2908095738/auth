@@ -5,6 +5,9 @@ import com.bbs.Result;
 import com.bbs.exception.ReLoginException;
 import com.bbs.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -39,5 +42,12 @@ public class BusinessExceptionHandler {
         String message = exception.getMessage();
         log.debug("[ExceptionHandler::IllegalArgumentException] error={}", message);
         response.sendError(400, message);
+    }
+
+    @ExceptionHandler(value = BeanCreationException.class)
+    public ResponseEntity<String> handleConfigLoadFailure(BeanCreationException ex) {
+        // 处理配置加载失败的逻辑
+        log.error("Nacos 配置加载失败: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Configuration loading failed: " + ex.getMessage());
     }
 }
