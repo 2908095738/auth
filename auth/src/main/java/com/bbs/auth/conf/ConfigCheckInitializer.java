@@ -11,16 +11,20 @@ public class ConfigCheckInitializer implements ApplicationContextInitializer<Con
     @Override
     public void initialize(ConfigurableApplicationContext applicationContext) {
         ConfigurableEnvironment environment = applicationContext.getEnvironment();
-        String nacosServerAddr = environment.getProperty("spring.cloud.nacos.config.server-addr");
-        String nacosUsername = environment.getProperty("spring.cloud.nacos.config.username");
-        String nacosPassword = environment.getProperty("spring.cloud.nacos.config.password");
-        log.info("环境信息 - Nacos: addr={}; username={}; password={};", nacosServerAddr, nacosUsername, nacosPassword);
-        String nacosNameSpace = environment.getProperty("spring.cloud.nacos.config.namespace");
-        String nacosPrefix = environment.getProperty("spring.cloud.nacos.config.prefix");
-        String nacosFileExtension = environment.getProperty("spring.cloud.nacos.config.file-extension");
-        String nacosGroup = environment.getProperty("spring.cloud.nacos.config.group");
-        log.info("环境信息 - Nacos: namespace={}; prefix={}; file-extension={}; group={};", nacosNameSpace, nacosPrefix, nacosFileExtension, nacosGroup);
+        checkNacosConf(environment);
         String redisAddress = environment.getProperty("spring.redis.host");
-        System.out.println("环境信息 - nacosServerAddr: " + nacosServerAddr + " redisAddress: " + redisAddress);
+        log.info("环境信息 - Redis: addr={};", redisAddress);
+    }
+
+    private static void checkNacosConf(ConfigurableEnvironment environment) {
+        String serverAddr = environment.getProperty("spring.cloud.nacos.config.server-addr");
+        String username = environment.getProperty("spring.cloud.nacos.config.username");
+        String password = environment.getProperty("spring.cloud.nacos.config.password");
+        log.info("环境信息 - Nacos: addr={}; username={}; password={};", serverAddr, username, password);
+        String nameSpace = environment.getProperty("spring.cloud.nacos.config.namespace");
+        String prefix = environment.getProperty("spring.cloud.nacos.config.prefix");
+        String fileExtension = environment.getProperty("spring.cloud.nacos.config.file-extension");
+        String group = environment.getProperty("spring.cloud.nacos.config.group");
+        log.info("环境信息 - Nacos: namespace={}; prefix={}; file-extension={}; group={};", nameSpace, prefix, fileExtension, group);
     }
 }
