@@ -7,6 +7,13 @@ RUN apk add --no-cache vim curl wget bash
 
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && apk update && apk add busybox-extras
 
+RUN echo "a deb http://mirrors.ustc.edu.cn/debian buster main contrib non-free" >> /etc/apt/sources.list \
+    && echo "a deb http://mirrors.ustc.edu.cn/debian buster-backports main contrib non-free" >> /etc/apt/sources.list \
+    && echo "a deb http://mirrors.ustc.edu.cn/debian buster-proposed-updates main contrib non-free" >> /etc/apt/sources.list \
+    && echo "a deb http://mirrors.ustc.edu.cn/debian-security buster/updates main contrib non-free" >> /etc/apt/sources.list \
+    && apt-get clean \
+    && apt-get update
+
 RUN apt-get install yum
 
 RUN yum install -y fontconfig mkfontscale
