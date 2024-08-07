@@ -1,5 +1,6 @@
 package com.clinic.controller;
 
+import cn.hutool.core.util.ObjUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.clinic.app.AppPayService;
@@ -17,11 +18,12 @@ import com.clinic.dto.param.PatientPayRecordParam;
 import com.clinic.dto.param.ReturnPayRecordParam;
 import com.clinic.dto.param.UpdatePayById;
 import com.clinic.entity.PayRecord;
+import com.clinic.enums.PayStateEnum;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.PayService;
-import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
 import com.clinic.util.PageUtil;
+import com.clinic.util.log.LogUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,7 +32,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
@@ -175,21 +182,28 @@ public class PayController {
     public Result<Boolean> updatePayById(@RequestBody UpdatePayById param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            //收费
-            if(!payCache.updatePayById(param))throw new RuntimeException();
-            //根据支付id,查出处方数据
-            PrescriptionDto prescriptionDto = appPrescriptionService.getByPayId(param.getId());
-            Long patientId = prescriptionDto.getPatientId();
-            //根据处方数据，扣库存
-            if(!appStockService.updateNum(prescriptionDto))throw new RuntimeException();
-            //修改门诊日志状态
-            if (!admissionLogService.updateEndState(param.getAdmissionId()))throw new RuntimeException();
-            LogUtil.Operation.pay(patientId, param.getAdmissionId(), "{}就诊收费-修改收费状态和收费方式：收费id={}, 处方id={}", LoginUser.get().getName(), param.getId(), prescriptionDto.getId());
+            if(ObjUtil.isEmpty(param.getWay())){//收费-扣库存
+                //修改收费
+                if(!payCache.updatePayById(param))throw new RuntimeException();
+            }else{
+                param.setState(PayStateEnum.IS_PAY.getCode());
+                //修改收费
+                if(!payCache.updatePayById(param))throw new RuntimeException();
+                //根据支付id,查出处方数据
+                PrescriptionDto prescriptionDto = appPrescriptionService.getByPayId(param.getId());
+                Long patientId = prescriptionDto.getPatientId();
+                //根据处方数据，扣库存
+                if(!appStockService.updateNum(prescriptionDto))throw new RuntimeException();
+                //修改门诊日志状态
+                if (!admissionLogService.updateEndState(param.getAdmissionId()))throw new RuntimeException();
+                LogUtil.Operation.pay(patientId, param.getAdmissionId(), "{}就诊收费-修改收费状态和收费方式：收费id={}, 处方id={}", LoginUser.get().getName(), param.getId(), prescriptionDto.getId());
+            }
             transactionManager.commit(transaction);
             return Result.success(true);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
+            transactionManager.rollback(transaction);
             return Result.failed();
         }
     }

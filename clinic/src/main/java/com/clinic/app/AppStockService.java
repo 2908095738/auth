@@ -1,5 +1,6 @@
 package com.clinic.app;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -269,15 +270,17 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
 
     public boolean updateNum(PrescriptionDto prescriptionDto) {
         //校验库存不为零
-
         List<PrescriptionDrugDto> drugList = prescriptionDto.getDrugList();
         List<Long> stockBatchIds = drugList.stream().map(PrescriptionDrugDto::getStockBatchId).collect(Collectors.toList());
         Map<Long, StockBatch> stockBatchMap = batchService.lambdaQuery().in(StockBatch::getId, stockBatchIds).list().stream().collect(Collectors.toMap(StockBatch::getId, o2 -> o2));
-        List<StockBatch> newStockDrugList = drugList.stream().map(drug->{
-            StockBatch oldStockBatch = stockBatchMap.get(drug.getStockBatchId());
-            return new StockBatch(drug,oldStockBatch.getNumber());
-        }).collect(Collectors.toList());
-        return batchService.updateBatchById(newStockDrugList);
+        if(CollUtil.isNotEmpty(stockBatchMap)){
+            List<StockBatch> newStockDrugList = drugList.stream().map(drug->{
+                StockBatch oldStockBatch = stockBatchMap.get(drug.getStockBatchId());
+                return new StockBatch(drug,oldStockBatch.getNumber());
+            }).collect(Collectors.toList());
+            return batchService.updateBatchById(newStockDrugList);
+        }
+        return true;
     }
 
 

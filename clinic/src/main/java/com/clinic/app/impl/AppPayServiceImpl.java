@@ -93,7 +93,7 @@ public class AppPayServiceImpl implements AppPayService {
      */
     @Override
     public List<PayRecord> updatePayOther(List<CreateOrSetPayRecord> payOther, Long payId) {
-        removePayOtherThrowable(payId);
+        removePayOther(payId);
         createPayOtherThrowable(payOther,payId);
         return payRecordService.searchByPayId(payId);
     }
@@ -102,9 +102,8 @@ public class AppPayServiceImpl implements AppPayService {
         if(!createPayOther(payOther,payId)) throw new BusinessException("新增其他收费记录失败！");
     }
 
-    private void removePayOtherThrowable(Long payId) throws BusinessException {
-        if(!payRecordService.lambdaUpdate().eq(PayRecord::getPayId,payId).ne(PayRecord::getName,"处方").remove())
-            throw new BusinessException("删除其他收费记录失败！");
+    private void removePayOther(Long payId){
+        payRecordService.lambdaUpdate().eq(PayRecord::getPayId,payId).remove();
     }
 
     /**
@@ -112,6 +111,9 @@ public class AppPayServiceImpl implements AppPayService {
      */
     @Override
     public boolean updatePayById(UpdatePayById param) {
+        List<CreateOrSetPayRecord> payRecords = param.getPayRecords();
+        removePayOther(param.getId());
+        createPayOtherThrowable(payRecords,param.getId());
         return payService.updateById(payConverter.toPayEntity(param));
     }
 
