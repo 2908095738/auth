@@ -182,10 +182,10 @@ public class PayController {
     public Result<Boolean> updatePayById(@RequestBody UpdatePayById param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            if(ObjUtil.isEmpty(param.getWay())){//收费-扣库存
+            if(ObjUtil.isEmpty(param.getWay())||(ObjUtil.isNotEmpty(param.getState())&&param.getState()==1)){//如果收费方式为空或者支付状态是已支付，说明是修改支付数据
                 //修改收费
                 if(!payCache.updatePayById(param))throw new RuntimeException();
-            }else{
+            }else{//收费-扣库存
                 param.setState(PayStateEnum.IS_PAY.getCode());
                 //修改收费
                 if(!payCache.updatePayById(param))throw new RuntimeException();
