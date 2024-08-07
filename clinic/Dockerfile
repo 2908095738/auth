@@ -7,6 +7,8 @@ RUN apk add --no-cache vim curl wget bash
 
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && apk update && apk add busybox-extras
 
+RUN apt-get install yum
+
 RUN yum install -y fontconfig mkfontscale
 
 # 设置时区
