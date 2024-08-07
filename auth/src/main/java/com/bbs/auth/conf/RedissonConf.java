@@ -23,7 +23,7 @@ public class RedissonConf {
 
     @Value("${spring.redis.port}")
     private int port;
-    @Bean
+    @Bean(destroyMethod = "shutdown")
     public RedissonClient getRedisson() {
         String address = "redis://" + host + ":" + port;
         log.info("创建 RedissonClient Bean: address={}; password={}", address, password);
