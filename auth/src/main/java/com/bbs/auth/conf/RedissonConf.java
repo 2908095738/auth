@@ -10,27 +10,19 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.io.IOException;
+
 @Slf4j
 @Configuration
 @RefreshScope
 public class RedissonConf {
 
-    @Value("${spring.redis.host}")
-    private String host;
+    @Value("${spring.redis.redisson.config}")
+    private String redissonConfig;
 
-    @Value("${spring.redis.password}")
-    private String password;
-
-    @Value("${spring.redis.port}")
-    private int port;
     @Bean(destroyMethod = "shutdown")
-    public RedissonClient getRedisson() {
-        String address = "redis://" + host + ":" + port;
-        log.info("创建 RedissonClient Bean: address={}; password={}", address, password);
-        Config config = new Config();
-        config.useSingleServer().
-                setAddress(address)
-                .setPassword(password);
+    public RedissonClient getRedisson() throws IOException {
+        Config config = Config.fromYAML(redissonConfig);
         config.setCodec(new JsonJacksonCodec());
         return Redisson.create(config);
     }
