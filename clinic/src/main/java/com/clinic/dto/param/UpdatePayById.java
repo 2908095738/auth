@@ -1,10 +1,11 @@
 package com.clinic.dto.param;
 
-import com.clinic.enums.PayStateEnum;
 import lombok.Data;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 public class UpdatePayById {
@@ -26,15 +27,17 @@ public class UpdatePayById {
     /**
      * 支付状态
      */
-    private Integer state = PayStateEnum.IS_PAY.getCode();
+    private Integer state;
     /**
      * 收费方式
      */
-    @NotNull(message = "收费方式不能为空！")
     private Integer way;
     /**
      * 备注
      */
     private String remark;
+
+    @Valid
+    private List<CreateOrSetPayRecord> payRecords;
 
 }
