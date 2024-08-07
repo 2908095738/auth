@@ -217,8 +217,8 @@
             </dependency>
             <dependency>
                 <groupId>org.redisson</groupId>
-                <artifactId>redisson</artifactId>
-                <version>3.25.2</version>
+                <artifactId>redisson-spring-boot-starter</artifactId>
+                <version>3.16.8</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
