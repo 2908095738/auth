@@ -1,5 +1,6 @@
 package com.clinic.controller;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.bbs.Result;
 import com.clinic.app.AppPayService;
@@ -72,11 +73,13 @@ public class PrescriptionController {
         try {
             AdmissionLog admissionLog = admissionLogService.getById(param.getAdmissionLogId());
             Dossier dossier = dossierService.createOrUpdateDossier(admissionLog.getId(), admissionLog.getPatientId(),param.getDossier());
-            if (isEmpty(param.getPrescriptionId())&& isEmpty(param.getPayId())) {
-                Prescription prescription = service.save(param,admissionLog.getPatientId(), dossier.getId());
-                Long payId = payCache.createPayAndPrescriptionRecord(prescription,dossier);
-                admissionLogService.update(param.getAdmissionLogId(),prescription.getId(), payId, dossier.getId(), dossier.getDiagnosis());
-                LogUtil.Operation.addPrescription(admissionLog.getPatientId(), prescription.getId(), "{}添加处方并创建收费记录：处方id={}, 支付id={}", LoginUser.get().getName(), prescription.getId(), payId);
+            if (isEmpty(param.getPrescriptionId())) {
+                if(CollUtil.isNotEmpty(param.getDrugList())){
+                    Prescription prescription = service.save(param,admissionLog.getPatientId(), dossier.getId());
+                    Long payId = payCache.createPayAndPrescriptionRecord(prescription,dossier);
+                    admissionLogService.update(param.getAdmissionLogId(),prescription.getId(), payId, dossier.getId(), dossier.getDiagnosis());
+                    LogUtil.Operation.addPrescription(admissionLog.getPatientId(), prescription.getId(), "{}添加处方并创建收费记录：处方id={}, 支付id={}", LoginUser.get().getName(), prescription.getId(), payId);
+                }
             }else {
                 if(service.update(param))
                     if(!appPayService.updatePayPrescriptionRecord(param.getPayId(), param.getPrice()) )throw new RuntimeException();
