@@ -14,10 +14,10 @@ import java.nio.file.Paths;
 @RequestMapping("/logfile")
 public class LogfileController {
 
-    @Value("${management.endpoint.logfile.info-file}")
+    @Value("${management.endpoints.logfile.info-file}")
     private Resource infoLogFile;
 
-    @Value("${management.endpoint.logfile.error-file}")
+    @Value("${management.endpoints.logfile.error-file}")
     private Resource errorLogFile;
 
     @GetMapping("/info")
