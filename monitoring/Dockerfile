@@ -14,7 +14,7 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN echo 'Asia/Shanghai' >/etc/timezone
 ENV LANG C.UTF-8
 # 拷贝jar 把可执行jar包复制到基础镜像的根目录下
-ADD clinic/target/monitoring-1.0.jar app.jar
+ADD monitoring/target/monitoring-1.0.jar app.jar
 
 # 设置暴露的端口号
 EXPOSE 8080
