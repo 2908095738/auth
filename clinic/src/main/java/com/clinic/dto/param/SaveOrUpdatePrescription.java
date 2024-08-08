@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Data
-public class SavePrescription {
+public class SaveOrUpdatePrescription {
 
     /**
      * 接诊日志id
@@ -17,10 +17,20 @@ public class SavePrescription {
     private Long admissionLogId;
 
     /**
+     *
+     */
+    private Long prescriptionId;
+
+    /**
+     * 支付编号
+     */
+    private Long payId;
+
+    /**
      * 病列编号
      */
     @Valid
-    private SaveDossierParam dossier;
+    private SaveOrUpdateDossierParam dossier;
 
     /**
      * 总价，药方药品总价之和
@@ -35,5 +45,5 @@ public class SavePrescription {
 
     @Valid
     @NotNull
-    private List<SavePrescriptionDrug> drugList;
+    private List<SaveOrUpdatePrescriptionDrug> drugList;
 }

@@ -4,16 +4,15 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.bbs.Result;
 import com.clinic.dto.PrescriptionDrugDto;
 import com.clinic.dto.PrescriptionDto;
-import com.clinic.dto.param.SavePrescription;
-import com.clinic.dto.param.UpdatePrescription;
+import com.clinic.dto.param.SaveOrUpdatePrescription;
 import com.clinic.entity.Prescription;
 
 import java.util.List;
 
 public interface AppPrescriptionService {
 
-    Prescription save(SavePrescription param, Long patientId, Long dossierId);
-    boolean update(UpdatePrescription param);
+    Prescription save(SaveOrUpdatePrescription param, Long patientId, Long dossierId);
+    boolean update(SaveOrUpdatePrescription param);
 
     Result<IPage<PrescriptionDto>> selectOr(Long dossierId, Long patientId, Integer current, Integer size);
 

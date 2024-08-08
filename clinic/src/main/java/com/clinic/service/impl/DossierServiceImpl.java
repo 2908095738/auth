@@ -6,30 +6,21 @@ import com.bbs.Result;
 import com.bbs.api.auth.User;
 import com.bbs.exception.BusinessException;
 import com.clinic.app.AppPrescriptionService;
-import com.clinic.cache.log.admission.AdmissionLogCache;
 import com.clinic.converter.DossierConverter;
 import com.clinic.dao.DossierDao;
 import com.clinic.dto.PrescriptionDto;
-import com.clinic.dto.param.SaveDossierParam;
-import com.clinic.dto.param.UpdateDossierParam;
+import com.clinic.dto.param.SaveOrUpdateDossierParam;
 import com.clinic.entity.Dossier;
-import com.clinic.entity.DossierPrescription;
 import com.clinic.mapper.DossierMapper;
-import com.clinic.service.AdmissionLogService;
 import com.clinic.service.DossierService;
 import com.clinic.util.LoginUser;
 import com.clinic.util.log.LogUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
-import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import com.google.common.base.Preconditions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
 
-import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -49,68 +40,31 @@ public class DossierServiceImpl extends MPJBaseServiceImpl<DossierMapper, Dossie
 
     private AppPrescriptionService appPrescriptionService;
 
-    private AdmissionLogService admissionLogService;
-
-    @Resource
-    private AdmissionLogCache admissionLogCache;
-
-    @Resource
-    private DataSourceTransactionManager transactionManager;
-
-    @Resource
-    private TransactionDefinition transactionDefinition;
-
     @Override
-    public Dossier createDossier(Long admissionID, Long patientId, SaveDossierParam param) throws BusinessException {
+    public Dossier createOrUpdateDossier(Long admissionID, Long patientId, SaveOrUpdateDossierParam param) throws BusinessException {
         User user = LoginUser.get();
         Dossier dossier = converter.toEntity(param);
-        dossier.setUserId(user.getId());
-        dossier.setPatientId(patientId);
-        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-        try {
-            if(!save(dossier)) throw new BusinessException();
-            LogUtil.Operation.addDossier(patientId ,dossier.getId(), "{}添加病例：病例id={}, 门诊日志id={}", user.getName(), dossier.getId(), admissionID);
-            transactionManager.commit(transaction);
-            return dossier;
-        } catch (Exception e) {
-            transactionManager.rollback(transaction);
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
-
-
-    @Override
-    public Dossier updateDossier(UpdateDossierParam param) throws BusinessException {
-        Dossier dossier = converter.toEntity(param);
-        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-        try {
-            Dossier dossierDB = getById(param.getDossierId());
+        if(nonNull(param.getId())){
+            Dossier dossierDB = getById(param.getId());
             Preconditions.checkArgument(nonNull(dossierDB), "病例不存在，可能已删除");
             if(!updateById(dossier)) throw new BusinessException("更新病历失败！");
-            LogUtil.Operation.updateDossier(dossierDB.getPatientId(), dossierDB.getId(), "{}修改病例：病例id={}", LoginUser.get().getName(), param.getDossierId());
-            transactionManager.commit(transaction);
-            return dossier;
-        } catch (Exception e) {
-            transactionManager.rollback(transaction);
-            e.printStackTrace();
-            throw new RuntimeException(e);
+            LogUtil.Operation.updateDossier(dossierDB.getPatientId(), dossierDB.getId(), "{}修改病例：病例id={}", LoginUser.get().getName(), param.getId());
+        }else{
+            dossier.setUserId(user.getId());
+            dossier.setPatientId(patientId);
+            if(!save(dossier)) throw new BusinessException("添加病历失败！");
+            LogUtil.Operation.addDossier(patientId ,dossier.getId(), "{}添加病例：病例id={}, 门诊日志id={}", user.getName(), dossier.getId(), admissionID);
         }
+        return dossier;
+
     }
+
 
     @Override
     public Result<Page<Dossier>> select(Long userId, String id, Integer current, Integer size) {
         return Result.success(selectPatientDossier(userId, id, current, size));
     }
 
-    @Override
-    public Dossier getDossierByPrescriptionId(Long prescriptionId) {
-        return baseMapper.selectJoinOne(Dossier.class, new MPJLambdaWrapper<Dossier>()
-                .selectAll(Dossier.class)
-                .leftJoin(DossierPrescription.class,DossierPrescription::getDossierId,Dossier::getId)
-                .eq(DossierPrescription::getPrescriptionId,prescriptionId)
-        );
-    }
 
     private Page<Dossier> selectPatientDossier(Long userId,String patientId,Integer pageNo,Integer pageSize) {
         Page<Dossier> dossierPage = dao.selectedById(userId, patientId, pageNo, pageSize);
@@ -142,10 +96,6 @@ public class DossierServiceImpl extends MPJBaseServiceImpl<DossierMapper, Dossie
         this.appPrescriptionService = appPrescriptionService;
     }
 
-    @Autowired
-    public void setAdmissionLogService(AdmissionLogService admissionLogService) {
-        this.admissionLogService = admissionLogService;
-    }
 }
 
 

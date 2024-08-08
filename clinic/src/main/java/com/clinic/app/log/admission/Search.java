@@ -6,7 +6,6 @@ import com.clinic.entity.AdmissionLog;
 import com.clinic.entity.Dossier;
 import com.clinic.entity.Patient;
 import com.clinic.entity.Pay;
-import com.clinic.entity.PayRecord;
 import com.clinic.entity.Prescription;
 import com.clinic.entity.PrescriptionDrug;
 import com.clinic.entity.Stock;
@@ -67,7 +66,6 @@ public class Search extends MPJBaseServiceImpl<AdmissionLogMapper, AdmissionLog>
                 .map(this::joinPrescription)
                 .map(this::joinPrescriptionDrugAndStockBatch)
                 .map(this::joinPay)
-                .map(this::joinPayRecord)
                 .get();
         wrapper
                 .eq(AdmissionLog::getUserId, LoginUser.getId())
@@ -101,16 +99,10 @@ public class Search extends MPJBaseServiceImpl<AdmissionLogMapper, AdmissionLog>
                     prescriptionDrug.setUnits(units);
                 });
             }
+            if(nonNull(log.getPayId())) log.setPayRecords(payRecordService.getByPayId(log.getPayId()));
         }
         return Result.success(log);
     }
-
-    private MPJLambdaWrapper<AdmissionLog> joinPayRecord(MPJLambdaWrapper<AdmissionLog> admissionLogMPJLambdaWrapper) {
-        return admissionLogMPJLambdaWrapper
-                .selectAssociation(PayRecord.class, AdmissionLog::getPayRecords)
-                .leftJoin(PayRecord.class, PayRecord::getPayId, AdmissionLog::getPayId, payRecord -> payRecord.eq(PayRecord::getName, "处方"));
-    }
-
 
     private MPJLambdaWrapper<AdmissionLog> joinPatient(MPJLambdaWrapper<AdmissionLog> wrapper) {
         wrapper
