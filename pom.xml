@@ -22,6 +22,7 @@
         <module>log-server</module>
         <module>financial</module>
         <module>clinic</module>
+        <module>monitoring</module>
     </modules>
 
     <properties>

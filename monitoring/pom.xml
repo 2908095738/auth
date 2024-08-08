@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>monitoring-server</artifactId>
+    <artifactId>monitoring</artifactId>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -18,6 +18,18 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-bootstrap</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
 <!--        接入应用监控-->
         <dependency>
             <groupId>de.codecentric</groupId>
@@ -37,6 +49,11 @@
             <groupId>com.bbs</groupId>
             <artifactId>common</artifactId>
             <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>2.0.44</version>
         </dependency>
     </dependencies>
 </project>
