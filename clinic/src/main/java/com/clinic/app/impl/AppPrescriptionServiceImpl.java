@@ -7,8 +7,7 @@ import com.clinic.app.AppPrescriptionService;
 import com.clinic.converter.PrescriptionConverter;
 import com.clinic.dto.PrescriptionDrugDto;
 import com.clinic.dto.PrescriptionDto;
-import com.clinic.dto.param.SavePrescription;
-import com.clinic.dto.param.UpdatePrescription;
+import com.clinic.dto.param.SaveOrUpdatePrescription;
 import com.clinic.entity.DossierPrescription;
 import com.clinic.entity.Prescription;
 import com.clinic.entity.PrescriptionDrug;
@@ -41,32 +40,8 @@ public class AppPrescriptionServiceImpl implements AppPrescriptionService {
 
     private PrescriptionConverter prescriptionConverter;
 
-    public Prescription save(SavePrescription param, Long patientId, Long dossierId) {
-        return initAndCreate(param,patientId, dossierId);
-    }
-
-
-    public boolean update(UpdatePrescription param) {
-        return updatePrescription(param);
-    }
-
-
-    private boolean updatePrescription(UpdatePrescription param) {
+    public Prescription save(SaveOrUpdatePrescription param, Long patientId, Long dossierId) {
         List<PrescriptionDrug> drugList = prescriptionConverter.toEntityDrug(param.getDrugList());
-        Prescription prescription = prescriptionConverter.toEntity(param);
-        if(!prescriptionService.updateById(prescription))throw new RuntimeException();
-        if(!updateDrug(drugList,param.getPrescriptionId()))throw new RuntimeException();
-        return true;
-    }
-
-    private boolean updateDrug(List<PrescriptionDrug> drugList, Long id) {
-        prescriptionDrugService.lambdaUpdate().eq(PrescriptionDrug::getPrescriptionId,id).remove();
-        drugList.forEach(drug-> drug.setPrescriptionId(id));
-        return prescriptionDrugService.saveBatch(drugList);
-    }
-
-    private Prescription initAndCreate(SavePrescription param, Long patientId, Long dossierId) {
-        List<PrescriptionDrug> drugList = prescriptionConverter.toEntityDrugList(param.getDrugList());
         Prescription prescription = new Prescription();
 
         fillPrescription(prescription, param, patientId);
@@ -80,7 +55,7 @@ public class AppPrescriptionServiceImpl implements AppPrescriptionService {
         return null;
     }
 
-    private void fillPrescription(Prescription prescription,SavePrescription param, Long patientId) {
+    private void fillPrescription(Prescription prescription,SaveOrUpdatePrescription param, Long patientId) {
         LocalDate tomorrow = LocalDateTime.now().plusDays(NumberUtils.INTEGER_ONE).toLocalDate();
         Date tomo =Date.from(tomorrow.atStartOfDay(ZoneId.systemDefault()).toInstant());
         prescription.setPatientId(patientId);
@@ -91,11 +66,25 @@ public class AppPrescriptionServiceImpl implements AppPrescriptionService {
         prescription.setExpiryDate(NumberUtils.INTEGER_ONE);
         prescription.setExpirationDate(tomo);
     }
-
     private Boolean saveDrug(List<PrescriptionDrug> drugList) { return prescriptionDrugService.saveBatch(drugList); }
-
     private Boolean saveDossierPrescription(Long id, Long dossierId) {
         return dossierPrescriptionService.save(new DossierPrescription(dossierId, id));
+    }
+
+
+    public boolean update(SaveOrUpdatePrescription param) {
+        List<PrescriptionDrug> drugList = prescriptionConverter.toEntityDrug(param.getDrugList());
+        Prescription prescription = prescriptionConverter.toEntity(param);
+        prescriptionService.updateById(prescription);
+        updateDrug(drugList,param.getPrescriptionId());
+        return true;
+    }
+
+
+    private void updateDrug(List<PrescriptionDrug> drugList, Long id) {
+        prescriptionDrugService.lambdaUpdate().eq(PrescriptionDrug::getPrescriptionId,id).remove();
+        drugList.forEach(drug-> drug.setPrescriptionId(id));
+        saveDrug(drugList);
     }
 
 

@@ -18,6 +18,11 @@ public class PayRecordServiceImpl extends ServiceImpl<PayRecordMapper, PayRecord
     public List<PayRecord> searchByPayId(Long payId) {
         return lambdaQuery().eq(PayRecord::getPayId, payId).ne(PayRecord::getName, "处方").list();
     }
+
+    @Override
+    public PayRecord getByPayId(Long payId) {
+        return lambdaQuery().eq(PayRecord::getPayId, payId).eq(PayRecord::getName, "处方").one();
+    }
 }
 
 

@@ -6,7 +6,12 @@ import org.hibernate.validator.constraints.Length;
 import javax.validation.constraints.NotBlank;
 
 @Data
-public class SaveDossierParam {
+public class SaveOrUpdateDossierParam {
+
+    /**
+     * id
+     */
+    private Long id;
 
     /**
      * 既往史 (含药物过敏史)

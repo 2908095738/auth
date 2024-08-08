@@ -8,11 +8,13 @@ import com.clinic.app.porescription.file.create.CreatePrescriptionFile;
 import com.clinic.cache.pay.PayCache;
 import com.clinic.cache.unit.UnitCache;
 import com.clinic.cache.usage.UsageCache;
-import com.clinic.dto.PrescriptionAndPayIdVo;
 import com.clinic.dto.PrescriptionDto;
-import com.clinic.dto.param.SavePrescription;
-import com.clinic.dto.param.UpdatePrescription;
-import com.clinic.entity.*;
+import com.clinic.dto.param.SaveOrUpdatePrescription;
+import com.clinic.entity.AdmissionLog;
+import com.clinic.entity.Dossier;
+import com.clinic.entity.Prescription;
+import com.clinic.entity.Unit;
+import com.clinic.entity.Usage;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.DossierService;
 import com.clinic.util.LoginUser;
@@ -21,7 +23,6 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,6 +31,8 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+
+import static cn.hutool.core.util.ObjectUtil.isEmpty;
 
 
 /**
@@ -64,18 +67,25 @@ public class PrescriptionController {
      * @return PrescriptionAndPayIdVo
      */
     @PutMapping("/prescription")
-    public Result<PrescriptionAndPayIdVo> add(@RequestBody @Valid SavePrescription param){
+    public Result<Boolean> add(@RequestBody @Valid SaveOrUpdatePrescription param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             AdmissionLog admissionLog = admissionLogService.getById(param.getAdmissionLogId());
-
-            Dossier dossier = dossierService.createDossier(admissionLog.getId(), admissionLog.getPatientId(),param.getDossier());
-            Prescription prescription = service.save(param,admissionLog.getPatientId(), dossier.getId());
-            Long payId = payCache.createPayAndPrescriptionRecord(prescription,dossier);
-            admissionLogService.update(param.getAdmissionLogId(),prescription.getId(), payId, dossier.getId(), dossier.getDiagnosis());
-            LogUtil.Operation.addPrescription(admissionLog.getPatientId(), prescription.getId(), "{}添加处方并创建收费记录：处方id={}, 支付id={}", LoginUser.get().getName(), prescription.getId(), payId);
+            Dossier dossier = dossierService.createOrUpdateDossier(admissionLog.getId(), admissionLog.getPatientId(),param.getDossier());
+            if (isEmpty(param.getPrescriptionId())&& isEmpty(param.getPayId())) {
+                Prescription prescription = service.save(param,admissionLog.getPatientId(), dossier.getId());
+                Long payId = payCache.createPayAndPrescriptionRecord(prescription,dossier);
+                admissionLogService.update(param.getAdmissionLogId(),prescription.getId(), payId, dossier.getId(), dossier.getDiagnosis());
+                LogUtil.Operation.addPrescription(admissionLog.getPatientId(), prescription.getId(), "{}添加处方并创建收费记录：处方id={}, 支付id={}", LoginUser.get().getName(), prescription.getId(), payId);
+            }else {
+                if(service.update(param))
+                    if(!appPayService.updatePayPrescriptionRecord(param.getPayId(), param.getPrice()) )throw new RuntimeException();
+                admissionLogService.update(param.getAdmissionLogId(), param.getPrescriptionId(), param.getPayId(), dossier.getId(), dossier.getDiagnosis());
+                LogUtil.Operation.updatePrescription(admissionLog.getPatientId(), param.getPayId(), "{}修改处方和处方收费记录：处方id={}, 支付id={}",
+                LoginUser.get().getName(), admissionLog.getPrescriptionId(), param.getPayId());
+            }
             transactionManager.commit(transaction);
-            return Result.success(new PrescriptionAndPayIdVo(prescription.getId(), payId));
+            return Result.success(true);
         } catch (RuntimeException e) {
             transactionManager.rollback(transaction);
             e.printStackTrace();
@@ -83,29 +93,6 @@ public class PrescriptionController {
         }
     }
 
-    /**
-     * 修改处方
-     * @param param 处方信息
-     * @return Long
-     */
-    @PostMapping("/prescription")
-    public Result<Boolean> update(@RequestBody @Valid UpdatePrescription param){
-        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-        try {
-            AdmissionLog admissionLog = admissionLogService.getById(param.getAdmissionId());
-            Dossier dossier = dossierService.updateDossier(param.getDossier());
-            if(service.update(param))if(!appPayService.updatePayPrescriptionRecord(param.getPayId(), param.getPrice()) )throw new RuntimeException();
-            admissionLogService.update(param.getAdmissionId(), param.getPrescriptionId(), param.getPayId(), dossier.getId(), dossier.getDiagnosis());
-            LogUtil.Operation.updatePrescription(admissionLog.getPatientId(), param.getPayId(), "{}修改处方和处方收费记录：处方id={}, 支付id={}",
-                    LoginUser.get().getName(), admissionLog.getPrescriptionId(), param.getPayId());
-            transactionManager.commit(transaction);
-            return Result.success();
-        } catch (RuntimeException e) {
-            transactionManager.rollback(transaction);
-            e.printStackTrace();
-            return Result.failed();
-        }
-    }
 
 
     /**

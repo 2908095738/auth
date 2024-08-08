@@ -16,4 +16,6 @@ public interface PayRecordService extends IService<PayRecord> {
      * @return 其他收费条目
      */
     List<PayRecord> searchByPayId(Long payId);
+
+    PayRecord getByPayId(Long payId);
 }

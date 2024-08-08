@@ -6,7 +6,12 @@ import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 @Data
-public class SavePrescriptionDrug {
+public class SaveOrUpdatePrescriptionDrug {
+
+    /**
+     * 主键
+     */
+    private Long id;
 
     /**
      * 批次编号
