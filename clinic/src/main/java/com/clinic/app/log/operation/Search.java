@@ -78,7 +78,7 @@ public class Search {
             Set<Long> needFillPatientLogIds = logs.stream().peek(log -> {
                 Date createTime = log.getCreateTime();
                 log.setIsCurrentDay(DateUtil.isSameDay(now, createTime));
-                log.setCreateYMD(DateUtil.format(createTime, "yyyy/MM/dd"));
+                log.setCreateYMD(DateUtil.format(createTime, "yyyy-MM-dd"));
                 log.setCreateHMS(DateUtil.format(createTime, "HH:mm:ss"));
 
             }).filter(log -> {
@@ -105,25 +105,5 @@ public class Search {
                 });
             }
         }
-    }
-
-    private Date getStartDate(Long startDateLong) {
-        Date startDate;
-        if(nonNull(startDateLong)) {
-            startDate = new Date(startDateLong);
-        } else {
-            startDate = DateUtil.offsetDay(new Date(), -3);
-        }
-        return startDate;
-    }
-
-    private Date getEndDate(Long endDateLong) {
-        Date endDate;
-        if(nonNull(endDateLong)) {
-            endDate = new Date(endDateLong);
-        } else {
-            endDate = new Date();
-        }
-        return endDate;
     }
 }
