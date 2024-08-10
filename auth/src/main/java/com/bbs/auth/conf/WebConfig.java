@@ -1,6 +1,7 @@
 package com.bbs.auth.conf;
 
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -14,7 +15,7 @@ public class WebConfig implements WebMvcConfigurer {
 
 
     @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry)
+    public void addResourceHandlers(@NotNull ResourceHandlerRegistry registry)
     {
 
 
@@ -50,6 +51,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/salary/temp/export"+ "/**")
                 .excludePathPatterns("/weixin/pay/notification"+ "/**")
                 .excludePathPatterns("/weixin/pay/notification"+ "/**")
+                .excludePathPatterns("/weixin/getQRCode")
                 .excludePathPatterns("/user" + "/**")//注册
                 .excludePathPatterns("/login" + "/**");
     }
