@@ -72,6 +72,7 @@ public class CountTow {
                         .ge(Pay::getCreateTime, DateUtil.beginOfDay(now))
                         .lt(Pay::getCreateTime, DateUtil.endOfDay(now))
                 )
+                .eq(Pay::getState, 1)
         );
         BigDecimal countFree = currentDayFrees.stream().map(Pay::getFee).reduce(BigDecimal.ZERO, BigDecimal::add);
         return Result.success(new VO(admissionLog, currentDayAdmissionLog, currentDayProceeds, countFree));
