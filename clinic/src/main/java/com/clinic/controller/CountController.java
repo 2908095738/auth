@@ -52,8 +52,6 @@ public class CountController {
     @Resource
     private StockUnitService stockUnitService;
     @Resource
-    private AppStockService appStockService;
-    @Resource
     private StockBatchService stockBatchService;
 
     @GetMapping("/count")
@@ -106,9 +104,11 @@ public class CountController {
         List<Pay> currentMonthPayList = payService.lambdaQuery()
                 .eq(Pay::getCreator, LoginUser.getId())
                 .and(ext -> ext
-                        .ge(Pay::getCreateTime, DateUtil.beginOfMonth(now))
-                        .lt(Pay::getCreateTime, DateUtil.beginOfMonth(DateUtil.offsetMonth(now, INTEGER_ONE)))
-                ).list();
+                        .ge(Pay::getUpdateTime, DateUtil.beginOfMonth(now))
+                        .lt(Pay::getUpdateTime, DateUtil.beginOfMonth(DateUtil.offsetMonth(now, INTEGER_ONE)))
+                )
+                .eq(Pay::getState, 1)
+                .list();
         Map<Date, List<Pay>> singularMonthEveryDayPayMap = currentMonthPayList.stream()
                 .collect(Collectors.groupingBy(Pay::getCreateTime));
         Map<String, BigDecimal> singularMonthEveryDayFeeMap = singularMonthEveryDayPayMap.entrySet().stream()
