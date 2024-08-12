@@ -52,7 +52,9 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/weixin/**")
                 .excludePathPatterns("/phone/**")
                 .excludePathPatterns("/user" + "/**")//注册
-                .excludePathPatterns("/login" + "/**");
+                .excludePathPatterns("/login" + "/**")
+                .excludePathPatterns("/system/router/user")
+        ;
     }
 }
 
