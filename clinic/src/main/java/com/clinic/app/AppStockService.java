@@ -25,12 +25,7 @@ import com.clinic.entity.Unit;
 import com.clinic.enums.DrugExpiryStateEnum;
 import com.clinic.enums.DrugTypeEnum;
 import com.clinic.mapper.StockMapper;
-import com.clinic.service.DrugService;
-import com.clinic.service.SettingsService;
-import com.clinic.service.StockBatchService;
-import com.clinic.service.StockInDrugService;
-import com.clinic.service.StockInService;
-import com.clinic.service.StockService;
+import com.clinic.service.*;
 import com.clinic.util.LoginUser;
 import com.clinic.util.RedisUtil;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
@@ -44,6 +39,7 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Comparator;
@@ -81,6 +77,8 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
     private StockBatchService batchService;
     @Resource
     private SettingsService settingsService;
+    @Resource
+    private StockUnitService stockUnitService;
 
     private static final String STOCK_NO_GENERATE = "STOCK_NO_GENERATE";
 
@@ -91,7 +89,7 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
     @Resource
     private StockConverter converter;
 
-    public Result search(StockSearchParam param) {
+    public Result<Object> search(StockSearchParam param) {
         if(nonNull(param.getId())) {
             Optional<StockBatch> stockBatch = searchById(param);
             if(stockBatch.isPresent()) return Result.success(stockBatch.get());
@@ -296,5 +294,13 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
                 System.currentTimeMillis() +
                 redis.increment(STOCK_NO_GENERATE)
         ;
+    }
+
+    @Transactional
+    public void remove(Long stockBatchId) {
+        batchService.removeById(stockBatchId);
+        stockUnitService.lambdaUpdate()
+                .eq(StockUnit::getBatchId, stockBatchId)
+                .remove();
     }
 }

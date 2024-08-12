@@ -96,7 +96,7 @@ public class StockBatchServiceImpl extends MPJBaseServiceImpl<StockBatchMapper, 
     public Boolean updateCost(Long id, BigDecimal cost, Integer unitId) {
         return lambdaUpdate()
                 .set(StockBatch::getCost, cost)
-                .set(StockBatch::getCostUnit, unitId)
+                .set(StockBatch::getCostUnitId, unitId)
                 .eq(StockBatch::getId, id)
         .update();
     }

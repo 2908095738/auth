@@ -21,12 +21,12 @@ public class StockController {
     private AppStockService app;
 
     @GetMapping
-    public Result search(StockSearchParam param) {
+    public Result<Object> search(StockSearchParam param) {
         return app.search(param);
     }
 
     @GetMapping("/role")
-    public Result getWarnRole() {
+    public Result<Object> getWarnRole() {
         return Result.success(DrugStockRule.list);
     }
 
@@ -42,8 +42,14 @@ public class StockController {
      * 药品入库（批量）
      */
     @PutMapping("/list")
-    public Result putStockList(@RequestBody @Valid PutStockList param) {
+    public Result<Object> putStockList(@RequestBody @Valid PutStockList param) {
         return app.putStockList(param);
+    }
+
+    @DeleteMapping("/{id}")
+    public Result<Boolean> remove(@PathVariable Long id) {
+        app.remove(id);
+        return Result.success();
     }
 
     @Autowired
