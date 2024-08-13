@@ -12,16 +12,12 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import static com.bbs.enums.CodeEnum.FAILED_LOGIN_PWD_ERROR;
+import static com.bbs.enums.CodeEnum.FAILED_USER_LOGIN_EXPIRE;
 
 @Slf4j
 @ControllerAdvice
 public class BusinessExceptionHandler {
-
-    @Resource
-    private HttpServletResponse response;
 
     @ResponseBody
     @ExceptionHandler(value = BusinessException.class)
@@ -32,16 +28,16 @@ public class BusinessExceptionHandler {
 
     @ResponseBody
     @ExceptionHandler(value = { ReLoginException.class, JWTException.class })
-    public void errorHandler(ReLoginException exception) throws IOException {
-        response.sendError(exception.getCode(), exception.getMessage());
+    public Result<Object> errorHandler() {
+        log.debug("[BusinessExceptionHandler::ReLoginException] FAILED_USER_LOGIN_EXPIRE: code={}; msg={}", FAILED_USER_LOGIN_EXPIRE.getCode(), FAILED_USER_LOGIN_EXPIRE.getCode());
+        return Result.failed(FAILED_USER_LOGIN_EXPIRE);
     }
 
     @ResponseBody
     @ExceptionHandler(value = IllegalArgumentException.class)
-    public void errorHandler(IllegalArgumentException exception) throws IOException {
-        String message = exception.getMessage();
-        log.debug("[ExceptionHandler::IllegalArgumentException] error={}", message);
-        response.sendError(400, message);
+    public Result<Object> errorHandler(IllegalArgumentException ignoredException) {
+        log.debug("[BusinessExceptionHandler::IllegalArgumentException] FAILED_LOGIN_PWD_ERROR: code={}; msg={}", FAILED_LOGIN_PWD_ERROR.getCode(), FAILED_LOGIN_PWD_ERROR.getCode());
+        return Result.failed(FAILED_LOGIN_PWD_ERROR);
     }
 
     @ExceptionHandler(value = BeanCreationException.class)
