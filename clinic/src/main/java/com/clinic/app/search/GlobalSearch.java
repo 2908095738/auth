@@ -63,7 +63,7 @@ public class GlobalSearch {
             patients = patientService.select(val);          //搜病人
             drugs = drugService.search(val);                  //搜药品
             drugDetails = drugDetailService.search(val);    //搜库存
-            answerList =questionService.search(val);//搜问答
+//            answerList =questionService.search(val);//搜问答
         }
         return Result.success(new VO(patients, drugs, drugDetails, answerList));
     }
