@@ -138,6 +138,47 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
     }
 
 
+    public Result<Object> searchStock(StockSearchParam param) {
+        if(nonNull(param.getId())) {
+            Optional<StockBatch> stockBatch = searchById(param);
+            if(stockBatch.isPresent()) return Result.success(stockBatch.get());
+        }
+
+        if(isNotBlank(param.getApprovalNumber())) {
+            StockBatch stockBatch = batchService.searchByApprovalNumber(param.getApprovalNumber());
+            if(nonNull(stockBatch)) return Result.success(stockBatch);
+        }
+        MPJLambdaWrapper<Stock> wrapper = getBaseWrapper()
+                .eq(isNotBlank(param.getManufacturerName()), StockBatch::getManufacturer, param.getManufacturerName())
+                .eq(isNotBlank(param.getBatchNumber()), StockBatch::getBatchNumber, param.getBatchNumber())
+                .eq(nonNull(param.getType()), StockBatch::getType, param.getType())
+                .eq(isNotBlank(param.getDosageForm()), StockBatch::getDosageForm, param.getDosageForm())
+                .eq(nonNull(param.getProduceDate()), StockBatch::getProduceDate, param.getProduceDate())
+
+                .eq(isNotBlank(param.getName()), Stock::getName, param.getName())
+                .or()
+                .eq(isNotBlank(param.getName()), Stock::getAlias, param.getName())
+
+                .between(
+                        isNull(param.getProduceDate()) && nonNull(param.getProduceStartDate()) && nonNull(param.getProduceEndDate()),
+                        StockBatch::getProduceDate,
+                        param.getProduceStartDate(),
+                        param.getProduceEndDate()
+                )
+                .eq(nonNull(param.getExpiryDate()), StockBatch::getExpiryDate, param.getExpiryDate())
+                .between(
+                        isNull(param.getExpiryDate()) && nonNull(param.getExpiryStartDate()) && nonNull(param.getExpiryEndDate()),
+                        StockBatch::getExpiryDate,
+                        param.getExpiryStartDate(),
+                        param.getExpiryEndDate()
+                )
+                ;
+        List<Stock> stocks = baseMapper.selectJoinList(Stock.class, wrapper);
+        return Result.success(countStockStateAndPage(param.toPage(), stocks));
+    }
+
+
+
     private MPJLambdaWrapper<Stock> getBaseWrapper(){
         return new MPJLambdaWrapper<Stock>()
                 .selectAll(Stock.class)

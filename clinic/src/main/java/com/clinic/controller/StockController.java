@@ -25,6 +25,13 @@ public class StockController {
         return app.search(param);
     }
 
+
+    @GetMapping("/only")
+    public Result<Object> searchStock(StockSearchParam param) {
+        return app.searchStock(param);
+    }
+
+
     @GetMapping("/role")
     public Result<Object> getWarnRole() {
         return Result.success(DrugStockRule.list);
