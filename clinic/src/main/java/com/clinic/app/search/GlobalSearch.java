@@ -4,10 +4,11 @@ import com.bbs.Result;
 import com.clinic.entity.Drug;
 import com.clinic.entity.DrugDetail;
 import com.clinic.entity.Patient;
+import com.clinic.entity.Question;
 import com.clinic.service.DrugDetailService;
 import com.clinic.service.DrugService;
 import com.clinic.service.PatientService;
-import com.clinic.util.LoginUser;
+import com.clinic.service.QuestionService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -34,6 +35,9 @@ public class GlobalSearch {
     @Resource
     private DrugDetailService drugDetailService;
 
+    @Resource
+    private QuestionService questionService;
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -44,6 +48,9 @@ public class GlobalSearch {
         private List<Drug> drugs;
 
         private List<DrugDetail> drugDetails;
+
+        private List<Question> answers;
+
     }
 
     @GetMapping("/search")
@@ -51,11 +58,13 @@ public class GlobalSearch {
         List<Patient> patients = new ArrayList<>();
         List<Drug> drugs = new ArrayList<>();
         List<DrugDetail> drugDetails = new ArrayList<>();
+        List<Question> answerList = new ArrayList<>();
         if(StringUtils.isNotBlank(val)) {
             patients = patientService.select(val);          //搜病人
             drugs = drugService.search(val);                  //搜药品
             drugDetails = drugDetailService.search(val);    //搜库存
+            answerList =questionService.search(val);//搜问答
         }
-        return Result.success(new VO(patients, drugs, drugDetails));
+        return Result.success(new VO(patients, drugs, drugDetails, answerList));
     }
 }
