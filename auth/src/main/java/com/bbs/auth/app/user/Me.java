@@ -41,7 +41,7 @@ public class Me {
     /**
      * 当前用户个人信息
      */
-    @GetMapping
+    @GetMapping("/me")
     public Result<VO> me() throws ReLoginException {
         String token = tokenService.getToken(request);
         Long uid = tokenService.verify(token).getId();
