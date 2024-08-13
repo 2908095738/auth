@@ -46,11 +46,9 @@ public class QuestionServiceImpl implements QuestionService{
             if(HttpStatus.HTTP_OK == bean.code) {
                 Object data = bean.data;
                 if(nonNull(data)) {
-                    log.debug("data,{}",data);
                     AnswerData dataBean = JSONUtil.parse(data).toBean(AnswerData.class);
                     objList = JSONUtil.toList(dataBean.getList(),ObjectList.class);
                 }
-                log.debug("objList,{}",objList);
             }
             if(!objList.isEmpty()){
                 result = objList.stream().map(o-> JSONUtil.toBean(o.getObject(),Question.class)).collect(Collectors.toList());
