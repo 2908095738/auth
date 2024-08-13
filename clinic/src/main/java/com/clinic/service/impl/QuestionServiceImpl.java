@@ -2,8 +2,9 @@ package com.clinic.service.impl;
 
 import cn.hutool.http.HttpException;
 import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpStatus;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.clinic.entity.Question;
 import com.clinic.service.QuestionService;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.nonNull;
 
@@ -28,28 +30,28 @@ public class QuestionServiceImpl implements QuestionService{
     @Value("${answer.api.search.serverHost}")
     private String serverHost;
 
-    @Value("${answer.api.search.timeout}")
-    private Integer verifyTimeout;
-
     @Override
     public List<Question> search(String val) {
         List<Question> result = new ArrayList<>();
+        List<ObjectList> objList =  new ArrayList<>();
         try {
             Map<String, Object> param = new HashMap<>();
             param.put("q", "is:question"+val);
             param.put("order", "relevance");
-            HttpResponse response = HttpRequest.post(serverHost+"answer/api/v1/search").body(JSONUtil.toJsonPrettyStr(param))
-                    .timeout(verifyTimeout).execute();
-            if(response.isOk()) {
-                String body = response.body();
-                Result bean = JSONUtil.toBean(body, Result.class);
-                log.debug(JSONUtil.toJsonPrettyStr(result));
-                if(HttpStatus.HTTP_OK == bean.getCode()) {
-                    Object data = bean.getData();
-                    if(nonNull(data)) {
-                        result = JSONUtil.parseArray(data).toList(Question.class);
-                    }
+            param.put("page", 1);
+            param.put("size", 10);
+            log.debug("param,{}",param);
+            String body = HttpRequest.get(serverHost+"answer/api/v1/search").form(param).execute(true).body();
+            Result bean = JSONUtil.toBean(body, Result.class);
+            if(HttpStatus.HTTP_OK == bean.code) {
+                Object data = bean.data;
+                if(nonNull(data)) {
+                    AnswerData dataBean = JSONUtil.parse(data).toBean(AnswerData.class);
+                    objList = JSONUtil.toList(dataBean.getList(),ObjectList.class);
                 }
+            }
+            if(!objList.isEmpty()){
+                result = objList.stream().map(o-> JSONUtil.toBean(o.getObject(),Question.class)).collect(Collectors.toList());
             }
             return result;
         } catch (HttpException e) {
@@ -62,7 +64,7 @@ public class QuestionServiceImpl implements QuestionService{
 
         private Integer code;
 
-        private AnswerData data;
+        private Object data;
 
         private String msg;
 
@@ -72,13 +74,14 @@ public class QuestionServiceImpl implements QuestionService{
 
     @lombok.Data
     private static class AnswerData {
-        private String count;
-        private List<ObjectList> list;
+        private Integer count;
+        private JSONArray list;
     }
+
     @lombok.Data
     private static class ObjectList {
         private String object_type;
-        private Question object;
+        private JSONObject object;
     }
 
 }
