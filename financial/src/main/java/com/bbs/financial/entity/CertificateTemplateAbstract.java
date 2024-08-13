@@ -4,20 +4,22 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.github.yulichang.annotation.EntityMapping;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 
 import java.io.Serializable;
 
 /**
- * 
  * @TableName certificate_template_abstract
  */
 @TableName(value ="certificate_template_abstract")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldNameConstants
 public class CertificateTemplateAbstract implements Serializable {
     /**
      * 主键
@@ -103,6 +105,12 @@ public class CertificateTemplateAbstract implements Serializable {
     @TableField(value = "borrow_or_loans_type")
     private Integer borrowOrLoansType;
 
+    /**
+     * 取值类型：0.价税合计;1.税额;2.不含税金额;
+     */
+    @TableField(value = "money_type")
+    private Integer moneyType;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
@@ -110,5 +118,9 @@ public class CertificateTemplateAbstract implements Serializable {
     private PriceType priceType;
 
     @TableField(exist = false)
+    @EntityMapping(
+            thisField = Fields.accountId,
+            joinField = Account.Fields.id
+    )
     private Account account;
 }

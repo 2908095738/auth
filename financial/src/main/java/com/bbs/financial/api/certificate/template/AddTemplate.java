@@ -59,6 +59,16 @@ public class AddTemplate {
         private String comment;
 
         /**
+         * 凭证字
+         */
+        private String certificateWord;
+
+        /**
+         * 发票分类：0.销项发票;1.进项发票;2.费用小票;
+         */
+        private Integer invoiceCategory;
+
+        /**
          * 具体科目摘要
          */
         private List<TemplateAbstract> abstractList;
@@ -102,6 +112,16 @@ public class AddTemplate {
          * 贷方金额
          */
         private String loansMoney;
+
+        /**
+         * 借贷类型：1借0贷，默认借
+         */
+        private Integer borrowOrLoansType;
+
+        /**
+         * 取值类型：0.价税合计;1.税额;2.不含税金额;
+         */
+        private Integer moneyType;
 
         /**
          * 权重

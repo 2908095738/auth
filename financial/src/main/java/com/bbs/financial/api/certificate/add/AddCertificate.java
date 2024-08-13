@@ -55,6 +55,11 @@ public class AddCertificate {
         private Date date;
 
         /**
+         * 是否需要返回凭证id
+         */
+        private Boolean isNeedCertId;
+
+        /**
          * 具体科目
          */
         List<Abstract> abstracts;
@@ -87,6 +92,11 @@ public class AddCertificate {
         private String loansMoney;
 
         /**
+         * 辅助核算
+         */
+        private String auxiliary;
+
+        /**
          * 权重
          */
         private Integer weight;
@@ -110,7 +120,7 @@ public class AddCertificate {
     private LedgerSubsidiaryService ledgerSubsidiaryService;
 
     @PutMapping("/certificate")
-    public Result<Boolean> add(@RequestBody Param param) {
+    public Result<Object> add(@RequestBody Param param) {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         Long accountingSetId = LoginUser.getLoginSetId();
         param.setAccountingSetId(accountingSetId);
@@ -119,7 +129,7 @@ public class AddCertificate {
         certificate.setCreateBy(LoginUser.getId());
         try {
             // 保存凭证
-            saveCertificate(certificate);
+            Long certId = saveCertificate(certificate);
             // 保存具体科目信息
             List<CertificateAbstract> certificateAbstracts = saveAbstracts(param, certificate);
             // 并更新总账（修改账户金额）、日记账
@@ -127,15 +137,16 @@ public class AddCertificate {
             // 修改指定【凭证附件】的凭证 ID（原因：添加附件时，未创建凭证，只能先绑定到日期、凭证字、编号）
             updateFiles(param, certificate);
             transactionManager.commit(transaction);
-            return Result.success();
+            return Objects.nonNull(param.getIsNeedCertId()) ? Result.success(certId) : Result.success(true);
         } catch (Exception e) {
             transactionManager.rollback(transaction);
             throw new RuntimeException(e);
         }
     }
 
-    private void saveCertificate(Certificate certificate) {
+    private Long saveCertificate(Certificate certificate) {
         db.save(certificate);
+        return certificate.getId();
     }
 
     private List<CertificateAbstract> saveAbstracts(Param param, Certificate certificate) {
@@ -148,6 +159,7 @@ public class AddCertificate {
             if (nonNull(certificateAbstract.getLoansMoney()))
                 entity.setLoansMoney(Long.valueOf(certificateAbstract.getLoansMoney().replace(",", "")));
             entity.setCertificateAbstract(certificateAbstract.getCertificateAbstract());
+            entity.setAuxiliary(certificateAbstract.getAuxiliary());
             return entity;
         }).collect(Collectors.toList());
         certificateAbstractService.saveBatch(certificateAbstracts);

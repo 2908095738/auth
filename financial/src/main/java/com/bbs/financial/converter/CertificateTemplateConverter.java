@@ -1,6 +1,8 @@
 package com.bbs.financial.converter;
 
 import com.bbs.financial.api.certificate.template.AddTemplate;
+import com.bbs.financial.api.certificate.template.UpdateTemplate;
+import com.bbs.financial.api.invoice.update.UpdateCertTemp;
 import com.bbs.financial.entity.CertificateTemplate;
 import com.bbs.financial.entity.CertificateTemplateAbstract;
 import org.mapstruct.Mapper;
@@ -11,7 +13,13 @@ public interface CertificateTemplateConverter {
 
     CertificateTemplate toEntity(AddTemplate.Param param);
 
+    CertificateTemplate toEntity(UpdateCertTemp.Param param);
+
     @Mapping(target = "borrowMoney", ignore = true)
     @Mapping(target = "loansMoney", ignore = true)
     CertificateTemplateAbstract toEntity(AddTemplate.TemplateAbstract templateAbstract);
+
+    @Mapping(target = "borrowMoney", ignore = true)
+    @Mapping(target = "loansMoney", ignore = true)
+    CertificateTemplateAbstract toEntity(UpdateTemplate.TemplateAbstract templateAbstract);
 }

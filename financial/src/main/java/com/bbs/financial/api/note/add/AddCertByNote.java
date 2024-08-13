@@ -91,7 +91,7 @@ public class AddCertByNote {
         //新增凭证
         AddCertificate.Param addParam = getCertParam(tmpNote);
         AddCertificate addCertController = (AddCertificate) applicationContext.getBean(SpringUtil.getClassNameOfFirstLow(AddCertificate.class));
-        boolean isAdd = addCertController.add(addParam).getData();
+        boolean isAdd = (boolean) addCertController.add(addParam).getData();
         if (!isAdd) return Result.failed(StringTIP.FAIL_CERT);
 
         //日记账修改
