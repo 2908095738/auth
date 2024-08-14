@@ -39,16 +39,20 @@ public class Me {
     private HttpServletRequest request;
 
     /**
-     * 当前用户个人信息
+     * 当前用户个人信息（不响应 401）
      */
     @GetMapping("/me")
     public Result<VO> me() throws ReLoginException {
-        String token = tokenService.getToken(request);
-        Long uid = tokenService.verify(token).getId();
-        VO vo = converter.toMeVO(service.search(uid));
-        List<UserCompany> userCompanyList = companyService.searchCompany(uid);
-        vo.setUserCompanyList(userCompanyList);
-        return success(vo);
+        try {
+            String token = tokenService.getToken(request);
+            Long uid = tokenService.verify(token).getId();
+            VO vo = converter.toMeVO(service.search(uid));
+            List<UserCompany> userCompanyList = companyService.searchCompany(uid);
+            vo.setUserCompanyList(userCompanyList);
+            return success(vo);
+        } catch (ReLoginException e) {
+            return success(null);
+        }
     }
 
     @Data
