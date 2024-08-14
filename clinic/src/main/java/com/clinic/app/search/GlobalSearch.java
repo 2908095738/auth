@@ -8,7 +8,6 @@ import com.clinic.entity.Question;
 import com.clinic.service.DrugDetailService;
 import com.clinic.service.DrugService;
 import com.clinic.service.PatientService;
-import com.clinic.service.QuestionService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -34,9 +33,6 @@ public class GlobalSearch {
 
     @Resource
     private DrugDetailService drugDetailService;
-
-    @Resource
-    private QuestionService questionService;
 
     @Data
     @NoArgsConstructor

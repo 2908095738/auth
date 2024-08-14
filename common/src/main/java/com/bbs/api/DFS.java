@@ -36,7 +36,7 @@ public class DFS {
     @Component
     public static class Clean {
 
-        @Value("${dfs.host}")
+//        @Value("${dfs.host}")
         private String host;
 
 
@@ -61,7 +61,7 @@ public class DFS {
     @Component
     public static class Upload {
 
-        @Value("${dfs.host}")
+//        @Value("${dfs.host}")
         private String host;
 
         private static final String api = "/upload";
