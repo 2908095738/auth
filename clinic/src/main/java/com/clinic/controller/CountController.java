@@ -98,7 +98,7 @@ public class CountController {
             if(number > max) max = number;
             numberList.add(number);
         }
-        ReceptionPeopleNumberChartData receptionPeopleNumberChartData = new ReceptionPeopleNumberChartData(dateList, numberList, max);
+        ReceptionPeopleNumberChartData receptionPeopleNumberChartData = new CountController.ReceptionPeopleNumberChartData(dateList, numberList, max);
 
         // 本月销售额（柱状图数据）
         List<Pay> currentMonthPayList = payService.lambdaQuery()
@@ -249,7 +249,7 @@ public class CountController {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    private static class ReceptionPeopleNumberChartData {
+    public static class ReceptionPeopleNumberChartData {
 
         private List<String> dateList;
 
@@ -261,7 +261,7 @@ public class CountController {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    private static class SingularMonthSalesChartData {
+    public static class SingularMonthSalesChartData {
 
         private List<String> dateList;
 

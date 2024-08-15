@@ -1,5 +1,6 @@
 package com.bbs.auth.app.user;
 
+import cn.hutool.jwt.JWTException;
 import com.bbs.Result;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.entity.UserCompany;
@@ -43,15 +44,18 @@ public class Me {
      */
     @GetMapping("/me")
     public Result<VO> me() throws ReLoginException {
+        VO vo = new VO();
         try {
             String token = tokenService.getToken(request);
             Long uid = tokenService.verify(token).getId();
-            VO vo = converter.toMeVO(service.search(uid));
+            vo = converter.toMeVO(service.search(uid));
             List<UserCompany> userCompanyList = companyService.searchCompany(uid);
             vo.setUserCompanyList(userCompanyList);
+            vo.setLoginState(true);
             return success(vo);
-        } catch (ReLoginException e) {
-            return success(null);
+        } catch (ReLoginException | JWTException e) {
+            vo.setLoginState(false);
+            return success(vo);
         }
     }
 
@@ -59,6 +63,8 @@ public class Me {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class VO {
+
+        private boolean loginState;
 
         private Long id;
 

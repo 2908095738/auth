@@ -54,6 +54,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/user" + "/**")//注册
                 .excludePathPatterns("/login/**")
                 .excludePathPatterns("/system/router/user")
+                .excludePathPatterns("/me")
         ;
     }
 }
