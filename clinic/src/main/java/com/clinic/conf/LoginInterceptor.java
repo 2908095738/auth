@@ -6,6 +6,7 @@ import com.bbs.api.auth.UserAPI;
 import com.bbs.exception.ReLoginException;
 import com.clinic.util.LoginUser;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -32,19 +33,22 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(@NotNull @org.jetbrains.annotations.NotNull HttpServletRequest request, @Nonnull HttpServletResponse response, @Nonnull Object handler) throws ReLoginException, IOException {
-        log.debug("拦截器request.getRequestURI(){}",request.getRequestURI());
-        if(request.getRequestURI().contains("/weixin/pay/notification")){
-            return true;
-        }
-        User user;
-        try {
-            user = userAPI.getUserByToken(request.getHeader(tokenName));
-        } catch (Exception e) {
-            throw new ReLoginException();
-        }
-        if (nonNull(user)){
-            LoginUser.set(user);
-            return true;
+        String token = request.getHeader(tokenName);
+        if(StringUtils.isNotBlank(token)) {
+            log.debug("拦截器request.getRequestURI(){}",request.getRequestURI());
+            if(request.getRequestURI().contains("/weixin/pay/notification")){
+                return true;
+            }
+            User user;
+            try {
+                user = userAPI.getUserByToken(request.getHeader(tokenName));
+            } catch (Exception e) {
+                throw new ReLoginException();
+            }
+            if (nonNull(user)){
+                LoginUser.set(user);
+                return true;
+            }
         }
         response.sendError(401,"请重新登陆");
         return false;

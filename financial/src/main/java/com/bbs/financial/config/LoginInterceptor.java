@@ -6,6 +6,7 @@ import com.bbs.api.auth.UserAPI;
 import com.bbs.exception.ReLoginException;
 import com.bbs.financial.util.LoginUser;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -32,15 +33,18 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(@NotNull HttpServletRequest request, @Nonnull HttpServletResponse response, @Nonnull Object handler) throws ReLoginException, IOException {
-        User user = null;
-        try {
-            user = userAPI.getUserByToken(request.getHeader(tokenName));
-        } catch (Exception e) {
-            throw new ReLoginException();
-        }
-        if (nonNull(user)){
-            LoginUser.set(user);
-            return true;
+        String token = request.getHeader(tokenName);
+        if(StringUtils.isNotBlank(token)) {
+            User user;
+            try {
+                user = userAPI.getUserByToken(token);
+            } catch (Exception e) {
+                throw new ReLoginException();
+            }
+            if (nonNull(user)){
+                LoginUser.set(user);
+                return true;
+            }
         }
         response.sendError(401,"请重新登陆");
         return false;

@@ -6,6 +6,7 @@ import com.bbs.auth.cache.BindLoginCompanyCache;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.service.TokenService;
 import com.bbs.auth.service.UserService;
+import com.bbs.exception.ReLoginException;
 import com.bbs.vo.UserVO;
 import com.bbs.util.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -36,9 +37,16 @@ public class UserAPIImpl implements UserAPI {
 
     @Override
     public User getUserByToken(String token) {
-        UserVO vo = tokenService.verify(token);
-        vo.setCompanyId(bindLoginCompanyCache.get(vo.getId()));
-        return converter.toAPIUser(vo);
+        try {
+            UserVO vo = tokenService.verify(token);
+            vo.setCompanyId(bindLoginCompanyCache.get(vo.getId()));
+            return converter.toAPIUser(vo);
+        } catch (ReLoginException ignored) {
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
