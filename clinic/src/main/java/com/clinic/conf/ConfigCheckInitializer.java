@@ -12,19 +12,28 @@ public class ConfigCheckInitializer implements ApplicationContextInitializer<Con
     public void initialize(ConfigurableApplicationContext applicationContext) {
         ConfigurableEnvironment environment = applicationContext.getEnvironment();
         checkNacosConf(environment);
-        String redisAddress = environment.getProperty("spring.redis.host");
-        log.info("环境信息 - Redis: addr={};", redisAddress);
+        checkRedisConf(environment);
+        checkMySQLConf(environment);
     }
 
     private static void checkNacosConf(ConfigurableEnvironment environment) {
-        String serverAddr = environment.getProperty("spring.cloud.nacos.config.server-addr");
-        String username = environment.getProperty("spring.cloud.nacos.config.username");
-        String password = environment.getProperty("spring.cloud.nacos.config.password");
-        log.info("环境信息 - Nacos: addr={}; username={}; password={};", serverAddr, username, password);
         String nameSpace = environment.getProperty("spring.cloud.nacos.config.namespace");
         String prefix = environment.getProperty("spring.cloud.nacos.config.prefix");
         String fileExtension = environment.getProperty("spring.cloud.nacos.config.file-extension");
         String group = environment.getProperty("spring.cloud.nacos.config.group");
         log.info("环境信息 - Nacos: namespace={}; prefix={}; file-extension={}; group={};", nameSpace, prefix, fileExtension, group);
+    }
+
+    private static void checkMySQLConf(ConfigurableEnvironment environment) {
+        String dbURL = environment.getProperty("spring.datasource.url");
+        String dbUsername = environment.getProperty("spring.datasource.username");
+        String dbPassword = environment.getProperty("spring.datasource.password");
+        log.info("环境信息 - MySQL: addr={}; username={}; password={};", dbURL, dbUsername, dbPassword);
+    }
+
+    private static void checkRedisConf(ConfigurableEnvironment environment) {
+        String redisAddress = environment.getProperty("spring.redis.host");
+        String redisPort = environment.getProperty("spring.redis.port");
+        log.info("环境信息 - Redis: addr={}; port={};", redisAddress, redisPort);
     }
 }

@@ -22,7 +22,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static cn.hutool.core.bean.BeanUtil.toBean;
@@ -166,7 +165,7 @@ public class TokenServiceImpl implements TokenService {
             try {
                 return JWTUtil.verify(token, key.getBytes());
             } catch (Exception e) {
-                log.info("[TokenService::verifyToken] Verify Error!!! message={}", e.getMessage());
+                log.info("[TokenService::verifyToken] Verify Error!!! token={}; key={}", token, key);
                 e.printStackTrace();
                 throw new ReLoginException();
             }
