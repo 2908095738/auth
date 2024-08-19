@@ -1,11 +1,13 @@
 package com.bbs.auth.app.user.router;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.tree.Tree;
 import com.bbs.Result;
 import com.bbs.auth.cache.BindLoginCompanyCache;
 import com.bbs.auth.entity.System;
 import com.bbs.auth.entity.SystemCompany;
 import com.bbs.auth.entity.SystemRouter;
+import com.bbs.auth.entity.User;
 import com.bbs.auth.service.SystemCompanyService;
 import com.bbs.auth.service.SystemRouterService;
 import com.bbs.auth.service.SystemService;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -55,12 +58,16 @@ public class SearchSystemRouter {
     @Cacheable(cacheNames = "system::router::user")
     @GetMapping("/system/router/user")
     public Result<VO> search(@RequestParam String systemCode) {
-        Long uid = userService.loginUser().getId();
+        User user = userService.loginEntityUser();
         System system = systemService.searchBySystemCode(systemCode);
         Long systemId = system.getId();
 //        Long companyId = searchCompanyId(uid);
 //        tryCreateSystemCompany(systemId, companyId);
         List<SystemRouter> systemRouters = searchRouter(systemId);
+        if(!user.isSupperAdmin()&&CollUtil.isNotEmpty(systemRouters)){
+            systemRouters = systemRouters.stream().filter(o->!o.getId().equals(77L)&&!o.getId().equals(84L)).collect(Collectors.toList());
+            return Result.success(new VO(systemRouters, systemRouterService.toTree(systemRouters)));
+        }
         return Result.success(new VO(systemRouters, systemRouterService.toTree(systemRouters)));
     }
 
