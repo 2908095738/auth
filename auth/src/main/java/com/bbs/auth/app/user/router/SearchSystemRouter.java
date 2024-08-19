@@ -16,7 +16,7 @@ import com.google.common.base.Preconditions;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,6 +32,7 @@ import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 @RestController("searchMySystemRouter")
 @RequestMapping
+@Slf4j
 public class SearchSystemRouter {
 
     @Resource
@@ -55,9 +56,9 @@ public class SearchSystemRouter {
         private List<Tree<Long>> tree;
     }
 
-    @Cacheable(cacheNames = "system::router::user")
     @GetMapping("/system/router/user")
-    public Result<VO> search(@RequestParam String systemCode) {
+    public Result<VO> search(@RequestParam String systemCode,Long time) {
+        log.debug("time:{}", time);
         User user = userService.loginEntityUser();
         System system = systemService.searchBySystemCode(systemCode);
         Long systemId = system.getId();
