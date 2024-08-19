@@ -67,6 +67,11 @@ public class UnitCacheImpl implements UnitCache, ApplicationListener<ContextRefr
     }
 
     @Override
+    public List<Unit> getUnit(Set<Integer> ids) {
+        return getUnit(new ArrayList<>(ids));
+    }
+
+    @Override
     public Map<Integer, Unit> getUnitMap(List<Integer> ids) {
         return getUnit(ids).stream().collect(Collectors.toMap(Unit::getId, unit -> unit));
     }

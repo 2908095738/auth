@@ -7,6 +7,7 @@ import com.clinic.entity.Settings;
 import com.clinic.entity.Stock;
 import com.clinic.entity.StockBatch;
 import com.clinic.enums.StockStateCountTypeEnum;
+import com.clinic.service.impl.StockServiceImpl;
 
 /**
 * @author 路晨霖
@@ -37,4 +38,10 @@ public interface StockService extends IService<Stock> {
      * @return 库存数量是否正常
      */
     Boolean stockNumberStateIsNormal(Long stockNumber, StockStateCountTypeEnum countType, Long totalNumber, Integer contVal);
+
+
+    /**
+     * 统计并更更新库存药品状态
+     */
+    StockServiceImpl.DrugExpiryGroup countAndUpdateDrugExpiryState();
 }

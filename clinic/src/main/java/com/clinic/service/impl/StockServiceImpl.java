@@ -2,14 +2,14 @@ package com.clinic.service.impl;
 
 import cn.hutool.db.DbRuntimeException;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.clinic.app.AppStockService;
+import com.clinic.controller.CountController;
 import com.clinic.dto.param.PutStockList;
 import com.clinic.entity.Settings;
 import com.clinic.entity.Stock;
 import com.clinic.entity.StockBatch;
 import com.clinic.entity.StockUnit;
-import com.clinic.enums.DrugTypeEnum;
-import com.clinic.enums.StockStateCountTypeEnum;
-import com.clinic.enums.StockStateEnum;
+import com.clinic.enums.*;
 import com.clinic.mapper.StockMapper;
 import com.clinic.service.SettingsService;
 import com.clinic.service.StockBatchService;
@@ -17,6 +17,8 @@ import com.clinic.service.StockService;
 import com.clinic.service.StockUnitService;
 import com.clinic.util.LoginUser;
 import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +31,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.clinic.enums.DrugExpiryStateEnum.ABOUT_EXPIRES;
+import static com.clinic.enums.DrugExpiryStateEnum.EXPIRES;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 /**
 * @author 路晨霖
@@ -206,6 +211,160 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock>
         public static CountSetting create(StockBatch stockBatch) {
             return new CountSetting(stockBatch.getStateCountRule().getCode(), stockBatch.getCountVal());
         }
+    }
+
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DrugExpiryGroup {
+
+        private List<StockBatch> normal;
+
+        private List<StockBatch> aboutExpires;
+
+        private List<StockBatch> expires;
+
+        private List<StockBatch> stockShortage;
+    }
+
+    public DrugExpiryGroup countAndUpdateDrugExpiryState() {
+        Settings settings = settingsService.getByUserId();
+        Integer stockExpiryAlertMonth = settingsService.getUserSettingStockExpiryAlertMonth(settings);  //用户设置的库存药品过期提醒时间'
+
+        List<StockBatch> allDrugBatch = batchService.lambdaQuery()
+                .eq(StockBatch::getUserId, LoginUser.getId())
+                .list();
+
+        List<StockBatch> expiresStateNormal = new ArrayList<>();    // 正常
+        List<StockBatch> needUpdateExpiresStateToExpires = new ArrayList<>();  // 过期（需要 update DB）
+        List<StockBatch> needUpdateExpiresStateToAbout = new ArrayList<>(); // 即将过期（需要 update DB）
+        List<StockBatch> needUpdateStockStateToShortage = new ArrayList<>(); // 库存状态短缺（需要 update DB）
+        allDrugBatch.forEach(drugBatch -> {
+            Long stockNumber = drugBatch.getNumber();
+            Long totalNumber = drugBatch.getTotalNumber();
+            DrugStockRule stateCountRule = drugBatch.getStateCountRule();
+            // 筛选出【库存状态】正常，且需要统计【库存预警状态】的库存批次
+            if(StockStateEnum.NORMAL.equals(drugBatch.getState()) && !DrugStockRule.NOT_COUNT.equals(stateCountRule)) {
+                Integer countVal = drugBatch.getCountVal();
+                // 当库存数量不足【自定义阈值】时，提醒库存不足（库存数量按最小单位统计，如粒/片/袋等）
+                if(DrugStockRule.MIN_UNIT_PERCENTAGE_CUSTOMIZE.equals(stateCountRule)) {
+                    Integer countUnitId = drugBatch.getCountUnitId();
+                    Integer unitId = drugBatch.getUnitId();
+                    // 统计单位与库存单位是否一致，如果一致可以直接计算，否则需要将数量换算到一致的单位
+                    if(countUnitId.equals(unitId)) {
+                        if(stockNumber <= countVal) {
+                            drugBatch.setState(StockStateEnum.SHORTAGE);
+                            needUpdateStockStateToShortage.add(drugBatch);
+                        }
+                    } else {
+                        // 取出当前库存批次，对应的库存单位（包含全部单位与进制）
+                        List<StockUnit> currentStockBatchUnits = stockUnitService.lambdaQuery()
+                                .eq(StockUnit::getBatchId, drugBatch.getId()).orderByAsc(StockUnit::getSort).list();
+                        // 获取统计单位与库存单位
+                        StockUnit countUnit = null;
+                        StockUnit stockNumberUnit = null;
+                        for (StockUnit stockUnit : currentStockBatchUnits) {
+                            if (stockUnit.getUnitId().equals(countUnitId)) {
+                                countUnit = stockUnit;
+                            }
+                            if (stockUnit.getUnitId().equals(unitId)) {
+                                stockNumberUnit = stockUnit;
+                            }
+                        }
+                        // 设置了统计单位后，才能进行计算
+                        if(nonNull(countUnit) && nonNull(stockNumberUnit)) {
+                            Integer countUnitSort = countUnit.getSort();
+                            Integer stockNumberSort = stockNumberUnit.getSort();
+                            long parentUnitStockNumber = 0L;
+                            if(countUnit.getSort() < stockNumberUnit.getSort()) {
+                                // 由库存单位（较大单位），向统计单位（较小单位）遍历（0, 统计单位, 库存单位）
+                                for (int index = stockNumberSort; index > countUnitSort; index--) {
+                                    parentUnitStockNumber = stockNumber / currentStockBatchUnits.get(index).getStepSize();
+                                }
+                            } else {
+                                // 由统计单位（较大单位），向库存单位（较小单位）遍历（0, 库存单位, 统计单位）
+                                for (int index = stockNumberSort; index < countUnitSort; index++) {
+                                    //此处，需要 * 下一级单位的 stepSize
+                                    // 比如，本单位为箱，有 50 箱，需要得出有多少瓶
+                                    // （下一级单位瓶，下一级单位进制 stepSize：100，即 100 瓶 = 1 箱）
+                                    // 总瓶数量 = 50 箱 * 100瓶
+                                    parentUnitStockNumber = stockNumber * currentStockBatchUnits.get(index +1).getStepSize();
+                                }
+                            }
+                            if(parentUnitStockNumber <= countVal) {
+                                drugBatch.setState(StockStateEnum.SHORTAGE);
+                                needUpdateStockStateToShortage.add(drugBatch);
+                            }
+                        }
+                    }
+
+                    // 当库存数量不足 20% 时，提醒库存不足（库存数量按最小单位统计，如粒/片/袋等）
+                } else if(DrugStockRule.MIN_UNIT_PERCENTAGE_20.equals(stateCountRule)) {
+                    if(stockNumber <= totalNumber * 0.2) {
+                        drugBatch.setState(StockStateEnum.SHORTAGE);
+                        needUpdateStockStateToShortage.add(drugBatch);
+                    }
+
+                    // 当库存数量不足 50% 时，提醒库存不足（库存数量按最小单位统计，如粒/片/袋等）
+                } else if(DrugStockRule.MIN_UNIT_PERCENTAGE_50.equals(stateCountRule)) {
+                    if(stockNumber <= totalNumber * 0.5) {
+                        drugBatch.setState(StockStateEnum.SHORTAGE);
+                        needUpdateStockStateToShortage.add(drugBatch);
+                    }
+
+                    // 当库存数量不足 80% 时，提醒库存不足（库存数量按最小单位统计，如粒/片/袋等）
+                } else if(DrugStockRule.MIN_UNIT_PERCENTAGE_80.equals(stateCountRule)) {
+                    if(stockNumber <= totalNumber * 0.8) {
+                        drugBatch.setState(StockStateEnum.SHORTAGE);
+                        needUpdateStockStateToShortage.add(drugBatch);
+                    }
+                }
+            }
+            // 筛选出【即将过期】与【已过期】的批次药品
+            if(
+                    DrugExpiryStateEnum.NORMAL.getCode().equals(drugBatch.getExpiryState()) ||
+                            ABOUT_EXPIRES.getCode().equals(drugBatch.getExpiryState())
+            ) {
+                DrugExpiryStateEnum expiryState = AppStockService.computeDrugIsExpiry(drugBatch, stockExpiryAlertMonth);
+                if(EXPIRES.equals(expiryState)) {
+                    drugBatch.setExpiryState(EXPIRES.getCode());
+                    needUpdateExpiresStateToExpires.add(drugBatch);
+                } else if(ABOUT_EXPIRES.equals(expiryState)) {
+                    drugBatch.setExpiryState(ABOUT_EXPIRES.getCode());
+                    needUpdateExpiresStateToAbout.add(drugBatch);
+                } else {
+                    expiresStateNormal.add(drugBatch);
+                }
+            }
+        });
+        // 合并批量更新
+        List<StockBatch> needUpdateStockBatch = new ArrayList<>();
+        needUpdateStockBatch.addAll(updateExpiresState(needUpdateExpiresStateToExpires, needUpdateExpiresStateToAbout));
+        needUpdateStockBatch.addAll(updateStockState(needUpdateStockStateToShortage));
+        if(needUpdateStockBatch.size() > INTEGER_ZERO) {
+            batchService.updateBatchById(needUpdateStockBatch);
+        }
+        return new DrugExpiryGroup(expiresStateNormal, needUpdateExpiresStateToExpires, needUpdateExpiresStateToAbout, needUpdateStockStateToShortage);
+    }
+
+    private List<StockBatch> updateExpiresState(List<StockBatch> needUpdateExpiresStateToExpires, List<StockBatch> needUpdateExpiresStateToAbout) {
+        List<StockBatch> needUpdateStockBatch = new ArrayList<>();
+        if(needUpdateExpiresStateToExpires.size() > INTEGER_ZERO) {
+            needUpdateStockBatch.addAll(needUpdateExpiresStateToExpires);
+        }
+        if(needUpdateExpiresStateToAbout.size() > INTEGER_ZERO) {
+            needUpdateStockBatch.addAll(needUpdateExpiresStateToAbout);
+        }
+        return needUpdateStockBatch;
+    }
+
+    private List<StockBatch> updateStockState(List<StockBatch> needUpdateStockStateToShortage) {
+        List<StockBatch> needUpdateStockBatch = new ArrayList<>();
+        if(needUpdateStockStateToShortage.size() > INTEGER_ZERO) {
+            needUpdateStockBatch.addAll(needUpdateStockStateToShortage);
+        }
+        return needUpdateStockBatch;
     }
 
 

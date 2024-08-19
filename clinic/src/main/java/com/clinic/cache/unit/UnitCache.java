@@ -14,6 +14,8 @@ public interface UnitCache {
 
     List<Unit> getUnit(List<Integer> ids);
 
+    List<Unit> getUnit(Set<Integer> ids);
+
     Map<Integer, Unit> getUnitMap(List<Integer> ids);
 
     Map<Integer, Unit> getUnitMap(Set<Integer> ids);
