@@ -2,14 +2,14 @@ package com.bbs.financial.api.note.delete;
 
 import com.bbs.Result;
 
-import com.bbs.financial.entity.CertificateAbstract;
+import com.bbs.financial.controller.CertificateController;
 import com.bbs.financial.entity.Note;
-import com.bbs.financial.service.CertificateAbstractService;
-import com.bbs.financial.service.CertificateService;
 import com.bbs.financial.service.NoteService;
+import com.bbs.financial.util.ORMUtil;
+import com.bbs.financial.util.SpringUtil;
+import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -24,10 +24,7 @@ public class DeleteNote {
     private DataSourceTransactionManager transactionManager;
 
     @Resource
-    private CertificateService certORM;
-
-    @Resource
-    private CertificateAbstractService abstORM;
+    private ApplicationContext appContext;
 
     @Resource
     private NoteService orm;
@@ -40,25 +37,14 @@ public class DeleteNote {
      */
     @DeleteMapping("/note/cert/{id}/{certId}")
     public Result<Boolean> removeCert(@PathVariable Long id, @PathVariable Long certId) {
-        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-        try {
-            //凭证相关删除
-            certORM.removeById(certId);
-            abstORM.lambdaUpdate()
-                    .eq(CertificateAbstract::getCertificateId, certId)
-                    .remove();
+        return ORMUtil.fastTran(() -> {
+            SpringUtil.getRespData(CertificateController.class, appContext, c -> c.remove(certId));
 
             orm.lambdaUpdate()
                     .set(Note::getCertificateId, null)
                     .eq(Note::getId, id)
                     .update();
-
-            transactionManager.commit(transaction);
-            return Result.success();
-        } catch (Exception e) {
-            transactionManager.rollback(transaction);
-            return Result.failed(e.getMessage());
-        }
+        }, transactionManager, transactionDefinition);
     }
 
     /**
@@ -68,14 +54,6 @@ public class DeleteNote {
      */
     @DeleteMapping("/note/{id}")
     public Result<Boolean> remove(@PathVariable Long id) {
-        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-        try {
-            orm.removeById(id);
-            transactionManager.commit(transaction);
-            return Result.success();
-        } catch (Exception e) {
-            transactionManager.rollback(transaction);
-            return Result.failed(e.getMessage());
-        }
+        return ORMUtil.fastTran(() -> orm.removeById(id), transactionManager, transactionDefinition);
     }
 }

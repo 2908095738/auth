@@ -198,7 +198,7 @@ public class AddCertByInvoice {
             if (StringUtils.isNotBlank(detail.getLoansMoney())) {
                 BigDecimal oriMoney = new BigDecimal(detail.getLoansMoney());
                 BigDecimal doneMoney = oriMoney.setScale(NumberUtils.INTEGER_ZERO, BigDecimal.ROUND_DOWN);
-                abst.setBorrowMoney(doneMoney.toString());
+                abst.setLoansMoney(doneMoney.toString());
             }
 
             abst.setAuxiliary(detail.getAuxiliary());

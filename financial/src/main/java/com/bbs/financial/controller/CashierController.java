@@ -107,52 +107,6 @@ public class CashierController {
     }
 
     /**
-     * 新增初始余额
-     *
-     * @param zhangHuId 账户id
-     * @param initMoney 初始余额
-     * @param dateLong  时间戳
-     */
-    @PutMapping("/initMoney/{zhangHuId}/{initMoney}/{dateLong}")
-    public Result<Boolean> addInitMoney(@PathVariable Long zhangHuId, @PathVariable String initMoney, @PathVariable Long dateLong) {
-        Long loginSetId = LoginUser.getLoginSetId();
-        Note tmpNote = noteService.selectJoinOne(Note.class, new MPJLambdaWrapper<Note>()
-                .eq(Note::getNoteType, INTEGER_ZERO)
-                .eq(Note::getZhId, zhangHuId)
-                .eq(Note::getAccountingSetId, loginSetId));
-        boolean isHas = Objects.nonNull(tmpNote);
-
-        if (Objects.isNull(tmpNote)) {
-            tmpNote = new Note();
-            tmpNote.setCertificateAbstract(StringTIP.INIT_MONEY);
-            tmpNote.setBorrowMoney(new BigDecimal(initMoney));
-            tmpNote.setDate(new Date(dateLong));
-            tmpNote.setCreateBy(LoginUser.getId());
-            tmpNote.setNoteType(INTEGER_ZERO);
-            tmpNote.setZhId(zhangHuId);
-            tmpNote.setAccountingSetId(loginSetId);
-        }
-
-
-        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-        try {
-            if (isHas)
-                noteService.lambdaUpdate()
-                        .set(Note::getBorrowMoney, new BigDecimal(initMoney))
-                        .eq(Note::getId, tmpNote.getId())
-                        .update();
-            else
-                noteService.save(tmpNote);
-
-            transactionManager.commit(transaction);
-            return Result.success();
-        } catch (Exception e) {
-            transactionManager.rollback(transaction);
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
      * 获取初始余额
      *
      * @param zhangHuId 账户id
@@ -195,7 +149,7 @@ public class CashierController {
         //凭证摘要列表排序
 //        sortByNoteList(certificatePage.getRecords());
 
-        Long oriMoney = getOriMoney(zhangHuId, startDateLong).getData();
+        Long oriMoney = Long.valueOf(getOriMoney(zhangHuId, startDateLong).getData());
         initLessMoney(certificatePage.getRecords(), oriMoney);
 
         // 获取【创建用户】&&【审核用户】的 userId Set
@@ -285,7 +239,7 @@ public class CashierController {
      * @param date      时间戳字符串
      */
     @GetMapping("/cert/oriMoney")
-    public Result<Long> getOriMoney(Long zhangHuId, @RequestParam(name = "date", required = false) Long date) {
+    public Result<String> getOriMoney(Long zhangHuId, @RequestParam(name = "date", required = false) Long date) {
         //计算期初余额
         List<Note> tmpList = noteService.listNote(INTEGER_ZERO, INTEGER_ZERO,
                 Collections.singletonList(zhangHuId),
@@ -293,15 +247,15 @@ public class CashierController {
                 date, null, null,
                 Boolean.FALSE, Boolean.FALSE).getRecords();
 
-        long oriMoeny = 0L;
+        BigDecimal oriMoeny = new BigDecimal(getInitMoney(zhangHuId).getData());
         for (Note note : tmpList) {
             if (!ObjectUtils.isEmpty(note.getBorrowMoney()))
-                oriMoeny = oriMoeny + note.getBorrowMoney().longValue();
+                oriMoeny = oriMoeny.add(note.getBorrowMoney());
             if (!ObjectUtils.isEmpty(note.getLoansMoney()))
-                oriMoeny = oriMoeny - note.getLoansMoney().longValue();
+                oriMoeny = oriMoeny.subtract(note.getLoansMoney());
         }
 
-        return Result.success(oriMoeny);
+        return Result.success(oriMoeny.toString());
     }
 
     /**
@@ -335,7 +289,7 @@ public class CashierController {
                 startDateLong, endDateLong,
                 certificateAbstract, heSubjName, remark, makeName).getData().getRecords();
 
-        Long oriMoney = getOriMoney(zhangHuId, startDateLong).getData();
+        Long oriMoney = Long.valueOf(getOriMoney(zhangHuId, startDateLong).getData());
         Function<List<NoteDto>, List<ExcelNoteDto>> initExcelDataFunc = d -> {
             List<ExcelNoteDto> datas = getExcelDatasByNote(d, oriMoney);
             initZhByNote(datas, LoginUser.getLoginSetId());

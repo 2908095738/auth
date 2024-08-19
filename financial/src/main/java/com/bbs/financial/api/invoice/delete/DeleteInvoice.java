@@ -1,11 +1,14 @@
 package com.bbs.financial.api.invoice.delete;
 
 import com.bbs.Result;
+import com.bbs.financial.controller.CertificateController;
 import com.bbs.financial.entity.*;
 import com.bbs.financial.service.*;
+import com.bbs.financial.util.ORMUtil;
+import com.bbs.financial.util.SpringUtil;
+import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -19,13 +22,7 @@ public class DeleteInvoice {
     private DataSourceTransactionManager transactionManager;
 
     @Resource
-    private CertificateService certORM;
-
-    @Resource
-    private CertificateAbstractService abstORM;
-
-    @Resource
-    private CertificateFileService fileORM;
+    private ApplicationContext appContext;
 
     @Resource
     private InvoiceService orm;
@@ -35,8 +32,7 @@ public class DeleteInvoice {
 
     @DeleteMapping("/invoice/{id}")
     public Result<Boolean> remove(@PathVariable Long id) {
-        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-        try {
+        return ORMUtil.fastTran(() -> {
             orm.lambdaUpdate()
                     .eq(Invoice::getId, id)
                     .remove();
@@ -44,27 +40,13 @@ public class DeleteInvoice {
             detailORM.lambdaUpdate()
                     .eq(InvoiceDetail::getInvoiceId, id)
                     .remove();
-
-            transactionManager.commit(transaction);
-            return Result.success();
-        } catch (Exception e) {
-            transactionManager.rollback(transaction);
-            return Result.failed(e.getMessage());
-        }
+        }, transactionManager, transactionDefinition);
     }
 
     @DeleteMapping("/invoice/cert/{id}/{certId}")
     public Result<Boolean> removeCert(@PathVariable Long id, @PathVariable Long certId) {
-        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-        try {
-            //凭证相关删除
-            certORM.removeById(certId);
-            abstORM.lambdaUpdate()
-                    .eq(CertificateAbstract::getCertificateId, certId)
-                    .remove();
-            fileORM.lambdaUpdate()
-                    .eq(CertificateFile::getCertificateId, certId)
-                    .remove();
+        return ORMUtil.fastTran(() -> {
+            SpringUtil.getRespData(CertificateController.class, appContext, c -> c.remove(certId));
 
             //修改发票
             orm.lambdaUpdate()
@@ -72,12 +54,6 @@ public class DeleteInvoice {
                     .set(Invoice::getTempName, null)
                     .eq(Invoice::getId, id)
                     .update();
-
-            transactionManager.commit(transaction);
-            return Result.success();
-        } catch (Exception e) {
-            transactionManager.rollback(transaction);
-            return Result.failed(e.getMessage());
-        }
+        }, transactionManager, transactionDefinition);
     }
 }
