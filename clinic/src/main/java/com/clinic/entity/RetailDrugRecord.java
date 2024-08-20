@@ -4,10 +4,11 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
-import lombok.Data;
 
 /**
  * 零售：关联药品记录
@@ -142,6 +143,12 @@ public class RetailDrugRecord implements Serializable {
     @TableField(exist = false)
     private RetailRecord retailRecord;
 
+    /**
+     * 是否是库存
+     */
+    @TableField(exist = false)
+    private Boolean isStock;
+
 
     public void fillStockBatchInfo(StockBatch stockBatch) {
         this.name = stockBatch.getStock().getName();
@@ -159,4 +166,12 @@ public class RetailDrugRecord implements Serializable {
         this.stockUnitId = stockBatch.getUnitId();
     }
 
+    public void fillDrugInfo(Drug drug) {
+        this.name = drug.getName();
+        this.approvalNumber = drug.getApprovalNumber();
+        this.manufacturer = drug.getManufacturer();
+        this.dosageForm = drug.getType();
+        this.spec = drug.getSpec();
+
+    }
 }

@@ -156,6 +156,7 @@ public class Search {
 
             PrescriptionSearchDrugVO prescriptionSearchDrugVO = converter.toPrescriptionSearchDrugVO(stockBatch);
             prescriptionSearchDrugVO.setIsStock(true);
+            prescriptionSearchDrugVO.setStockNumber(stockBatch.getNumber());
             prescriptionSearchDrugVO.setStockNumberUnit(stockBatch.getUnit().getName());
             prescriptionSearchDrugVO.setExpiryDate(DateUtil.format(stockBatch.getExpiryDate(), "yyyy/MM/dd"));
             List<PrescriptionSearchDrugVO.Unit> voUnits = prescriptionSearchDrugVO.getUnits();

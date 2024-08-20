@@ -1,13 +1,16 @@
 package com.clinic.app.retail;
 
+import cn.hutool.core.collection.CollUtil;
 import com.bbs.Result;
 import com.clinic.converter.PatientConverter;
 import com.clinic.converter.RetailConverter;
 import com.clinic.dto.param.AddRetailParams;
+import com.clinic.entity.Drug;
 import com.clinic.entity.Patient;
 import com.clinic.entity.RetailDrugRecord;
 import com.clinic.entity.RetailRecord;
 import com.clinic.entity.StockBatch;
+import com.clinic.service.DrugService;
 import com.clinic.service.PatientService;
 import com.clinic.service.RetailDrugRecordService;
 import com.clinic.service.RetailRecordService;
@@ -31,9 +34,12 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.clinic.app.retail.Method.*;
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 @Slf4j
 @RestController
@@ -60,6 +66,9 @@ public class Add {
 
     @Resource(name = "protoStuffTemplate")
     private RedisTemplate<String, String> redis;
+
+    @Resource
+    private DrugService drugService;
 
     private static final String ADD_RETAIL_KEY = "lock_add_retail_lock";
 
@@ -109,23 +118,31 @@ public class Add {
         retailRecord.setId(patient.getId());
 
         if(updateTargetStockIsPresent(params, stockBatches)) {
+            Map<Long, StockBatch> stockBatcheMap = stockBatches.stream().collect(Collectors.toMap(StockBatch::getId, stockBatch -> stockBatch));
 
             List<StockBatch> waitUpdateStockBatch = new ArrayList<>(stockBatches.size());
-            for (int index = 0; index < stockBatches.size(); index++) {
+            for (int index = 0; index < retailDrugRecords.size(); index++) {
                 RetailDrugRecord retailDrugRecord = retailDrugRecords.get(index);
-                StockBatch stockBatch = stockBatches.get(index);
 
-                retailDrugRecord.fillStockBatchInfo(stockBatch);
+                if(nonNull(retailDrugRecord.getIsStock())&& retailDrugRecord.getIsStock()) {
+                    StockBatch stockBatch = stockBatcheMap.get(retailDrugRecord.getStockBatchId());
+                    retailDrugRecord.fillStockBatchInfo(stockBatch);
 
-                long number = computeSellAfterStockNumber(retailDrugRecord, stockBatch);
+                    long number = computeSellAfterStockNumber(retailDrugRecord, stockBatch);
 
-                Preconditions.checkArgument(sellAfterStockNumberIsNormal(number), "库存数量不足，无法执行操作");
+                    Preconditions.checkArgument(sellAfterStockNumberIsNormal(number), "库存数量不足，无法执行操作");
 
-                stockBatch.setNumber(number);
-                waitUpdateStockBatch.add(stockBatch);
+                    stockBatch.setNumber(number);
+
+                    waitUpdateStockBatch.add(stockBatch);
+                }else{
+                    Drug drug = drugService.getById(retailDrugRecord.getStockBatchId());
+                    retailDrugRecord.fillDrugInfo(drug);
+                }
             }
-
-            if(!stockService.update(waitUpdateStockBatch)) throw new DatabaseException("库存数量更新失败");
+            if(CollUtil.isNotEmpty(waitUpdateStockBatch)){
+                if(!stockService.update(waitUpdateStockBatch)) throw new DatabaseException("库存数量更新失败");
+            }
 
             if(!recordService.save(retailRecord)) throw new DatabaseException("零售记录入库失败");
 

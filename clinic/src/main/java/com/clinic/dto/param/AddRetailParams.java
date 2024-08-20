@@ -113,5 +113,10 @@ public class AddRetailParams {
          * 备注
          */
         private String remark;
+
+        /**
+         * 是否是库存
+         */
+        private Boolean isStock;
     }
 }
