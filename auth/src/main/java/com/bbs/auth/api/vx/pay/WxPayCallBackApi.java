@@ -42,16 +42,16 @@ public class WxPayCallBackApi {
         Transaction transaction;
         try {
             transaction = parser.parse(requestParam, Transaction.class);
+            log.info("transaction: {}", transaction);
+            if (transaction.getTradeState().equals(Transaction.TradeStateEnum.SUCCESS)) {
+                // 处理支付成功的业务逻辑
+
+                // 处理成功，返回 200 OK 状态码
+                return ResponseEntity.status(HttpStatus.OK).build();
+            }
         } catch (ValidationException e) {
             log.error("sign verification failed", e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        log.info("transaction: {}", transaction);
-        if (transaction.getTradeState().equals(Transaction.TradeStateEnum.SUCCESS)) {
-            // 处理支付成功的业务逻辑
-
-            // 处理成功，返回 200 OK 状态码
-            return ResponseEntity.status(HttpStatus.OK).build();
         }
         // 默认处理失败，返回 4xx/5xx 的状态码，例如 500 INTERNAL_SERVER_ERROR
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

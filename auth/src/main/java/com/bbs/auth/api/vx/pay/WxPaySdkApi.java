@@ -31,12 +31,12 @@ public class WxPaySdkApi {
 
 
     @GetMapping("/weixin/clinic/pay/qrcode")
-    public Result<Map<String, Object>> getPayCode() {
+    public Result<Map<String, Object>> getPayCode(Integer total) {
         // 初始化服务
         service = new NativePayService.Builder().config(config.getWxMlConfig()).build();
         try {
             String orderId = "tradeNo"+System.currentTimeMillis()/1000+config.merchantId;
-            PrepayResponse prepay = prepay(orderId);
+            PrepayResponse prepay = prepay(orderId,total);
             Map<String, Object> resultMap = new HashMap<>();
             resultMap.put("orderId", orderId);
             resultMap.put("codeUrl", prepay.getCodeUrl());
@@ -85,12 +85,12 @@ public class WxPaySdkApi {
     /**
      * Native支付预下单
      */
-    public PrepayResponse prepay(String outTradeNo) {
+    public PrepayResponse prepay(String outTradeNo, Integer total) {
         PrepayRequest request = new PrepayRequest();
         request.setAppid(config.appId);
         request.setMchid(config.merchantId);
         Amount amount = new Amount();
-        amount.setTotal(1);
+        amount.setTotal(total);
         request.setAmount(amount);
         request.setDescription("码良科技-支付-诊所系统");
         request.setAttach("码良科技-支付-诊所系统");

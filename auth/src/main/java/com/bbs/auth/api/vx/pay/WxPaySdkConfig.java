@@ -19,7 +19,7 @@ public class WxPaySdkConfig implements InitializingBean {
 
     /** 商户号 */
     @Value(value = "${wx.pay.merchantId}")
-    public String merchantId;//"1681624897"
+    public String merchantId;//"1683753833"
 
     /** 商户API私钥路径 */
     @Value(value = "${wx.pay.privateKeyPath}")
@@ -27,14 +27,14 @@ public class WxPaySdkConfig implements InitializingBean {
 
     /** 商户证书序列号 */
     @Value(value = "${wx.pay.merchantSerialNumber}")
-    public String merchantSerialNumber;//"5721D46FCEB001585844D195A3CBF2CD37402052"
+    public String merchantSerialNumber;//"30F598E21FFCC168EC548ED29386EC8573BD41A4"
 
     /** 商户APIV3密钥 */
     @Value(value = "${wx.pay.apiV3Key}")
-    public String apiV3Key;//"jhdfhen274612BDGFSndcVBS6BD5r4ds"
-//
+    public String apiV3Key;//"sgdfhen274612BDGFSndcVBS6BD5r4sf"
+
     private Config wxMlConfig;
-//
+
     @Override
     public void afterPropertiesSet() throws Exception {
         Security.setProperty("crypto.policy", "unlimited");
