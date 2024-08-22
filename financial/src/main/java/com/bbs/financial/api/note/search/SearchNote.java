@@ -42,11 +42,15 @@ public class SearchNote {
      */
     @GetMapping("/note/{id}")
     public Result<NoteDto> search(@PathVariable Long id) {
-        Note tmpNote = orm.selectJoinOne(Note.class, new MPJLambdaWrapper<Note>().selectAssociation(Account.class, Note::getHeAccount).selectAssociation(ZhangHu.class, Note::getZhangHu)
+        Note tmpNote = orm.selectJoinOne(Note.class,
+                new MPJLambdaWrapper<Note>()
+                        .selectAssociation(Account.class, Note::getHeAccount)
+                        .selectAssociation(ZhangHu.class, Note::getZhangHu)
 
-                .leftJoin(Account.class, Account::getId, Note::getHeAccountId).leftJoin(ZhangHu.class, ZhangHu::getId, Note::getZhId)
+                        .leftJoin(Account.class, Account::getId, Note::getHeAccountId)
+                        .leftJoin(ZhangHu.class, ZhangHu::getId, Note::getZhId)
 
-                .eq(Note::getId, id));
+                        .eq(Note::getId, id));
 
         //初始化日记账的用户相关
         List<Note> tmpList = new ArrayList();
@@ -54,13 +58,11 @@ public class SearchNote {
         fillUser(tmpList, searchIdUserMap(filterUserIds(tmpList)));
 
         //初始化实例域
-        List<NoteDto> tmpDtoList = new ArrayList<>();
-        NoteDto dto = getNoteDto(tmpNote);
-        tmpDtoList.add(dto);
+        List<NoteDto> tmpDtoList = Collections.singletonList(getNoteDto(tmpNote));
         BigDecimal oriMoney = getOriMoney(tmpNote.getZhId(), tmpNote.getDate().getTime(), INTEGER_ZERO, null, null);
         initMoney(tmpList, tmpDtoList, oriMoney);
 
-        return Result.success(dto);
+        return Result.success(tmpDtoList.get(0));
     }
 
     /**
@@ -79,13 +81,13 @@ public class SearchNote {
      * @param makeName            制单人
      */
     @GetMapping("/note/list")
-    public Result<Page<NoteDto>> search(@RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size, @RequestParam Long zhangHuId, @RequestParam boolean isAllZh, @RequestParam(name = "voucherStatus", required = false) Integer voucherStatus, @RequestParam(name = "startDate", required = false) Long startDateLong, @RequestParam(name = "endDate", required = false) Long endDateLong, @RequestParam(name = "certificateAbstract", required = false) String certificateAbstract, @RequestParam(name = "heSubjName", required = false) String heSubjName, @RequestParam(name = "remark", required = false) String remark, @RequestParam(name = "makeName", required = false) String makeName) {
-        Page<Note> tmpPage = orm.listNote(current, size, Collections.singletonList(zhangHuId), voucherStatus, INTEGER_ONE, certificateAbstract, remark, null, startDateLong, endDateLong, true, true);
-
-        //账户启用状态过滤
-        tmpPage.getRecords().removeIf(n -> n.getZhangHu().getIsActive().equals(isAllZh));
-        if (tmpPage.getRecords().isEmpty())
-            return Result.success(new Page<NoteDto>().setCurrent(current).setSize(size).setTotal(INTEGER_ZERO).setRecords(Collections.emptyList()));
+    public Result<Page<NoteDto>> search(@RequestParam(defaultValue = "1") Integer current, @RequestParam(defaultValue = "10") Integer size,
+                                        @RequestParam Long zhangHuId, @RequestParam Boolean isAllZh,
+                                        @RequestParam(name = "voucherStatus", required = false) Integer voucherStatus,
+                                        @RequestParam(name = "startDate", required = false) Long startDateLong, @RequestParam(name = "endDate", required = false) Long endDateLong,
+                                        @RequestParam(name = "certificateAbstract", required = false) String certificateAbstract, @RequestParam(name = "heSubjName", required = false) String heSubjName,
+                                        @RequestParam(name = "remark", required = false) String remark, @RequestParam(name = "makeName", required = false) String makeName) {
+        Page<Note> tmpPage = orm.listNote(current, size, Collections.singletonList(zhangHuId), isAllZh, voucherStatus, INTEGER_ONE, certificateAbstract, remark, null, startDateLong, endDateLong, true, true);
 
         //初始化日记账的用户相关
         fillUser(tmpPage.getRecords(), searchIdUserMap(filterUserIds(tmpPage.getRecords())));
@@ -178,7 +180,7 @@ public class SearchNote {
      */
     private BigDecimal getOriMoney(Long zhangHuId, Long date, Integer voucherStatus, String certificateAbstract, String remark) {
         //计算期初余额
-        List<Note> tmpList = orm.listNote(INTEGER_ZERO, INTEGER_ZERO, Collections.singletonList(zhangHuId), voucherStatus, INTEGER_ONE, certificateAbstract, remark, date, null, null, Boolean.FALSE, Boolean.FALSE).getRecords();
+        List<Note> tmpList = orm.listNote(INTEGER_ZERO, INTEGER_ZERO, Collections.singletonList(zhangHuId), null, voucherStatus, INTEGER_ONE, certificateAbstract, remark, date, null, null, Boolean.FALSE, Boolean.FALSE).getRecords();
         BigDecimal oriMoeny = BigDecimal.ZERO;
         for (Note note : tmpList) {
             if (!ObjectUtils.isEmpty(note.getBorrowMoney())) oriMoeny = oriMoeny.add(note.getBorrowMoney());
@@ -204,10 +206,7 @@ public class SearchNote {
         if (!priceTypeIdColl.isEmpty())
             nameByIdOfMoney = priceTypeService.listByIds(priceTypeIdColl).stream().collect(Collectors.toMap(PriceType::getId, PriceType::getName));
 
-
-        for (int i = 0; i < dtoList.size(); i++) {
-            NoteDto dto = dtoList.get(i);
-
+        for (NoteDto dto : dtoList) {
             dto.setStartMoney(oriMoney);
 
             if (!priceTypeIdColl.isEmpty()) dto.setMoneyName(nameByIdOfMoney.get(dto.getMoneyId()));

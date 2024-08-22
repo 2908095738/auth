@@ -18,6 +18,7 @@ import javax.annotation.Resource;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.Objects;
 
 import static java.util.Objects.nonNull;
 
@@ -34,7 +35,7 @@ public class NoteServiceImpl extends MPJBaseServiceImpl<NoteMapper, Note>
     private ZhangHuService zhService;
 
     @Override
-    public Page<Note> listNote(Integer current, Integer size, Collection<Long> zhIdList, Integer voucherStatus, Integer noteType, String certificateAbstract, String remark, Long dateLong, Long startDateLong, Long endDateLong, boolean isMonth, boolean isPage) {
+    public Page<Note> listNote(Integer current, Integer size, Collection<Long> zhIdList, Boolean isAllZh, Integer voucherStatus, Integer noteType, String certificateAbstract, String remark, Long dateLong, Long startDateLong, Long endDateLong, boolean isMonth, boolean isPage) {
         //TODO L SQL合一
 
         //结束时间时间戳转成当日最后一秒的时间戳
@@ -49,10 +50,10 @@ public class NoteServiceImpl extends MPJBaseServiceImpl<NoteMapper, Note>
 
         boolean nonZhId = !isZhId(zhIdList);
         if (isMonth && nonZhId && isPage) {
-            return selectJoinListPage(new Page<>(current, size), Note.class, getConditionByNoteList(wrappers, !nonZhId, zhIdList, voucherStatus, noteType, certificateAbstract, remark, isMonth, dateLong, startDateLong, endDateLong));
+            return selectJoinListPage(new Page<>(current, size), Note.class, getConditionByNoteList(wrappers, !nonZhId, zhIdList, isAllZh, voucherStatus, noteType, certificateAbstract, remark, isMonth, dateLong, startDateLong, endDateLong));
         } else {
             return new Page<Note>().setRecords(selectJoinList(Note.class,
-                    getConditionByNoteList(wrappers, !nonZhId, zhIdList, voucherStatus, noteType, certificateAbstract, remark, isMonth, dateLong, startDateLong, endDateLong)));
+                    getConditionByNoteList(wrappers, !nonZhId, zhIdList, isAllZh, voucherStatus, noteType, certificateAbstract, remark, isMonth, dateLong, startDateLong, endDateLong)));
         }
     }
 
@@ -89,6 +90,7 @@ public class NoteServiceImpl extends MPJBaseServiceImpl<NoteMapper, Note>
      *
      * @param isZhId              有账户id
      * @param zhIdList            账户id列表
+     * @param isAllZh             是否显示所有账户：true: 显示所有;false: 显示启用;
      * @param voucherStatus       凭证状态：0.所有凭证;1.未生成凭证;2.已生成凭证;
      * @param noteType            日记账类型：1.普通类型;0.初始金额
      * @param certificateAbstract 摘要
@@ -98,9 +100,10 @@ public class NoteServiceImpl extends MPJBaseServiceImpl<NoteMapper, Note>
      * @param startDateLong       起始时间时间戳
      * @param endDateLong         结束时间时间戳
      */
-    private MPJLambdaWrapper<Note> getConditionByNoteList(MPJLambdaWrapper<Note> wrappers, boolean isZhId, Collection<Long> zhIdList, Integer voucherStatus, Integer noteType, String certificateAbstract, String remark, boolean isMonth, Long dateLong, Long startDateLong, Long endDateLong) {
+    private MPJLambdaWrapper<Note> getConditionByNoteList(MPJLambdaWrapper<Note> wrappers, boolean isZhId, Collection<Long> zhIdList, Boolean isAllZh, Integer voucherStatus, Integer noteType, String certificateAbstract, String remark, boolean isMonth, Long dateLong, Long startDateLong, Long endDateLong) {
         return wrappers
                 .eq(Note::getAccountingSetId, LoginUser.getLoginSetId())
+                .eq(Objects.nonNull(isAllZh)&&!isAllZh, ZhangHu::getIsActive, NumberUtils.INTEGER_ONE)
                 .in(isZhId, Note::getZhId, zhIdList)
 
                 //凭证状态查询条件

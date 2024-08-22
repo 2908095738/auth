@@ -102,7 +102,7 @@ public class CashierController {
     @GetMapping("/isOriMoney")
     public Result<Boolean> isOriMoney(@RequestParam Long zhangHuId, @RequestParam Long dateLong) {
         return Result.success(
-                noteService.listNote(INTEGER_ZERO, INTEGER_ZERO, Collections.singletonList(zhangHuId), INTEGER_ZERO, INTEGER_ONE,
+                noteService.listNote(INTEGER_ZERO, INTEGER_ZERO, Collections.singletonList(zhangHuId), null, INTEGER_ZERO, INTEGER_ONE,
                         null, null, dateLong, null, null, false, false).getRecords().isEmpty());
     }
 
@@ -242,7 +242,7 @@ public class CashierController {
     public Result<String> getOriMoney(Long zhangHuId, @RequestParam(name = "date", required = false) Long date) {
         //计算期初余额
         List<Note> tmpList = noteService.listNote(INTEGER_ZERO, INTEGER_ZERO,
-                Collections.singletonList(zhangHuId),
+                Collections.singletonList(zhangHuId), null,
                 INTEGER_ZERO, INTEGER_ONE, null, null,
                 date, null, null,
                 Boolean.FALSE, Boolean.FALSE).getRecords();
@@ -289,7 +289,7 @@ public class CashierController {
                 startDateLong, endDateLong,
                 certificateAbstract, heSubjName, remark, makeName).getData().getRecords();
 
-        Long oriMoney = Long.valueOf(getOriMoney(zhangHuId, startDateLong).getData());
+        BigDecimal oriMoney = new BigDecimal(getOriMoney(zhangHuId, startDateLong).getData());
         Function<List<NoteDto>, List<ExcelNoteDto>> initExcelDataFunc = d -> {
             List<ExcelNoteDto> datas = getExcelDatasByNote(d, oriMoney);
             initZhByNote(datas, LoginUser.getLoginSetId());
@@ -349,7 +349,7 @@ public class CashierController {
      * @param noteList 日记账列表
      * @param oriMoney 期初余额
      */
-    private List<ExcelNoteDto> getExcelDatasByNote(List<NoteDto> noteList, Long oriMoney) {
+    private List<ExcelNoteDto> getExcelDatasByNote(List<NoteDto> noteList, BigDecimal oriMoney) {
         List<ExcelNoteDto> result = new ArrayList<>();
 
         for (NoteDto note : noteList)
@@ -397,7 +397,7 @@ public class CashierController {
      * @param dataList 日记账表格数据列表
      * @param oriMoney 期初余额
      */
-    private void initFlagNoteByExcel(List<ExcelNoteDto> dataList, Long oriMoney) {
+    private void initFlagNoteByExcel(List<ExcelNoteDto> dataList, BigDecimal oriMoney) {
         //合计数据计算
         BigDecimal borrowTotal = dataList.stream().map(ExcelNoteDto::getBorrowMoney).filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal loansTotal = dataList.stream().map(ExcelNoteDto::getLoansMoney).filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -415,7 +415,7 @@ public class CashierController {
         //起始标识符赋值
         ExcelNoteDto startData = new ExcelNoteDto();
         startData.setCertificateAbstract("初始余额");
-        startData.setLessMoney(BigDecimal.valueOf(oriMoney));
+        startData.setLessMoney(oriMoney);
         dataList.add(0, startData);
     }
 
@@ -658,7 +658,7 @@ public class CashierController {
 
             //期初余额计算
             List<Note> noteList2Ori = noteService.listNote(current, size,
-                    subjMap.keySet(), INTEGER_ONE, INTEGER_ONE,
+                    subjMap.keySet(), null, INTEGER_ONE, INTEGER_ONE,
                     null, null,
                     startDateLong, null, null,
                     Boolean.FALSE, Boolean.TRUE).getRecords();
@@ -731,13 +731,13 @@ public class CashierController {
         List<Note> result;
         if (Objects.nonNull(zhIdList) && !zhIdList.isEmpty()) {
             result = noteService.listNote(current, size,
-                    zhIdList, INTEGER_ZERO, INTEGER_ONE,
+                    zhIdList, null, INTEGER_ZERO, INTEGER_ONE,
                     null, null,
                     null, startDateLong, endDateLong,
                     Boolean.TRUE, Boolean.TRUE).getRecords();
         } else
             result = noteService.listNote(INTEGER_ZERO, INTEGER_ZERO,
-                    zhIdList, INTEGER_ZERO, INTEGER_ONE,
+                    zhIdList, null, INTEGER_ZERO, INTEGER_ONE,
                     null, null,
                     null, startDateLong, endDateLong,
                     true, false).getRecords();
@@ -1010,13 +1010,13 @@ public class CashierController {
 
         //不同时间区间的凭证列表
         List<Note> noteListByBefore = noteService.listNote(current, size,
-                Collections.emptyList(), INTEGER_ONE, INTEGER_ONE,
+                Collections.emptyList(), null, INTEGER_ONE, INTEGER_ONE,
                 null, null,
                 startDateLong, null, null,
                 false, true
         ).getRecords();
         List<Note> noteListByNow = noteService.listNote(current, size,
-                Collections.emptyList(), INTEGER_ONE, INTEGER_ONE,
+                Collections.emptyList(), null, INTEGER_ONE, INTEGER_ONE,
                 null, null,
                 null, startDateLong, endDateLong,
                 true, false).getRecords();
