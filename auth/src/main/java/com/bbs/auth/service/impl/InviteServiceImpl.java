@@ -1,0 +1,17 @@
+package com.bbs.auth.service.impl;
+
+import com.bbs.auth.entity.Invite;
+import com.bbs.auth.service.InviteService;
+import com.bbs.auth.mapper.InviteMapper;
+import com.github.yulichang.base.MPJBaseServiceImpl;
+import org.springframework.stereotype.Service;
+
+/**
+* @author Mafty
+* @description 针对表【invite(邀请)】的数据库操作Service实现
+* @createDate 2024-08-20 15:28:06
+*/
+@Service
+public class InviteServiceImpl extends MPJBaseServiceImpl<InviteMapper, Invite>
+    implements InviteService{
+}

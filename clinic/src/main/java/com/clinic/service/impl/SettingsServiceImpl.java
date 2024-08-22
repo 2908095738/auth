@@ -3,6 +3,8 @@ package com.clinic.service.impl;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.Result;
+import com.bbs.api.auth.UserAPI;
+import com.bbs.enums.CodeEnum;
 import com.clinic.converter.SettingsConverter;
 import com.clinic.dto.param.AddSettingsParam;
 import com.clinic.dto.param.UpdateSettingsParam;
@@ -11,6 +13,8 @@ import com.clinic.mapper.SettingsMapper;
 import com.clinic.service.SettingsService;
 import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
+import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -29,6 +33,9 @@ import static java.util.Objects.nonNull;
 @Service
 public class SettingsServiceImpl extends ServiceImpl<SettingsMapper, Settings>
     implements SettingsService {
+
+    @DubboReference
+    private UserAPI api;
 
     @Resource
     private SettingsConverter settingsConverter;
@@ -52,6 +59,13 @@ public class SettingsServiceImpl extends ServiceImpl<SettingsMapper, Settings>
         settings.setUserId(userId);
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
+            settings.setInviteUid(api.getUidByInvite(param.getInviteCode()));
+            if (Objects.nonNull(settings.getInviteUid())){
+                Long uid = settings.getInviteUid();
+                if (uid.equals(NumberUtils.LONG_MINUS_ONE))
+                    return Result.failed(CodeEnum.FAILED_REG_INVITE_NOT_AVAILABLE.getMsg());
+            }
+
             boolean save = save(settings);
             if(hasKey(getKey(userId))){
                 //同步添加redis中的数据
@@ -93,7 +107,8 @@ public class SettingsServiceImpl extends ServiceImpl<SettingsMapper, Settings>
     public Settings getByUserId() {
         Long userId = LoginUser.getId();
         //先查询redis中的数据
-        String str = redis.opsForValue().get(getKey(userId));
+//        String str = redis.opsForValue().get(getKey(userId));
+        String str=null;
         //不存在再从数据库中取
         if(Objects.isNull(str)){
             Settings one = lambdaQuery().eq(Settings::getUserId, userId).one();

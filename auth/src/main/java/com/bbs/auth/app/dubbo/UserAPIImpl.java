@@ -4,19 +4,23 @@ import com.bbs.api.auth.User;
 import com.bbs.api.auth.UserAPI;
 import com.bbs.auth.cache.BindLoginCompanyCache;
 import com.bbs.auth.converter.UserConverter;
+import com.bbs.auth.entity.Invite;
+import com.bbs.auth.service.InviteService;
 import com.bbs.auth.service.TokenService;
 import com.bbs.auth.service.UserService;
+import com.bbs.exception.FailInviteException;
 import com.bbs.exception.ReLoginException;
 import com.bbs.vo.UserVO;
 import com.bbs.util.BeanUtils;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -32,6 +36,10 @@ public class UserAPIImpl implements UserAPI {
 
     @Resource
     private TokenService tokenService;
+
+    @Resource
+    private InviteService inviteService;
+
     @Resource
     private BindLoginCompanyCache bindLoginCompanyCache;
 
@@ -43,6 +51,29 @@ public class UserAPIImpl implements UserAPI {
             return converter.toAPIUser(vo);
         } catch (ReLoginException ignored) {
             return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Override
+    public Long getUidByInvite(String inviteCode) {
+        try {
+            if (StringUtils.isBlank(inviteCode))//无邀请码注册
+                return null;
+
+            Long userId = inviteService.selectJoinOne(Long.class, new MPJLambdaWrapper<Invite>()
+                    .select(Invite::getUserId)
+                    .eq(Invite::getInviteCode,inviteCode)
+                    .ge(Invite::getValidEndTime,new Date()));
+
+            if (Objects.nonNull(userId))
+                return userId;
+            else//邀请码过期
+                throw new FailInviteException();
+        } catch (FailInviteException ignored) {
+            return NumberUtils.LONG_MINUS_ONE;
         } catch (Exception e) {
             e.printStackTrace();
             return null;

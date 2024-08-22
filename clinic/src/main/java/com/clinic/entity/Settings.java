@@ -81,6 +81,12 @@ public class Settings implements Serializable {
     @TableField(value = "physician")
     private String physician;
 
+    /**
+     * 邀请方用户id
+     */
+    @TableField(value = "invite_uid")
+    private Long inviteUid;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

@@ -8,6 +8,12 @@ public interface UserAPI {
 
     User getUserByToken(String token);
 
+    /**
+     * 根据邀请码返回用户
+     * @param inviteCode 邀请码
+     */
+    Long getUidByInvite(String inviteCode);
+
     List<User> getUserList(List<Long> ids);
 
     List<User> getUserList(Set<Long> ids);

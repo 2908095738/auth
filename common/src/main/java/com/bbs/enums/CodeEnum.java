@@ -26,6 +26,8 @@ public enum CodeEnum {
 
     FAILED_AUTH_PHONE_CODE_NOT_AVAILABLE(400, "短信验证码不可用"),
 
+    FAILED_REG_INVITE_NOT_AVAILABLE(400,"邀请码已过期"),
+
     // Login
     //-----------------------------------------------------------------------------------------------------------------
     FAILED_LOGIN_TYPE_NOT_AVAILABLE(400, "登录类型不可用"),
