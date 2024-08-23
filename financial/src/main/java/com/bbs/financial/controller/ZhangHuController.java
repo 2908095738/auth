@@ -74,13 +74,4 @@ public class ZhangHuController {
         zhangHuService.updateById(zhanghu);
         return success();
     }
-
-    /**
-     * 删除账户
-     */
-    @DeleteMapping("/{ids}")
-    public Result<Boolean> remove(@PathVariable List<Long> ids) {
-        zhangHuService.getBaseMapper().deleteBatchIds(ids);
-        return success();
-    }
 }

@@ -13,6 +13,8 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.Collections;
+import java.util.List;
 
 @RestController
 @RequestMapping
@@ -38,7 +40,7 @@ public class DeleteNote {
     @DeleteMapping("/note/cert/{id}/{certId}")
     public Result<Boolean> removeCert(@PathVariable Long id, @PathVariable Long certId) {
         return ORMUtil.fastTran(() -> {
-            SpringUtil.getRespData(CertificateController.class, appContext, c -> c.remove(certId));
+            SpringUtil.getRespData(CertificateController.class, appContext, c -> c.remove(Collections.singletonList(certId)));
 
             orm.lambdaUpdate()
                     .set(Note::getCertificateId, null)
@@ -50,10 +52,10 @@ public class DeleteNote {
     /**
      * 删除日记账
      *
-     * @param id 日记账id
+     * @param idList 日记账id列表
      */
-    @DeleteMapping("/note/{id}")
-    public Result<Boolean> remove(@PathVariable Long id) {
-        return ORMUtil.fastTran(() -> orm.removeById(id), transactionManager, transactionDefinition);
+    @DeleteMapping("/note/batch/{idList}")
+    public Result<Boolean> remove(@PathVariable List<Long> idList) {
+        return ORMUtil.fastTran(() -> orm.removeBatchByIds(idList), transactionManager, transactionDefinition);
     }
 }

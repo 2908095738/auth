@@ -85,14 +85,14 @@ public class CertificateController {
     /**
      * 删除记账凭证
      */
-    @DeleteMapping("/certificate/{id}")
-    public Result<Boolean> remove(@PathVariable Long id)
+    @DeleteMapping("/certificate/batch/{idList}")
+    public Result<Boolean> remove(@PathVariable List<Long> idList)
     {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            certificateService.removeById(id);
+            certificateService.removeBatchByIds(idList);
             certificateAbstractService.lambdaUpdate()
-                    .eq(CertificateAbstract::getCertificateId, id)
+                    .in(CertificateAbstract::getCertificateId, idList)
                     .remove();
             transactionManager.commit(transaction);
             return Result.success();

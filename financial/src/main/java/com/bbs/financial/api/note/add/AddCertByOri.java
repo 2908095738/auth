@@ -8,7 +8,9 @@ import com.bbs.financial.api.certificate.no.search.SearchCertificateNo;
 import com.bbs.financial.api.note.search.SearchOriByZh;
 import com.bbs.financial.controller.CertificateController;
 import com.bbs.financial.entity.Note;
+import com.bbs.financial.entity.ZhangHu;
 import com.bbs.financial.service.NoteService;
+import com.bbs.financial.service.ZhangHuService;
 import com.bbs.financial.util.LoginUser;
 import com.bbs.financial.util.ORMUtil;
 import com.bbs.financial.util.SpringUtil;
@@ -27,10 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static org.apache.commons.lang3.math.NumberUtils.*;
 
@@ -53,6 +52,9 @@ public class AddCertByOri {
     @Resource
     private NoteService noteORM;
 
+    @Resource
+    private ZhangHuService zhORM;
+
     private class StringTip {
         public static final String ABST = "初始金额";
 
@@ -69,6 +71,11 @@ public class AddCertByOri {
          * 开票日期
          */
         private Date openDate;
+
+        /**
+         * 是否有科目
+         */
+        private Boolean hasSubj;
 
         /**
          * 账户id
@@ -126,6 +133,14 @@ public class AddCertByOri {
             return Result.failed(idResult.getMsg());
 
         return ORMUtil.fastTran(() -> {
+            if (!param.getHasSubj()) {//账户没有设置科目，用初始金额凭证摘要中的科目赋值
+                Long subjId = param.getDetails().get(INTEGER_ZERO).getAccountId();
+                zhORM.lambdaUpdate()
+                        .set(ZhangHu::getSubjectsId, subjId)
+                        .eq(ZhangHu::getId, param.getZhId())
+                        .update();
+            }
+
             if (isHasNote)
                 noteORM.lambdaUpdate()
                         .set(Note::getHeAccountId, toDBNote.getHeAccountId())
@@ -189,7 +204,7 @@ public class AddCertByOri {
      */
     private boolean isDelCert(boolean isHasNote, Long certId) {
         if (isHasNote && Objects.nonNull(certId)) {
-            boolean isDone = SpringUtil.getRespData(CertificateController.class, appContext, c -> c.remove(certId));
+            boolean isDone = SpringUtil.getRespData(CertificateController.class, appContext, c -> c.remove(Collections.singletonList(certId)));
             if (!isDone)
                 return false;
         }

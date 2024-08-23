@@ -12,6 +12,7 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.Collections;
 
 @RequestMapping
 @RestController
@@ -46,7 +47,7 @@ public class DeleteInvoice {
     @DeleteMapping("/invoice/cert/{id}/{certId}")
     public Result<Boolean> removeCert(@PathVariable Long id, @PathVariable Long certId) {
         return ORMUtil.fastTran(() -> {
-            SpringUtil.getRespData(CertificateController.class, appContext, c -> c.remove(certId));
+            SpringUtil.getRespData(CertificateController.class, appContext, c -> c.remove(Collections.singletonList(certId)));
 
             //修改发票
             orm.lambdaUpdate()

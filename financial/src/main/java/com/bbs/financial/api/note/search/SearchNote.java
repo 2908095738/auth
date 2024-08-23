@@ -231,7 +231,7 @@ public class SearchNote {
      */
     @GetMapping("/hasNote/{zhId}")
     public Result<Boolean> hasNote(@PathVariable Long zhId) {
-        List<Note> tmp = orm.lambdaQuery().eq(Note::getZhId, zhId).list();
+        List<Note> tmp = orm.lambdaQuery().eq(Note::getZhId, zhId).eq(Note::getNoteType, INTEGER_ONE).list();
         return !tmp.isEmpty() ? Result.success(true) : Result.success(false);
     }
 }
