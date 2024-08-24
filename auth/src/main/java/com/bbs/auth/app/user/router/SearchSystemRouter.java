@@ -66,7 +66,10 @@ public class SearchSystemRouter {
 //        tryCreateSystemCompany(systemId, companyId);
         List<SystemRouter> systemRouters = searchRouter(systemId);
         if(!user.isSupperAdmin()&&CollUtil.isNotEmpty(systemRouters)){
-            systemRouters = systemRouters.stream().filter(o->!o.getId().equals(77L)&&!o.getId().equals(84L)).collect(Collectors.toList());
+            systemRouters = systemRouters.stream().filter(o->
+                    !o.getId().equals(77L)
+                    &&!o.getId().equals(84L)
+                    &&!o.getId().equals(100L)).collect(Collectors.toList());
             return Result.success(new VO(systemRouters, systemRouterService.toTree(systemRouters)));
         }
         return Result.success(new VO(systemRouters, systemRouterService.toTree(systemRouters)));
