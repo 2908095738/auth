@@ -7,6 +7,7 @@ import com.bbs.financial.api.certificate.add.AddCertificate;
 import com.bbs.financial.api.certificate.no.search.SearchCertificateNo;
 import com.bbs.financial.converter.InvoiceConverter;
 import com.bbs.financial.entity.Invoice;
+import com.bbs.financial.enums.CertTypeEnum;
 import com.bbs.financial.service.InvoiceService;
 import com.bbs.financial.util.LoginUser;
 import com.bbs.financial.util.SpringUtil;
@@ -159,6 +160,7 @@ public class AddCertByInvoice {
         param.setNo(getNo(openDate));
         param.setDate(openDate);
         param.setIsNeedCertId(true);
+        param.setType(CertTypeEnum.INVOICE.getType());
         param.setAbstracts(getAbst(detailList));
 
         return param;

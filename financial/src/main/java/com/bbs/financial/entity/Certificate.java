@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.bbs.api.auth.User;
 import com.bbs.enums.financial.CertificateWordEnum;
+import com.bbs.financial.enums.CertTypeEnum;
 import com.bbs.vo.Company;
 import com.github.yulichang.annotation.EntityMapping;
 import lombok.AllArgsConstructor;
@@ -92,10 +93,11 @@ public class Certificate implements Serializable {
     private Long updateBy;
 
     /**
-     * 凭证类型：1折旧凭证
+     * 凭证类型：{@link CertTypeEnum}
      */
     @TableField(value = "type")
-    private Integer type;
+    @JSONField(serialzeFeatures = SerializerFeature.WriteEnumUsingToString)
+    private CertTypeEnum type;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

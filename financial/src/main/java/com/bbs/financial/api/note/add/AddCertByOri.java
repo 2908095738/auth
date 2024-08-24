@@ -4,11 +4,12 @@ import com.bbs.Result;
 import com.bbs.enums.CodeEnum;
 import com.bbs.exception.BusinessException;
 import com.bbs.financial.api.certificate.add.AddCertificate;
+import com.bbs.financial.api.certificate.delete.DelCertificate;
 import com.bbs.financial.api.certificate.no.search.SearchCertificateNo;
 import com.bbs.financial.api.note.search.SearchOriByZh;
-import com.bbs.financial.controller.CertificateController;
 import com.bbs.financial.entity.Note;
 import com.bbs.financial.entity.ZhangHu;
+import com.bbs.financial.enums.CertTypeEnum;
 import com.bbs.financial.service.NoteService;
 import com.bbs.financial.service.ZhangHuService;
 import com.bbs.financial.util.LoginUser;
@@ -204,7 +205,8 @@ public class AddCertByOri {
      */
     private boolean isDelCert(boolean isHasNote, Long certId) {
         if (isHasNote && Objects.nonNull(certId)) {
-            boolean isDone = SpringUtil.getRespData(CertificateController.class, appContext, c -> c.remove(Collections.singletonList(certId)));
+            boolean isDone = SpringUtil.getRespData(DelCertificate.class, appContext,
+                    c -> c.remove(Collections.singletonList(new DelCertificate.DelParam(CertTypeEnum.NONE.getType(), certId))));
             if (!isDone)
                 return false;
         }
@@ -250,6 +252,7 @@ public class AddCertByOri {
         param.setNo(getNo(openDate));
         param.setDate(openDate);
         param.setIsNeedCertId(true);
+        param.setType(CertTypeEnum.ORI_NOTE.getType());
         param.setAbstracts(getAbst(detailList));
 
         return param;

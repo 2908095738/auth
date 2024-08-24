@@ -82,26 +82,6 @@ public class CertificateController {
         companyAPI.list(companyIds).forEach(company -> companyIdAndCertificateMap.get(company.getId()).forEach(certificate -> certificate.setCompany(company)));
     }
 
-    /**
-     * 删除记账凭证
-     */
-    @DeleteMapping("/certificate/batch/{idList}")
-    public Result<Boolean> remove(@PathVariable List<Long> idList)
-    {
-        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-        try {
-            certificateService.removeBatchByIds(idList);
-            certificateAbstractService.lambdaUpdate()
-                    .in(CertificateAbstract::getCertificateId, idList)
-                    .remove();
-            transactionManager.commit(transaction);
-            return Result.success();
-        } catch (Exception e) {
-            transactionManager.rollback(transaction);
-            return Result.failed(e.getMessage());
-        }
-    }
-
     @Resource
     private CertificateAbstractService certificateAbstractService;
 
