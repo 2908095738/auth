@@ -15,7 +15,7 @@ public class RenewLogController {
     @Resource
     private RenewLogService renewLogService;
 
-    @GetMapping("by/renew/log")
+    @GetMapping("/by/renew/log")
     public Result<Page<RenewLog>> get(Integer current, Integer size) {
         return Result.success(renewLogService.page(new Page<>(current,size)));
     }
