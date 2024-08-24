@@ -35,7 +35,10 @@ public enum CodeEnum {
     FAILED_LOGIN_PWD_ERROR(400, "账户或密码错误"),
     FAILED_LOGIN_USER_STATUS_ERROR(400, "账户状态异常，请联系客服"),
 
-    FAILED_LOGIN_USER_NEED_REGISTER(401, "用户不存在，需要验证短信验证码，并注册");
+    FAILED_LOGIN_USER_NEED_REGISTER(401, "用户不存在，需要验证短信验证码，并注册"),
+
+    FAILED_ACCOUNT_EXPIRED(4001, "套餐已过期，请续费"),
+    ;
 
 
     private final Integer code;

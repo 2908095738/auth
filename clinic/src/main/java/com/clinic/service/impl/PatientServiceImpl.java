@@ -160,6 +160,14 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
     }
 
     @Override
+    public List<Patient> selectListByPhone(String phone) {
+        return lambdaQuery()
+                .eq(Patient::getUserId, LoginUser.getId())
+                .likeRight(Patient::getPhone, phone)
+                .list();
+    }
+
+    @Override
     public Patient selectByPhone(String phone) {
         return lambdaQuery()
                 .eq(Patient::getUserId, LoginUser.getId())

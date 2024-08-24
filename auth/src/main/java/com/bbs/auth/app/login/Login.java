@@ -1,5 +1,6 @@
 package com.bbs.auth.app.login;
 
+import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
 import cn.hutool.crypto.symmetric.SymmetricCrypto;
@@ -23,7 +24,6 @@ import com.bbs.enums.UserStateEnum;
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.redisson.api.RDeque;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -47,6 +48,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 @Slf4j
 @RestController
@@ -152,6 +154,21 @@ public class Login {
                     } else {
                         return failed(FAILED_LOGIN_TYPE_NOT_AVAILABLE);
                     }
+                    Date expirationTime = user.getExpirationTime();
+                    if(nonNull(expirationTime)) {
+                        long between = DateUtil.between(expirationTime, new Date(), DateUnit.DAY);
+                        if(between >= INTEGER_ZERO) {
+                            // 正常
+                            if(between <= 3) {
+                                // 即将过期
+                                // TODO 向用户发送通知
+                            }
+                        } else {
+                            // 过期
+                            return failed(FAILED_ACCOUNT_EXPIRED);
+                        }
+                    }
+
                     List<UserCompany> userCompanyList = searchUserCompany(user.getId());
                     searchIsSetCompanyStructure(param.getCheckCompanyStructure(), userCompanyList);
 
@@ -220,13 +237,13 @@ public class Login {
     }
 
     public void recordLoginSuccessLog(Param param, String newToken, String loginTime) {
-        Log log = new Log(NumberUtils.INTEGER_ZERO, param, loginTime);
+        Log log = new Log(INTEGER_ZERO, param, loginTime);
         log.setNewToken(newToken);
         deque().addFirst(JSONUtil.toJsonPrettyStr(log));
     }
 
     public void recordLoginFailLog(Param param, String errorMsg, String loginTime) {
-        Log log = new Log(NumberUtils.INTEGER_ZERO, param, loginTime);
+        Log log = new Log(INTEGER_ZERO, param, loginTime);
         log.setErrorMsg(errorMsg);
         deque().addFirst(JSONUtil.toJsonPrettyStr(log));
     }

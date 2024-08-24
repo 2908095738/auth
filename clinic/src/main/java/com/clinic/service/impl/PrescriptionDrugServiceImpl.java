@@ -8,6 +8,7 @@ import com.clinic.entity.StockUnit;
 import com.clinic.entity.Unit;
 import com.clinic.mapper.PrescriptionDrugMapper;
 import com.clinic.service.PrescriptionDrugService;
+import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +18,7 @@ import java.util.List;
  *
  */
 @Service
-public class PrescriptionDrugServiceImpl extends ServiceImpl<PrescriptionDrugMapper, PrescriptionDrug>
+public class PrescriptionDrugServiceImpl extends MPJBaseServiceImpl<PrescriptionDrugMapper, PrescriptionDrug>
     implements PrescriptionDrugService{
 
 

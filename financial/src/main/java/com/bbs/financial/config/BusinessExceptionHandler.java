@@ -35,16 +35,17 @@ public class BusinessExceptionHandler {
 
     @ResponseBody
     @ExceptionHandler(value = IllegalArgumentException.class)
-    public void errorHandler(IllegalArgumentException exception) throws IOException {
+    public Result<Object> errorHandler(IllegalArgumentException exception) throws IOException {
         String message = exception.getMessage();
+        exception.printStackTrace();
         log.debug("[ExceptionHandler::IllegalArgumentException] error={}", message);
-        response.sendError(400, message);
+        return Result.failed(400, message);
     }
 
     @ResponseBody
     @ExceptionHandler(value = NoAccountingSetException.class)
-    public void errorHandler(NoAccountingSetException exception) throws IOException {
-        response.sendError(501, "没有找到账套！");
+    public Result<Object> errorHandler(NoAccountingSetException exception) throws IOException {
+        return Result.failed(501, "没有找到账套！");
     }
 
 

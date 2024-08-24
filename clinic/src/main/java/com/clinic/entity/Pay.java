@@ -96,6 +96,9 @@ public class Pay implements Serializable {
     private Long patientId;
 
     @TableField(exist = false)
+    private Patient patient;
+
+    @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
     public Pay(Long userId, Dossier dossier, Prescription prescription) {

@@ -11,6 +11,7 @@ import com.clinic.entity.PayRecord;
 import com.clinic.mapper.PayMapper;
 import com.clinic.service.PayService;
 import com.clinic.util.LoginUser;
+import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +23,7 @@ import static java.util.Objects.nonNull;
  *
  */
 @Service
-public class PayServiceImpl extends ServiceImpl<PayMapper, Pay>
+public class PayServiceImpl extends MPJBaseServiceImpl<PayMapper, Pay>
     implements PayService {
 
     @Override
@@ -78,6 +79,15 @@ public class PayServiceImpl extends ServiceImpl<PayMapper, Pay>
                 .leftJoin(PayRecord.class, PayRecord::getPayId, Pay::getId)
                 .eq(Pay::getId, id)
         );
+    }
+
+    @Override
+    public List<Pay> searchUnPays() {
+        return selectJoinList(Pay.class, new MPJLambdaWrapper<Pay>()
+                .selectAll(Pay.class)
+                .leftJoin(Patient.class, Patient::getId, Pay::getPatientId, ext -> ext.selectAssociation(Patient.class, Pay::getPatient))
+                .eq(Pay::getCreator, LoginUser.getId())
+                .eq(Pay::getState, 0));
     }
 }
 

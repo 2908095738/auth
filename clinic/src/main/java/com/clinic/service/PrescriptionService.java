@@ -9,6 +9,7 @@ import com.clinic.dto.PrescriptionFileVo;
 import com.clinic.dto.vo.PrescriptionSearchDrugVO;
 import com.clinic.entity.Prescription;
 import com.clinic.entity.StockBatch;
+import com.github.yulichang.base.MPJBaseService;
 
 import java.io.IOException;
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.List;
 /**
  * 处方
  */
-public interface PrescriptionService extends IService<Prescription> {
+public interface PrescriptionService extends MPJBaseService<Prescription> {
 
     IPage<PrescriptionDto> selectPage(Long id, Long dossierId, Long patientId, Integer current, Integer size);
 

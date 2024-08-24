@@ -24,15 +24,10 @@ import org.apache.commons.collections4.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.clinic.enums.DrugExpiryStateEnum.ABOUT_EXPIRES;
-import static com.clinic.enums.DrugExpiryStateEnum.EXPIRES;
+import static com.clinic.enums.DrugExpiryStateEnum.*;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
@@ -236,16 +231,23 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock>
                 .eq(StockBatch::getUserId, LoginUser.getId())
                 .list();
 
-        List<StockBatch> expiresStateNormal = new ArrayList<>();    // 正常
-        List<StockBatch> needUpdateExpiresStateToExpires = new ArrayList<>();  // 过期（需要 update DB）
-        List<StockBatch> needUpdateExpiresStateToAbout = new ArrayList<>(); // 即将过期（需要 update DB）
-        List<StockBatch> needUpdateStockStateToShortage = new ArrayList<>(); // 库存状态短缺（需要 update DB）
+        List<StockBatch> shortageStockDrugs = new ArrayList<>();                // 库存状态短缺
+        List<StockBatch> expiresStateNormalStockDrugs = new ArrayList<>();      // 正常
+        List<StockBatch> expiresStateStockDrugs = new ArrayList<>();            // 过期
+        List<StockBatch> aboutExpiresStateStockDrugs = new ArrayList<>();       // 即将过期
+
+        List<StockBatch> needUpdateStockStateToShortage = new ArrayList<>();    // 库存状态短缺（需要 update DB）
+        List<StockBatch> needUpdateExpiresStateToNormal = new ArrayList<>();    // 正常（需要 update DB）
+        List<StockBatch> needUpdateExpiresStateToExpires = new ArrayList<>();   // 过期（需要 update DB）
+        List<StockBatch> needUpdateExpiresStateToAbout = new ArrayList<>();     // 即将过期（需要 update DB）
+
         allDrugBatch.forEach(drugBatch -> {
             Long stockNumber = drugBatch.getNumber();
             Long totalNumber = drugBatch.getTotalNumber();
             DrugStockRule stateCountRule = drugBatch.getStateCountRule();
+            StockStateEnum stockState = drugBatch.getState();
             // 筛选出【库存状态】正常，且需要统计【库存预警状态】的库存批次
-            if(StockStateEnum.NORMAL.equals(drugBatch.getState()) && !DrugStockRule.NOT_COUNT.equals(stateCountRule)) {
+            if(StockStateEnum.NORMAL.equals(stockState) && !DrugStockRule.NOT_COUNT.equals(stateCountRule)) {
                 Integer countVal = drugBatch.getCountVal();
                 // 当库存数量不足【自定义阈值】时，提醒库存不足（库存数量按最小单位统计，如粒/片/袋等）
                 if(DrugStockRule.MIN_UNIT_PERCENTAGE_CUSTOMIZE.equals(stateCountRule)) {
@@ -320,36 +322,77 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock>
                         needUpdateStockStateToShortage.add(drugBatch);
                     }
                 }
+            } else if(StockStateEnum.SHORTAGE.equals(stockState)) {
+                shortageStockDrugs.add(drugBatch);
             }
-            // 筛选出【即将过期】与【已过期】的批次药品
-            if(
-                    DrugExpiryStateEnum.NORMAL.getCode().equals(drugBatch.getExpiryState()) ||
-                            ABOUT_EXPIRES.getCode().equals(drugBatch.getExpiryState())
-            ) {
-                DrugExpiryStateEnum expiryState = AppStockService.computeDrugIsExpiry(drugBatch, stockExpiryAlertMonth);
-                if(EXPIRES.equals(expiryState)) {
-                    drugBatch.setExpiryState(EXPIRES.getCode());
-                    needUpdateExpiresStateToExpires.add(drugBatch);
-                } else if(ABOUT_EXPIRES.equals(expiryState)) {
-                    drugBatch.setExpiryState(ABOUT_EXPIRES.getCode());
-                    needUpdateExpiresStateToAbout.add(drugBatch);
-                } else {
-                    expiresStateNormal.add(drugBatch);
+            // 只重新统计【正常】【临期】库存，【已过期】不重新统计
+            Integer expiryState = drugBatch.getExpiryState();
+            DrugExpiryStateEnum computeExpiryState = AppStockService.computeDrugIsExpiry(drugBatch, stockExpiryAlertMonth);
+            if(isNull(expiryState)) {                                       //空状态，第一次需要 update 状态
+                switch (computeExpiryState) {
+                    case NORMAL:
+                        drugBatch.setExpiryState(NORMAL.getCode());
+                        needUpdateExpiresStateToNormal.add(drugBatch);
+                        break;
+                    case ABOUT_EXPIRES:
+                        drugBatch.setExpiryState(ABOUT_EXPIRES.getCode());
+                        needUpdateExpiresStateToAbout.add(drugBatch);
+                        break;
+                    case EXPIRES:
+                        drugBatch.setExpiryState(EXPIRES.getCode());
+                        needUpdateExpiresStateToExpires.add(drugBatch);
+                        break;
+                }
+            } else {
+                if(computeExpiryState.getCode().equals(expiryState)) {      // 计算后状态相同，不需要更新
+                    switch (computeExpiryState) {
+                        case NORMAL:
+                            expiresStateNormalStockDrugs.add(drugBatch);
+                            break;
+                        case ABOUT_EXPIRES:
+                            aboutExpiresStateStockDrugs.add(drugBatch);
+                            break;
+                        case EXPIRES:
+                            expiresStateStockDrugs.add(drugBatch);
+                            break;
+                    }
+                } else {                                                    // 需要更新
+                    switch (computeExpiryState) {
+                        case NORMAL:
+                            drugBatch.setExpiryState(NORMAL.getCode());
+                            needUpdateExpiresStateToNormal.add(drugBatch);
+                            break;
+                        case ABOUT_EXPIRES:
+                            drugBatch.setExpiryState(ABOUT_EXPIRES.getCode());
+                            needUpdateExpiresStateToAbout.add(drugBatch);
+                            break;
+                        case EXPIRES:
+                            drugBatch.setExpiryState(EXPIRES.getCode());
+                            needUpdateExpiresStateToExpires.add(drugBatch);
+                            break;
+                    }
                 }
             }
         });
         // 合并批量更新
-        List<StockBatch> needUpdateStockBatch = new ArrayList<>();
-        needUpdateStockBatch.addAll(updateExpiresState(needUpdateExpiresStateToExpires, needUpdateExpiresStateToAbout));
-        needUpdateStockBatch.addAll(updateStockState(needUpdateStockStateToShortage));
-        if(needUpdateStockBatch.size() > INTEGER_ZERO) {
-            batchService.updateBatchById(needUpdateStockBatch);
+        List<StockBatch> needUpdateList = new ArrayList<>();
+        needUpdateList.addAll(updateExpiresState(needUpdateExpiresStateToNormal, needUpdateExpiresStateToExpires, needUpdateExpiresStateToAbout));
+        needUpdateList.addAll(updateStockState(needUpdateStockStateToShortage));
+        if(needUpdateList.size() > INTEGER_ZERO) {
+            batchService.updateBatchById(needUpdateList);
         }
-        return new DrugExpiryGroup(expiresStateNormal, needUpdateExpiresStateToExpires, needUpdateExpiresStateToAbout, needUpdateStockStateToShortage);
+        expiresStateNormalStockDrugs.addAll(needUpdateExpiresStateToNormal);
+        aboutExpiresStateStockDrugs.addAll(needUpdateExpiresStateToAbout);
+        expiresStateStockDrugs.addAll(needUpdateExpiresStateToExpires);
+        shortageStockDrugs.addAll(needUpdateStockStateToShortage);
+        return new DrugExpiryGroup(expiresStateNormalStockDrugs, aboutExpiresStateStockDrugs, expiresStateStockDrugs, shortageStockDrugs);
     }
 
-    private List<StockBatch> updateExpiresState(List<StockBatch> needUpdateExpiresStateToExpires, List<StockBatch> needUpdateExpiresStateToAbout) {
+    private List<StockBatch> updateExpiresState(List<StockBatch> needUpdateExpiresStateToNormal, List<StockBatch> needUpdateExpiresStateToExpires, List<StockBatch> needUpdateExpiresStateToAbout) {
         List<StockBatch> needUpdateStockBatch = new ArrayList<>();
+        if(needUpdateExpiresStateToNormal.size() > INTEGER_ZERO) {
+            needUpdateStockBatch.addAll(needUpdateExpiresStateToNormal);
+        }
         if(needUpdateExpiresStateToExpires.size() > INTEGER_ZERO) {
             needUpdateStockBatch.addAll(needUpdateExpiresStateToExpires);
         }

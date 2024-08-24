@@ -1,5 +1,6 @@
 package com.bbs.auth.app.register;
 
+import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.Result;
 import com.bbs.auth.app.login.vo.VO;
@@ -13,6 +14,7 @@ import com.bbs.enums.UserStateEnum;
 import lombok.Data;
 import net.sf.jsqlparser.util.validation.metadata.DatabaseException;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -25,6 +27,7 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import java.util.Date;
 import java.util.Random;
 
 import static com.bbs.Result.failed;
@@ -36,6 +39,12 @@ import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
 @RestController
 @RequestMapping
 public class Register extends ServiceImpl<UserMapper, User> {
+
+    /**
+     * 新用户注册试用天数
+     */
+    @Value("${user.register.try.day}")
+    private Integer tryDay;
 
     @Resource
     private DataSourceTransactionManager transactionManager;
@@ -99,6 +108,8 @@ public class Register extends ServiceImpl<UserMapper, User> {
             }
 
             user.setCreateBy(LONG_ZERO);
+
+            user.setExpirationTime(DateUtil.offsetDay(new Date(), tryDay));
 
             saveUser(user);
 

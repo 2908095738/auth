@@ -69,7 +69,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/salary/temp/export"+ "/**")
                 .excludePathPatterns("/weixin/pay/notification"+ "/**")
                 .excludePathPatterns(fileDownPrefix + "/**")
-                .excludePathPatterns(imageDownPrefix + "/**");
+                .excludePathPatterns(imageDownPrefix + "/**")
+                .excludePathPatterns("/ai/**");
     }
 }
 

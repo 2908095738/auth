@@ -1,8 +1,10 @@
 package com.bbs.auth.app.user;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.jwt.JWTException;
 import com.bbs.Result;
 import com.bbs.auth.converter.UserConverter;
+import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.UserCompany;
 import com.bbs.auth.service.CompanyService;
 import com.bbs.auth.service.TokenService;
@@ -48,7 +50,9 @@ public class Me {
         try {
             String token = tokenService.getToken(request);
             Long uid = tokenService.verify(token).getId();
-            vo = converter.toMeVO(service.search(uid));
+            User user = service.search(uid);
+            vo = converter.toMeVO(user);
+            vo.setExpirationDate(DateUtil.format(user.getExpirationTime(), "yyyy-MM-dd"));
             List<UserCompany> userCompanyList = companyService.searchCompany(uid);
             vo.setUserCompanyList(userCompanyList);
             vo.setLoginState(true);
@@ -102,5 +106,10 @@ public class Me {
          * 用户公司
          */
         List<UserCompany> userCompanyList;
+
+        /**
+         * 过期时间
+         */
+        private String expirationDate;
     }
 }
