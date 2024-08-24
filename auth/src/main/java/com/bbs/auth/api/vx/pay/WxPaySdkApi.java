@@ -1,6 +1,9 @@
 package com.bbs.auth.api.vx.pay;
 
 import com.bbs.Result;
+import com.bbs.auth.entity.RenewLog;
+import com.bbs.auth.service.RenewLogService;
+import com.bbs.auth.util.LoginUser;
 import com.wechat.pay.java.core.exception.HttpException;
 import com.wechat.pay.java.core.exception.MalformedMessageException;
 import com.wechat.pay.java.core.exception.ServiceException;
@@ -28,19 +31,30 @@ public class WxPaySdkApi {
 
     @Resource
     private WxPaySdkConfig config;
+    @Resource
+    private RenewLogService renewLogService;
 
 
     @GetMapping("/weixin/clinic/pay/qrcode")
-    public Result<Map<String, Object>> getPayCode(Integer total) {
+    public Result<Map<String, Object>> getPayCode(Integer packageType) {
         log.info("获取支付二维码");
         // 初始化服务
         service = new NativePayService.Builder().config(config.getWxMlConfig()).build();
         try {
             String orderId = "tradeNo"+System.currentTimeMillis()/1000+config.merchantId;
-            PrepayResponse prepay = prepay(orderId,total);
+            PrepayResponse prepay = prepay(orderId,packageType);
             Map<String, Object> resultMap = new HashMap<>();
             resultMap.put("orderId", orderId);
             resultMap.put("codeUrl", prepay.getCodeUrl());
+            // 保存订单
+            RenewLog renewLog = new RenewLog();
+            renewLog.setBackSystemId(3L);
+            renewLog.setCreateBy(LoginUser.getId());
+            renewLog.setOrderId(orderId);
+            renewLog.setStatus(0);
+            renewLog.setPackageType(packageType);
+            renewLogService.save(renewLog);
+
             return Result.success(resultMap);
         } catch (HttpException e) { // 发送HTTP请求失败
             log.error("请求失败:{}", e.getHttpRequest());
@@ -56,12 +70,30 @@ public class WxPaySdkApi {
     }
 
     @GetMapping("/weixin/clinic/pay/WxOrder")
-    public Result<Transaction> getByWxOrder(String orderId) {
+    public Result<RenewLog> getByWxOrder(String orderId) {
         // 初始化服务
         service = new NativePayService.Builder().config(config.getWxMlConfig()).build();
         try {
             Transaction transaction = queryOrderByOutTradeNo(orderId);
-            return Result.success(transaction);
+            RenewLog renewLog = renewLogService.getByOrderId(transaction.getOutTradeNo());
+            if (transaction.getTradeState() == Transaction.TradeStateEnum.SUCCESS) {
+                // 订单已支付
+                if(renewLog.getStatus()==0){//未支付
+                    renewLog.setCreateBy(LoginUser.getId());
+                    renewLog.setStatus(1);
+                    renewLogService.updateById(renewLog);
+                }
+            } else if (transaction.getTradeState() == Transaction.TradeStateEnum.CLOSED) {
+                // 订单已关闭
+                renewLog.setDeleteFlag(1);
+                renewLogService.updateById(renewLog);
+            } else if (transaction.getTradeState() == Transaction.TradeStateEnum.REFUND) {
+                // 订单已退款
+                renewLog.setStatus(2);
+                renewLogService.updateById(renewLog);
+            } else if (transaction.getTradeState() == Transaction.TradeStateEnum.NOTPAY) {
+            }
+            return Result.success(renewLog);
         } catch (HttpException e) { // 发送HTTP请求失败
             log.error("请求失败:{}", e.getHttpRequest());
             // 调用e.getHttpRequest()获取请求打印日志或上报监控，更多方法见HttpException定义
@@ -86,7 +118,21 @@ public class WxPaySdkApi {
     /**
      * Native支付预下单
      */
-    public PrepayResponse prepay(String outTradeNo, Integer total) {
+    public PrepayResponse prepay(String outTradeNo, Integer packageType) {
+        int total = 0;
+        switch (packageType){
+            case 1:
+                total = 4000;
+                break;
+            case 2:
+                total = 7800;
+                break;
+            case 3:
+                total = 36800;
+                break;
+            case 123:
+                total = 1;
+        }
         PrepayRequest request = new PrepayRequest();
         request.setAppid(config.appId);
         request.setMchid(config.merchantId);

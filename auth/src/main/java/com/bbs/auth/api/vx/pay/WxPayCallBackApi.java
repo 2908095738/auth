@@ -44,8 +44,6 @@ public class WxPayCallBackApi {
             transaction = parser.parse(requestParam, Transaction.class);
             log.info("transaction: {}", transaction);
             if (transaction.getTradeState().equals(Transaction.TradeStateEnum.SUCCESS)) {
-                // 处理支付成功的业务逻辑
-
                 // 处理成功，返回 200 OK 状态码
                 return ResponseEntity.status(HttpStatus.OK).build();
             }

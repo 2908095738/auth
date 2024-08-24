@@ -118,7 +118,7 @@ public class Search {
             set.add(stockBatch.getCostUnitId());
             set.addAll(stockBatch.getStockUnitList().stream().map(StockUnit::getUnitId).collect(Collectors.toList()));
             return set;
-        }).flatMap(Collection::stream).collect(Collectors.toSet());
+        }).flatMap(Collection::stream).filter(Objects::nonNull).collect(Collectors.toSet());
 
         Map<Integer, Unit> unitMap = unitCache.getUnitMap(unitIds);
 
@@ -162,7 +162,7 @@ public class Search {
             List<PrescriptionSearchDrugVO.Unit> voUnits = prescriptionSearchDrugVO.getUnits();
             prescriptionSearchDrugVO.setMinUnit(voUnits.get(INTEGER_ZERO));
             prescriptionSearchDrugVO.setMaxUnit(voUnits.get(voUnits.size() - INTEGER_ONE));
-            prescriptionSearchDrugVO.setSingleDoseUnit(stockBatch.getSingleDoseUnit().getName());
+            prescriptionSearchDrugVO.setSingleDoseUnit(stockBatch.getSingleDoseUnit()==null ?null:stockBatch.getSingleDoseUnit().getName());
             prescriptionSearchDrugVO.setStockState(stockBatch.getState().getCode());
             prescriptionSearchDrugVO.setExpiryState(stockBatch.getExpiryState());
             prescriptionSearchDrugVO.setStateCountRule(stockBatch.getStateCountRule().getCode());
