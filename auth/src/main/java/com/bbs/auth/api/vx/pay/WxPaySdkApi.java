@@ -130,8 +130,6 @@ public class WxPaySdkApi {
             case 3:
                 total = 36800;
                 break;
-            case 123:
-                total = 1;
         }
         PrepayRequest request = new PrepayRequest();
         request.setAppid(config.appId);
