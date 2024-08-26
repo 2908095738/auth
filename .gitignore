@@ -17,3 +17,5 @@ buildNumber.properties
 *.log
 !/.gitignore
 /clinic-service/src/main/resources/prescriptions/
+/.fastRequest/config/fastRequestCurrentProjectConfig.json
+/.fastRequest/config/fastRequestCurrentProjectEnvironment.json
