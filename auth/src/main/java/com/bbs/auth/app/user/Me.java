@@ -6,7 +6,6 @@ import com.bbs.Result;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.UserCompany;
-import com.bbs.auth.service.CompanyService;
 import com.bbs.auth.service.TokenService;
 import com.bbs.auth.service.UserService;
 import com.bbs.exception.ReLoginException;
@@ -16,7 +15,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 
 import java.util.List;
 
@@ -35,12 +33,6 @@ public class Me {
     @Resource
     private UserConverter converter;
 
-    @Resource
-    private CompanyService companyService;
-
-    @Resource
-    private HttpServletRequest request;
-
     /**
      * 当前用户个人信息（不响应 401）
      */
@@ -48,13 +40,10 @@ public class Me {
     public Result<VO> me() throws ReLoginException {
         VO vo = new VO();
         try {
-            String token = tokenService.getToken(request);
-            Long uid = tokenService.verify(token).getId();
+            Long uid = service.loginUser().getId();
             User user = service.search(uid);
             vo = converter.toMeVO(user);
             vo.setExpirationDate(DateUtil.format(user.getExpirationTime(), "yyyy-MM-dd"));
-            List<UserCompany> userCompanyList = companyService.searchCompany(uid);
-            vo.setUserCompanyList(userCompanyList);
             vo.setLoginState(true);
             return success(vo);
         } catch (ReLoginException | JWTException e) {
