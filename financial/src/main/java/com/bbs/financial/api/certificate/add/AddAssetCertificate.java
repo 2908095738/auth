@@ -8,6 +8,7 @@ import com.bbs.financial.entity.Asset;
 import com.bbs.financial.entity.AssetDepreciationCertificate;
 import com.bbs.financial.entity.Certificate;
 import com.bbs.financial.entity.CertificateAbstract;
+import com.bbs.financial.enums.CertTypeEnum;
 import com.bbs.financial.service.AssetDepreciationCertificateService;
 import com.bbs.financial.service.AssetService;
 import com.bbs.financial.service.CertificateAbstractService;
@@ -63,7 +64,7 @@ public class AddAssetCertificate {
         private List<Long> assetIds;
 
         /**
-         * 凭证类型:1购入凭证 2折旧凭证 3减值凭证 4清理凭证 5其他凭证
+         * 凭证类型: {@link CertTypeEnum}
          */
         private Integer certificateType;
 
@@ -94,7 +95,7 @@ public class AddAssetCertificate {
                     certificate.setNo(no);
                     certificate.setDate(param.date);
                     certificate.setCreateBy(LoginUser.getId());
-                    certificate.setType(param.certificateType);
+                    certificate.setType(CertTypeEnum.enumMap.get(param.getCertificateType()));
                     db.save(certificate);
 
                     //借

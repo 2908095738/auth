@@ -10,6 +10,7 @@ import com.bbs.financial.controller.CheckoutController;
 import com.bbs.financial.entity.Certificate;
 import com.bbs.financial.entity.Note;
 import com.bbs.financial.entity.ZhangHu;
+import com.bbs.financial.enums.CertTypeEnum;
 import com.bbs.financial.service.NoteService;
 import com.bbs.financial.util.SpringUtil;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
@@ -124,6 +125,7 @@ public class AddCertByNote {
         param.setCertificateWord(NumberUtils.INTEGER_ZERO + "");
         param.setNo(getNo(tmpNote.getDate()));
         param.setDate(tmpNote.getDate());
+        param.setType(CertTypeEnum.NORMAL_NOTE.getType());
         param.setAbstracts(getAbst(tmpNote));
         return param;
     }

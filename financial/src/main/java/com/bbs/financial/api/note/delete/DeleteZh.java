@@ -1,8 +1,9 @@
 package com.bbs.financial.api.note.delete;
 
 import com.bbs.Result;
-import com.bbs.financial.controller.CertificateController;
+import com.bbs.financial.api.certificate.delete.DelCertificate;
 import com.bbs.financial.entity.Note;
+import com.bbs.financial.enums.CertTypeEnum;
 import com.bbs.financial.service.NoteService;
 import com.bbs.financial.service.ZhangHuService;
 import com.bbs.financial.util.ORMUtil;
@@ -21,6 +22,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * 删除日记账下的账户
@@ -75,7 +77,10 @@ public class DeleteZh {
         //删除凭证
         boolean isDone = false;
         if (!certIdList.isEmpty()) {
-            isDone = SpringUtil.getRespData(CertificateController.class, appContext, c -> c.remove(certIdList));
+            List<DelCertificate.DelParam> delList = certIdList.stream()
+                    .map(id -> new DelCertificate.DelParam(CertTypeEnum.NONE.getType(), id))
+                    .collect(Collectors.toList());
+            isDone = SpringUtil.getRespData(DelCertificate.class, appContext, c -> c.remove(delList));
             if (!isDone)
                 return Result.failed(StringTip.FAIL_DEL_CERT);
         }

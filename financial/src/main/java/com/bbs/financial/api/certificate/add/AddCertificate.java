@@ -5,6 +5,7 @@ import com.bbs.Result;
 import com.bbs.enums.financial.CertificateWordEnum;
 import com.bbs.financial.converter.CertificateConverter;
 import com.bbs.financial.entity.*;
+import com.bbs.financial.enums.CertTypeEnum;
 import com.bbs.financial.service.*;
 import com.bbs.financial.service.impl.LedgerGeneralServiceImpl;
 import com.bbs.financial.util.LoginUser;
@@ -58,6 +59,11 @@ public class AddCertificate {
          * 是否需要返回凭证id
          */
         private Boolean isNeedCertId;
+
+        /**
+         * 凭证类型: {@link CertTypeEnum}
+         */
+        private Integer type;
 
         /**
          * 具体科目
