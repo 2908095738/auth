@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -116,6 +117,29 @@ public class StockBatchServiceImpl extends MPJBaseServiceImpl<StockBatchMapper, 
             return between > 0;
         }
         return false;
+    }
+
+    @Override
+    public List<StockBatch> search(String val) {
+        return search(val, null);
+    }
+
+    @Override
+    public List<StockBatch> search(String val, Long userId) {
+        return selectJoinList(StockBatch.class, new MPJLambdaWrapper<StockBatch>()
+                .selectAll(StockBatch.class)
+                .innerJoin(Stock.class, Stock::getId, StockBatch::getStockId)
+                .eq(StockBatch::getUserId, nonNull(userId) ? userId : LoginUser.getId())
+                .like(Stock::getName, val)
+                .or()
+                .like(Stock::getAlias, val)
+                .or()
+                .like(StockBatch::getApprovalNumber, val)
+                .or()
+                .like(StockBatch::getManufacturer, val)
+                .or()
+                .eq(StockBatch::getApprovalNumber, val)
+        );
     }
 
     @Autowired

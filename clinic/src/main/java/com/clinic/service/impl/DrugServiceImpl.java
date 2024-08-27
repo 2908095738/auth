@@ -8,11 +8,17 @@ import com.bbs.util.FirstWordsSqlUtils;
 import com.bbs.util.MyStringUtil;
 import com.clinic.dto.param.DrugParam;
 import com.clinic.entity.Drug;
+import com.clinic.entity.StockBatch;
 import com.clinic.mapper.DrugMapper;
 import com.clinic.service.DrugService;
+import com.clinic.service.StockBatchService;
+import com.github.yulichang.base.MPJBaseServiceImpl;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+import java.util.Collections;
 import java.util.List;
 
 import static java.util.Objects.nonNull;
@@ -21,8 +27,11 @@ import static java.util.Objects.nonNull;
  *
  */
 @Service
-public class DrugServiceImpl extends ServiceImpl<DrugMapper, Drug>
+public class DrugServiceImpl extends MPJBaseServiceImpl<DrugMapper, Drug>
     implements DrugService {
+
+    @Resource
+    private StockBatchService stockBatchService;
 
     @Override
     public List<Drug> selectInfoDistinct() {
@@ -64,6 +73,13 @@ public class DrugServiceImpl extends ServiceImpl<DrugMapper, Drug>
     @Override
     public Page<Drug> search(String name,  Page<Drug> tPage) {
         return page(tPage, searchWrapper(name));
+    }
+
+    @Override
+    public List<Drug> searchByName(String name) {
+        return lambdaQuery()
+                .like(Drug::getName, name)
+                .list();
     }
 
     private LambdaQueryWrapper<Drug> searchWrapper(String val) {

@@ -1,16 +1,14 @@
 package com.clinic.app.search;
 
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.extra.tokenizer.TokenizerEngine;
-import cn.hutool.extra.tokenizer.TokenizerUtil;
-import cn.hutool.extra.tokenizer.Word;
 import com.bbs.Result;
 import com.bbs.api.auth.User;
+import com.clinic.app.ai.CloudFlare;
 import com.clinic.app.log.admission.SearchList;
+import com.clinic.cache.unit.UnitCache;
 import com.clinic.entity.*;
 import com.clinic.enums.AISearchSearchKeyword;
 import com.clinic.service.*;
+import com.clinic.service.impl.StockBatchServiceImpl;
 import com.clinic.service.impl.StockServiceImpl;
 import com.clinic.util.LoginUser;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
@@ -18,6 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,6 +24,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
@@ -57,10 +58,22 @@ public class GlobalSearch {
     @Resource
     private StockService stockService;
 
+    @Resource
+    private CloudFlare cloudFlareAI;
+
+    @Resource
+    private StockBatchService stockBatchService;
+
+    @Resource
+    private AsyncSearch asyncSearch;
+
+    @Resource
+    private UnitCache unitCache;
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    private static class VO {
+    public static class VO {
 
         private List<Patient> patients;
 
@@ -78,13 +91,18 @@ public class GlobalSearch {
         private List<StockBatch> aboutExpireStockDrugs;
 
         private List<StockBatch> expireStockDrugs;
+
+        private List<StockBatch> stockBatches;
+
+
+        private String answer;  // AI 回答
     }
 
     @GetMapping("/search")
     public Result<Object> search(@RequestParam String val) {
 
-//
-//        VO vo = null;
+
+        VO vo = new VO();
 //        try {
 //            vo = new VO();
 //            if(val.equals("我需要最近3天的就诊记录")) {
@@ -130,57 +148,33 @@ public class GlobalSearch {
 //            e.printStackTrace();
 //            throw new RuntimeException(e);
 //        }
-//        List<Patient> patients = new ArrayList<>();
-//        List<Drug> drugs = new ArrayList<>();
-//        List<DrugDetail> drugDetails = new ArrayList<>();
-//
-//
-//        TokenizerEngine engine = TokenizerUtil.createEngine();
-//
-//
-//        String[] allKeyWord = CollUtil.join((Iterator<Word>) engine.parse(val), " ").split(" ");
-//
-//        for
-//
-//        if(StringUtils.isNotBlank(val)) {
-//            if(isAlphaNumeric(val)) {   //如果内容由字符和数字组成
-//
-//                if(isNumeric(val)) {    // 纯数字
-//                    patients.addAll(patientService.selectListByPhone(val)); //查病人手机号
-//                } else {
-//
-//                }
-//            } else {
-//
-//            }
-//        }
-
-//        for (Word keyword : parse) {
-//            AISearchSearchKeyword mappingFunction = AISearchSearchKeyword.allMap.get(keyword);
-//            if(nonNull(mappingFunction)) {
-//                switch (mappingFunction) {
-//                    case PATIENT:
-//                        patients = patientService.select(val);
-//                        break;
-//                    case STOCK:
-//                        drugDetails = drugDetailService.search(val);
-//                        break;
-//                    case STOCK_EXPIRED:
-//                        drugDetails = drugDetailService.selectInfoByLot();
-//                        break;
-//                    case STOCK_UNDER:
-//                        drugDetails = drugDetailService.selectInfoByLot();
-//                        break;
-//                }
-//            }
-//        }
-//        if(StringUtils.isNotBlank(val)) {
-////            vo.setPatients(patientService.select(val));          //搜病人
-////            vo.setDrugs(drugService.search(val));                  //搜药品
-////            vo.setDrugDetails(drugDetailService.search(val));    //搜库存
-////        }
-////        return Result.success(vo);
-        return Result.success(1);
+        if(StringUtils.isNotBlank(val)) {
+            if(isNumeric(val)) {
+                vo.setPatients(patientService.selectListByPhone(val)); //查病人手机号
+                vo.setDrugs(drugService.search(val));
+            } else {
+                vo.setPatients(patientService.selectByName(val));  //搜病人
+                vo.setDrugs(drugService.searchByName(val));    //搜药品
+                List<StockBatch> stockBatches = stockBatchService.search(val);  //查库存
+                if(stockBatches.size() > INTEGER_ZERO) {
+                    Set<Long> stockIds = new HashSet<>();
+                    Set<Integer> unitIds = new HashSet<>();
+                    stockBatches.forEach(stockBatch -> {
+                        stockIds.add(stockBatch.getStockId());
+                        unitIds.add(stockBatch.getUnitId());
+                    });
+                    Map<Long, Stock> stockMap = stockService.listByIds(stockIds)
+                            .stream().collect(Collectors.toMap(Stock::getId, stock -> stock));
+                    Map<Integer, Unit> unitMap = unitCache.getUnitMap(unitIds);
+                    stockBatches.forEach(stockBatch -> {
+                        stockBatch.setStock(stockMap.get(stockBatch.getStockId()));
+                        stockBatch.setUnit(unitMap.get(stockBatch.getUnitId()));
+                    });
+                }
+                vo.setStockBatches(stockBatches);
+            }
+        }
+        return Result.success(vo);
     }
 
     /**

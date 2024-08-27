@@ -34,4 +34,8 @@ public interface StockBatchService extends MPJBaseService<StockBatch> {
      * @return 是否即将过期
      */
     Boolean stockIsExpiry(StockBatch stockBatch);
+
+    List<StockBatch> search(String val);
+
+    List<StockBatch> search(String val, Long userId);
 }

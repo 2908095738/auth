@@ -5,17 +5,23 @@ import cn.hutool.core.date.TimeInterval;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONUtil;
 import com.bbs.Result;
+import com.clinic.app.search.GlobalSearch;
+import com.google.common.util.concurrent.AsyncFunction;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 
 import static java.util.Objects.nonNull;
 
@@ -34,26 +40,11 @@ public class CloudFlare {
         private String content;
     }
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ResponseResult {
-
-        private String response;
-
-        private Boolean success;
-
-        private Object[] errors;
-
-        private Object[] messages;
-    }
-
     @GetMapping("/ai/cf")
     public Result<String> quiz(@RequestParam String quiz) {
         List<Message> messages = Arrays.asList(new Message(
                 "system",
-                "我在开发一个医疗软件，我会问你一些医疗相关问题或者需要软件中的某个功能、或者查询一些功能的数据，例如需要某个病人一段时间的就诊记录等或者需要某些相关文献。" +
-                        "你的所有的回答都需要用中文，我的系统中有病人档案信息（病人信息）、就诊记录"
+                "你是一个医疗软件，需要回答一些医疗相关问题或者需要软件中的某个功能、或者查询一些功能的数据，例如需要类似系统中的某个功能，就引导去使用具体功能，功能有门诊日志（全部接诊记录）、正在接诊（今天未接诊的病人）、新增患者（创建病人档案）、收费、零售、库存、消杀、消毒、诊断证明"
         ), new Message(
                 "user",
                 quiz
@@ -77,5 +68,11 @@ public class CloudFlare {
         }
         log.error("AI: quiz={}; resultStr={}", quiz, resultStr);
         return Result.failed(resultStr);
+    }
+
+    @Async("asyncMethodThreadPool")
+    public void asyncQuiz(String question, GlobalSearch.VO vo, CountDownLatch countDownLatch) {
+        vo.setAnswer(quiz(question).getData());
+        countDownLatch.countDown();
     }
 }

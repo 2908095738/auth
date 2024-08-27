@@ -31,6 +31,7 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 
 import javax.annotation.Resource;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -173,6 +174,19 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
                 .eq(Patient::getUserId, LoginUser.getId())
                 .eq(Patient::getPhone, phone)
                 .one();
+    }
+
+    @Override
+    public List<Patient> selectByName(String name) {
+        return selectByName(name, null);
+    }
+
+    @Override
+    public List<Patient> selectByName(String name, Long userId) {
+        return lambdaQuery()
+                .eq(Patient::getUserId, nonNull(userId) ? userId :LoginUser.getId())
+                .like(Patient::getName, name)
+                .list();
     }
 
     private Page<Patient> defaultSearch(PatientParam param) {
