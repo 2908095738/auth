@@ -58,6 +58,9 @@ public class RenewLog implements Serializable {
     @TableField(value = "create_time")
     private Date createTime;
 
+    @TableField(exist = false)
+    private String createTimeStr;
+
     /**
      * 删除状态
      */
@@ -66,4 +69,7 @@ public class RenewLog implements Serializable {
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+    @TableField(exist = false)
+    private User user;
 }
