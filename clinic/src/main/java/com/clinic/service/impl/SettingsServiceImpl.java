@@ -107,8 +107,7 @@ public class SettingsServiceImpl extends ServiceImpl<SettingsMapper, Settings>
     public Settings getByUserId() {
         Long userId = LoginUser.getId();
         //先查询redis中的数据
-//        String str = redis.opsForValue().get(getKey(userId));
-        String str=null;
+        String str = redis.opsForValue().get(getKey(userId));
         //不存在再从数据库中取
         if(Objects.isNull(str)){
             Settings one = lambdaQuery().eq(Settings::getUserId, userId).one();

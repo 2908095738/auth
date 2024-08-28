@@ -52,6 +52,4 @@ public class SettingsController {
     public Result<Settings> getByUserId(){
         return Result.success(service.getByUserId());
     }
-
-
 }
