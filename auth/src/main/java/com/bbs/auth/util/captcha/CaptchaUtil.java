@@ -48,11 +48,10 @@ public abstract class CaptchaUtil {
     ) throws Exception;
 
     public Boolean send(String phone) throws IllegalArgumentException {
+        try {
         checkPhoneFormat(phone);
         cache.checkIsCanSendCode(phone);
         Integer code = createCode();
-        try {
-//            send(phone, signName, templateCode,  "{code:" + code + "}");
             send(phone, signName, templateCode,  code+"");
             cache.setCode(phone, code);
             return true;
