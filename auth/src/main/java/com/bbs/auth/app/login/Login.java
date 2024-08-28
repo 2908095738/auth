@@ -104,7 +104,6 @@ public class Login {
                         if(nonNull(user)) {
                             // 用户已注册
                             checkUserState(user);
-                            checkUserPWD(param, user);
                         } else {
                             // 用户未注册
                             user = new User(phone, Long.valueOf(phone));
@@ -145,6 +144,7 @@ public class Login {
                         checkPhoneAndPWDFormat(param);
                         user = searchUser(phone);
                         checkArgument(nonNull(user), FAILED_LOGIN_USER_NEED_REGISTER);
+                        checkArgument(nonNull(user.getPassword()), FAILED_LOGIN_USER_NOT_SET_PWD);
                         checkUserState(user);
                         checkUserPWD(param, user);
                     } else if(LoginType.PASSWORD_CREATE.getCode().equals(loginType)) {
