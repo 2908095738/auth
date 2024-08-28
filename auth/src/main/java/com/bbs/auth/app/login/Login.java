@@ -137,7 +137,7 @@ public class Login {
                     } else if(LoginType.PASSWORD.getCode().equals(loginType)) {
                         checkPhoneAndPWDFormat(param);
                         user = searchUser(phone);
-                        checkArgument(nonNull(user), FAILED_LOGIN_USER_NOT_EXISTS);
+                        checkArgument(nonNull(user), FAILED_LOGIN_USER_NEED_REGISTER);
                         checkUserState(user);
                         checkUserPWD(param, user);
                     } else if(LoginType.PASSWORD_CREATE.getCode().equals(loginType)) {

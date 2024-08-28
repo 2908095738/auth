@@ -37,7 +37,7 @@ public class BusinessExceptionHandler {
     @ExceptionHandler(value = IllegalArgumentException.class)
     public Result<Object> errorHandler(IllegalArgumentException ignoredException) {
         log.debug("[BusinessExceptionHandler::IllegalArgumentException] FAILED_LOGIN_PWD_ERROR: code={}; msg={}", FAILED_LOGIN_PWD_ERROR.getCode(), FAILED_LOGIN_PWD_ERROR.getCode());
-        return Result.failed(FAILED_LOGIN_PWD_ERROR);
+        return Result.failed(400, ignoredException.getMessage());
     }
 
     @ExceptionHandler(value = BeanCreationException.class)
