@@ -55,7 +55,6 @@ public class CloudFlare {
                 .body(JSONUtil.toJsonPrettyStr(new HashMap<String, Object>() {{
                     put("messages", messages);
                 }}))//表单内容
-                .timeout(60000)//超时，毫秒
                 .execute().body();
         log.info("AI: resultStr={};", resultStr);
         if(StringUtils.isNotBlank(resultStr)) {
