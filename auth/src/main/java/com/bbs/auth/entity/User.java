@@ -182,4 +182,9 @@ public class User implements Serializable {
         this.phone = phone;
         this.openId = openId;
     }
+
+    public User(String name, Long phone) {
+        this.name = name;
+        this.phone = phone;
+    }
 }

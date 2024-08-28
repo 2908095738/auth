@@ -101,8 +101,15 @@ public class Login {
                         phoneCodeCache.delCode(phone);
                         user = userCache.searchByPhoneNoLockNoLoad(phone);
 
-                        checkArgument(nonNull(user), FAILED_LOGIN_USER_NOT_EXISTS);
-                        checkUserState(user);
+                        if(nonNull(user)) {
+                            // 用户已注册
+                            checkUserState(user);
+                            checkUserPWD(param, user);
+                        } else {
+                            // 用户未注册
+                            user = new User(phone, Long.valueOf(phone));
+                            service.save(user);
+                        }
 
                     } else if (LoginType.WX.getCode().equals(loginType)) {
                         // 场景1：未注册（手机号未注册，且微信未绑定）

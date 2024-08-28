@@ -260,10 +260,11 @@ public class RedisUtil {
                     }
                 }
             } catch (IllegalArgumentException | InterruptedException e){
+                transactionManager.rollback(transaction);
+                log.warn("Redisson: 参数异常，触发回滚！！！");
                 throw e;  // 避开 lock 对参数检查异常的捕获
             } catch (Exception e) {
                 transactionManager.rollback(transaction);
-                log.error("Redisson: 业务异常，触发回滚！！！");
                 e.printStackTrace();
             }
             if(lock.getHoldCount() > 0) {
