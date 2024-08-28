@@ -12,9 +12,11 @@ import com.bbs.auth.cache.code.PhoneCodeCache;
 import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.dao.UserDao;
 import com.bbs.auth.entity.Company;
+import com.bbs.auth.entity.LoginLog;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.UserCompany;
 import com.bbs.auth.service.CompanyService;
+import com.bbs.auth.service.LoginLogService;
 import com.bbs.auth.service.TokenService;
 import com.bbs.auth.service.UserService;
 import com.bbs.auth.util.RedisUtil;
@@ -74,6 +76,9 @@ public class Login {
     private UserDao db;
     @Resource
     private CompanyService companyService;
+
+    @Resource
+    private LoginLogService logService;
 
     @Resource
     private WxUtil wxUtil;
@@ -156,10 +161,10 @@ public class Login {
                             checkUserPWD(param, user);
                         } else {
                             // 用户未注册
-                            return failed(FAILED_LOGIN_USER_NEED_REGISTER);
+                            throw new IllegalArgumentException(FAILED_LOGIN_USER_NEED_REGISTER.getMsg());
                         }
                     } else {
-                        return failed(FAILED_LOGIN_TYPE_NOT_AVAILABLE);
+                        throw new IllegalArgumentException(FAILED_LOGIN_TYPE_NOT_AVAILABLE.getMsg());
                     }
                     Date expirationTime = user.getExpirationTime();
                     if(nonNull(expirationTime)) {
@@ -172,7 +177,7 @@ public class Login {
                             }
                         } else {
                             // 过期
-                            return failed(FAILED_ACCOUNT_EXPIRED);
+                            throw new IllegalArgumentException(FAILED_ACCOUNT_EXPIRED.getMsg());
                         }
                     }
 
@@ -244,14 +249,14 @@ public class Login {
     }
 
     public void recordLoginSuccessLog(Param param, String newToken, String loginTime) {
-        Log log = new Log(INTEGER_ZERO, param, loginTime);
+        LoginLog log = new LoginLog(INTEGER_ZERO, param, loginTime);
         log.setNewToken(newToken);
-        deque().addFirst(JSONUtil.toJsonPrettyStr(log));
+        logService.save(log);
     }
 
     public void recordLoginFailLog(Param param, String errorMsg, String loginTime) {
-        Log log = new Log(INTEGER_ZERO, param, loginTime);
+        LoginLog log = new LoginLog(INTEGER_ZERO, param, loginTime);
         log.setErrorMsg(errorMsg);
-        deque().addFirst(JSONUtil.toJsonPrettyStr(log));
+        logService.save(log);
     }
 }
