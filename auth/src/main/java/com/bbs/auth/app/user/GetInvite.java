@@ -40,7 +40,7 @@ public class GetInvite {
     /**
      * 获取邀请码
      */
-    @GetMapping("/user/invite")
+    @GetMapping("/invite")
     public Result<String> getInviteCode() {
         Invite invite = orm.selectJoinOne(Invite.class, new MPJLambdaWrapper<Invite>()
                 .eq(Invite::getUserId, LoginUser.getId()));

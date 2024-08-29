@@ -1,7 +1,7 @@
 package com.clinic.service.impl;
 
+import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.clinic.dto.GetPayDto;
 import com.clinic.dto.PayAndRecordPageDto;
 import com.clinic.dto.param.GetPayParam;
@@ -13,6 +13,7 @@ import com.clinic.service.PayService;
 import com.clinic.util.LoginUser;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -56,10 +57,21 @@ public class PayServiceImpl extends MPJBaseServiceImpl<PayMapper, Pay>
                 .leftJoin(Patient.class, Patient::getId, Pay::getPatientId)
                 .leftJoin(PayRecord.class, PayRecord::getPayId, Pay::getId)
                 .eq(nonNull(param.getState()), Pay::getState, param.getState())
-                .and(nonNull(param.getStartDate()) && nonNull(param.getEndDate()), ext -> ext
+
+                .and(nonNull(param.getStartDate()) && nonNull(param.getEndDate()) && param.getState() == NumberUtils.INTEGER_ONE,
+                        wrapper -> wrapper
+                                .ge(Pay::getDossierTime,
+                                        nonNull(param.getStartDate()) ?
+                                                DateUtil.beginOfDay(param.getStartDate()).toJdkDate() : null)
+                                .lt(Pay::getDossierTime,
+                                        nonNull(param.getEndDate()) ?
+                                                DateUtil.endOfDay(param.getEndDate()).toJdkDate() : null))
+
+                .and(nonNull(param.getStartDate()) && nonNull(param.getEndDate()) && param.getState() != NumberUtils.INTEGER_ONE, ext -> ext
                         .ge(Pay::getUpdateTime, param.getStartDate())
                         .lt(Pay::getUpdateTime, param.getEndDate())
                 )
+
                 .and(nonNull(param.getName()) || nonNull(param.getPhone()) || nonNull(param.getAddress()), ext -> ext
                         .like(nonNull(param.getName()), Patient::getName, param.getName())
                         .or()

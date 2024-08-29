@@ -76,11 +76,21 @@ public class SearchList extends MPJBaseServiceImpl<AdmissionLogMapper, Admission
                 .eq(nonNull(param.state), AdmissionLog::getState, param.state)
                 .eq(AdmissionLog::getUserId, LoginUser.getId())
                 .eq(nonNull(param.patientId),AdmissionLog::getPatientId, nonNull(param.patientId) ? param.patientId : null)
-                .eq(StringUtils.isNotBlank(param.createTime) && StringUtils.isBlank(param.endTime), AdmissionLog::getCreateTime, nonNull(param.createTime) ? param.createTime : null)
+
+                .and(StringUtils.isNotBlank(param.getCreateTime()) && StringUtils.isBlank(param.getEndTime()),
+                        wrapper -> wrapper
+                                .ge(AdmissionLog::getCreateTime,
+                                        nonNull(param.getCreateTime()) ?
+                                                DateUtil.beginOfDay(DateUtil.parse(param.getCreateTime(),"yyyy-MM-dd")).toJdkDate() : null)
+                                .lt(AdmissionLog::getCreateTime,
+                                        nonNull(param.getCreateTime()) ?
+                                                DateUtil.endOfDay(DateUtil.parse(param.getCreateTime(),"yyyy-MM-dd")).toJdkDate() : null))
+
                 .and(nonNull(param.createTime) && nonNull(param.endTime), wrapper -> wrapper
                         .ge(AdmissionLog::getCreateTime, nonNull(param.createTime) ? DateUtil.beginOfDay(new Date(param.createTime)) : null)
                         .lt(AdmissionLog::getCreateTime, nonNull(param.endTime) ? DateUtil.endOfDay(new Date(param.endTime)) : null)
                 )
+
                 .and(nonNull(param.state), w -> w.isNull(nonNull(param.state), Pay::getState).or().eq(nonNull(param.state), AdmissionLog::getState, param.state))
                 .leftJoin(Pay.class, Pay::getId, AdmissionLog::getPayId)
                 .orderByDesc(AdmissionLog::getCreateTime);
