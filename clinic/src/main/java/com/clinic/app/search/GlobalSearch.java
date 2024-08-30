@@ -1,14 +1,12 @@
 package com.clinic.app.search;
 
+import cn.hutool.core.date.DateUtil;
 import com.bbs.Result;
 import com.bbs.api.auth.User;
 import com.clinic.app.ai.CloudFlare;
-import com.clinic.app.log.admission.SearchList;
 import com.clinic.cache.unit.UnitCache;
 import com.clinic.entity.*;
-import com.clinic.enums.AISearchSearchKeyword;
 import com.clinic.service.*;
-import com.clinic.service.impl.StockBatchServiceImpl;
 import com.clinic.service.impl.StockServiceImpl;
 import com.clinic.util.LoginUser;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
@@ -16,7 +14,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,8 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
@@ -59,13 +54,7 @@ public class GlobalSearch {
     private StockService stockService;
 
     @Resource
-    private CloudFlare cloudFlareAI;
-
-    @Resource
     private StockBatchService stockBatchService;
-
-    @Resource
-    private AsyncSearch asyncSearch;
 
     @Resource
     private UnitCache unitCache;
@@ -104,7 +93,6 @@ public class GlobalSearch {
 
         VO vo = new VO();
 //        try {
-//            vo = new VO();
 //            if(val.equals("我需要最近3天的就诊记录")) {
 //                User user = LoginUser.get();
 //                vo.setAdmissionLogs(admissionLogService.lambdaQuery()
@@ -135,9 +123,11 @@ public class GlobalSearch {
 //                StockServiceImpl.DrugExpiryGroup drugExpiryGroup = stockService.countAndUpdateDrugExpiryState();
 //                // 填充 Stock
 //                List<StockBatch> stockShortage = drugExpiryGroup.getStockShortage();
-//                Map<Long, Stock> stockMap = stockService.listByIds(stockShortage.stream().map(StockBatch::getStockId).collect(Collectors.toSet()))
-//                        .stream().collect(Collectors.toMap(Stock::getId, stock -> stock));
-//                stockShortage.forEach(stockBatch -> stockBatch.setStock(stockMap.get(stockBatch.getStockId())));
+//                if(stockShortage.size() > INTEGER_ZERO) {
+//                    Map<Long, Stock> stockMap = stockService.listByIds(stockShortage.stream().map(StockBatch::getStockId).collect(Collectors.toSet()))
+//                            .stream().collect(Collectors.toMap(Stock::getId, stock -> stock));
+//                    stockShortage.forEach(stockBatch -> stockBatch.setStock(stockMap.get(stockBatch.getStockId())));
+//                }
 //
 //                vo.setUnderStockDrugs(drugExpiryGroup.getStockShortage());
 //                return Result.success(vo);
@@ -288,7 +278,7 @@ public class GlobalSearch {
         public DrugUse(Map.Entry<String, List<PrescriptionDrug>> entry) {
             List<PrescriptionDrug> prescriptionDrugs = entry.getValue();
             PrescriptionDrug one = prescriptionDrugs.get(INTEGER_ZERO);
-            long count = entry.getValue().stream().map(PrescriptionDrug::getSingleDose).count();
+            long count = entry.getValue().stream().mapToLong(PrescriptionDrug::getQuantity).sum();
             this.name = entry.getKey() + " (" + count + one.getSingleDoseUnit() +")";
             this.value = count;
             this.unitName = one.getQuantityUnit();

@@ -42,12 +42,7 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.clinic.enums.DrugExpiryStateEnum.ABOUT_EXPIRES;
@@ -293,31 +288,23 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
     }
 
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    private static class DrugExpiryCount {
-
-        private Long normal;
-
-        private Long aboutExpires;
-
-        private Long expires;
-    }
-
-
 
     public boolean updateNum(PrescriptionDto prescriptionDto) {
         //校验库存不为零
         List<PrescriptionDrugDto> drugList = prescriptionDto.getDrugList();
-        List<Long> stockBatchIds = drugList.stream().map(PrescriptionDrugDto::getStockBatchId).collect(Collectors.toList());
-        Map<Long, StockBatch> stockBatchMap = batchService.lambdaQuery().in(StockBatch::getId, stockBatchIds).list().stream().collect(Collectors.toMap(StockBatch::getId, o2 -> o2));
-        if(CollUtil.isNotEmpty(stockBatchMap)){
-            List<StockBatch> newStockDrugList = drugList.stream().map(drug->{
-                StockBatch oldStockBatch = stockBatchMap.get(drug.getStockBatchId());
-                return new StockBatch(drug,oldStockBatch.getNumber());
-            }).collect(Collectors.toList());
-            return batchService.updateBatchById(newStockDrugList);
+        if(drugList.size() > INTEGER_ZERO) {
+            Set<Long> stockBatchIds = drugList.stream().map(PrescriptionDrugDto::getStockBatchId).filter(Objects::nonNull).collect(Collectors.toSet());
+            Map<Long, StockBatch> stockBatchMap = batchService.lambdaQuery().in(StockBatch::getId, stockBatchIds).list().stream().collect(Collectors.toMap(StockBatch::getId, o2 -> o2));
+            if(CollUtil.isNotEmpty(stockBatchMap)){
+                List<StockBatch> newStockDrugList = new ArrayList<>();
+                drugList.forEach(drug -> {
+                    StockBatch oldStockBatch = stockBatchMap.get(drug.getStockBatchId());
+                    if(nonNull(oldStockBatch)) {
+                        newStockDrugList.add(new StockBatch(drug,oldStockBatch.getNumber()));
+                    }
+                });
+                return batchService.updateBatchById(newStockDrugList);
+            }
         }
         return true;
     }
