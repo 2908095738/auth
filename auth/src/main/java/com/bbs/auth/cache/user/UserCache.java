@@ -85,6 +85,7 @@ public class UserCache {
         List<String> idStrList = ids.stream().filter(Objects::nonNull).map(USER::key).collect(Collectors.toList());
         return redis.multiGet(idStrList)
                 .stream().map(str -> nonNull(str) ? JSONUtil.toBean(str, User.class) : null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 

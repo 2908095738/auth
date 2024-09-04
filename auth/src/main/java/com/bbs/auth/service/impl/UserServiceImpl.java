@@ -220,8 +220,10 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
         }
         if(cacheIsEmptyUserIds.size() >= NumberUtils.INTEGER_ONE) {
             List<User> cacheIsEmptyUser = listByIds(cacheIsEmptyUserIds);
-            for (int index = 0; index < cacheIsEmptyUser.size(); index++) {
-                users.set(cacheIsEmptyUserIndexList.get(index), cacheIsEmptyUser.get(index));
+            if(nonNull(cacheIsEmptyUser) && cacheIsEmptyUser.size() > INTEGER_ZERO) {
+                for (int index = 0; index < cacheIsEmptyUser.size(); index++) {
+                    users.set(cacheIsEmptyUserIndexList.get(index), cacheIsEmptyUser.get(index));
+                }
             }
         }
         return users;
