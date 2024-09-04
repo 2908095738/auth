@@ -62,8 +62,6 @@ public class SearchSystemRouter {
         User user = userService.loginEntityUser();
         System system = systemService.searchBySystemCode(systemCode);
         Long systemId = system.getId();
-//        Long companyId = searchCompanyId(uid);
-//        tryCreateSystemCompany(systemId, companyId);
         List<SystemRouter> systemRouters = searchRouter(systemId);
         if(!user.isSupperAdmin()&&CollUtil.isNotEmpty(systemRouters)){
             systemRouters = systemRouters.stream().filter(o->
