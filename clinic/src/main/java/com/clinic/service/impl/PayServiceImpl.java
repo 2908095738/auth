@@ -52,7 +52,7 @@ public class PayServiceImpl extends MPJBaseServiceImpl<PayMapper, Pay>
         Long uid = LoginUser.getId();
         return baseMapper.selectJoinList(PayAndRecordPageDto.class, new MPJLambdaWrapper<Pay>()
                 .select(Patient::getName, Patient::getSex, Patient::getAge, Patient::getAddress, Patient::getPhone)
-                .select(Pay::getDossierTime, Pay::getFee)
+                .select(Pay::getDossierTime, Pay::getFee, Pay::getWay)
                 .selectCollection(PayRecord.class, PayAndRecordPageDto::getPayRecordList)
                 .leftJoin(Patient.class, Patient::getId, Pay::getPatientId)
                 .leftJoin(PayRecord.class, PayRecord::getPayId, Pay::getId)

@@ -121,6 +121,11 @@ public class AdmissionLog implements Serializable {
     @TableField(value = "state")
     private AdmissionStateEnum state;
 
+    /**
+     * 关联微信编号
+     */
+    @TableField(value = "open_id")
+    private String openId;
 
 
     @TableField(exist = false)

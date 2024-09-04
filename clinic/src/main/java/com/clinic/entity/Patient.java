@@ -18,7 +18,7 @@ import java.util.Date;
 public class Patient implements Serializable {
 
     /**
-     * 编号
+     * 主键
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
@@ -132,10 +132,19 @@ public class Patient implements Serializable {
     private Integer isFirst;
 
     /**
+     * 关联微信编号
+     */
+    @TableField(value = "open_id")
+    private String openId;
+
+
+    /**
      *病例数量
      */
     @TableField(exist = false)
     private Integer dossierNum;
+
+
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

@@ -1,6 +1,7 @@
 package com.clinic.service.impl;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.clinic.cache.log.admission.AdmissionLogCache;
 import com.clinic.dto.param.RecordAdmissionLogParam;
@@ -92,6 +93,10 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
     public Long save(RecordAdmissionLogParam param) {
         Long loginUID = LoginUser.getId();
         Patient patient = patientService.getById(param.getPatientId());
+        if (StrUtil.isNotBlank(patient.getOpenId())) {
+            patient.setOpenId(param.getOpenId());
+            patientService.updateById(patient);
+        }
         AdmissionLog log = new AdmissionLog(param, patient);
         if(isNull(param.getIsFirst())) log.setIsFirst(computeIsFirst(param, loginUID));
         save(log);

@@ -1,18 +1,17 @@
 package com.clinic.util;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Component
 public class RedisUtil {
 
-    @Autowired
-    @Qualifier("protoStuffTemplate")
-    private RedisTemplate protoStuffTemplate;
+    @Resource(name = "protoStuffTemplate")
+    private RedisTemplate<String, String> redis;
 
     /**
      * 设置过期时间，单位秒
@@ -21,7 +20,7 @@ public class RedisUtil {
      * @return 成功：true，失败：false
      */
     public boolean setExpireTime(String key, long timeout) {
-        return protoStuffTemplate.expire(key, timeout, TimeUnit.SECONDS);
+        return redis.expire(key, timeout, TimeUnit.SECONDS);
     }
 
     /**
@@ -29,7 +28,7 @@ public class RedisUtil {
      * @param key 键的名称
      */
     public void delete(String key) {
-        protoStuffTemplate.delete(key);
+        redis.delete(key);
     }
 
     /**
@@ -38,7 +37,7 @@ public class RedisUtil {
      * @return 存在：true，不存在：false
      */
     public boolean hasKey(String key) {
-        return protoStuffTemplate.hasKey(key);
+        return redis.hasKey(key);
     }
 
     /**
@@ -46,8 +45,8 @@ public class RedisUtil {
      * @param key 键
      * @param value 值
      */
-    public void set(String key, Object value) {
-        protoStuffTemplate.boundValueOps(key).set(value);
+    public void set(String key, String value) {
+        redis.boundValueOps(key).set(value);
     }
 
     /**
@@ -56,8 +55,8 @@ public class RedisUtil {
      * @param value 值
      * @param expireTime 过期时间
      */
-    public void set(String key, Object value, Long expireTime) {
-        protoStuffTemplate.boundValueOps(key).set(value, expireTime, TimeUnit.SECONDS);
+    public void set(String key, String value, Long expireTime) {
+        redis.boundValueOps(key).set(value, expireTime, TimeUnit.SECONDS);
     }
 
     /**
@@ -65,12 +64,12 @@ public class RedisUtil {
      * @param key 键
      * @return 查询成功：值，查询失败，null
      */
-    public Object get(String key) {
-        return protoStuffTemplate.boundValueOps(key).get();
+    public String get(String key) {
+        return redis.boundValueOps(key).get();
     }
 
     public Long increment(String key) {
-        return protoStuffTemplate.boundValueOps(key).increment();
+        return redis.boundValueOps(key).increment();
     }
 
     /**
@@ -79,6 +78,15 @@ public class RedisUtil {
      * @return
      */
     public Boolean setIfPresent(String key, String value) {
-        return protoStuffTemplate.opsForValue().setIfPresent(key, value);
+        return redis.opsForValue().setIfPresent(key, value);
+    }
+
+
+    public void hashSet(String key, Map<String, String> values) {
+        redis.opsForHash().putAll(key, values);
+    }
+
+    public Object hashGet(String key, String hashKey) {
+        return redis.opsForHash().get(key, hashKey);
     }
 }

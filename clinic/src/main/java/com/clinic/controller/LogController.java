@@ -13,8 +13,8 @@ import com.clinic.entity.Patient;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.OperationLogService;
 import com.clinic.service.PatientService;
-import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
+import com.clinic.util.log.LogUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -23,7 +23,6 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
@@ -36,7 +35,6 @@ import static java.util.Objects.nonNull;
  * 日志
  */
 @RestController
-@RequestMapping("/log")
 public class LogController {
 
     @Resource
@@ -57,7 +55,7 @@ public class LogController {
      * @param param 就诊信息
      * @return null
      */
-    @PutMapping("/admission")
+    @PutMapping("/log/admission")
     public Result<Long> recordAdmission(@RequestBody RecordAdmissionLogParam param) {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         User loginUser = LoginUser.get();
@@ -86,7 +84,7 @@ public class LogController {
      * 查询就诊日志
      * @param param SearchAdmissionParam
      */
-    @GetMapping("/admission")
+    @GetMapping("/log/admission")
     public Result<Page<AdmissionLog>> searchAdmission(SearchAdmissionParam param) throws ParseException {
         return Result.success(database.search(param));
     }
@@ -98,7 +96,7 @@ public class LogController {
         private Long userId = LoginUser.getId();
     }
 
-    @GetMapping("/operation")
+    @GetMapping("/log/operation")
     public Result<Page<OperationLog>> searchOperationLog(SearchOperationLogParam param) {
         return Result.success(operationLogService.lambdaQuery()
                 .eq(nonNull(param.userId), OperationLog::getUserId, param.userId)

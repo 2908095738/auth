@@ -1,5 +1,6 @@
 package com.bbs.auth.service.impl;
 
+import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
 import cn.hutool.crypto.symmetric.SymmetricCrypto;
@@ -127,6 +128,9 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
             if (msgType.equals("event")) {
                 String event = resXml.get("Event");
                 String ticket = resXml.get("Ticket"); // 获取二维码凭证
+
+                String user;
+                String[] userArray;
                 switch (event){
                     case "subscribe": //扫描带参数二维码事件-未关注
                         if(StrUtil.isEmpty(ticket)){
@@ -134,10 +138,16 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
                         }
                         log.debug("处理“扫描带参数二维码事件-未关注”事件");
                         // 处理绑定微信号事件
-                        if ("1".equals(redisUtil.get("WX:"+ticket))){
+                        user = redisUtil.get("WX:" + ticket);
+                        userArray = user.split(",");
+                        if ("1".equals(userArray[0])){
                             //先删除
                             redisUtil.delete("WX:"+ticket);
-                            redisUtil.set("WX:"+ticket, fromUserName,100000L);
+                            if(ObjUtil.isNotEmpty(userArray[1])){
+                                redisUtil.set("WX:"+ticket, fromUserName+","+userArray[1],100000L);
+                            }else{
+                                redisUtil.set("WX:"+ticket, fromUserName,100000L);
+                            }
                         }
                         xml ="<xml>\n" +
                                 "  <ToUserName><![CDATA[" + fromUserName + "]]></ToUserName>\n" +
@@ -155,10 +165,16 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
                         }
                         log.debug("处理“扫描带参数二维码事件-已关注”事件");
                         // 处理绑定微信号事件
-                        if ("1".equals(redisUtil.get("WX:"+ticket))){
+                        user = redisUtil.get("WX:" + ticket);
+                        userArray = user.split(",");
+                        if ("1".equals(userArray[0])){
                             //先删除
                             redisUtil.delete("WX:"+ticket);
-                            redisUtil.set("WX:"+ticket, fromUserName,100000L);
+                            if(ObjUtil.isNotEmpty(userArray[1])){
+                                redisUtil.set("WX:"+ticket, fromUserName+","+userArray[1],100000L);
+                            }else{
+                                redisUtil.set("WX:"+ticket, fromUserName,100000L);
+                            }
                         }
                         xml ="<xml>\n" +
                                 "  <ToUserName><![CDATA[" + fromUserName + "]]></ToUserName>\n" +
