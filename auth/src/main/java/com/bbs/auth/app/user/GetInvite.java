@@ -42,6 +42,7 @@ public class GetInvite {
      */
     @GetMapping("/invite")
     public Result<String> getInviteCode() {
+        try{
         Invite invite = orm.selectJoinOne(Invite.class, new MPJLambdaWrapper<Invite>()
                 .eq(Invite::getUserId, LoginUser.getId()));
 
@@ -60,7 +61,12 @@ public class GetInvite {
             Invite toDBInvite = getInv();
             ORMUtil.fastTran(() -> orm.save(toDBInvite), transactionManager, transactionDefinition);
             return Result.success(toDBInvite.getInviteCode());
+        }}
+        catch (Exception e){
+            e.printStackTrace();
         }
+        
+        return Result.success("233");
     }
 
     /**
