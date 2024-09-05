@@ -66,8 +66,6 @@ public class AdmissionLogCacheImpl implements AdmissionLogCache {
     @Override
     public Long save(RecordAdmissionLogParam param) {
         Long id = LoginUser.getId();
-        Patient patient = param.getPatient();
-        param.setOpenId(redis.opsForValue().get("PATIENT:" + patient.getPhone()));
         Long save = database.save(param);
         if(hasKey(getKey(id))){
             if(!deleteKey(getKey(id))) {

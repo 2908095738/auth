@@ -1,7 +1,6 @@
 package com.clinic.controller;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.bbs.Result;
 import com.clinic.app.AppPayService;
@@ -20,7 +19,6 @@ import com.clinic.entity.Usage;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.DossierService;
 import com.clinic.util.LoginUser;
-import com.clinic.util.WxUtil;
 import com.clinic.util.log.LogUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -66,8 +64,6 @@ public class PrescriptionController {
     @Resource
     private UnitCache unitCache;
 
-    @Resource
-    private WxUtil wxUtil;
 
     /**
      * 添加处方
@@ -93,11 +89,6 @@ public class PrescriptionController {
                 admissionLogService.update(param.getAdmissionLogId(), param.getPrescriptionId(), param.getPayId(), dossier.getId(), dossier.getDiagnosis());
                 LogUtil.Operation.updatePrescription(admissionLog.getPatientId(), param.getPayId(), "{}修改处方和处方收费记录：处方id={}, 支付id={}",
                 LoginUser.get().getName(), admissionLog.getPrescriptionId(), param.getPayId());
-            }
-            // 发送微信消息
-            if(StrUtil.isNotBlank(admissionLog.getOpenId())){
-                log.info(admissionLog.getPatientId()+ "准备发送处方信息到微信公众号");
-                wxUtil.sendPrescriptionMassage(param,admissionLog);
             }
             transactionManager.commit(transaction);
             return Result.success(true);

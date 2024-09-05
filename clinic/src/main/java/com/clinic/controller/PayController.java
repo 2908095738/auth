@@ -1,6 +1,6 @@
 package com.clinic.controller;
 
-import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.clinic.app.AppPayService;
@@ -17,12 +17,14 @@ import com.clinic.dto.param.GetPayParam;
 import com.clinic.dto.param.PatientPayRecordParam;
 import com.clinic.dto.param.ReturnPayRecordParam;
 import com.clinic.dto.param.UpdatePayById;
+import com.clinic.entity.AdmissionLog;
 import com.clinic.entity.PayRecord;
 import com.clinic.enums.PayStateEnum;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.PayService;
 import com.clinic.util.LoginUser;
 import com.clinic.util.PageUtil;
+import com.clinic.util.WxUtil;
 import com.clinic.util.log.LogUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -66,7 +68,8 @@ public class PayController {
     private final DataSourceTransactionManager transactionManager;
 
     private final TransactionDefinition transactionDefinition;
-
+    @Resource
+    private WxUtil wxUtil;
     @Resource
     private PayService payService;
     /**
@@ -182,21 +185,22 @@ public class PayController {
     public Result<Boolean> updatePayById(@RequestBody UpdatePayById param){
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            if(ObjUtil.isEmpty(param.getWay())||(ObjUtil.isNotEmpty(param.getState())&&param.getState()==1)){//如果收费方式为空或者支付状态是已支付，说明是修改支付数据
-                //修改收费
-                if(!payCache.updatePayById(param))throw new RuntimeException();
-            }else{//收费-扣库存
-                param.setState(PayStateEnum.IS_PAY.getCode());
-                //修改收费
-                if(!payCache.updatePayById(param))throw new RuntimeException();
-                //根据支付id,查出处方数据
-                PrescriptionDto prescriptionDto = appPrescriptionService.getByPayId(param.getId());
-                Long patientId = prescriptionDto.getPatientId();
-                //根据处方数据，扣库存
-                if(!appStockService.updateNum(prescriptionDto))throw new RuntimeException();
-                //修改门诊日志状态
-                if (!admissionLogService.updateEndState(param.getAdmissionId()))throw new RuntimeException();
-                LogUtil.Operation.pay(patientId, param.getAdmissionId(), "{}就诊收费-修改收费状态和收费方式：收费id={}, 处方id={}", LoginUser.get().getName(), param.getId(), prescriptionDto.getId());
+            AdmissionLog admissionLog = admissionLogService.getById(param.getAdmissionId());
+            //收费-扣库存
+            param.setState(PayStateEnum.IS_PAY.getCode());
+            //修改收费
+            if(!payCache.updatePayById(param))throw new RuntimeException();
+            //根据支付id,查出处方数据
+            PrescriptionDto prescriptionDto = appPrescriptionService.getByPayId(param.getId());
+            Long patientId = prescriptionDto.getPatientId();
+            //根据处方数据，扣库存
+            if(!appStockService.updateNum(prescriptionDto))throw new RuntimeException();
+            //修改门诊日志状态
+            if (!admissionLogService.updateEndState(param.getAdmissionId()))throw new RuntimeException();
+            LogUtil.Operation.pay(patientId, param.getAdmissionId(), "{}就诊收费-修改收费状态和收费方式：收费id={}, 处方id={}", LoginUser.get().getName(), param.getId(), prescriptionDto.getId());
+            // 发送微信消息
+            if(StrUtil.isNotBlank(admissionLog.getOpenId())){
+                wxUtil.sendPrescriptionMassage(admissionLog,prescriptionDto);
             }
             transactionManager.commit(transaction);
             return Result.success(true);

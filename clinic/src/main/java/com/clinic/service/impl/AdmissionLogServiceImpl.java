@@ -13,6 +13,8 @@ import com.clinic.mapper.AdmissionLogMapper;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.PatientService;
 import com.clinic.util.LoginUser;
+import com.clinic.util.RedisUtil;
+import com.clinic.util.WxUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
@@ -43,6 +45,12 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
     @Lazy
     @Resource
     private AdmissionLogCache admissionLogCache;
+
+    @Resource
+    private RedisUtil redisUtil;
+
+    @Resource
+    private WxUtil wxUtil;
 
     @Override
     public Page<AdmissionLog> search(SearchAdmissionParam param) throws ParseException {

@@ -18,8 +18,8 @@ import com.clinic.entity.Dossier;
 import com.clinic.entity.Patient;
 import com.clinic.mapper.PatientMapper;
 import com.clinic.service.PatientService;
-import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
+import com.clinic.util.log.LogUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.toolkit.JoinWrappers;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
@@ -31,7 +31,6 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 
 import javax.annotation.Resource;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;

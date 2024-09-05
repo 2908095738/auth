@@ -180,5 +180,6 @@ public class AdmissionLog implements Serializable {
         this.phone = patient.getPhone();
         this.address = patient.getAddress();
         this.birthDate = patient.getBirthDate();
+        this.openId = patient.getOpenId();
     }
 }

@@ -1,5 +1,6 @@
 package com.clinic.app.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
@@ -112,9 +113,12 @@ public class AppPayServiceImpl implements AppPayService {
     @Override
     public boolean updatePayById(UpdatePayById param) {
         List<CreateOrSetPayRecord> payRecords = param.getPayRecords();
-        removePayOther(param.getId());
-        createPayOtherThrowable(payRecords,param.getId());
-        return payService.updateById(payConverter.toPayEntity(param));
+        if(CollUtil.isNotEmpty(payRecords)){
+            removePayOther(param.getId());
+            createPayOtherThrowable(payRecords,param.getId());
+            return payService.updateById(payConverter.toPayEntity(param));
+        }
+       return true;
     }
 
 

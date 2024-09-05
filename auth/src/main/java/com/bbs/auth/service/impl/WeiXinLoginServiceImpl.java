@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.Objects.isNull;
@@ -59,7 +60,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
 
 
     @Override
-    public Map<String,String> getQrCode() {
+    public Map<String,String> getQrCode(Long phone) {
         log.info("getQrCode方法开始执行！");
         // 获取 AccessToken
         String accessToken;
@@ -95,8 +96,11 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
             e.printStackTrace();
             throw new BusinessException("获取tikect异常");
         }
-
-        redisUtil.set("WX:"+ticket, "1", Long.parseLong(expireSeconds));
+        if(Objects.nonNull(phone)){
+            redisUtil.set("WX:"+ticket, "1,"+phone, Long.parseLong(expireSeconds));
+        }else{
+            redisUtil.set("WX:"+ticket, "1", Long.parseLong(expireSeconds));
+        }
         // 通过ticket换取二维码 https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=
         HashMap<String, String> map = new HashMap<>();
         map.put("ticket", ticket);

@@ -8,8 +8,11 @@ import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.bbs.exception.BusinessException;
-import com.clinic.dto.param.SaveOrUpdatePrescription;
+import com.clinic.dto.PrescriptionDto;
 import com.clinic.entity.AdmissionLog;
+import com.clinic.entity.Patient;
+import com.clinic.entity.Settings;
+import com.clinic.service.SettingsService;
 import lombok.extern.slf4j.Slf4j;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -43,6 +46,9 @@ public class WxUtil {
 
     @Resource
     private RedisUtil redisUtil;
+
+    @Resource
+    private SettingsService settingsService;
 
     /**
      * 用于获取 AccessToken (微信接口调用凭证)
@@ -170,32 +176,37 @@ public class WxUtil {
     }
 
 
-
-
-
     /**
-     * 发送处方消息
+     *
+     * @param patient
      */
-    public void sendPrescriptionMassage(SaveOrUpdatePrescription prescription, AdmissionLog admissionLog){
-        log.debug("生成处方成功! 用户信息={}", JSONUtil.toJsonPrettyStr(prescription));
+    public void sendPatientMassage(Patient patient) {
+        Settings byUserId = settingsService.getByUserId();
+        log.debug("用户绑定成功! 用户信息={}", JSONUtil.toJsonPrettyStr(patient));
         // 获取 AccessToken
         String accessToken = getAccessToken();
         String url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=" + accessToken;
         // 组织请求数据
         Map<String, Object> data = new HashMap<>();
 
-        // 用户账号
+        // 用户姓名
+        Map<String, String> keyword1 = new HashMap<>();
+        keyword1.put("value", patient.getName());
+        data.put("thing1",keyword1);
+
+        // 平台名称
+        Map<String, String> keyword2 = new HashMap<>();
+        keyword2.put("value",byUserId.getClinicName() );
+        data.put("thing2",keyword2);
+
+        // 绑定时间
         Map<String, String> keyword3 = new HashMap<>();
-        keyword3.put("value", admissionLog.getPhone()+"");
-        data.put("character_string6",keyword3);
-        // 登录时间
-        Map<String, String> keyword4 = new HashMap<>();
-        keyword4.put("value", new SimpleDateFormat("yyyy年MM月dd日 HH:mm").format(new Date()));
-        data.put("time1",keyword4);
+        keyword3.put("value", new SimpleDateFormat("yyyy年MM月dd日 HH:mm").format(new Date()));
+        data.put("time4",keyword3);
 
         Map<String, Object> jsonData = new HashMap<>();
-        jsonData.put("touser", admissionLog.getOpenId());
-        jsonData.put("template_id", "30_oq_2GlEMfPkUunUk2HzXdbwF04aO1hjwMwymxA5Q");
+        jsonData.put("touser", patient.getOpenId());
+        jsonData.put("template_id", "iq5G8dIQw0PYconRIR1GHz8_3cXk-1FiCTNvhjN0v9o");
         jsonData.put("data", data);
         // 发送请求
         String result = HttpRequest.post(url).body(JSON.toJSONString(jsonData)).execute().body();
@@ -209,6 +220,49 @@ public class WxUtil {
     }
 
 
+    /**
+     * 发送处方消息
+     */
+    public void sendPrescriptionMassage(AdmissionLog admissionLog, PrescriptionDto prescriptionDto){
+        log.debug("生成处方成功! 用户信息={}", JSONUtil.toJsonPrettyStr(prescriptionDto));
+        // 获取 AccessToken
+        String accessToken = getAccessToken();
+        String url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=" + accessToken;
+        // 组织请求数据
+        Map<String, Object> data = new HashMap<>();
+
+        // 用户名称
+        Map<String, String> keyword1 = new HashMap<>();
+        keyword1.put("value", admissionLog.getName());
+        data.put("character_string6",keyword1);
+        // 单号
+        Map<String, String> keyword2 = new HashMap<>();
+        keyword2.put("value", admissionLog.getPayId()+"");
+        data.put("character_string3",keyword2);
+        // 消费金额
+        Map<String, String> keyword3 = new HashMap<>();
+        keyword3.put("value", prescriptionDto.getPrice()+"");
+        data.put("amount5",keyword3);
+        // 完成时间
+        Map<String, String> keyword4 = new HashMap<>();
+        keyword4.put("value", new SimpleDateFormat("yyyy年MM月dd日 HH:mm").format(new Date()));
+        data.put("time1",keyword4);
+
+        Map<String, Object> jsonData = new HashMap<>();
+        jsonData.put("touser", admissionLog.getOpenId());
+        jsonData.put("template_id", "gb0dqlOOnkdTxhzPfzFcGvDsRk8MJfvoLgjvkyYyKFk");
+        jsonData.put("url", "https://maliang.work/clinic/cure/76?title="+admissionLog.getName()+"&index="+admissionLog.getId());
+        jsonData.put("data", data);
+        // 发送请求
+        String result = HttpRequest.post(url).body(JSON.toJSONString(jsonData)).execute().body();
+        // 结果处理
+        JSONObject ticketJson = JSONObject.parseObject(result);
+        Integer errcode = ticketJson.getInteger("errcode");
+        if (errcode != 0){
+            log.error(errcode + ":" + ticketJson.getString("errmsg"));
+            throw new BusinessException("消息发送失败！");
+        }
+    }
 
 
 }

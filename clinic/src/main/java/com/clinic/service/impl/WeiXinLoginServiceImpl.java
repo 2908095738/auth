@@ -4,12 +4,11 @@ package com.clinic.service.impl;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
 import cn.hutool.crypto.symmetric.SymmetricCrypto;
-import cn.hutool.http.HttpException;
-import cn.hutool.http.HttpRequest;
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.bbs.exception.BusinessException;
+import com.clinic.entity.AdmissionLog;
+import com.clinic.entity.Patient;
 import com.clinic.service.AdmissionLogService;
+import com.clinic.service.PatientService;
 import com.clinic.service.WeiXinLoginService;
 import com.clinic.util.RedisUtil;
 import com.clinic.util.WxUtil;
@@ -20,6 +19,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -35,56 +35,9 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
     private WxUtil wxUtil;
 
     @Resource
+    private PatientService patientService;
+    @Resource
     private AdmissionLogService admissionLogService;
-
-
-    @Override
-    public Map<String,String> getQrCode(Long phone) {
-        log.info("getQrCode方法开始执行！");
-        // 获取 AccessToken
-        String accessToken;
-        try {
-            accessToken = wxUtil.getAccessToken();
-            log.debug("获取到的acesstoken为：‘{}’",accessToken);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new BusinessException("获取AccessToken异常");
-        }
-        // 获取ticket
-        String ticket;
-        String expireSeconds;
-        try {
-            String url = "https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token=" + accessToken;
-            // 组织请求数据
-            Map<String, Object> jsonData = new HashMap<>();
-            jsonData.put("expire_seconds", 1800); // 二维码过期时间
-            jsonData.put("action_name", "QR_SCENE");
-            Map<String, Object> actionInfo = new HashMap<>();
-            Map<String, Object> scene = new HashMap<>();
-            scene.put("scene_str", "3D");
-            actionInfo.put("scene", scene);
-            jsonData.put("action_info", actionInfo);
-            // 发送请求
-            String result = HttpRequest.post(url).body(JSON.toJSONString(jsonData)).execute().body();
-            log.debug("请求微信接口的结果:'{}'",result);
-            // 结果处理
-            JSONObject ticketJson = JSONObject.parseObject(result);
-            ticket = ticketJson.getString("ticket");
-            expireSeconds = ticketJson.getString("expire_seconds");
-        } catch (HttpException e) {
-            e.printStackTrace();
-            throw new BusinessException("获取tikect异常");
-        }
-        redisUtil.set("WX:"+ticket, "1"+","+phone, Long.parseLong(expireSeconds));
-        // 通过ticket换取二维码 https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=
-        HashMap<String, String> map = new HashMap<>();
-        map.put("ticket", ticket);
-        map.put("expire_seconds", expireSeconds);
-        log.info("getQrCode方法执行结束！");
-        return map;
-    }
-
-
 
 
     /**
@@ -94,7 +47,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
      * @return
      */
     @Override
-    public Map<String, Object> checkPhone(String ticket, Long phone) {
+    public Map<String, Object> checkPhone(String ticket, Long phone, boolean isEnd) {
         // 从缓存获取扫码状态
         String wxUser;
         String[] openUser;
@@ -128,7 +81,30 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
         SymmetricCrypto aes = new SymmetricCrypto(SymmetricAlgorithm.AES, token.getBytes());
         scanResultMap3.put("openId", aes.encrypt(openId));
         scanResultMap3.put("scanResult",1);
-        redisUtil.set("PATIENT:"+phone, openId);
+
+        Patient patient;
+        if(isEnd){
+            AdmissionLog dbOne = admissionLogService.getById(phone);
+            patient = patientService.getById(dbOne.getPatientId());
+            dbOne.setOpenId(openId);
+            patient.setOpenId(openId);
+            patientService.updateById(patient);
+            admissionLogService.lambdaUpdate().set(AdmissionLog::getOpenId, openId).eq(AdmissionLog::getId, dbOne.getId()).update();
+            //发送绑定成功消息
+            wxUtil.sendPatientMassage(patient);
+            //发送最近一次就诊处方记录
+        }else{
+            patient = patientService.selectByPhone(String.valueOf(phone));
+            if(Objects.isNull(patient)){
+                //病人还未创建完，暂时存到redis
+                redisUtil.set("PATIENT:"+phone, openId);
+            }else{
+                patient.setOpenId(openId);
+                patientService.updateById(patient);
+                //发送绑定成功消息
+                wxUtil.sendPatientMassage(patient);
+            }
+        }
         return scanResultMap3;
     }
 

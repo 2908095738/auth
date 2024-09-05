@@ -60,10 +60,10 @@ public class WXLoginAuthAPI {
 
     @ApiOperation("微信扫码登录，提供二维码")
     @PostMapping(value = "/weixin/getQRCode")
-    public Result<Map<String, String>> weinLogin(){
+    public Result<Map<String, String>> weinLogin(@RequestParam(required = false) Long phone){
         log.debug("微信扫码登录接口开始执行：/weixin/getQRCode");
         //获取ticket
-        Map<String, String> codeResult = weiXinLoginService.getQrCode();
+        Map<String, String> codeResult = weiXinLoginService.getQrCode(phone);
         log.debug("微信扫码登录接口执行结束！");
         return Result.success(codeResult);
     }

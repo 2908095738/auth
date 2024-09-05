@@ -4,7 +4,5 @@ import java.util.Map;
 
 public interface WeiXinLoginService {
 
-    Map<String,String> getQrCode(Long phone);
-
-    Map<String, Object> checkPhone(String ticket, Long phone);
+    Map<String, Object> checkPhone(String ticket, Long phone, boolean isEnd);
 }
