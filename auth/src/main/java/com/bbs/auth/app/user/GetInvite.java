@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -67,6 +68,29 @@ public class GetInvite {
         }
         
         return Result.success("233");
+    }
+
+    /**
+     * 获取邀请码
+     */
+    @GetMapping("/invite/list")
+    public Result<List<Invite>> getInviteCodeList() {
+        return Result.success(orm.lambdaQuery()
+                .eq(Invite::getUserId, LoginUser.getId())
+                .list()
+        );
+    }
+
+    /**
+     * 是否存在邀请成功
+     */
+    @GetMapping("/invite/check/is/invite")
+    public Result<Boolean> checkIsInvite() {
+        return Result.success(orm.lambdaQuery()
+                .eq(Invite::getUserId, LoginUser.getId())
+                .isNotNull(Invite::getInviteUserId)
+                .exists()
+        );
     }
 
     /**

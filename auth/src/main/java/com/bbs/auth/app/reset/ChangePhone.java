@@ -1,5 +1,6 @@
 package com.bbs.auth.app.reset;
 
+import com.bbs.auth.service.TokenService;
 import com.bbs.auth.util.PhoneUtil;
 import com.bbs.auth.cache.code.PhoneCodeCache;
 import com.bbs.auth.cache.user.PhoneCache;
@@ -64,6 +65,9 @@ public class ChangePhone {
     @Resource
     private UserCache userCache;
 
+    @Resource
+    private TokenService tokenService;
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -102,7 +106,7 @@ public class ChangePhone {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class ChangePasswordParam {
+    public static class LoginChangePasswordParam {
 
         @NotBlank
         @Length(max = 11)
@@ -116,8 +120,8 @@ public class ChangePhone {
         @Min(1000)
         private Integer code;
     }
-    @PostMapping("/pwd")
-    public Result<Boolean> changePassword(@Valid @RequestBody ChangePasswordParam param) throws InterruptedException, IllegalArgumentException {
+    @PostMapping("/login/pwd")
+    public Result<Boolean> loginChangePassword(@Valid @RequestBody LoginChangePasswordParam param) throws InterruptedException, IllegalArgumentException {
         PhoneUtil.checkPhoneFormat(param.phone);
         PhoneUtil.checkPhoneCodeFormat(String.valueOf(param.code));
         Integer code = codeCache.getCode(param.phone);
@@ -138,6 +142,48 @@ public class ChangePhone {
                 },
                 () -> failed(500, null, "无法获取登录锁，详情请联系客服"),
                 redisson.getSpinLock(USER_LOGIN_PHONE.LOCK.key(param.phone)),
+                50000,
+                50000,
+                MILLISECONDS
+        );
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ChangePasswordParam {
+
+        @NotBlank
+        private String password;
+
+        @NotNull
+        @Max(9999)
+        @Min(1000)
+        private Integer code;
+    }
+
+    @PostMapping("/pwd")
+    public Result<Boolean> changePassword(@Valid @RequestBody ChangePasswordParam param) throws InterruptedException, IllegalArgumentException {
+        String phone = service.loginUser().getPhone();
+        Integer code = codeCache.getCode(phone);
+        codeCache.checkIsCanSendCode(code);
+        Preconditions.checkArgument(code.equals(param.code), "验证码不可用，请重新发送");
+        codeCache.delCode(phone);
+        return redissonUtil.lockExec(
+                () -> {
+                    User user = service.searchByPhone(phone);
+                    if(nonNull(user)) {
+                        String password = service.encryptPassword(param.getPassword(), user.getSalt());
+                        if(service.updatePasswordByID(password, user.getId())) {
+                            userCache.load(user, 7, DAYS);
+                            tokenService.clearLoginFlag(user.getId());
+                            return success();
+                        }
+                    }
+                    return failed();
+                },
+                () -> failed(500, null, "无法获取登录锁，详情请联系客服"),
+                redisson.getSpinLock(USER_LOGIN_PHONE.LOCK.key(phone)),
                 50000,
                 50000,
                 MILLISECONDS

@@ -53,4 +53,6 @@ public class Param {
      * 过期时间（单位默认天）
      */
     private Integer expireNumber;
+
+    private String inviteCode;
 }

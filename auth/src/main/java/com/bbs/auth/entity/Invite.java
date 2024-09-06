@@ -6,7 +6,9 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 邀请
@@ -15,6 +17,8 @@ import lombok.Data;
  */
 @TableName(value = "invite")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Invite implements Serializable {
     /**
      * 用户id
@@ -30,6 +34,12 @@ public class Invite implements Serializable {
 
     @TableField(value = "valid_end_time")
     private Date validEndTime;
+
+    /**
+     * 被邀请用户id
+     */
+    @TableField(value = "invite_user_id")
+    private Long inviteUserId;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

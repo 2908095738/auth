@@ -11,14 +11,8 @@ import com.bbs.auth.app.login.vo.VO;
 import com.bbs.auth.cache.code.PhoneCodeCache;
 import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.dao.UserDao;
-import com.bbs.auth.entity.Company;
-import com.bbs.auth.entity.LoginLog;
-import com.bbs.auth.entity.User;
-import com.bbs.auth.entity.UserCompany;
-import com.bbs.auth.service.CompanyService;
-import com.bbs.auth.service.LoginLogService;
-import com.bbs.auth.service.TokenService;
-import com.bbs.auth.service.UserService;
+import com.bbs.auth.entity.*;
+import com.bbs.auth.service.*;
 import com.bbs.auth.util.RedisUtil;
 import com.bbs.auth.util.WxUtil;
 import com.bbs.enums.LoginType;
@@ -85,6 +79,9 @@ public class Login {
 
     @Value("${vx.token}")
     private String token;
+
+    @Resource
+    private InviteService inviteService;
 
     @PostMapping("/login")
     public Result<VO> login(@Valid @RequestBody Param param) throws InterruptedException, IllegalArgumentException {
@@ -187,6 +184,19 @@ public class Login {
                     String token = tokenService.createToken(user);
                     tokenService.setLoginFlag(user.getId(), param.getExpireNumber(), TimeUnit.DAYS);
                     userCache.expireUserAndPhoneMap(user);
+
+                    String inviteCode = param.getInviteCode();
+                    if(StringUtils.isNoneBlank(inviteCode)) {
+                        if(inviteService.lambdaQuery()
+                                .eq(Invite::getInviteCode, inviteCode)
+                                .isNotNull(Invite::getInviteUserId)
+                                .exists()) {
+                            inviteService.lambdaUpdate()
+                                    .eq(Invite::getInviteCode, inviteCode)
+                                    .ne(Invite::getUserId, user.getId())
+                                    .set(Invite::getInviteUserId, user.getId()).update();
+                        }
+                    }
                     recordLoginSuccessLog(param, token, loginTime);
                     return success(new VO(user.getId(), user.getName(), token, userCompanyList));
                 } catch (IllegalArgumentException e) {
