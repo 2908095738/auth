@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 
 import static com.bbs.Result.success;
 import static com.bbs.auth.cache.user.UserCache.cacheIsExists;
+import static com.bbs.enums.CodeEnum.FAILED_LOGIN_USER_NEED_REGISTER;
 import static com.bbs.enums.CodeEnum.FAILED_USER_CODE_NOT_AVAILABLE;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.isNull;
@@ -289,6 +290,7 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
     @Override
     public Boolean loginUserIsAdmin() throws IllegalArgumentException, ReLoginException {
         User user = loginEntityUser();
+        if(isNull(user)) throw new ReLoginException(FAILED_LOGIN_USER_NEED_REGISTER);
         return user.isSupperAdmin();
     }
 
