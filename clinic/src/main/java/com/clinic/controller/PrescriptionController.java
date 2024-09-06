@@ -20,6 +20,7 @@ import com.clinic.service.AdmissionLogService;
 import com.clinic.service.DossierService;
 import com.clinic.util.LoginUser;
 import com.clinic.util.log.LogUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -39,6 +40,7 @@ import static cn.hutool.core.util.ObjectUtil.isEmpty;
 /**
  * 处方
  */
+@Slf4j
 @RestController
 public class PrescriptionController {
 
@@ -61,6 +63,7 @@ public class PrescriptionController {
     private UsageCache usageCache;
     @Resource
     private UnitCache unitCache;
+
 
     /**
      * 添加处方

@@ -25,13 +25,16 @@ import com.clinic.entity.Unit;
 import com.clinic.enums.DrugExpiryStateEnum;
 import com.clinic.enums.DrugTypeEnum;
 import com.clinic.mapper.StockMapper;
-import com.clinic.service.*;
+import com.clinic.service.DrugService;
+import com.clinic.service.SettingsService;
+import com.clinic.service.StockBatchService;
+import com.clinic.service.StockInDrugService;
+import com.clinic.service.StockInService;
+import com.clinic.service.StockService;
+import com.clinic.service.StockUnitService;
 import com.clinic.util.LoginUser;
 import com.clinic.util.RedisUtil;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,7 +45,14 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.clinic.enums.DrugExpiryStateEnum.ABOUT_EXPIRES;
@@ -294,16 +304,18 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
         List<PrescriptionDrugDto> drugList = prescriptionDto.getDrugList();
         if(drugList.size() > INTEGER_ZERO) {
             Set<Long> stockBatchIds = drugList.stream().map(PrescriptionDrugDto::getStockBatchId).filter(Objects::nonNull).collect(Collectors.toSet());
-            Map<Long, StockBatch> stockBatchMap = batchService.lambdaQuery().in(StockBatch::getId, stockBatchIds).list().stream().collect(Collectors.toMap(StockBatch::getId, o2 -> o2));
-            if(CollUtil.isNotEmpty(stockBatchMap)){
-                List<StockBatch> newStockDrugList = new ArrayList<>();
-                drugList.forEach(drug -> {
-                    StockBatch oldStockBatch = stockBatchMap.get(drug.getStockBatchId());
-                    if(nonNull(oldStockBatch)) {
-                        newStockDrugList.add(new StockBatch(drug,oldStockBatch.getNumber()));
-                    }
-                });
-                return batchService.updateBatchById(newStockDrugList);
+            if(CollUtil.isNotEmpty(stockBatchIds)){
+                Map<Long, StockBatch> stockBatchMap = batchService.lambdaQuery().in(StockBatch::getId, stockBatchIds).list().stream().collect(Collectors.toMap(StockBatch::getId, o2 -> o2));
+                if(CollUtil.isNotEmpty(stockBatchMap)){
+                    List<StockBatch> newStockDrugList = new ArrayList<>();
+                    drugList.forEach(drug -> {
+                        StockBatch oldStockBatch = stockBatchMap.get(drug.getStockBatchId());
+                        if(nonNull(oldStockBatch)) {
+                            newStockDrugList.add(new StockBatch(drug,oldStockBatch.getNumber()));
+                        }
+                    });
+                    return batchService.updateBatchById(newStockDrugList);
+                }
             }
         }
         return true;

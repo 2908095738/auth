@@ -121,6 +121,11 @@ public class AdmissionLog implements Serializable {
     @TableField(value = "state")
     private AdmissionStateEnum state;
 
+    /**
+     * 关联微信编号
+     */
+    @TableField(value = "open_id")
+    private String openId;
 
 
     @TableField(exist = false)
@@ -175,5 +180,6 @@ public class AdmissionLog implements Serializable {
         this.phone = patient.getPhone();
         this.address = patient.getAddress();
         this.birthDate = patient.getBirthDate();
+        this.openId = patient.getOpenId();
     }
 }

@@ -1,6 +1,7 @@
 package com.clinic.service.impl;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.clinic.cache.log.admission.AdmissionLogCache;
 import com.clinic.dto.param.RecordAdmissionLogParam;
@@ -12,6 +13,8 @@ import com.clinic.mapper.AdmissionLogMapper;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.PatientService;
 import com.clinic.util.LoginUser;
+import com.clinic.util.RedisUtil;
+import com.clinic.util.WxUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
@@ -42,6 +45,12 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
     @Lazy
     @Resource
     private AdmissionLogCache admissionLogCache;
+
+    @Resource
+    private RedisUtil redisUtil;
+
+    @Resource
+    private WxUtil wxUtil;
 
     @Override
     public Page<AdmissionLog> search(SearchAdmissionParam param) throws ParseException {
@@ -92,6 +101,10 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
     public Long save(RecordAdmissionLogParam param) {
         Long loginUID = LoginUser.getId();
         Patient patient = patientService.getById(param.getPatientId());
+        if (StrUtil.isNotBlank(patient.getOpenId())) {
+            patient.setOpenId(param.getOpenId());
+            patientService.updateById(patient);
+        }
         AdmissionLog log = new AdmissionLog(param, patient);
         if(isNull(param.getIsFirst())) log.setIsFirst(computeIsFirst(param, loginUID));
         save(log);

@@ -49,6 +49,12 @@ public class PayAndRecordPageDto {
      */
     private BigDecimal fee;
 
+    /**
+     * 收费方式
+     */
+    private String way;
+
+
     private List<PayRecordDto> payRecordList;
 
 }
