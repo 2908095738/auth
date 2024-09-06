@@ -65,6 +65,12 @@ public class SystemRouter implements Serializable {
     @TableField(value = "icon_name")
     private String iconName;
 
+    /**
+     * 是否需要管理员权限
+     */
+    @TableField(value = "is_admin")
+    private Integer isAdmin;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 

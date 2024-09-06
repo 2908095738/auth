@@ -36,7 +36,7 @@ public class RenewLogController {
 
     @GetMapping("/back/renew/log")
     public Result<Page<RenewLog>> backSearch(@RequestParam(required = false) Long userId, Integer current, Integer size) throws IllegalArgumentException, ReLoginException {
-        userService.loginUserIsAdmin();
+        userService.checkLoginUserIsAdmin();
         Page<RenewLog> result = renewLogService.lambdaQuery()
                 .eq(nonNull(userId), RenewLog::getCreateBy, userId)
                 .page(new Page<>(current, size));

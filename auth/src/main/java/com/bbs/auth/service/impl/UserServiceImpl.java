@@ -287,7 +287,13 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
     }
 
     @Override
-    public void loginUserIsAdmin() throws IllegalArgumentException, ReLoginException {
+    public Boolean loginUserIsAdmin() throws IllegalArgumentException, ReLoginException {
+        User user = loginEntityUser();
+        return user.isSupperAdmin();
+    }
+
+    @Override
+    public void checkLoginUserIsAdmin() throws IllegalArgumentException, ReLoginException {
         User user = loginEntityUser();
         Preconditions.checkArgument(user.isSupperAdmin(), "当前用户非超级管理员");
     }

@@ -26,7 +26,7 @@ public class LoginLogController {
 
     @GetMapping("/back/login/log")
     public Result<Page<LoginLog>> list(@RequestParam(required = false) Long userId, Integer current, Integer size) {
-        userService.loginUserIsAdmin();
+        userService.checkLoginUserIsAdmin();
         Page<LoginLog> page = loginLogService.lambdaQuery()
                 .eq(nonNull(userId), LoginLog::getUserId, userId)
                 .page(new Page<>(current, size));

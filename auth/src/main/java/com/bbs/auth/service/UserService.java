@@ -107,7 +107,9 @@ public interface UserService extends MPJBaseService<User> {
 
     List<User> searchByUserOrSave(Long companyId, List<com.bbs.api.auth.User> userList);
 
-    void loginUserIsAdmin() throws IllegalArgumentException, ReLoginException;
+    void checkLoginUserIsAdmin() throws IllegalArgumentException, ReLoginException;
+
+    Boolean loginUserIsAdmin() throws IllegalArgumentException, ReLoginException;
 
     void checkPhoneCodeThrow(Long phone, Integer code) throws IllegalArgumentException;
 

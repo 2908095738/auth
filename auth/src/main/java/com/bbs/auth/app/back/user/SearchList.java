@@ -27,7 +27,7 @@ public class SearchList {
             @RequestParam(required = false, defaultValue = "1") Integer current,
             @RequestParam(required = false, defaultValue = "10") Integer size
     ) {
-        userService.loginUserIsAdmin();
+        userService.checkLoginUserIsAdmin();
         if(StringUtils.isBlank(type) || ALL.getCode().equals(type)) {
             return Result.success(userService.page(new Page<>(current, size)));
         } else if(ON_LINE.getCode().equals(type)) {

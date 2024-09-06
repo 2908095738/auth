@@ -4,18 +4,19 @@ import cn.hutool.core.lang.tree.Tree;
 import cn.hutool.core.lang.tree.TreeNodeConfig;
 import cn.hutool.core.lang.tree.TreeUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.bbs.Result;
 import com.bbs.auth.entity.SystemRouter;
 import com.bbs.auth.service.SystemRouterService;
 import com.bbs.auth.mapper.SystemRouterMapper;
+import com.bbs.auth.service.UserService;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
+import static org.apache.commons.lang3.math.NumberUtils.*;
 
 /**
 * @author 路晨霖
@@ -26,10 +27,15 @@ import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
 public class SystemRouterServiceImpl extends MPJBaseServiceImpl<SystemRouterMapper, SystemRouter>
     implements SystemRouterService{
 
+    @Resource
+    private UserService userService;
+
     @Override
     public List<SystemRouter> searchBySystemId(Long systemId) {
+        boolean loginUserIsNotAdmin = (!userService.loginUserIsAdmin());
         return list(new LambdaQueryWrapper<SystemRouter>()
                 .eq(nonNull(systemId), SystemRouter::getSystemId, systemId)
+                .eq(loginUserIsNotAdmin, SystemRouter::getIsAdmin, INTEGER_ZERO)
         );
     }
 
