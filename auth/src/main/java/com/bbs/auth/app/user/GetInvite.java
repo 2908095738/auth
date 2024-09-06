@@ -2,22 +2,28 @@ package com.bbs.auth.app.user;
 
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.util.IdUtil;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.auth.entity.Invite;
 import com.bbs.auth.entity.InviteUser;
+import com.bbs.auth.entity.User;
 import com.bbs.auth.service.InviteService;
 import com.bbs.auth.service.InviteUserService;
 import com.bbs.auth.service.UserService;
 import com.bbs.auth.util.LoginUser;
 import com.bbs.vo.UserVO;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 /**
  * 获取邀请码
@@ -47,6 +53,7 @@ public class GetInvite {
     /**
      * 获取邀请码
      */
+    @Transactional
     @GetMapping("/invite")
     public Result<String> getInviteCode() {
         Invite invite = orm.search();
@@ -62,8 +69,24 @@ public class GetInvite {
      * 获取已邀请用户
      */
     @GetMapping("/invite/list")
-    public Result<List<InviteUser>> getInviteCodeList() {
-        return Result.success(inviteUserService.lambdaQuery().eq(InviteUser::getInitiatorUserId, LoginUser.getId()).list());
+    public Result<Page<InviteUser>> getInviteCodeList(@RequestParam(required = false, defaultValue = "1") Integer current, @RequestParam(required = false, defaultValue = "10") Integer size) {
+        Page<InviteUser> inviteUserPage = inviteUserService.lambdaQuery().eq(InviteUser::getInitiatorUserId, LoginUser.getId()).page(new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(current, size));
+        List<InviteUser> inviteUserList = inviteUserPage.getRecords();
+        if(inviteUserList.size() > INTEGER_ZERO) {
+            Set<Long> userIds = new HashSet<>();
+            inviteUserList.forEach(inviteUser -> {
+                userIds.add(inviteUser.getInvitedUserId());
+                userIds.add(inviteUser.getInitiatorUserId());
+            });
+            Map<Long, User> userMap = userService.searchMap(userIds);
+            if(nonNull(userMap) && userMap.size() > INTEGER_ZERO) {
+                inviteUserList.forEach(inviteUser -> {
+                    inviteUser.setInvitedUser(userMap.get(inviteUser.getInvitedUserId()));
+                    inviteUser.setInitiatorUser(userMap.get(inviteUser.getInitiatorUserId()));
+                });
+            }
+        }
+        return Result.success(inviteUserPage);
     }
 
     /**

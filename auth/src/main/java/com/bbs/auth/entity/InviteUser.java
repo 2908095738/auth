@@ -27,11 +27,17 @@ public class InviteUser implements Serializable {
     @TableField(value = "initiator_user_id")
     private Long initiatorUserId;
 
+    @TableField(exist = false)
+    private User initiatorUser;
+
     /**
      * 受邀用户 ID
      */
     @TableField(value = "invited_user_id")
     private Long invitedUserId;
+
+    @TableField(exist = false)
+    private User invitedUser;
 
     /**
      * 创建时间
