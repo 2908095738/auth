@@ -9,4 +9,6 @@ import com.github.yulichang.base.MPJBaseService;
  * @createDate 2024-08-20 15:28:06
  */
 public interface InviteService extends MPJBaseService<Invite> {
+
+    Invite search();
 }

@@ -4,25 +4,17 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-
 import java.io.Serializable;
 import java.util.Date;
-
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
- * 邀请
- *
- * @TableName invite
+ * 邀请用户记录
+ * @TableName invite_user
  */
-@TableName(value = "invite")
+@TableName(value ="invite_user")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class Invite implements Serializable {
-
+public class InviteUser implements Serializable {
     /**
      * 主键
      */
@@ -30,28 +22,28 @@ public class Invite implements Serializable {
     private Long id;
 
     /**
-     * 用户id
+     * 发出邀请用户 ID
      */
-    @TableField(value = "user_id")
-    private Long userId;
+    @TableField(value = "initiator_user_id")
+    private Long initiatorUserId;
 
     /**
-     * 邀请码
+     * 受邀用户 ID
      */
-    @TableField(value = "invite_code")
-    private String inviteCode;
+    @TableField(value = "invited_user_id")
+    private Long invitedUserId;
 
+    /**
+     * 创建时间
+     */
     @TableField(value = "create_time")
     private Date createTime;
-
-    @TableField(value = "valid_end_time")
-    private Date validEndTime;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
-    public Invite(Long userId, String inviteCode) {
-        this.userId = userId;
-        this.inviteCode = inviteCode;
+    public InviteUser(Long initiatorUserId, Long invitedUserId) {
+        this.initiatorUserId = initiatorUserId;
+        this.invitedUserId = invitedUserId;
     }
 }

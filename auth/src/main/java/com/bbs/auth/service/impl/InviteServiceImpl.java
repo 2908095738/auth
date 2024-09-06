@@ -3,7 +3,9 @@ package com.bbs.auth.service.impl;
 import com.bbs.auth.entity.Invite;
 import com.bbs.auth.service.InviteService;
 import com.bbs.auth.mapper.InviteMapper;
+import com.bbs.auth.util.LoginUser;
 import com.github.yulichang.base.MPJBaseServiceImpl;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 /**
@@ -14,4 +16,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class InviteServiceImpl extends MPJBaseServiceImpl<InviteMapper, Invite>
     implements InviteService{
+
+    @Cacheable(cacheNames = "user::invite")
+    @Override
+    public Invite search() {
+        return lambdaQuery().eq(Invite::getUserId, LoginUser.getId()).one();
+    }
 }

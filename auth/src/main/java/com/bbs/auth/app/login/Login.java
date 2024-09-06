@@ -4,7 +4,6 @@ import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
 import cn.hutool.crypto.symmetric.SymmetricCrypto;
-import cn.hutool.json.JSONUtil;
 import com.bbs.Result;
 import com.bbs.auth.app.login.param.Param;
 import com.bbs.auth.app.login.vo.VO;
@@ -83,6 +82,9 @@ public class Login {
     @Resource
     private InviteService inviteService;
 
+    @Resource
+    private InviteUserService inviteUserService;
+
     @PostMapping("/login")
     public Result<VO> login(@Valid @RequestBody Param param) throws InterruptedException, IllegalArgumentException {
         String loginTime = DateUtil.now();
@@ -92,7 +94,6 @@ public class Login {
         return redissonUtil.lockExec(
             () -> {
                 try {
-                    log.debug("[Login::login] param={}", JSONUtil.toJsonPrettyStr(param));
                     User user;
                     Integer code;
                     if(LoginType.PHONE.getCode().equals(loginType)) {
@@ -185,16 +186,12 @@ public class Login {
                     tokenService.setLoginFlag(user.getId(), param.getExpireNumber(), TimeUnit.DAYS);
                     userCache.expireUserAndPhoneMap(user);
 
+                    // 邀请相关
                     String inviteCode = param.getInviteCode();
                     if(StringUtils.isNoneBlank(inviteCode)) {
-                        if(inviteService.lambdaQuery()
-                                .eq(Invite::getInviteCode, inviteCode)
-                                .isNotNull(Invite::getInviteUserId)
-                                .exists()) {
-                            inviteService.lambdaUpdate()
-                                    .eq(Invite::getInviteCode, inviteCode)
-                                    .ne(Invite::getUserId, user.getId())
-                                    .set(Invite::getInviteUserId, user.getId()).update();
+                        Invite invite = inviteService.lambdaQuery().eq(Invite::getInviteCode, inviteCode).one();
+                        if(nonNull(invite)) {
+                            inviteUserService.save(new InviteUser(invite.getUserId(), user.getId()));
                         }
                     }
                     recordLoginSuccessLog(param, token, loginTime);
