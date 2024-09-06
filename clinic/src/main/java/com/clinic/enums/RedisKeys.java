@@ -22,7 +22,10 @@ public enum RedisKeys {
     USAGE("drug:sig:", "药品用法缓存"),
     STOCK_DRUG("stock:drug:", "库存药品缓存"),
     STOCK_DRUG_NAME("stock:drug:", "库存药品名称 & ID 映射缓存"),
-    AUXILIARY_TYPE("auxiliary_type:", "辅助类型缓存")
+    AUXILIARY_TYPE("auxiliary_type:", "辅助类型缓存"),
+    INFORM("inform:", "通知缓存"),
+    INFORM_USER("inform:user:", "通知用户缓存"),
+
     ;
 
     private final String prefix;
