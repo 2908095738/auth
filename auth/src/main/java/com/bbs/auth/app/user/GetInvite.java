@@ -8,6 +8,7 @@ import com.bbs.auth.service.InviteService;
 import com.bbs.auth.util.LoginUser;
 import com.bbs.auth.util.ORMUtil;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,6 +37,12 @@ public class GetInvite {
 
     private static class Constant {
         public static final Long VALID_TIME_LONG = 7L * 24 * 60 * 60 * 1000;//邀请码有效时间
+
+        public static final String TOTAL = "total";//条数别名
+
+        public static final Integer MAT_TOTAL = 5;//最大未用条数
+
+        public static final String FAIL_CODE = "生成邀请码失败";
     }
 
     /**
@@ -43,31 +50,46 @@ public class GetInvite {
      */
     @GetMapping("/invite")
     public Result<String> getInviteCode() {
-        try{
-        Invite invite = orm.selectJoinOne(Invite.class, new MPJLambdaWrapper<Invite>()
-                .eq(Invite::getUserId, LoginUser.getId()));
+        List<Invite> tmpList = getLast();
+        Integer total = tmpList.size();
+        Invite lastInv = null;
+        if (!tmpList.isEmpty())
+            lastInv = tmpList.get(total - NumberUtils.INTEGER_ONE);
 
-        if (Objects.nonNull(invite)) {//已生成邀请码
-            if (invite.getValidEndTime().getTime() < new Date().getTime()) {//邀请码已过期
-                ORMUtil.fastTran(() -> orm.remove(new MPJLambdaWrapper<Invite>()
-                        .eq(Invite::getUserId, LoginUser.getId())), transactionManager, transactionDefinition);
-
-                invite = getInv();
-                final Invite toDBInvite = invite;
-                ORMUtil.fastTran(() -> orm.save(toDBInvite), transactionManager, transactionDefinition);
-            }
-
-            return Result.success(invite.getInviteCode());
-        } else {//未生成邀请码
+        if (Objects.nonNull(lastInv) && tmpList.size() < Constant.MAT_TOTAL) {//未使用的前四条邀请码
             Invite toDBInvite = getInv();
             ORMUtil.fastTran(() -> orm.save(toDBInvite), transactionManager, transactionDefinition);
             return Result.success(toDBInvite.getInviteCode());
-        }}
-        catch (Exception e){
-            e.printStackTrace();
+        } else if (Objects.nonNull(lastInv) && tmpList.size() == Constant.MAT_TOTAL) {//未使用的第五条邀请码
+            if (lastInv.getValidEndTime().getTime() < new Date().getTime()) {//邀请码已过期
+                Long lastId = lastInv.getId();
+                ORMUtil.fastTran(() -> orm.remove(
+                        new MPJLambdaWrapper<Invite>()
+                                .eq(Invite::getId, lastId)
+                ), transactionManager, transactionDefinition);
+            } else
+                return Result.success(lastInv.getInviteCode());
+
+            Invite toDBInvite = getInv();
+            ORMUtil.fastTran(() -> orm.save(toDBInvite), transactionManager, transactionDefinition);
+            return Result.success(toDBInvite.getInviteCode());
+        } else if (Objects.isNull(lastInv)) {//未使用的第一条邀请码
+            Invite toDBInvite = getInv();
+            ORMUtil.fastTran(() -> orm.save(toDBInvite), transactionManager, transactionDefinition);
+            return Result.success(toDBInvite.getInviteCode());
         }
-        
-        return Result.success("233");
+        return Result.failed(Constant.FAIL_CODE);
+    }
+
+    /**
+     * 获取最新邀请码
+     */
+    private List<Invite> getLast() {
+        return orm.selectJoinList(Invite.class,
+                new MPJLambdaWrapper<Invite>()
+                        .eq(Invite::getUserId, LoginUser.getId())
+                        .isNull(Invite::getInviteUserId)
+                        .orderByAsc(Invite::getCreateTime));
     }
 
     /**
@@ -75,10 +97,7 @@ public class GetInvite {
      */
     @GetMapping("/invite/list")
     public Result<List<Invite>> getInviteCodeList() {
-        return Result.success(orm.lambdaQuery()
-                .eq(Invite::getUserId, LoginUser.getId())
-                .list()
-        );
+        return Result.success(orm.lambdaQuery().eq(Invite::getUserId, LoginUser.getId()).list());
     }
 
     /**
@@ -86,11 +105,7 @@ public class GetInvite {
      */
     @GetMapping("/invite/check/is/invite")
     public Result<Boolean> checkIsInvite() {
-        return Result.success(orm.lambdaQuery()
-                .eq(Invite::getUserId, LoginUser.getId())
-                .isNotNull(Invite::getInviteUserId)
-                .exists()
-        );
+        return Result.success(orm.lambdaQuery().eq(Invite::getUserId, LoginUser.getId()).isNotNull(Invite::getInviteUserId).exists());
     }
 
     /**
