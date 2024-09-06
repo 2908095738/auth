@@ -1,6 +1,8 @@
 package com.bbs.auth.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.io.Serializable;
@@ -20,6 +22,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Invite implements Serializable {
+
+    /**
+     * 主键
+     */
+    @TableId(value = "id", type = IdType.AUTO)
+    private Long id;
+
     /**
      * 用户id
      */
@@ -31,6 +40,9 @@ public class Invite implements Serializable {
      */
     @TableField(value = "invite_code")
     private String inviteCode;
+
+    @TableField(value = "create_time")
+    private Date createTime;
 
     @TableField(value = "valid_end_time")
     private Date validEndTime;
