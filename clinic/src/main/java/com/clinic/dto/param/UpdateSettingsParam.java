@@ -3,6 +3,8 @@ package com.clinic.dto.param;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import java.util.List;
+import java.util.Map;
 
 @Data
 public class UpdateSettingsParam {
@@ -54,5 +56,13 @@ public class UpdateSettingsParam {
      */
     private String physician;
 
+    /**
+     * 营业天数
+     */
+    private List<Integer> businessDayList;
 
+    /**
+     * 营业时间
+     */
+    private List<Map<Integer, List<Long>>> businessTimes;
 }

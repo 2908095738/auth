@@ -1,6 +1,9 @@
 package com.clinic.service.impl;
 
+import cn.hutool.core.date.DateTime;
 import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.Result;
 import com.bbs.api.auth.UserAPI;
@@ -13,6 +16,7 @@ import com.clinic.mapper.SettingsMapper;
 import com.clinic.service.SettingsService;
 import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +27,7 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 
 import javax.annotation.Resource;
-import java.util.Objects;
+import java.util.*;
 
 import static java.util.Objects.nonNull;
 
@@ -111,6 +115,8 @@ public class SettingsServiceImpl extends ServiceImpl<SettingsMapper, Settings>
         //不存在再从数据库中取
         if(Objects.isNull(str)){
             Settings one = lambdaQuery().eq(Settings::getUserId, userId).one();
+            one.setBusinessDayList(JSON.parseArray(one.getBusinessDay(), String.class));
+            one.setBusinessTimeList(getBusinessTime(one.getBusinessTime()));
             redis.opsForValue().set(getKey(userId), JSONUtil.toJsonPrettyStr(one));
             return one;
         } else {
@@ -121,6 +127,42 @@ public class SettingsServiceImpl extends ServiceImpl<SettingsMapper, Settings>
     @Override
     public Integer getUserSettingStockExpiryAlertMonth(Settings settings) {
         return nonNull(settings) && nonNull(settings.getExpiryAlertMonth()) ? settings.getExpiryAlertMonth() : stockDefaultExpiryAlertMonth;
+    }
+
+    /**
+     * 获取所有时间段的营业时间
+     *
+     * @param jsonArrStr 所有时间段的营业时间JSON字符串
+     */
+    private List<Map<Integer, List<Date>>> getBusinessTime(String jsonArrStr) {
+        if (StringUtils.isBlank(jsonArrStr))
+            return Collections.emptyList();
+
+        List<String> allTimeStrList = JSON.parseArray(jsonArrStr, String.class);//所有时间段JSON字符串
+        List<Map<Integer, List<Date>>> resultList = new ArrayList<>();//所有时间段列表
+        for (String nowTimeMapStr : allTimeStrList) {
+            Map tmpTimeStrMap = JSON.parseObject(nowTimeMapStr, Map.class);//当前时间段的起始、结束时间戳字符串列表
+            if (tmpTimeStrMap.size() > NumberUtils.INTEGER_ONE)
+                return Collections.emptyList();
+
+            Set<Map.Entry> tmpSet = tmpTimeStrMap.entrySet();
+            for (Map.Entry nowTimeMap : tmpSet) {
+                Map<Integer, List<Date>> dateMapByNow = new HashMap<>();//当前时间段的起始、结束日期映射
+                List<Date> dateListByNow = new ArrayList();//当前时间段的起始、结束日期列表
+
+                //初始化当前时间段的起始、结束日期列表
+                JSONArray nowTimeJsonArr = JSON.parseArray(String.valueOf(nowTimeMap.getValue()));
+                if (nowTimeJsonArr.size() > NumberUtils.INTEGER_TWO)
+                    return Collections.emptyList();
+                dateListByNow.add(DateTime.of(nowTimeJsonArr.getLong(NumberUtils.INTEGER_ZERO)).toJdkDate());
+                dateListByNow.add(DateTime.of(nowTimeJsonArr.getLong(NumberUtils.INTEGER_ONE)).toJdkDate());
+
+                dateMapByNow.put(Integer.valueOf(String.valueOf(nowTimeMap.getKey())), dateListByNow);
+                resultList.add(dateMapByNow);
+            }
+        }
+
+        return resultList;
     }
 
     private Boolean hasKey(String key){

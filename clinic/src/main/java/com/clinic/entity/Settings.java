@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import lombok.Data;
 
 /**
@@ -86,6 +88,30 @@ public class Settings implements Serializable {
      */
     @TableField(value = "invite_uid")
     private Long inviteUid;
+
+    /**
+     * 营业天数列表JSON字符串
+     */
+    @TableField(value = "business_day")
+    private String businessDay;
+
+    /**
+     * 营业时间列表JSON字符串
+     */
+    @TableField(value = "business_time")
+    private String businessTime;
+
+    /**
+     * 营业天数列表
+     */
+    @TableField(exist = false)
+    private List<String> businessDayList;
+
+    /**
+     * 营业时间列表
+     */
+    @TableField(exist = false)
+    private List<Map<Integer, List<Date>>> businessTimeList;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
