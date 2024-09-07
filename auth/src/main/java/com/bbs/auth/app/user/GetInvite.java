@@ -7,6 +7,7 @@ import com.bbs.Result;
 import com.bbs.auth.entity.Invite;
 import com.bbs.auth.entity.InviteUser;
 import com.bbs.auth.entity.User;
+import com.bbs.auth.enums.InviteClaimStatus;
 import com.bbs.auth.service.InviteService;
 import com.bbs.auth.service.InviteUserService;
 import com.bbs.auth.service.UserService;
@@ -21,8 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import java.util.*;
 
+import static com.bbs.auth.enums.InviteClaimStatus.*;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 /**
@@ -90,11 +93,43 @@ public class GetInvite {
     }
 
     /**
-     * 是否存在邀请成功
+     * 检查初次邀请任务的完成、奖励领取状态
      */
     @GetMapping("/invite/check/is/invite")
-    public Result<Boolean> checkIsInvite() {
-        return Result.success(inviteUserService.lambdaQuery().eq(InviteUser::getInitiatorUserId, LoginUser.getId()).exists());
+    public Result<Integer> checkIsInvite() {
+        InviteClaimStatus result = UNFINISHED;
+        List<InviteUser> inviteUserList = searchInviteList();
+        if(nonNull(inviteUserList)) {
+            // 判断是否完成任务
+            if(isCompleteTask(inviteUserList)) {
+                result = UNCLAIMED_AWARD;
+            }
+            // 判断是否已领取奖励
+            for (InviteUser inviteUser : inviteUserList) {
+                if(isAwardReceived(inviteUser)) {
+                    result = AWARD_RECEIVED;
+                    break;
+                }
+            }
+        }
+        return Result.success(result.getCode());
+    }
+
+    private Boolean isCompleteTask(List<InviteUser> inviteUserList) {
+        return inviteUserList.size() > INTEGER_ZERO;
+    }
+
+    private Boolean isAwardReceived(InviteUser inviteUser) {
+        Integer rewardState = inviteUser.getReward();
+        return nonNull(rewardState) && AWARD_RECEIVED.getCode().equals(rewardState);
+    }
+
+    private List<InviteUser> searchInviteList() {
+        User loginUser = userService.loginEntityUser();
+        Long loginUserID = loginUser.getId();
+        return inviteUserService.lambdaQuery()
+                .eq(InviteUser::getInitiatorUserId, loginUserID)
+                .list();
     }
 
     /**

@@ -45,6 +45,12 @@ public class InviteUser implements Serializable {
     @TableField(value = "create_time")
     private Date createTime;
 
+    /**
+     * 奖励是否领取
+     */
+    @TableField(value = "reward")
+    private Integer reward;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
