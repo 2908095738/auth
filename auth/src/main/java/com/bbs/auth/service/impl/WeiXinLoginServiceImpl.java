@@ -92,21 +92,22 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
             JSONObject ticketJson = JSONObject.parseObject(result);
             ticket = ticketJson.getString("ticket");
             expireSeconds = ticketJson.getString("expire_seconds");
+
+            if(Objects.nonNull(phone)){
+                redisUtil.set("WX:"+ticket, "1,"+phone, Long.parseLong(expireSeconds));
+            }else{
+                redisUtil.set("WX:"+ticket, "1", Long.parseLong(expireSeconds));
+            }
+            // 通过ticket换取二维码 https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=
+            HashMap<String, String> map = new HashMap<>();
+            map.put("ticket", ticket);
+            map.put("expire_seconds", expireSeconds);
+            log.info("getQrCode方法执行结束！");
+            return map;
         } catch (HttpException e) {
             e.printStackTrace();
             throw new BusinessException("获取tikect异常");
         }
-        if(Objects.nonNull(phone)){
-            redisUtil.set("WX:"+ticket, "1,"+phone, Long.parseLong(expireSeconds));
-        }else{
-            redisUtil.set("WX:"+ticket, "1", Long.parseLong(expireSeconds));
-        }
-        // 通过ticket换取二维码 https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=
-        HashMap<String, String> map = new HashMap<>();
-        map.put("ticket", ticket);
-        map.put("expire_seconds", expireSeconds);
-        log.info("getQrCode方法执行结束！");
-        return map;
     }
 
     @Override
@@ -147,7 +148,8 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
                         if ("1".equals(userArray[0])){
                             //先删除
                             redisUtil.delete("WX:"+ticket);
-                            if(ObjUtil.isNotEmpty(userArray[1])){
+                            log.debug("删除redis中的openid：{}",userArray[0]);
+                            if(userArray.length>1&&ObjUtil.isNotEmpty(userArray[1])){
                                 redisUtil.set("WX:"+ticket, fromUserName+","+userArray[1],100000L);
                             }else{
                                 redisUtil.set("WX:"+ticket, fromUserName,100000L);
@@ -174,7 +176,8 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
                         if ("1".equals(userArray[0])){
                             //先删除
                             redisUtil.delete("WX:"+ticket);
-                            if(ObjUtil.isNotEmpty(userArray[1])){
+                            log.debug("1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111删除redis中的openid：{}",userArray[0]);
+                            if(userArray.length>1&&ObjUtil.isNotEmpty(userArray[1])){
                                 redisUtil.set("WX:"+ticket, fromUserName+","+userArray[1],100000L);
                             }else{
                                 redisUtil.set("WX:"+ticket, fromUserName,100000L);
@@ -199,6 +202,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
                 log.debug(Content);
             }
         }catch (Exception e){
+            log.error("微信回调方法执行异常！{}",e.getMessage());
             e.printStackTrace();
             throw new BusinessException("系统异常");
         }
