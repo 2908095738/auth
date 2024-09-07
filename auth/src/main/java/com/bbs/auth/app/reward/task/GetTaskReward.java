@@ -2,6 +2,7 @@ package com.bbs.auth.app.reward.task;
 
 import cn.hutool.core.date.DateUtil;
 import com.bbs.Result;
+import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.entity.InviteUser;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.service.InviteUserService;
@@ -30,6 +31,9 @@ public class GetTaskReward {
     @Resource
     private UserService userService;
 
+    @Resource
+    private UserCache userCache;
+
     @Transactional
     @GetMapping("/reward/task/invite/first")
     public Result<Boolean> getInviteFirstTaskReward() {
@@ -37,16 +41,17 @@ public class GetTaskReward {
         Long loginUserID = loginUser.getId();
         InviteUser inviteUser = inviteFirstTaskIsComplete(loginUserID);
         Preconditions.checkArgument(nonNull(inviteUser), "您的奖励任务未完成：邀请 1 家诊所使用");
-        extensionExpirationTime(loginUserID, loginUser.getExpirationTime());
+        extensionExpirationTime(loginUser);
         updateRewardClaimStatus(inviteUser);
         return Result.success();
     }
 
-    private void extensionExpirationTime(Long loginUserID, Date expirationTime) {
-        userService.lambdaUpdate()
-                .eq(User::getId, loginUserID)
-                .set(User::getExpirationTime, DateUtil.offsetMonth(expirationTime, INTEGER_ONE))
-                .update();
+    private void extensionExpirationTime(User loginUser) {
+        Date expirationTime = loginUser.getExpirationTime();
+        if(nonNull(expirationTime)) {
+            loginUser.setExpirationTime(DateUtil.offsetMonth(expirationTime, INTEGER_ONE));
+            userCache.updateByID(loginUser);
+        }
     }
 
     private void updateRewardClaimStatus(InviteUser inviteUser) {

@@ -162,7 +162,7 @@ public class UserCache {
                 load(service.getById(uid), 7, DAYS);
                 return;
             }
-            throw new BusinessException("修改用户密码失败！");
+            throw new BusinessException("修改用户信息以及缓存失败！");
         });
     }
 
