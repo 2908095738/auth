@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -67,9 +68,15 @@ public class RenewLog implements Serializable {
     @TableField(value = "delete_flag")
     private Integer deleteFlag;
 
+    @TableField(value = "money")
+    private BigDecimal money;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
     @TableField(exist = false)
     private User user;
+
+    @TableField(exist = false)
+    private Integer payNumber;
 }

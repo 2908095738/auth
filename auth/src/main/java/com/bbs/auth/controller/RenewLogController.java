@@ -7,6 +7,7 @@ import com.bbs.auth.entity.RenewLog;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.service.RenewLogService;
 import com.bbs.auth.service.UserService;
+import com.bbs.auth.util.PageUtil;
 import com.bbs.exception.ReLoginException;
 import com.bbs.vo.UserVO;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,11 +16,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 
-import java.util.List;
-import java.util.Map;
+import java.math.BigDecimal;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 /**
@@ -49,6 +52,36 @@ public class RenewLogController {
             });
         }
         return Result.success(result);
+    }
+
+    @GetMapping("/back/renew/count/log")
+    public Result<Page<RenewLog>> searchCumulativePaymentRecord(
+            @RequestParam(required = false, defaultValue = "1") Integer current,
+            @RequestParam(required = false, defaultValue = "10")Integer size
+    ) throws IllegalArgumentException, ReLoginException {
+        userService.checkLoginUserIsAdmin();
+        List<RenewLog> all = renewLogService.list();
+        if(nonNull(all) && all.size() > INTEGER_ZERO) {
+
+            Map<Long, BigDecimal> countMap = new HashMap<>();
+            Map<Long, Integer> payNumberMap = new HashMap<>();
+            all.forEach(log -> {
+                BigDecimal countMoney = countMap.getOrDefault(log.getCreateBy(), new BigDecimal(INTEGER_ZERO));
+                countMap.put(log.getCreateBy(), countMoney.add(log.getMoney()));
+                payNumberMap.put(log.getCreateBy(), payNumberMap.getOrDefault(log.getCreateBy(), INTEGER_ZERO) + INTEGER_ONE);
+            });
+            Set<Long> userIds = countMap.keySet();
+            Map<Long, User> uidMap = userService.searchMap(userIds);
+            Set<RenewLog> logs = userIds.stream().map(id -> {
+                RenewLog renewLog = new RenewLog();
+                renewLog.setMoney(countMap.get(id));
+                renewLog.setUser(uidMap.get(id));
+                renewLog.setPayNumber(payNumberMap.get(id));
+                return renewLog;
+            }).collect(Collectors.toSet());
+            return Result.success(PageUtil.execPage(current, size, new ArrayList<>(logs)));
+        }
+        return Result.success(new Page<>());
     }
 
     @GetMapping("/renew/log/list")

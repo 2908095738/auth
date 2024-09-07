@@ -15,11 +15,14 @@ import com.wechat.pay.java.service.payments.nativepay.model.PrepayRequest;
 import com.wechat.pay.java.service.payments.nativepay.model.PrepayResponse;
 import com.wechat.pay.java.service.payments.nativepay.model.QueryOrderByIdRequest;
 import com.wechat.pay.java.service.payments.nativepay.model.QueryOrderByOutTradeNoRequest;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,7 +45,8 @@ public class WxPaySdkApi {
         service = new NativePayService.Builder().config(config.getWxMlConfig()).build();
         try {
             String orderId = "tradeNo"+System.currentTimeMillis()/1000+config.merchantId;
-            PrepayResponse prepay = prepay(orderId,packageType);
+            Order order = prepay(orderId,packageType);
+            PrepayResponse prepay = order.getPrepayResponse();
             Map<String, Object> resultMap = new HashMap<>();
             resultMap.put("orderId", orderId);
             resultMap.put("codeUrl", prepay.getCodeUrl());
@@ -53,6 +57,7 @@ public class WxPaySdkApi {
             renewLog.setOrderId(orderId);
             renewLog.setStatus(0);
             renewLog.setPackageType(packageType);
+            renewLog.setMoney(order.getMoney());
             renewLogService.save(renewLog);
 
             return Result.success(resultMap);
@@ -115,10 +120,19 @@ public class WxPaySdkApi {
         service.closeOrder(request);
     }
 
+    @Data
+    @AllArgsConstructor
+    private static class Order {
+
+        private PrepayResponse prepayResponse;
+
+        private BigDecimal money;
+    }
+
     /**
      * Native支付预下单
      */
-    public PrepayResponse prepay(String outTradeNo, Integer packageType) {
+    public Order prepay(String outTradeNo, Integer packageType) {
         int total = 0;
         switch (packageType){
             case 1:
@@ -142,7 +156,7 @@ public class WxPaySdkApi {
         request.setNotifyUrl("https://www.maliang.work/api/auth/weixin/clinic/pay/notification");//回调地址
         request.setOutTradeNo(outTradeNo);//商户订单号
         // 调用接口
-        return service.prepay(request);
+        return new Order(service.prepay(request), new BigDecimal(total * 0.01));
     }
 
     /** 微信支付订单号查询订单 */
