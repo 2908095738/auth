@@ -135,7 +135,7 @@ public class SettingsServiceImpl extends ServiceImpl<SettingsMapper, Settings>
      * @param jsonArrStr 所有时间段的营业时间JSON字符串
      */
     private List<Map<Integer, List<Date>>> getBusinessTime(String jsonArrStr) {
-        if (StringUtils.isBlank(jsonArrStr))
+        if (StringUtils.isBlank(jsonArrStr) || (jsonArrStr.length() == NumberUtils.INTEGER_ONE && jsonArrStr.charAt(0) == 127))
             return Collections.emptyList();
 
         List<String> allTimeStrList = JSON.parseArray(jsonArrStr, String.class);//所有时间段JSON字符串
