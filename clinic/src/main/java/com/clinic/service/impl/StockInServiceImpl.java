@@ -1,5 +1,7 @@
 package com.clinic.service.impl;
 
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.db.DbRuntimeException;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -14,6 +16,8 @@ import com.clinic.service.StockInService;
 import com.clinic.util.LoginUser;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Service;
 
 import static com.alibaba.fastjson2.JSON.toJSONString;
@@ -48,12 +52,27 @@ public class StockInServiceImpl extends ServiceImpl<StockInMapper, StockIn>
 
     @Override
     public Page<QueryStockInDto> query(QueryStockInParam param) {
-        return baseMapper.selectJoinPage(param.toPage(), QueryStockInDto.class, new MPJLambdaWrapper<StockIn>()
+        MPJLambdaWrapper<StockIn> wrapper = new MPJLambdaWrapper<StockIn>()
                 .selectAll(StockIn.class)
-                .selectAssociation(StockInDrug.class,QueryStockInDto::getStockInDrugs)
-                .leftJoin(StockInDrug.class,StockInDrug::getStockInId,StockIn::getId)
-                .eq(StockIn::getUserId,LoginUser.getId())
-        );
+                .selectAssociation(StockInDrug.class, QueryStockInDto::getStockInDrugs)
+                .leftJoin(StockInDrug.class, StockInDrug::getStockInId, StockIn::getId)
+                .eq(StockIn::getUserId, LoginUser.getId())
+
+                //药品名称或生产批号查询
+                .and(StrUtil.isNotBlank(param.getName()), e -> e
+                        .like(StockInDrug::getName, param.getName())
+                        .or()
+                        .like(StockInDrug::getBatchNumber, param.getName())
+                );
+
+        //入库时间查询
+        if (ObjectUtils.isNotEmpty(param.getCreateTimes()) && !param.getCreateTimes().isEmpty()) {
+            wrapper.between(StockInDrug::getCreateTime,
+                    DateUtil.date(param.getCreateTimes().get(NumberUtils.INTEGER_ZERO)).toJdkDate(),
+                    DateUtil.date(param.getCreateTimes().get(NumberUtils.INTEGER_ONE)).toJdkDate());
+        }
+
+        return baseMapper.selectJoinPage(param.toPage(), QueryStockInDto.class, wrapper);
     }
 }
 
