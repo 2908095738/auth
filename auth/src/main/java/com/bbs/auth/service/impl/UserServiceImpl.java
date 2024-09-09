@@ -15,6 +15,7 @@ import com.bbs.auth.entity.CompanyStructure;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.UserCompany;
 import com.bbs.auth.entity.param.UserParam;
+import com.bbs.auth.enums.UserRole;
 import com.bbs.auth.mapper.UserMapper;
 import com.bbs.auth.service.CompanyStructureService;
 import com.bbs.auth.service.TokenService;
@@ -322,6 +323,12 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
                 .set(User::getOpenId, openId)
                 .update();
         cache.load(uid);
+    }
+
+    @Override
+    public void checkLoginUserIsSales() throws IllegalArgumentException, ReLoginException {
+        User user = loginEntityUser();
+        Preconditions.checkArgument(UserRole.SALES.getCode().equals(user.getRole()), "您无权限查看当前页面");
     }
 
     @Override

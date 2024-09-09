@@ -190,7 +190,7 @@ public class Login {
                     if(StringUtils.isNoneBlank(inviteCode)) {
                         Invite invite = inviteService.lambdaQuery().eq(Invite::getInviteCode, inviteCode).one();
                         if(nonNull(invite)) {
-                            inviteUserService.save(new InviteUser(invite.getUserId(), user.getId()));
+                            inviteUserService.save(new InviteUser(invite.getUserId(), user.getId(), inviteCode));
                         }
                     }
                     recordLoginSuccessLog(param, token, loginTime);

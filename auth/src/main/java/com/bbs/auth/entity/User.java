@@ -145,6 +145,9 @@ public class User implements Serializable {
     @TableField(value = "is_admin")
     private Integer isAdmin;
 
+    @TableField(value = "role")
+    private Integer role;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 

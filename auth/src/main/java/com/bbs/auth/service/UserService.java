@@ -118,4 +118,6 @@ public interface UserService extends MPJBaseService<User> {
     User searchIdByOpenId(String openId);
 
     void bindUser(Long uid, String openId);
+
+    void checkLoginUserIsSales() throws IllegalArgumentException, ReLoginException;
 }

@@ -1,6 +1,6 @@
 package com.bbs.auth.app.user;
 
-import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
@@ -13,6 +13,7 @@ import com.bbs.auth.service.InviteUserService;
 import com.bbs.auth.service.UserService;
 import com.bbs.auth.util.LoginUser;
 import com.bbs.vo.UserVO;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,11 +22,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.bbs.auth.enums.InviteClaimStatus.*;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 /**
@@ -42,16 +44,6 @@ public class GetInvite {
     private InviteUserService inviteUserService;
     @Resource
     private UserService userService;
-
-    private static class Constant {
-        public static final Long VALID_TIME_LONG = 7L * 24 * 60 * 60 * 1000;//邀请码有效时间
-
-        public static final String TOTAL = "total";//条数别名
-
-        public static final Integer MAT_TOTAL = 5;//最大未用条数
-
-        public static final String FAIL_CODE = "生成邀请码失败";
-    }
 
     /**
      * 获取邀请码
@@ -72,14 +64,44 @@ public class GetInvite {
      * 获取已邀请用户
      */
     @GetMapping("/invite/list")
-    public Result<Page<InviteUser>> getInviteCodeList(@RequestParam(required = false, defaultValue = "1") Integer current, @RequestParam(required = false, defaultValue = "10") Integer size) {
-        Page<InviteUser> inviteUserPage = inviteUserService.lambdaQuery().eq(InviteUser::getInitiatorUserId, LoginUser.getId()).page(new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(current, size));
+    public Result<Page<InviteUser>> getInviteCodeList(
+            @RequestParam(required = false) String val,
+            @RequestParam(required = false) Long createTime,
+            @RequestParam(required = false, defaultValue = "1") Integer current,
+            @RequestParam(required = false, defaultValue = "10")Integer size
+    ) {
+        Date createTimeDate = nonNull(createTime) ? new Date(createTime) : null;
+
+        Page<InviteUser> inviteUserPage = inviteUserService.lambdaQuery()
+                .and(nonNull(createTimeDate), ext -> ext
+                        .ge(InviteUser::getCreateTime, nonNull(createTimeDate) ? DateUtil.beginOfDay(createTimeDate) : null)
+                        .lt(InviteUser::getCreateTime, nonNull(createTimeDate) ? DateUtil.endOfDay(createTimeDate) : null)
+                )
+                .eq(InviteUser::getInitiatorUserId, LoginUser.getId())
+                .page(new Page<>(current, size));
         List<InviteUser> inviteUserList = inviteUserPage.getRecords();
+        Set<Long> allInviteUserIds = inviteUserList.stream().map(InviteUser::getInvitedUserId).collect(Collectors.toSet());
+
+        if(StringUtils.isNoneBlank(val) && allInviteUserIds.size() > INTEGER_ZERO) {
+            Set<Long> filterIds = userService.search(allInviteUserIds).stream()
+                    .filter(user -> Pattern.matches("%" + val + "%", user.getName()) || Pattern.matches("%" + val + "%", user.getPhone().toString()))
+                    .map(User::getId)
+                    .collect(Collectors.toSet());
+
+            if(filterIds.size() > INTEGER_ZERO) {
+                inviteUserList = inviteUserList.stream().filter(inviteUser -> !filterIds.contains(inviteUser.getInvitedUserId())).collect(Collectors.toList());
+            } else {
+                inviteUserList = new ArrayList<>();
+            }
+        }
+
+
         if(inviteUserList.size() > INTEGER_ZERO) {
             Set<Long> userIds = new HashSet<>();
             inviteUserList.forEach(inviteUser -> {
                 userIds.add(inviteUser.getInvitedUserId());
                 userIds.add(inviteUser.getInitiatorUserId());
+                inviteUser.setCreateTimeStr(DateUtil.formatDateTime(inviteUser.getCreateTime()));
             });
             Map<Long, User> userMap = userService.searchMap(userIds);
             if(nonNull(userMap) && userMap.size() > INTEGER_ZERO) {
@@ -89,6 +111,7 @@ public class GetInvite {
                 });
             }
         }
+        inviteUserPage.setRecords(inviteUserList);
         return Result.success(inviteUserPage);
     }
 
@@ -130,16 +153,5 @@ public class GetInvite {
         return inviteUserService.lambdaQuery()
                 .eq(InviteUser::getInitiatorUserId, loginUserID)
                 .list();
-    }
-
-    /**
-     * 获取邀请实例
-     */
-    private Invite getInv() {
-        Invite toDBInvite = new Invite();
-        toDBInvite.setUserId(LoginUser.getId());
-        toDBInvite.setInviteCode(IdUtil.fastSimpleUUID());
-        toDBInvite.setValidEndTime(new Date(DateTime.now().getTime() + Constant.VALID_TIME_LONG));
-        return toDBInvite;
     }
 }

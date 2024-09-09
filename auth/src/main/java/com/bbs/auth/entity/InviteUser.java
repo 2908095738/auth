@@ -40,10 +40,19 @@ public class InviteUser implements Serializable {
     private User invitedUser;
 
     /**
+     * 邀请码
+     */
+    @TableField(value = "invite_code")
+    private String inviteCode;
+
+    /**
      * 创建时间
      */
     @TableField(value = "create_time")
     private Date createTime;
+
+    @TableField(exist = false)
+    private String createTimeStr;
 
     /**
      * 奖励是否领取
@@ -54,8 +63,9 @@ public class InviteUser implements Serializable {
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
-    public InviteUser(Long initiatorUserId, Long invitedUserId) {
+    public InviteUser(Long initiatorUserId, Long invitedUserId, String inviteCode) {
         this.initiatorUserId = initiatorUserId;
         this.invitedUserId = invitedUserId;
+        this.inviteCode = inviteCode;
     }
 }
