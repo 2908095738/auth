@@ -1,7 +1,6 @@
 package com.bbs.auth.app.reset;
 
 import com.bbs.auth.service.TokenService;
-import com.bbs.auth.util.PhoneUtil;
 import com.bbs.auth.cache.code.PhoneCodeCache;
 import com.bbs.auth.cache.user.PhoneCache;
 import com.bbs.auth.cache.user.UserCache;
@@ -11,6 +10,7 @@ import com.bbs.auth.util.RedisUtil;
 import com.bbs.auth.entity.User;
 import com.bbs.Result;
 import com.bbs.exception.BusinessException;
+import com.bbs.util.PhoneUtil;
 import com.google.common.base.Preconditions;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -122,7 +122,7 @@ public class ChangePhone {
     }
     @PostMapping("/login/pwd")
     public Result<Boolean> loginChangePassword(@Valid @RequestBody LoginChangePasswordParam param) throws InterruptedException, IllegalArgumentException {
-        PhoneUtil.checkPhoneFormat(param.phone);
+        PhoneUtil.checkPhoneFormatThrows(param.phone);
         PhoneUtil.checkPhoneCodeFormat(String.valueOf(param.code));
         Integer code = codeCache.getCode(param.phone);
         codeCache.checkIsCanSendCode(code);

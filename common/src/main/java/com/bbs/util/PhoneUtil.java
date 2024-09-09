@@ -1,4 +1,4 @@
-package com.bbs.auth.util;
+package com.bbs.util;
 
 import java.util.regex.Pattern;
 
@@ -32,8 +32,12 @@ public class PhoneUtil {
      * @param phone 手机号
      * @throws IllegalArgumentException 手机号格式异常
      */
-    public static void checkPhoneFormat(String phone) throws IllegalArgumentException {
+    public static void checkPhoneFormatThrows(String phone) throws IllegalArgumentException {
         checkArgument(isNoneBlank(phone) && PHONE_MAX_LENGTH == phone.length() && isNumber(phone), "手机号格式异常");
+    }
+
+    public static Boolean checkPhoneFormat(String phone) throws IllegalArgumentException {
+        isNoneBlank(phone) && PHONE_MAX_LENGTH == phone.length() && isNumber(phone);
     }
 
     /**

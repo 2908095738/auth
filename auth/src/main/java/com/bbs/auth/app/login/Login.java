@@ -36,9 +36,8 @@ import java.util.concurrent.TimeUnit;
 import static com.bbs.Result.failed;
 import static com.bbs.Result.success;
 import static com.bbs.auth.enums.RedisKeys.USER_LOGIN_PHONE;
-import static com.bbs.auth.util.PhoneUtil.checkPhoneCodeFormat;
-import static com.bbs.auth.util.PhoneUtil.checkPhoneFormat;
 import static com.bbs.enums.CodeEnum.*;
+import static com.bbs.util.PhoneUtil.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -97,7 +96,7 @@ public class Login {
                     User user;
                     Integer code;
                     if(LoginType.PHONE.getCode().equals(loginType)) {
-                        checkPhoneFormat(phone);
+                        checkPhoneFormatThrows(phone);
                         checkPhoneCodeFormat(paramCode);
                         code = phoneCodeCache.getCode(phone);
                         checkArgument(nonNull(code) && code.equals(Integer.valueOf(paramCode)), FAILED_AUTH_PHONE_CODE_NOT_AVAILABLE);
@@ -119,7 +118,7 @@ public class Login {
                         // PS：不需要【响应用户未绑定手机号，需要绑定手机号】步骤，已在上个步骤【轮询扫码状态】中判断并响应
 
                         // 1. 校验手机号 & 验证码格式
-                        checkPhoneFormat(phone);
+                        checkPhoneFormatThrows(phone);
                         checkPhoneCodeFormat(paramCode);
                         // 2. 查询验证码，并比较
                         code = phoneCodeCache.getCode(phone);
@@ -217,7 +216,7 @@ public class Login {
     }
 
     private void checkPhoneAndPWDFormat(Param param) {
-        checkPhoneFormat(param.getPhone());
+        checkPhoneFormatThrows(param.getPhone());
         checkArgument(StringUtils.isNoneBlank(param.getPassword()));
     }
 
