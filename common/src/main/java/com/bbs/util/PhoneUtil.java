@@ -37,7 +37,7 @@ public class PhoneUtil {
     }
 
     public static Boolean checkPhoneFormat(String phone) throws IllegalArgumentException {
-        isNoneBlank(phone) && PHONE_MAX_LENGTH == phone.length() && isNumber(phone);
+        return isNoneBlank(phone) && PHONE_MAX_LENGTH == phone.length() && isNumber(phone);
     }
 
     /**
