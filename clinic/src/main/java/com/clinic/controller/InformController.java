@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.List;
+import java.util.Map;
 
 @RestController
 public class InformController {
@@ -26,7 +26,7 @@ public class InformController {
      * @return Result<List<Inform>>
      */
     @GetMapping("/inform")
-    public Result<List<Inform>> getLoginInform() {
+    public Result<Map<String,Object>> getLoginInform() {
         return Result.success(InformCache.getInformList(LoginUser.getId()));
     }
 
@@ -46,9 +46,9 @@ public class InformController {
      * @return Result<List<Inform>>
      */
     @GetMapping("/back/inform")
-    public Result<List<Inform>> getAllInform() {
-        List<Inform> informList = InformCache.getInformList(null);
-        return Result.success(informList);
+    public Result<Object> getAllInform() {
+        Map<String, Object> map = InformCache.getInformList(null);
+        return Result.success(map.get("list"));
     }
 
     @Data

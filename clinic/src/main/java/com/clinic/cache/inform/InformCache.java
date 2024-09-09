@@ -12,7 +12,9 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class InformCache {
@@ -25,7 +27,7 @@ public class InformCache {
      * @param userId 用户ID
      * @return List<Inform>
      */
-    public List<Inform> getInformList(Long userId) {
+    public Map<String,Object> getInformList(Long userId) {
         List<Inform> result = new ArrayList<>();
         List<String> notReadInformIds = redis.opsForList().range(informKey(), NumberUtils.INTEGER_ZERO, NumberUtils.INTEGER_MINUS_ONE);
         int userIsReadInformId = NumberUtils.INTEGER_MINUS_ONE;
@@ -39,16 +41,21 @@ public class InformCache {
                 userIsReadInformId = Integer.parseInt(userIsReadInformIdStr);
             }
         }
+        boolean hasNoRead = false;
         if(CollUtil.isNotEmpty(notReadInformIds)){
             for (int i = 0; i < notReadInformIds.size(); i++) {
                 Inform bean = JSONUtil.toBean(notReadInformIds.get(i), Inform.class);
-                if(userIsReadInformId != NumberUtils.INTEGER_MINUS_ONE && i < (userIsReadInformId+1)){
+                if(userIsReadInformId == NumberUtils.INTEGER_MINUS_ONE || i > (userIsReadInformId+1)){
                     bean.setIsNotRead(true);
+                    hasNoRead = true;
                 }
                 result.add(bean);
             }
         }
-        return result;
+        Map<String, Object> hashMap = new HashMap<>();
+        hashMap.put("list", result);
+        hashMap.put("hasNoRead", hasNoRead);
+        return hashMap;
     }
 
 
