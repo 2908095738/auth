@@ -139,10 +139,10 @@ public class WxPaySdkApi {
                 total = 4000;
                 break;
             case 2:
-                total = 7800;
+                total = 11000;
                 break;
             case 3:
-                total = 36800;
+                total = 36500;
                 break;
         }
         PrepayRequest request = new PrepayRequest();

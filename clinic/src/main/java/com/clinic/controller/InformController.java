@@ -1,18 +1,18 @@
 package com.clinic.controller;
 
-import cn.hutool.core.collection.CollUtil;
 import com.bbs.Result;
 import com.clinic.cache.inform.InformCache;
 import com.clinic.entity.Inform;
 import com.clinic.util.LoginUser;
 import lombok.Data;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.List;
+import java.util.Map;
 
 @RestController
 public class InformController {
@@ -26,22 +26,29 @@ public class InformController {
      * @return Result<List<Inform>>
      */
     @GetMapping("/inform")
-    public Result<List<Inform>> getLoginInform() {
-        List<Inform> informList = InformCache.getInformList(LoginUser.getId());
-        if(CollUtil.isNotEmpty(informList)){
-            InformCache.updateUserReadInform(LoginUser.getId());
-        }
-        return Result.success(informList);
+    public Result<Map<String,Object>> getLoginInform() {
+        return Result.success(InformCache.getInformList(LoginUser.getId()));
     }
+
+    /**
+     * 修改登录用户全部通知为已读
+     * @return Result<Boolean>
+     */
+    @PostMapping("/inform")
+    public Result<Boolean> updateLoginInform() {
+        InformCache.updateUserReadInform(LoginUser.getId());
+        return Result.success();
+    }
+
 
     /**
      * 查询所有通知
      * @return Result<List<Inform>>
      */
     @GetMapping("/back/inform")
-    public Result<List<Inform>> getAllInform() {
-        List<Inform> informList = InformCache.getInformList(null);
-        return Result.success(informList);
+    public Result<Object> getAllInform() {
+        Map<String, Object> map = InformCache.getInformList(null);
+        return Result.success(map.get("list"));
     }
 
     @Data
@@ -53,8 +60,8 @@ public class InformController {
 
     /**
      * 添加通知
-     * @param informVo
-     * @return
+     * @param informVo InformVo
+     * @return Boolean
      */
     @PutMapping("/back/inform")
     public Result<Boolean> putInform(@RequestBody InformVo informVo) {

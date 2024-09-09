@@ -2,16 +2,19 @@ package com.clinic.cache.inform;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.clinic.entity.Inform;
 import com.clinic.enums.RedisKeys;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 @Component
 public class InformCache {
@@ -24,26 +27,38 @@ public class InformCache {
      * @param userId 用户ID
      * @return List<Inform>
      */
-    public List<Inform> getInformList(Long userId) {
+    public Map<String,Object> getInformList(Long userId) {
         List<Inform> result = new ArrayList<>();
-        List<String> notReadInformIds = new ArrayList<>();
-        if(ObjUtil.isEmpty(userId)){//获取所有消息
-            notReadInformIds = redis.opsForList().range(informKey(), 0, -1);
-        }else{//获取指定用户的未读消息
-            String userIsReadInformId = informUserKey(userId);
-            //没有数据说明是新用户，需修改为最新的消息
-            if(ObjUtil.isEmpty(userIsReadInformId)){
-                Long size = redis.opsForList().size(informKey());
-                redis.opsForHash().put(informKey(), informUserKey(userId), size.toString());
+        List<String> notReadInformIds = redis.opsForList().range(informKey(), NumberUtils.INTEGER_ZERO, NumberUtils.INTEGER_MINUS_ONE);
+        int userIsReadInformId = NumberUtils.INTEGER_MINUS_ONE;
+        if(ObjUtil.isNotEmpty(userId)){
+            //获取指定用户的未读消息
+            String userIsReadInformIdStr = redis.opsForValue().get(informUserKey(userId));
+            //没有数据说明是新用户，需修改为全部未读
+            if(StrUtil.isEmpty(userIsReadInformIdStr)){
+                redis.opsForValue().set(informUserKey(userId), String.valueOf(NumberUtils.INTEGER_ZERO));
             }else{
-                notReadInformIds = redis.opsForList().range(informKey(), (Long.parseLong(userIsReadInformId)-1),-1);
+                userIsReadInformId = Integer.parseInt(userIsReadInformIdStr);
             }
         }
+        boolean hasNoRead = false;
         if(CollUtil.isNotEmpty(notReadInformIds)){
-            result = notReadInformIds.stream().map(o -> JSONUtil.toBean(o, Inform.class)).collect(Collectors.toList());
+            for (int i = 0; i < notReadInformIds.size(); i++) {
+                Inform bean = JSONUtil.toBean(notReadInformIds.get(i), Inform.class);
+                if(userIsReadInformId == NumberUtils.INTEGER_MINUS_ONE || i > (userIsReadInformId+1)){
+                    bean.setIsNotRead(true);
+                    hasNoRead = true;
+                }
+                result.add(bean);
+            }
         }
-        return result;
+        Map<String, Object> hashMap = new HashMap<>();
+        hashMap.put("list", result);
+        hashMap.put("hasNoRead", hasNoRead);
+        return hashMap;
     }
+
+
 
     /**
      * 添加消息
@@ -59,16 +74,16 @@ public class InformCache {
      */
     public void updateUserReadInform(Long userId) {
         Long size = redis.opsForList().size(informKey());
-        redis.opsForHash().put(informKey(), informUserKey(userId), size.toString());
+        redis.opsForValue().set(informUserKey(userId), String.valueOf(size));
     }
 
 
     public String informUserKey(Long userId) {
-        return RedisKeys.INFORM.key(userId);
+        return RedisKeys.INFORM_USER.key(userId);
     }
 
     public String informKey() {
-        return RedisKeys.INFORM_USER.getDescription();
+        return RedisKeys.INFORM.getPrefix();
     }
 
 

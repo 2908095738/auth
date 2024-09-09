@@ -21,6 +21,8 @@ public class Inform implements Serializable {
 
     private int type;
 
+    private Boolean isNotRead;
+
     private static final long serialVersionUID = 1L;
 
     public Inform(InformController.InformVo informVo) {
