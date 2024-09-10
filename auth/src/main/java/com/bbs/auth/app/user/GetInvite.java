@@ -13,12 +13,12 @@ import com.bbs.auth.service.InviteUserService;
 import com.bbs.auth.service.UserService;
 import com.bbs.auth.util.LoginUser;
 import com.bbs.vo.UserVO;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -58,6 +58,24 @@ public class GetInvite {
             orm.save(invite);
         }
         return Result.success(invite.getInviteCode());
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class GenerateInviteCodeParam {
+
+        private String code;
+    }
+
+    @PutMapping("/invite")
+    public Result<Boolean> generateInviteCode(@RequestBody GenerateInviteCodeParam param) {
+        if(orm.lambdaQuery().eq(Invite::getInviteCode, param.getCode()).exists()) {
+            throw new IllegalArgumentException("邀请码已存在（重复），请更换");
+        }
+        UserVO loginUser = userService.loginUser();
+        Invite invite = new Invite(loginUser.getId(), param.getCode());
+        return Result.success(orm.save(invite));
     }
 
     @GetMapping("/invite/code/list")
