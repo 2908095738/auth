@@ -4,18 +4,20 @@ import cn.hutool.core.date.DateTime;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.Result;
 import com.bbs.api.auth.UserAPI;
 import com.bbs.enums.CodeEnum;
 import com.clinic.converter.SettingsConverter;
 import com.clinic.dto.param.AddSettingsParam;
 import com.clinic.dto.param.UpdateSettingsParam;
+import com.clinic.entity.Patient;
 import com.clinic.entity.Settings;
 import com.clinic.mapper.SettingsMapper;
 import com.clinic.service.SettingsService;
-import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
+import com.clinic.util.log.LogUtil;
+import com.github.yulichang.base.MPJBaseServiceImpl;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
@@ -27,7 +29,14 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 import static java.util.Objects.nonNull;
 
@@ -35,7 +44,7 @@ import static java.util.Objects.nonNull;
  *
  */
 @Service
-public class SettingsServiceImpl extends ServiceImpl<SettingsMapper, Settings>
+public class SettingsServiceImpl extends MPJBaseServiceImpl<SettingsMapper, Settings>
     implements SettingsService {
 
     @DubboReference
@@ -127,6 +136,15 @@ public class SettingsServiceImpl extends ServiceImpl<SettingsMapper, Settings>
     @Override
     public Integer getUserSettingStockExpiryAlertMonth(Settings settings) {
         return nonNull(settings) && nonNull(settings.getExpiryAlertMonth()) ? settings.getExpiryAlertMonth() : stockDefaultExpiryAlertMonth;
+    }
+
+    @Override
+    public List<String> getClinic(Long patientId) {
+        return selectJoinList(String.class,new MPJLambdaWrapper<Settings>()
+                .select(Settings::getClinicName)
+                .leftJoin(Patient.class, Patient::getUserId, Settings::getUserId)
+                .eq(Patient::getId, patientId)
+               );
     }
 
     /**

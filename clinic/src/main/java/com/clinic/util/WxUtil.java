@@ -251,7 +251,7 @@ public class WxUtil {
         Map<String, Object> jsonData = new HashMap<>();
         jsonData.put("touser", admissionLog.getOpenId());
         jsonData.put("template_id", "gb0dqlOOnkdTxhzPfzFcGvDsRk8MJfvoLgjvkyYyKFk");
-        jsonData.put("url", "https://maliang.work/clinic/phone/patient/record?id="+admissionLog.getId());
+        jsonData.put("url", "https://maliang.work/clinic/phone/patient/record?id="+admissionLog.getId()+"&index=record");
         jsonData.put("data", data);
         // 发送请求
         String result = HttpRequest.post(url).body(JSON.toJSONString(jsonData)).execute().body();
