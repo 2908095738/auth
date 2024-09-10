@@ -1,12 +1,12 @@
 package com.clinic.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.clinic.entity.Settings;
+import com.github.yulichang.base.MPJBaseMapper;
 
 /**
  * @Entity com.clinic.entity.Settings
  */
-public interface SettingsMapper extends BaseMapper<Settings> {
+public interface SettingsMapper extends MPJBaseMapper<Settings> {
 
 }
 
