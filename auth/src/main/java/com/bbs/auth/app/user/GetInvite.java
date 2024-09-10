@@ -60,6 +60,14 @@ public class GetInvite {
         return Result.success(invite.getInviteCode());
     }
 
+    @GetMapping("/invite/code/list")
+    public Result<Page<Invite>> getInviteCodeList(
+            @RequestParam(required = false, defaultValue = "1") Integer current,
+            @RequestParam(required = false, defaultValue = "10") Integer size
+    ) {
+        return Result.success(orm.lambdaQuery().eq(Invite::getUserId, LoginUser.getId()).page(new Page<>(current, size)));
+    }
+
     /**
      * 获取已邀请用户
      */

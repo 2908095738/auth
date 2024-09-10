@@ -29,6 +29,7 @@ import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.context.annotation.Lazy;
@@ -47,6 +48,7 @@ import static com.bbs.enums.CodeEnum.FAILED_USER_CODE_NOT_AVAILABLE;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
 /**
@@ -210,25 +212,25 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
 
     @Override
     public List<User> search(List<Long> ids) {
-        List<User> users = cache.get(ids);
-        List<Long> cacheIsEmptyUserIds = new ArrayList<>(ids.size());
-        List<Integer> cacheIsEmptyUserIndexList = new ArrayList<>(ids.size());
-        for (int index = 0; index < users.size(); index++) {
-            User user = users.get(index);
-            if(isNull(user)) {
-                cacheIsEmptyUserIds.add(ids.get(index));
-                cacheIsEmptyUserIndexList.add(index);
+        Map<Long, User> cacheUserMaps = cache.get(ids).stream().collect(Collectors.toMap(User::getId, user -> user));
+        User[] result = new User[ids.size()];
+        Set<Long> cacheIsEmptyUserIds = new HashSet<>(ids.size());
+        for (int index = 0; index < ids.size(); index++) {
+            User cacheUser = cacheUserMaps.get(ids.get(index));
+            if(nonNull(cacheUser)) {
+                result[index] = cacheUser;
+                continue;
+            }
+            cacheIsEmptyUserIds.add(ids.get(index));
+        }
+        if(CollectionUtils.isNotEmpty(cacheIsEmptyUserIds)) {
+            Map<Long, User> idMaps = listByIds(cacheIsEmptyUserIds).stream().collect(Collectors.toMap(User::getId, user -> user));
+            for (int index = 0; index < ids.size(); index++) {
+                User user = result[index];
+                if(isNull(user)) result[index] = idMaps.get(ids.get(index));
             }
         }
-        if(cacheIsEmptyUserIds.size() >= NumberUtils.INTEGER_ONE) {
-            List<User> cacheIsEmptyUser = listByIds(cacheIsEmptyUserIds);
-            if(nonNull(cacheIsEmptyUser) && cacheIsEmptyUser.size() > INTEGER_ZERO) {
-                for (int index = 0; index < cacheIsEmptyUser.size(); index++) {
-                    users.set(cacheIsEmptyUserIndexList.get(index), cacheIsEmptyUser.get(index));
-                }
-            }
-        }
-        return users;
+        return new ArrayList<>(Arrays.asList(result));
     }
 
     @Override
