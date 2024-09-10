@@ -3,6 +3,7 @@ package com.clinic.dto.param;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import java.math.BigInteger;
 
 @Data
 public class AddSettingsParam {
@@ -33,4 +34,14 @@ public class AddSettingsParam {
      * 邀请码
      */
     private String inviteCode;
+
+    /**
+     * 诊所地址
+     */
+    private BigInteger provinceId;
+
+    /**
+     * 详细地址
+     */
+    private String addr;
 }

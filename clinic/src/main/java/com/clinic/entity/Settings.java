@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -100,6 +101,18 @@ public class Settings implements Serializable {
      */
     @TableField(value = "business_time")
     private String businessTime;
+
+    /**
+     * 诊所地址 id
+     */
+    @TableField(value = "province_id")
+    private BigInteger provinceId;
+
+    /**
+     * 详细地址
+     */
+    @TableField(value = "addr")
+    private String addr;
 
     /**
      * 营业天数列表
