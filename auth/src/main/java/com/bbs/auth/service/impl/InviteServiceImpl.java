@@ -8,6 +8,8 @@ import com.github.yulichang.base.MPJBaseServiceImpl;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
+
 /**
 * @author Mafty
 * @description 针对表【invite(邀请)】的数据库操作Service实现
@@ -20,6 +22,6 @@ public class InviteServiceImpl extends MPJBaseServiceImpl<InviteMapper, Invite>
 //    @Cacheable(cacheNames = "user::invite")
     @Override
     public Invite search() {
-        return lambdaQuery().eq(Invite::getUserId, LoginUser.getId()).one();
+        return lambdaQuery().eq(Invite::getUserId, LoginUser.getId()).list().get(INTEGER_ZERO);
     }
 }
