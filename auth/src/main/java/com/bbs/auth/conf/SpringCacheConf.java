@@ -17,7 +17,8 @@ public class SpringCacheConf {
                 "back::system",
                 "system::router::user",
                 "system::code",
-                "user::invite"
+                "user::invite",
+                "province"
         );
     }
 }

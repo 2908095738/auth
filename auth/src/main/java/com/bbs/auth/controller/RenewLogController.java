@@ -12,7 +12,6 @@ import com.bbs.auth.service.UserService;
 import com.bbs.auth.util.LoginUser;
 import com.bbs.auth.util.PageUtil;
 import com.bbs.exception.ReLoginException;
-import com.bbs.vo.UserVO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
