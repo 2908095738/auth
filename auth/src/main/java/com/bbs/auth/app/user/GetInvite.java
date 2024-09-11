@@ -94,7 +94,7 @@ public class GetInvite {
             @RequestParam(required = false) String val,
             @RequestParam(required = false) Long createTime,
             @RequestParam(required = false, defaultValue = "1") Integer current,
-            @RequestParam(required = false, defaultValue = "10")Integer size
+            @RequestParam(required = false, defaultValue = "10") Integer size
     ) {
         Date createTimeDate = nonNull(createTime) ? new Date(createTime) : null;
 

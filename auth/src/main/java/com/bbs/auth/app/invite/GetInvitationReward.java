@@ -3,8 +3,10 @@ package com.bbs.auth.app.invite;
 import com.bbs.Result;
 import com.bbs.auth.entity.InvitationReward;
 import com.bbs.auth.entity.Invite;
+import com.bbs.auth.entity.InviteUser;
 import com.bbs.auth.service.InvitationRewardService;
 import com.bbs.auth.service.InviteService;
+import com.bbs.auth.service.InviteUserService;
 import com.bbs.auth.service.UserService;
 import com.google.common.base.Preconditions;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +37,9 @@ public class GetInvitationReward {
     @Resource
     private InviteService inviteService;
 
+    @Resource
+    private InviteUserService inviteUserService;
+
     @Transactional
     @GetMapping("/reward/invitation")
     public Result<Boolean> get(@RequestParam String code) throws IllegalAccessError {
@@ -50,6 +55,13 @@ public class GetInvitationReward {
             invitationReward.setInviteCode(code);
             invitationReward.setState(INTEGER_ONE);
             invitationRewardService.updateById(invitationReward);
+        }
+        InviteUser inviteUser = inviteUserService.lambdaQuery()
+                .eq(InviteUser::getInitiatorUserId, invite.getUserId())
+                .eq(InviteUser::getInvitedUserId, loginUserId)
+                .one();
+        if(isNull(inviteUser)) {
+            inviteUserService.save(new InviteUser(invite.getUserId(), loginUserId, code));
         }
         return Result.success();
     }
