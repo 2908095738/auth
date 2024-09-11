@@ -1,6 +1,7 @@
 package com.clinic.service.impl;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.NumberUtil;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
@@ -19,9 +20,9 @@ import com.clinic.entity.Patient;
 import com.clinic.mapper.PatientMapper;
 import com.clinic.service.PatientService;
 import com.clinic.util.LoginUser;
+import com.clinic.util.PageUtil;
 import com.clinic.util.log.LogUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
-import com.github.yulichang.toolkit.JoinWrappers;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -39,7 +40,6 @@ import java.util.stream.Collectors;
 import static com.bbs.Result.failed;
 import static com.bbs.Result.success;
 import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
 * @author 29080
@@ -100,36 +100,6 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
         }
     }
 
-    private MPJLambdaWrapper<Patient> getDefaultWrapper(Patient patient) {
-        String name = patient.getName();
-        Integer age = patient.getAge();
-        Integer sex = patient.getSex();
-        Long phone = patient.getPhone();
-        String lastVisit = patient.getLastVisit();
-        String remark = patient.getRemark();
-        String address = patient.getAddress();
-        Integer marriage = patient.getMarriage();
-        MPJLambdaWrapper<Patient> wrapper = JoinWrappers.lambda(Patient.class)
-                .selectAll(Patient.class)
-                .eq(Patient::getUserId, LoginUser.getId())
-                .eq(nonNull(sex), Patient::getSex, sex)
-                .eq(nonNull(age) && age >= 0 && age <= 120, Patient::getAge, age)
-                .likeRight(nonNull(phone) && phone.toString().length() <= 11, Patient::getPhone, phone)
-                .eq(nonNull(marriage) && (marriage == 1 || marriage == 2), Patient::getMarriage, marriage)
-                .eq(isNotBlank(lastVisit), Patient::getLastVisit, lastVisit)
-                .eq(isNotBlank(remark), Patient::getRemark, remark)
-                .like(nonNull(address) && address.length() <= 500, Patient::getAddress, address);
-        if(StringUtils.isNotBlank(name)){
-            if(!MyStringUtil.isContainChinese(name)){
-                String sql = FirstWordsSqlUtils.getSql(name);
-                wrapper.apply(sql);
-            }else{
-                wrapper.like(Patient::getName,name);
-            }
-        }
-        return wrapper;
-    }
-
 
     private Boolean patientExists(Patient patient) {
         LambdaQueryChainWrapper<Patient> wrapper = lambdaQuery()
@@ -142,9 +112,27 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
 
     @Override
     public Result<Page<Patient>> select(PatientParam param) {
-        Page<Patient> patientPage = defaultSearch(param);
-        updateAgeAndIsFirstToDB(patientPage);
-        return success(patientPage);
+        String name = param.getName();
+        MPJLambdaWrapper<Patient> wrapper = new MPJLambdaWrapper<Patient>()
+                .selectAll(Patient.class)
+                .leftJoin(Dossier.class, Dossier::getPatientId, Patient::getId)
+                .selectCount(Dossier::getId, Patient::getDossierNum);
+        if(StringUtils.isNotBlank(name)){
+            if(!MyStringUtil.isContainChinese(name)){
+                String sql = FirstWordsSqlUtils.getSql(name);
+                wrapper = wrapper.apply(StringUtils.isNotEmpty(sql), sql);
+            } else{
+                wrapper = wrapper.like(StringUtils.isNoneBlank(name), Patient::getName, name);
+            }
+            wrapper = wrapper.like(NumberUtil.isNumber(name), Patient::getPhone, name);
+        }
+        wrapper = wrapper.eq(Patient::getUserId, LoginUser.getId())
+                .groupBy(Patient::getId);
+        List<Patient> list = selectJoinList(Patient.class, wrapper);
+        Page<Patient> page = PageUtil.execPage(param.getCurrent(), param.getSize(), list);
+
+        updateAgeAndIsFirstToDB(page.getRecords());
+        return success(page);
     }
 
     @Override
@@ -188,17 +176,8 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
                 .list();
     }
 
-    private Page<Patient> defaultSearch(PatientParam param) {
-        return getDefaultWrapper(converter.toEntity(param))
-                .selectCount(Dossier::getId,Patient::getDossierNum)
-                .leftJoin(Dossier.class,Dossier::getPatientId,Patient::getId)
-                .eq(Patient::getUserId, LoginUser.getId())
-                .groupBy(Patient::getId).page(param.toPage());
-    }
-
-    private void updateAgeAndIsFirstToDB(Page<Patient> patientPage){
-        List<Patient> patientList = patientPage.getRecords();
-        if(patientList.size() > 0) {
+    private void updateAgeAndIsFirstToDB(List<Patient> patientList){
+        if(!patientList.isEmpty()) {
             patientList.forEach(patient->{
                 updateAge(patient);
                 updateIsFirstAndDB(patient);

@@ -41,7 +41,7 @@ public class GetPayParam extends BaseParam {
     private String address;
 
     public GetPayParam(Page<PayAndRecordPageDto> page, String val, Long startDateLong, Long endDateLong) {
-        super(page.getCurrent(), page.getSize());
+        super((int)page.getCurrent(), (int)page.getSize());
         this.name = val;
         if(NumberUtil.isNumber(val)) this.phone = Long.valueOf(val);
         if(nonNull(startDateLong)) this.startDate = new Date(startDateLong);

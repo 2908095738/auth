@@ -15,7 +15,7 @@ import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 public class FirstWordsSqlUtils {
 
     //依次从小到大排序
-    private static Map<String,String> wordsMap;
+    private static final Map<String,String> wordsMap;
 
     static {
         wordsMap = new HashMap<>();
@@ -41,15 +41,15 @@ public class FirstWordsSqlUtils {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < wordsStr.length(); i++) {
             String c = wordsStr.charAt(i)+"";
+            if(c.equals("i") || c.equals("u") || c.equals("v")){
+                continue;
+            }
+            if(i > INTEGER_ZERO) sb.append(" and ");
             String wordsASC  = wordsMap.get(c);
             String[] asc = wordsASC.split(",");
             int ASC01 = Integer.parseInt(asc[0]);
             int ASC02 = Integer.parseInt(asc[1]);
-            if(i!=wordsStr.length()-1){
-                sb.append("CONV(HEX(SUBSTRING(CONVERT(name USING gbk ), ").append(i + 1).append(",1)), 16, 10) BETWEEN ").append(ASC01).append(" AND ").append(ASC02).append(" and ");
-            }else{
-                sb.append("CONV(HEX(SUBSTRING(CONVERT(name USING gbk ), ").append(i + 1).append(",1)), 16, 10) BETWEEN ").append(ASC01).append(" AND ").append(ASC02);
-            }
+            sb.append("CONV(HEX(SUBSTRING(CONVERT(name USING gbk ), ").append(i + 1).append(",1)), 16, 10) BETWEEN ").append(ASC01).append(" AND ").append(ASC02);
         }
         return sb.toString();
     }
