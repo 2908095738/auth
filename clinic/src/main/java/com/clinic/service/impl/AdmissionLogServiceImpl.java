@@ -8,6 +8,7 @@ import com.clinic.dto.param.RecordAdmissionLogParam;
 import com.clinic.dto.param.SearchAdmissionParam;
 import com.clinic.entity.AdmissionLog;
 import com.clinic.entity.Patient;
+import com.clinic.entity.Pay;
 import com.clinic.enums.AdmissionStateEnum;
 import com.clinic.mapper.AdmissionLogMapper;
 import com.clinic.service.AdmissionLogService;
@@ -18,6 +19,7 @@ import com.clinic.util.WxUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import static java.util.Objects.isNull;
@@ -95,6 +98,17 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
     @Override
     public boolean updateEndState(Long admissionId) {
         return lambdaUpdate().set(AdmissionLog::getState, AdmissionStateEnum.END.getCode()).eq(AdmissionLog::getId, admissionId).update();
+    }
+
+    @Override
+    public List<AdmissionLog> selectByPatientId(Long patientId) {
+        return selectJoinList(AdmissionLog.class, new MPJLambdaWrapper<>(AdmissionLog.class)
+                .selectAll(AdmissionLog.class)
+                .selectAssociation(Pay.class, AdmissionLog::getPay)
+                .leftJoin(Pay.class,  Pay::getId, AdmissionLog::getPayId)
+                .eq(AdmissionLog::getPatientId, patientId)
+                .eq(AdmissionLog::getState, NumberUtils.INTEGER_TWO)
+        );
     }
 
     @Override

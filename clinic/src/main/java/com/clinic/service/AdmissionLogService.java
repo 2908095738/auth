@@ -7,6 +7,7 @@ import com.clinic.entity.AdmissionLog;
 import com.github.yulichang.base.MPJBaseService;
 
 import java.text.ParseException;
+import java.util.List;
 
 /**
 * @author 路晨霖
@@ -22,4 +23,6 @@ public interface AdmissionLogService extends MPJBaseService<AdmissionLog> {
     void update(Long id, Long prescriptionId, Long payId, Long dossierId,String diagnosis);
 
     boolean updateEndState(Long admissionId);
+
+    List<AdmissionLog> selectByPatientId(Long patientId);
 }

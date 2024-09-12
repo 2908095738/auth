@@ -2,8 +2,6 @@ package com.clinic.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.IService;
-import com.bbs.Result;
 import com.clinic.dto.PrescriptionDto;
 import com.clinic.dto.PrescriptionFileVo;
 import com.clinic.dto.vo.PrescriptionSearchDrugVO;
@@ -20,6 +18,8 @@ import java.util.List;
 public interface PrescriptionService extends MPJBaseService<Prescription> {
 
     IPage<PrescriptionDto> selectPage(Long id, Long dossierId, Long patientId, Integer current, Integer size);
+
+    List<PrescriptionDto> select(Long patientId);
 
     List<PrescriptionDto> select(Long id, List<Long> dossierIds);
 

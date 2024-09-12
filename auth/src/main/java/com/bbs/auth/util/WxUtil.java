@@ -23,6 +23,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
@@ -74,6 +76,21 @@ public class WxUtil {
             throw new BusinessException("微信返回的accessToken为空");
         }
         return accessToken;
+    }
+
+
+    /**
+     * 给网页加授权域名
+     *
+     * @return
+     */
+    public String oAuth(String redircet_uri) {
+        try {
+            redircet_uri = URLEncoder.encode(redircet_uri, "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return "https://open.weixin.qq.com/connect/oauth2/authorize?appid=" + appId + "&redirect_uri=" + redircet_uri + "&response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect";
     }
 
 
