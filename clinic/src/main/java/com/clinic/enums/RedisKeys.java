@@ -14,6 +14,8 @@ import java.util.Map;
 @AllArgsConstructor
 public enum RedisKeys {
 
+    USER_BUSINESS_BY_ID("user:id:business:", "营业实例"),
+
     UNIT("unit:", "单位表缓存"),
     LOG_ADMISSION("log:admission:", "门诊日志表缓存"),
     LOG_PAY("log:pay:", "支付记录缓存"),

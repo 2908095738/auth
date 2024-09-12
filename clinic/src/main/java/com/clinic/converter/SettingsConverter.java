@@ -25,7 +25,7 @@ public interface SettingsConverter {
     }
 
     @Named("setBusinessTime")
-    default String setBusinessTimeStr(List<Map<Integer, List<Long>>> busTimeList) {
+    default String setBusinessTimeStr(List<Map<Integer, List<String>>> busTimeList) {
         return JSON.toJSONString(busTimeList);
     }
 }
