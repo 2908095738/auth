@@ -1,5 +1,6 @@
 package com.clinic.util;
 
+import cn.hutool.core.lang.Opt;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -27,8 +28,8 @@ public class RedisUtil {
      * 通过键删除一个值
      * @param key 键的名称
      */
-    public void delete(String key) {
-        redis.delete(key);
+    public boolean delete(String key) {
+        return redis.delete(key);
     }
 
     /**
@@ -68,6 +69,15 @@ public class RedisUtil {
         return redis.boundValueOps(key).get();
     }
 
+    /**
+     * get
+     * @param key 键
+     * @return 为空则返回 Opt<Null>，不空返回 Opt
+     */
+    public Opt<String> getOpt(String key) {
+        return Opt.ofNullable(redis.opsForValue().get(key));
+    }
+
     public Long increment(String key) {
         return redis.boundValueOps(key).increment();
     }
@@ -88,5 +98,13 @@ public class RedisUtil {
 
     public Object hashGet(String key, String hashKey) {
         return redis.opsForHash().get(key, hashKey);
+    }
+
+    public void multiSet(Map<String, String> map) {
+        redis.opsForValue().multiSet(map);
+    }
+
+    public void expire(String key, long timeout, TimeUnit unit) {
+        redis.expire(key, timeout, unit);
     }
 }

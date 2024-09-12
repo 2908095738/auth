@@ -64,5 +64,5 @@ public class UpdateSettingsParam {
     /**
      * 营业时间
      */
-    private List<Map<Integer, List<Long>>> businessTimes;
+    private List<Map<Integer, List<String>>> businessTimes;
 }

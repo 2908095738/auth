@@ -124,7 +124,7 @@ public class Settings implements Serializable {
      * 营业时间列表
      */
     @TableField(exist = false)
-    private List<Map<Integer, List<Date>>> businessTimeList;
+    private List<Map<Integer, List<String>>> businessTimeList;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

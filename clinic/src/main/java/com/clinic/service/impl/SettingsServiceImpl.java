@@ -1,6 +1,6 @@
 package com.clinic.service.impl;
 
-import cn.hutool.core.date.DateTime;
+import cn.hutool.core.lang.Opt;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -12,15 +12,18 @@ import com.clinic.dto.param.AddSettingsParam;
 import com.clinic.dto.param.UpdateSettingsParam;
 import com.clinic.entity.Patient;
 import com.clinic.entity.Settings;
+import com.clinic.enums.RedisKeys;
 import com.clinic.mapper.SettingsMapper;
 import com.clinic.service.SettingsService;
 import com.clinic.util.LoginUser;
+import com.clinic.util.RedisUtil;
 import com.clinic.util.log.LogUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -31,7 +34,6 @@ import org.springframework.transaction.TransactionStatus;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +57,10 @@ public class SettingsServiceImpl extends MPJBaseServiceImpl<SettingsMapper, Sett
 
     @Resource(name = "protoStuffTemplate")
     private RedisTemplate<String, String> redis;
+
+    @Autowired
+    private RedisUtil redisUtil;
+
     @Resource
     private DataSourceTransactionManager transactionManager;
     @Resource
@@ -109,11 +115,24 @@ public class SettingsServiceImpl extends MPJBaseServiceImpl<SettingsMapper, Sett
             }
             LogUtil.Operation.updateClinicSetting("{}修改设置：设置Id={}", LoginUser.get().getName(), settings.getId());
             transactionManager.commit(transaction);
+
+            resetBusCache();
             return Result.success(true);
         } catch (RuntimeException e) {
             transactionManager.rollback(transaction);
             return Result.failed(400, e.getMessage());
         }
+    }
+
+    /**
+     * 重置营业相关实例缓存
+     */
+    private void resetBusCache() {
+            Opt<String> busOpt = redisUtil.getOpt(RedisKeys.USER_BUSINESS_BY_ID.key(LoginUser.getId()));
+            if (!busOpt.isEmpty()){
+                String busKey = RedisKeys.USER_BUSINESS_BY_ID.key(LoginUser.getId());//营业实例键
+                redis.delete(busKey);//仅删除就行，再次获取时会自动查库再加入缓存
+            }
     }
 
     @Override
@@ -152,12 +171,15 @@ public class SettingsServiceImpl extends MPJBaseServiceImpl<SettingsMapper, Sett
      *
      * @param jsonArrStr 所有时间段的营业时间JSON字符串
      */
-    private List<Map<Integer, List<Date>>> getBusinessTime(String jsonArrStr) {
+    private List<Map<Integer, List<String>>> getBusinessTime(String jsonArrStr) {
+
+        //变量、注释没改，实际上value里的值变更为当天时分秒列表。
+
         if (StringUtils.isBlank(jsonArrStr) || (jsonArrStr.length() == NumberUtils.INTEGER_ONE && jsonArrStr.charAt(0) == 127))
             return Collections.emptyList();
 
         List<String> allTimeStrList = JSON.parseArray(jsonArrStr, String.class);//所有时间段JSON字符串
-        List<Map<Integer, List<Date>>> resultList = new ArrayList<>();//所有时间段列表
+        List<Map<Integer, List<String>>> resultList = new ArrayList<>();//所有时间段列表
         for (String nowTimeMapStr : allTimeStrList) {
             Map tmpTimeStrMap = JSON.parseObject(nowTimeMapStr, Map.class);//当前时间段的起始、结束时间戳字符串列表
             if (tmpTimeStrMap.size() > NumberUtils.INTEGER_ONE)
@@ -165,15 +187,15 @@ public class SettingsServiceImpl extends MPJBaseServiceImpl<SettingsMapper, Sett
 
             Set<Map.Entry> tmpSet = tmpTimeStrMap.entrySet();
             for (Map.Entry nowTimeMap : tmpSet) {
-                Map<Integer, List<Date>> dateMapByNow = new HashMap<>();//当前时间段的起始、结束日期映射
-                List<Date> dateListByNow = new ArrayList();//当前时间段的起始、结束日期列表
+                Map<Integer, List<String>> dateMapByNow = new HashMap<>();//当前时间段的起始、结束日期映射
+                List<String> dateListByNow = new ArrayList();//当前时间段的起始、结束日期列表
 
                 //初始化当前时间段的起始、结束日期列表
                 JSONArray nowTimeJsonArr = JSON.parseArray(String.valueOf(nowTimeMap.getValue()));
                 if (nowTimeJsonArr.size() > NumberUtils.INTEGER_TWO)
                     return Collections.emptyList();
-                dateListByNow.add(DateTime.of(nowTimeJsonArr.getLong(NumberUtils.INTEGER_ZERO)).toJdkDate());
-                dateListByNow.add(DateTime.of(nowTimeJsonArr.getLong(NumberUtils.INTEGER_ONE)).toJdkDate());
+                dateListByNow.add(nowTimeJsonArr.getString(NumberUtils.INTEGER_ZERO));
+                dateListByNow.add(nowTimeJsonArr.getString(NumberUtils.INTEGER_ONE));
 
                 dateMapByNow.put(Integer.valueOf(String.valueOf(nowTimeMap.getKey())), dateListByNow);
                 resultList.add(dateMapByNow);
