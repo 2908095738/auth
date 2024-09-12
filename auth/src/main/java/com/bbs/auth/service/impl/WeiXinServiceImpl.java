@@ -325,15 +325,15 @@ public class WeiXinServiceImpl implements WeiXinService {
         JSONObject subTwo1 = new JSONObject();
         subTwo1.put("name","历史诊所");
         subTwo1.put("type","view");
-        subTwo1.put("url",wxUtil.oAuth("http://localhost/clinic/phone/patient/record?index=admission"));
+        subTwo1.put("url",wxUtil.oAuth("https://maliang.work/clinic/phone/patient/record?index=admission"));
         JSONObject subTwo2 = new JSONObject();
         subTwo2.put("name","历史处方");
         subTwo2.put("type","view");
-        subTwo2.put("url",wxUtil.oAuth("http://localhost/clinic/phone/patient/record?index=admission"));
+        subTwo2.put("url",wxUtil.oAuth("https://maliang.work/clinic/phone/patient/record?index=admission"));
         JSONObject subTwo3 = new JSONObject();
         subTwo3.put("name","历史病例");
         subTwo3.put("type","view");
-        subTwo3.put("url",wxUtil.oAuth("http://localhost/clinic/phone/patient/record?&index=admission"));
+        subTwo3.put("url",wxUtil.oAuth("https://maliang.work/clinic/phone/patient/record?&index=admission"));
 
         twoSub.put(subTwo1);
         twoSub.put(subTwo2);
