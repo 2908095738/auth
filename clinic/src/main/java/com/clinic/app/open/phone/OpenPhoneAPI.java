@@ -2,6 +2,7 @@ package com.clinic.app.open.phone;
 
 import com.bbs.Result;
 import com.clinic.dto.PrescriptionDto;
+import com.clinic.entity.AdmissionLog;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.PrescriptionService;
 import com.clinic.service.SettingsService;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -49,18 +51,16 @@ public class OpenPhoneAPI {
      * 查去就诊记录
      */
     @GetMapping("/open/patient/admission")
-    public Result<PrescriptionDto> searchHistoryAdmission(Long patientId) {
-
-        return Result.success(null);
+    public Result<List<AdmissionLog>> searchHistoryAdmission(Long patientId) {
+        return Result.success(admissionLogService.selectByPatientId(patientId));
     }
 
     /**
      * 查去全部处方
      */
     @GetMapping("/open/patient/prescription")
-    public Result<PrescriptionDto> searchHistoryPrescription(Long patientId) {
-
-        return Result.success(null);
+    public Result<List<PrescriptionDto>> searchHistoryPrescription(Long patientId) {
+        return Result.success(prescriptionService.select(patientId));
     }
 
 

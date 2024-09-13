@@ -1,7 +1,7 @@
 package com.bbs.auth.api.vx;
 
 import com.bbs.Result;
-import com.bbs.auth.service.WeiXinLoginService;
+import com.bbs.auth.service.WeiXinService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,7 @@ import java.util.Map;
 public class WXLoginAuthAPI {
 
     @Resource
-    private WeiXinLoginService weiXinLoginService;
+    private WeiXinService weiXinService;
 
 
     @GetMapping(value = "/weixin/receive")
@@ -35,7 +35,7 @@ public class WXLoginAuthAPI {
         String echostr = request.getParameter("echostr");
         log.debug("开始校验此次消息是否来自微信服务器，param->signature:{},\ntimestamp:{},\nnonce:{},\nechostr:{}",
                 signature, timestamp, nonce, echostr);
-        String result = weiXinLoginService.receive(signature, timestamp, nonce, echostr, request);
+        String result = weiXinService.receive(signature, timestamp, nonce, echostr, request);
         log.debug("微信回调接口get请求执行结束！");
         return result;
     }
@@ -52,7 +52,7 @@ public class WXLoginAuthAPI {
         String echostr = request.getParameter("echostr");
         log.debug("开始校验此次消息是否来自微信服务器，param->signature:{},\ntimestamp:{},\nnonce:{},\nechostr:{}",
                 signature, timestamp, nonce, echostr);
-        String result = weiXinLoginService.receive(signature,timestamp,nonce,echostr,request);
+        String result = weiXinService.receive(signature,timestamp,nonce,echostr,request);
         log.debug("微信回调接口post请求执行结束！");
         return result;
     }
@@ -63,7 +63,7 @@ public class WXLoginAuthAPI {
     public Result<Map<String, String>> weinLogin(@RequestParam(required = false) Long phone){
         log.debug("微信扫码登录接口开始执行：/weixin/getQRCode");
         //获取ticket
-        Map<String, String> codeResult = weiXinLoginService.getQrCode(phone);
+        Map<String, String> codeResult = weiXinService.getQrCode(phone);
         log.debug("微信扫码登录接口执行结束！");
         return Result.success(codeResult);
     }
@@ -72,7 +72,7 @@ public class WXLoginAuthAPI {
     @ApiOperation("获取扫码登录状态,前端进行轮询")
     public Result<Map<String, Object>> checkLogin(@RequestParam String ticket, @RequestParam(required = false) Integer expireNumber) {
         log.debug("前端二维码轮询接口开始执行/weixin/check");
-        Map<String, Object> resultMap = weiXinLoginService.checkLogin(ticket, expireNumber);
+        Map<String, Object> resultMap = weiXinService.checkLogin(ticket, expireNumber);
         log.debug("前端二维码轮询接口执行结束！");
         return Result.success(resultMap);
     }

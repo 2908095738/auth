@@ -72,9 +72,17 @@ public class PrescriptionServiceImpl extends MPJBaseServiceImpl<PrescriptionMapp
                         .selectAll(Prescription.class)
                         .select(DossierPrescription::getDossierId)
                         .leftJoin(DossierPrescription.class, DossierPrescription::getPrescriptionId, Prescription::getId)
-                        .eq(Prescription::getCreator, id)
+                        .eq(nonNull(id),Prescription::getCreator, id)
                         .eq(nonNull(patientId), Prescription::getPatientId, patientId)
                         .eq(nonNull(dossierId), DossierPrescription::getDossierId, dossierId));
+    }
+
+    @Override
+    public List<PrescriptionDto> select(Long patientId) {
+        return selectJoinList(PrescriptionDto.class,
+                new MPJLambdaWrapper<Prescription>()
+                        .selectAll(Prescription.class)
+                        .eq(nonNull(patientId), Prescription::getPatientId, patientId));
     }
 
     @Override

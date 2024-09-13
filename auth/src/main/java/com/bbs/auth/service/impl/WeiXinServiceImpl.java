@@ -6,15 +6,16 @@ import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
 import cn.hutool.crypto.symmetric.SymmetricCrypto;
 import cn.hutool.http.HttpException;
 import cn.hutool.http.HttpRequest;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
 import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.entity.UserCompany;
 import com.bbs.auth.service.CompanyService;
 import com.bbs.auth.service.TokenService;
 import com.bbs.auth.service.UserService;
-import com.bbs.auth.service.WeiXinLoginService;
+import com.bbs.auth.service.WeiXinService;
 import com.bbs.auth.util.RedisUtil;
 import com.bbs.auth.util.WxUtil;
 import com.bbs.exception.BusinessException;
@@ -35,7 +36,7 @@ import static java.util.Objects.isNull;
 
 @Service
 @Slf4j
-public class WeiXinLoginServiceImpl implements WeiXinLoginService {
+public class WeiXinServiceImpl implements WeiXinService {
 
     @Value("${vx.token}")
     private String token;
@@ -89,7 +90,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
             String result = HttpRequest.post(url).body(JSON.toJSONString(jsonData)).execute().body();
             log.debug("请求微信接口的结果:'{}'",result);
             // 结果处理
-            JSONObject ticketJson = JSONObject.parseObject(result);
+            com.alibaba.fastjson2.JSONObject ticketJson = com.alibaba.fastjson2.JSONObject.parseObject(result);
             ticket = ticketJson.getString("ticket");
             expireSeconds = ticketJson.getString("expire_seconds");
 
@@ -176,7 +177,6 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
                         if ("1".equals(userArray[0])){
                             //先删除
                             redisUtil.delete("WX:"+ticket);
-                            log.debug("1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111删除redis中的openid：{}",userArray[0]);
                             if(userArray.length>1&&ObjUtil.isNotEmpty(userArray[1])){
                                 redisUtil.set("WX:"+ticket, fromUserName+","+userArray[1],100000L);
                             }else{
@@ -192,7 +192,30 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
                                 "</xml>\n";
                         break;
                     case "CLICK":   //自定义菜单事件
-
+                        String eventKey = resXml.get("EventKey");
+                        switch(eventKey) {
+                            case "url":
+                                xml ="<xml>\n" +
+                                        "  <ToUserName><![CDATA[" + fromUserName + "]]></ToUserName>\n" +
+                                        "  <FromUserName><![CDATA[" + toUserName + "]]></FromUserName>\n" +
+                                        "  <CreateTime>" + System.currentTimeMillis() + "</CreateTime>\n" +
+                                        "  <MsgType><![CDATA[text]]></MsgType>\n" +
+                                        "  <Content><![CDATA[https://maliang.work/clinic/back/invite/me]]></Content>\n" +
+                                        "</xml>\n";
+                                break;
+                            case "QrCode":
+                                xml ="<xml>\n" +
+                                        "  <ToUserName><![CDATA[" + fromUserName + "]]></ToUserName>\n" +
+                                        "  <FromUserName><![CDATA[" + toUserName + "]]></FromUserName>\n" +
+                                        "  <CreateTime>" + System.currentTimeMillis() + "</CreateTime>\n" +
+                                        "   <MsgType><![CDATA[image]]></MsgType>\n" +
+                                        "  <Image>\n" +
+                                        "  <MediaId><![CDATA[-gIBIvvHZ0-oip6xzJA_I768rudC9fZwsAibkGpFlrpZdh1sm0t5EWrfxjnlOcrn]]></MediaId>\n" +
+                                        "  </Image>\n" +
+                                        "</xml>\n";
+                                break;
+                        }
+                        break;
                     default:
                         break;
                 }
@@ -264,5 +287,94 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
         wxUtil.sendLoginMassage(openId, dbUser);
         log.info("checkLogin方法执行结束！");
         return resultMap;
+    }
+
+    @Override
+    public String createMenu() {
+        // 获取 AccessToken
+        String accessToken;
+        try {
+            accessToken = wxUtil.getAccessToken();
+            log.debug("获取到的acesstoken为：‘{}’",accessToken);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new BusinessException("获取AccessToken异常");
+        }
+        String url="https://api.weixin.qq.com/cgi-bin/menu/create?access_token="+accessToken;
+        JSONObject big = new JSONObject();
+        JSONArray button = new JSONArray();
+
+        JSONObject one = new JSONObject();
+
+        JSONArray sub_button = new JSONArray();
+
+        JSONObject subone = new JSONObject();
+        subone.put("name","系统链接");
+        subone.put("type","click");
+        subone.put("key","url");
+
+        sub_button.put(subone);
+
+        one.put("name","我是药企");
+        one.put("type","click");
+        one.put("sub_button",sub_button);
+
+        JSONObject two = new JSONObject();
+
+        JSONArray twoSub = new JSONArray();
+        JSONObject subTwo1 = new JSONObject();
+        subTwo1.put("name","历史诊所");
+        subTwo1.put("type","view");
+        subTwo1.put("url",wxUtil.oAuth("https://maliang.work/clinic/phone/patient/record?index=admission"));
+        JSONObject subTwo2 = new JSONObject();
+        subTwo2.put("name","历史处方");
+        subTwo2.put("type","view");
+        subTwo2.put("url",wxUtil.oAuth("https://maliang.work/clinic/phone/patient/record?index=admission"));
+        JSONObject subTwo3 = new JSONObject();
+        subTwo3.put("name","历史病例");
+        subTwo3.put("type","view");
+        subTwo3.put("url",wxUtil.oAuth("https://maliang.work/clinic/phone/patient/record?&index=admission"));
+
+        twoSub.put(subTwo1);
+        twoSub.put(subTwo2);
+        twoSub.put(subTwo3);
+
+        two.put("name","患者专栏");
+        two.put("type","click");
+        two.put("sub_button",twoSub);
+
+        JSONObject three = new JSONObject();
+        JSONArray threeSub = new JSONArray();
+
+        JSONObject subThree1 = new JSONObject();
+        subThree1.put("name","商务合作");
+        subThree1.put("type","click");
+        subThree1.put("key","QrCode");
+        JSONObject subThree2 = new JSONObject();
+        subThree2.put("name","常见问题");
+        subThree2.put("type","view");
+        subThree2.put("url","https://forum.maliang.work/");
+
+        threeSub.put(subThree1);
+        threeSub.put(subThree2);
+        three.put("name","联系我们");
+        three.put("type","click");
+        three.put("sub_button",threeSub);
+
+        button.put(one);
+        button.put(two);
+        button.put(three);
+        big.put("button",button);
+
+        String result = HttpRequest.post(url).body(JSON.toJSONString(big)).execute().body();
+
+        return result;
+    }
+
+    @Override
+    public String getMenu() {
+
+
+        return "";
     }
 }
