@@ -200,7 +200,7 @@ public class WeiXinServiceImpl implements WeiXinService {
                                         "  <FromUserName><![CDATA[" + toUserName + "]]></FromUserName>\n" +
                                         "  <CreateTime>" + System.currentTimeMillis() + "</CreateTime>\n" +
                                         "  <MsgType><![CDATA[text]]></MsgType>\n" +
-                                        "  <Content><![CDATA[https://maliang.work/clinic/back/invite/me]]></Content>\n" +
+                                        "  <Content><![CDATA[请在电脑上打开此链接：https://maliang.work]]></Content>\n" +
                                         "</xml>\n";
                                 break;
                             case "QrCode":
@@ -212,6 +212,15 @@ public class WeiXinServiceImpl implements WeiXinService {
                                         "  <Image>\n" +
                                         "  <MediaId><![CDATA[-gIBIvvHZ0-oip6xzJA_I768rudC9fZwsAibkGpFlrpZdh1sm0t5EWrfxjnlOcrn]]></MediaId>\n" +
                                         "  </Image>\n" +
+                                        "</xml>\n";
+                                break;
+                            case "admin_url"    :
+                                xml ="<xml>\n" +
+                                        "  <ToUserName><![CDATA[" + fromUserName + "]]></ToUserName>\n" +
+                                        "  <FromUserName><![CDATA[" + toUserName + "]]></FromUserName>\n" +
+                                        "  <CreateTime>" + System.currentTimeMillis() + "</CreateTime>\n" +
+                                        "  <MsgType><![CDATA[text]]></MsgType>\n" +
+                                        "  <Content><![CDATA[请在电脑上打开此链接：https://maliang.work/clinic/back/invite/me]]></Content>\n" +
                                         "</xml>\n";
                                 break;
                         }
@@ -311,9 +320,14 @@ public class WeiXinServiceImpl implements WeiXinService {
         JSONObject subone = new JSONObject();
         subone.put("name","系统链接");
         subone.put("type","click");
-        subone.put("key","url");
+        subone.put("key","admin_url");
+        JSONObject subone1 = new JSONObject();
+        subone1.put("name","联系我们");
+        subone1.put("type","click");
+        subone1.put("key","QrCode");
 
         sub_button.put(subone);
+        sub_button.put(subone1);
 
         one.put("name","我是药企");
         one.put("type","click");
@@ -323,23 +337,23 @@ public class WeiXinServiceImpl implements WeiXinService {
 
         JSONArray twoSub = new JSONArray();
         JSONObject subTwo1 = new JSONObject();
-        subTwo1.put("name","历史诊所");
+        subTwo1.put("name","找诊所");
         subTwo1.put("type","view");
-        subTwo1.put("url",wxUtil.oAuth("https://maliang.work/clinic/phone/patient/record?index=admission"));
+        subTwo1.put("url",wxUtil.oAuth("https://maliang.work/clinic/phone/patient/clinic"));
         JSONObject subTwo2 = new JSONObject();
-        subTwo2.put("name","历史处方");
+        subTwo2.put("name","个人中心");
         subTwo2.put("type","view");
-        subTwo2.put("url",wxUtil.oAuth("https://maliang.work/clinic/phone/patient/record?index=admission"));
+        subTwo2.put("url",wxUtil.oAuth("https://maliang.work/clinic/phone/patient/index"));
         JSONObject subTwo3 = new JSONObject();
-        subTwo3.put("name","历史病例");
+        subTwo3.put("name","论坛");
         subTwo3.put("type","view");
-        subTwo3.put("url",wxUtil.oAuth("https://maliang.work/clinic/phone/patient/record?&index=admission"));
+        subTwo3.put("url","https://forum.maliang.work/");
 
         twoSub.put(subTwo1);
         twoSub.put(subTwo2);
         twoSub.put(subTwo3);
 
-        two.put("name","患者专栏");
+        two.put("name","我是患者");
         two.put("type","click");
         two.put("sub_button",twoSub);
 
@@ -347,17 +361,28 @@ public class WeiXinServiceImpl implements WeiXinService {
         JSONArray threeSub = new JSONArray();
 
         JSONObject subThree1 = new JSONObject();
-        subThree1.put("name","商务合作");
+        subThree1.put("name","诊所入驻");
         subThree1.put("type","click");
-        subThree1.put("key","QrCode");
+        subThree1.put("key","url");
         JSONObject subThree2 = new JSONObject();
-        subThree2.put("name","常见问题");
+        subThree2.put("name","患者查询");
         subThree2.put("type","view");
-        subThree2.put("url","https://forum.maliang.work/");
+        subThree2.put("url",wxUtil.oAuth("https://maliang.work/clinic/phone/doctor/patient"));
+        JSONObject subThree3 = new JSONObject();
+        subThree3.put("name","留言回复");
+        subThree3.put("type","view");
+        subThree3.put("url",wxUtil.oAuth("https://maliang.work/clinic/phone/doctor/message"));
+        JSONObject subThree4 = new JSONObject();
+        subThree4.put("name","查看预约");
+        subThree4.put("type","view");
+        subThree4.put("url",wxUtil.oAuth("https://maliang.work/clinic/phone/doctor/index"));
 
         threeSub.put(subThree1);
         threeSub.put(subThree2);
-        three.put("name","联系我们");
+        threeSub.put(subThree3);
+        threeSub.put(subThree4);
+
+        three.put("name","我是医生");
         three.put("type","click");
         three.put("sub_button",threeSub);
 
@@ -366,9 +391,7 @@ public class WeiXinServiceImpl implements WeiXinService {
         button.put(three);
         big.put("button",button);
 
-        String result = HttpRequest.post(url).body(JSON.toJSONString(big)).execute().body();
-
-        return result;
+        return HttpRequest.post(url).body(JSON.toJSONString(big)).execute().body();
     }
 
     @Override
