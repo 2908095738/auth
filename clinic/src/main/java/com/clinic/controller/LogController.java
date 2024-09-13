@@ -73,8 +73,8 @@ public class LogController {
             transactionManager.commit(transaction);
             return Result.success(logId);
         } catch (RuntimeException e) {
-        transactionManager.rollback(transaction);
-        e.printStackTrace();
+            transactionManager.rollback(transaction);
+            e.printStackTrace();
         }
         return Result.failedNull();
     }

@@ -30,6 +30,7 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -99,29 +100,25 @@ public class SettingsServiceImpl extends MPJBaseServiceImpl<SettingsMapper, Sett
         }
     }
 
+    @Transactional
     @Override
     public Result<Boolean> update(UpdateSettingsParam param) {
         Settings settings = settingsConverter.toEntity(param);
         Long userId = LoginUser.getId();
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-        try {
-            boolean b = updateById(settings);
-            if(b){
-                Settings dbSettings = lambdaQuery().eq(Settings::getUserId, userId).one();
-                if(hasKey(getKey(userId))){
-                    //同步修改redis中的数据
-                    redis.opsForValue().set(getKey(userId),JSONUtil.toJsonPrettyStr(dbSettings));
-                }
+        boolean b = updateById(settings);
+        if(b){
+            Settings dbSettings = lambdaQuery().eq(Settings::getUserId, userId).one();
+            if(hasKey(getKey(userId))){
+                //同步修改redis中的数据
+                redis.opsForValue().set(getKey(userId),JSONUtil.toJsonPrettyStr(dbSettings));
             }
-            LogUtil.Operation.updateClinicSetting("{}修改设置：设置Id={}", LoginUser.get().getName(), settings.getId());
-            transactionManager.commit(transaction);
-
-            resetBusCache();
-            return Result.success(true);
-        } catch (RuntimeException e) {
-            transactionManager.rollback(transaction);
-            return Result.failed(400, e.getMessage());
         }
+        LogUtil.Operation.updateClinicSetting("{}修改设置：设置Id={}", LoginUser.get().getName(), settings.getId());
+        transactionManager.commit(transaction);
+
+        resetBusCache();
+        return Result.success(true);
     }
 
     /**
