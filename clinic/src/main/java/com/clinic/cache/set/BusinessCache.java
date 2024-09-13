@@ -90,6 +90,10 @@ public class BusinessCache {
         return vo;
     }
 
+    private static String DEFAULT_BUSINESS_DAY = "[1,5,3,4]";
+
+    private static String DEFAULT_BUSINESS_TIME = "[{1:[0,14400000]},{2:[18000000,43200000]}]";
+
     /**
      * 从数据库获取营业实例
      */
@@ -101,8 +105,8 @@ public class BusinessCache {
         BusinessVO vo = new BusinessVO();
         vo.setPhysician(set.getPhysician());
         vo.setDayTime(DateTime.now().getTime());
-        vo.setBusinessDayList(StringUtils.isNotBlank(dayJsonStr) ? JSONUtil.toList(dayJsonStr, String.class) : Collections.emptyList());
-        vo.setBusinessTimeList(StringUtils.isNotBlank(timeJsonStr) ? getTimesList(timeJsonStr) : Collections.emptyList());
+        vo.setBusinessDayList(JSONUtil.toList(StringUtils.isNotBlank(dayJsonStr) ? dayJsonStr : DEFAULT_BUSINESS_DAY, String.class));
+        vo.setBusinessTimeList(getTimesList(StringUtils.isNotBlank(timeJsonStr) ? timeJsonStr : DEFAULT_BUSINESS_TIME));
 
         return vo;
     }
@@ -127,7 +131,7 @@ public class BusinessCache {
             List<String> timeListByNow = new ArrayList<>();
             timeListByNowOfOri.forEach(l -> {
                 JSONArray timeJArr = (JSONArray) l;
-                timeJArr.forEach(t -> timeListByNow.add((String) t));
+                timeJArr.forEach(t -> timeListByNow.add(t.toString()));
             });
             resultList.add(timeListByNow);
         }
