@@ -3,7 +3,6 @@ package com.clinic.dao;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.util.FirstWordsSqlUtils;
-import com.bbs.util.MyStringUtil;
 import com.clinic.entity.Dossier;
 import com.clinic.entity.Patient;
 import com.clinic.mapper.PatientMapper;
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+import static cn.hutool.core.lang.Validator.isWord;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -55,7 +55,7 @@ public class PatientDao extends ServiceImpl<PatientMapper, Patient> {
                 .eq(isNotBlank(remark), Patient::getRemark, remark)
                 .like(nonNull(address) && address.length() <= 500, Patient::getAddress, address);
         if(StringUtils.isNotBlank(name)){
-            if(!MyStringUtil.isContainChinese(name)){
+            if(isWord(name)){
                 String sql = FirstWordsSqlUtils.getSql(name);
                 wrapper.apply(sql);
             }else{

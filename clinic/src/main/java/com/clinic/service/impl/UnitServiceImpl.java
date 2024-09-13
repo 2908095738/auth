@@ -6,7 +6,6 @@ import cn.hutool.core.lang.tree.TreeUtil;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.util.FirstWordsSqlUtils;
-import com.bbs.util.MyStringUtil;
 import com.clinic.dto.param.UnitParam;
 import com.clinic.entity.Unit;
 import com.clinic.enums.DefaultStateEnum;
@@ -18,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static cn.hutool.core.lang.Validator.isWord;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
@@ -75,7 +75,7 @@ public class UnitServiceImpl extends ServiceImpl<UnitMapper, Unit>
                 .eq(Unit::getDefaultState, DefaultStateEnum.DEFAULT.getCode());
 
         if(StringUtils.isNotBlank(name)){
-            if(!MyStringUtil.isContainChinese(name)){
+            if(isWord(name)){
                 String sql = FirstWordsSqlUtils.getSql(name);
                 wrapper.apply(sql);
             }else{

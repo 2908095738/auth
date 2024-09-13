@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static cn.hutool.core.lang.Validator.isWord;
 import static com.bbs.Result.failed;
 import static com.bbs.Result.success;
 import static java.util.Objects.nonNull;
@@ -118,7 +119,7 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
                 .leftJoin(Dossier.class, Dossier::getPatientId, Patient::getId)
                 .selectCount(Dossier::getId, Patient::getDossierNum);
         if(StringUtils.isNotBlank(name)){
-            if(!MyStringUtil.isContainChinese(name)){
+            if(isWord(name)){
                 String sql = FirstWordsSqlUtils.getSql(name);
                 wrapper = wrapper.apply(StringUtils.isNotEmpty(sql), sql);
             } else{

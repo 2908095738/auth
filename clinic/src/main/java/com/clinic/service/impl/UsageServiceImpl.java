@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static cn.hutool.core.lang.Validator.isWord;
 /**
 * @author 路晨霖
 * @description 针对表【usage(用法)】的数据库操作Service实现
@@ -25,7 +26,7 @@ public class UsageServiceImpl extends ServiceImpl<UsageMapper, Usage>
     public List<Usage> search(String name) {
         LambdaQueryChainWrapper<Usage> wrapper = lambdaQuery();
         if(StringUtils.isNotBlank(name)){
-            if(!MyStringUtil.isContainChinese(name)){
+            if(isWord(name)){
                 String sql = FirstWordsSqlUtils.getSql(name);
                 wrapper.apply(sql);
             }else{

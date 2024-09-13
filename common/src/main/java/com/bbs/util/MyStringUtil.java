@@ -23,5 +23,7 @@ public class MyStringUtil {
         Matcher m = p.matcher(str);
         return m.find();
     }
-
+    public static boolean isNotContainChinese(String str){
+        return !isContainChinese(str);
+    }
 }

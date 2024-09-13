@@ -3,24 +3,20 @@ package com.clinic.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bbs.util.FirstWordsSqlUtils;
-import com.bbs.util.MyStringUtil;
 import com.clinic.dto.param.DrugParam;
 import com.clinic.entity.Drug;
-import com.clinic.entity.StockBatch;
 import com.clinic.mapper.DrugMapper;
 import com.clinic.service.DrugService;
 import com.clinic.service.StockBatchService;
 import com.github.yulichang.base.MPJBaseServiceImpl;
-import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.Collections;
 import java.util.List;
 
+import static cn.hutool.core.lang.Validator.isWord;
 import static java.util.Objects.nonNull;
 
 /**
@@ -54,7 +50,7 @@ public class DrugServiceImpl extends MPJBaseServiceImpl<DrugMapper, Drug>
                     .likeRight(StringUtils.isNotBlank(drugNo), Drug::getDrugNo, drugNo)
                     .like(StringUtils.isNotBlank(approvalNumber), Drug::getApprovalNumber, approvalNumber);
                     if(StringUtils.isNotBlank(name)){
-                        if(!MyStringUtil.isContainChinese(name)){
+                        if(isWord(name)){
                             String sql = FirstWordsSqlUtils.getSql(name);
                             wrapper.apply(sql);
                         }else{

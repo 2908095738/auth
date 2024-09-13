@@ -6,7 +6,6 @@ import cn.hutool.core.io.resource.ClassPathResource;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.util.FirstWordsSqlUtils;
-import com.bbs.util.MyStringUtil;
 import com.clinic.cache.unit.UnitCache;
 import com.clinic.converter.StockConverter;
 import com.clinic.dto.PrescriptionDto;
@@ -46,6 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static cn.hutool.core.lang.Validator.isWord;
 import static com.deepoove.poi.config.Configure.builder;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
@@ -160,7 +160,7 @@ public class PrescriptionServiceImpl extends MPJBaseServiceImpl<PrescriptionMapp
 
                 .eq(Stock::getUserId, LoginUser.getId());
                 if(StringUtils.isNotBlank(drugName)){
-                    if(!MyStringUtil.isContainChinese(drugName)){
+                    if(isWord(drugName)){
                         String sql = FirstWordsSqlUtils.getSql(drugName);
                         wrapper.apply(sql);
                     }else{
