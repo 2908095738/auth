@@ -78,8 +78,8 @@ public class Search {
             Set<Long> needFillPatientLogIds = logs.stream().peek(log -> {
                 Date createTime = log.getCreateTime();
                 log.setIsCurrentDay(DateUtil.isSameDay(now, createTime));
-                log.setCreateYMD(DateUtil.format(createTime, "yyyy-MM-dd"));
-                log.setCreateHMS(DateUtil.format(createTime, "HH:mm:ss"));
+                log.setCreateYMD(DateUtil.formatDate(createTime));
+                log.setCreateHMS(DateUtil.formatTime(createTime));
 
             }).filter(log -> {
                 Integer serviceCode = log.getServiceCode();
