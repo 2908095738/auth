@@ -142,14 +142,14 @@ public class WeiXinServiceImpl implements WeiXinService {
                         if(StrUtil.isEmpty(ticket)){
                             return xml;
                         }
-                        log.debug("处理“扫描带参数二维码事件-未关注”事件");
+                        log.debug("处理“扫描带参数二维码事件-未关注”事件入参ticket：{}",ticket);
                         // 处理绑定微信号事件
                         user = redisUtil.get("WX:" + ticket);
                         userArray = user.split(",");
                         if ("1".equals(userArray[0])){
                             //先删除
                             redisUtil.delete("WX:"+ticket);
-                            log.debug("删除redis中的openid：{}",userArray[0]);
+                            log.debug("删除redis中的openid：{}",userArray.length>1);
                             if(userArray.length>1&&ObjUtil.isNotEmpty(userArray[1])){
                                 redisUtil.set("WX:"+ticket, fromUserName+","+userArray[1],100000L);
                             }else{
@@ -170,9 +170,10 @@ public class WeiXinServiceImpl implements WeiXinService {
                         if(StrUtil.isEmpty(ticket)){
                             return xml;
                         }
-                        log.debug("处理“扫描带参数二维码事件-已关注”事件");
+                        log.debug("处理“扫描带参数二维码事件-已关注”事件入参ticket：{}",ticket);
                         // 处理绑定微信号事件
                         user = redisUtil.get("WX:" + ticket);
+
                         userArray = user.split(",");
                         if ("1".equals(userArray[0])){
                             //先删除
