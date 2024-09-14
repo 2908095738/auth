@@ -149,8 +149,8 @@ public class WeiXinServiceImpl implements WeiXinService {
                         if ("1".equals(userArray[0])){
                             //先删除
                             redisUtil.delete("WX:"+ticket);
-                            log.debug("删除redis中的openid：{}",userArray.length>1);
-                            if(userArray.length>1&&ObjUtil.isNotEmpty(userArray[1])){
+                            log.debug("删除redis中的openid：{}",userArray);
+                            if(userArray.length>1&ObjUtil.isNotEmpty(userArray[1])){
                                 redisUtil.set("WX:"+ticket, fromUserName+","+userArray[1],100000L);
                             }else{
                                 redisUtil.set("WX:"+ticket, fromUserName,100000L);
@@ -178,7 +178,7 @@ public class WeiXinServiceImpl implements WeiXinService {
                         if ("1".equals(userArray[0])){
                             //先删除
                             redisUtil.delete("WX:"+ticket);
-                            if(userArray.length>1&&ObjUtil.isNotEmpty(userArray[1])){
+                            if(userArray.length>1&ObjUtil.isNotEmpty(userArray[1])){
                                 redisUtil.set("WX:"+ticket, fromUserName+","+userArray[1],100000L);
                             }else{
                                 redisUtil.set("WX:"+ticket, fromUserName,100000L);
