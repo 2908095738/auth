@@ -116,9 +116,8 @@ public class AppPayServiceImpl implements AppPayService {
         if(CollUtil.isNotEmpty(payRecords)){
             removePayOther(param.getId());
             createPayOtherThrowable(payRecords,param.getId());
-            return payService.updateById(payConverter.toPayEntity(param));
         }
-       return true;
+        return payService.updateById(payConverter.toPayEntity(param));
     }
 
 
