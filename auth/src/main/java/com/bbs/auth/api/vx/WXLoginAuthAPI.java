@@ -76,8 +76,4 @@ public class WXLoginAuthAPI {
         log.debug("前端二维码轮询接口执行结束！");
         return Result.success(resultMap);
     }
-
-
-
-
 }
