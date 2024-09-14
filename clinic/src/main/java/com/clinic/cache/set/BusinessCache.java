@@ -90,9 +90,9 @@ public class BusinessCache {
         return vo;
     }
 
-    private static String DEFAULT_BUSINESS_DAY = "[1,5,3,4]";
+    private static String DEFAULT_BUSINESS_DAY = "[1,2,3,4,5]";
 
-    private static String DEFAULT_BUSINESS_TIME = "[{1:[0,14400000]},{2:[18000000,43200000]}]";
+    private static String DEFAULT_BUSINESS_TIME = "[{1:[080000,120000]},{2:[140000,180000]}]";
 
     /**
      * 从数据库获取营业实例
