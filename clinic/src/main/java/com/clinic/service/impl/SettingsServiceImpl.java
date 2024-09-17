@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 /**
@@ -140,6 +141,7 @@ public class SettingsServiceImpl extends MPJBaseServiceImpl<SettingsMapper, Sett
         //不存在再从数据库中取
         if(Objects.isNull(str)){
             Settings one = lambdaQuery().eq(Settings::getUserId, userId).one();
+            if(isNull(one)) return null;
             one.setBusinessDayList(JSON.parseArray(one.getBusinessDay(), String.class));
             one.setBusinessTimeList(getBusinessTime(one.getBusinessTime()));
             redis.opsForValue().set(getKey(userId), JSONUtil.toJsonPrettyStr(one));

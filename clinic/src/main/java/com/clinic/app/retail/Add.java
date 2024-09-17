@@ -25,6 +25,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -72,33 +73,11 @@ public class Add {
 
     private static final String ADD_RETAIL_KEY = "lock_add_retail_lock";
 
+    @Transactional
     @PutMapping("/retail")
     public Result<Boolean> add(@RequestBody @Valid AddRetailParams params) {
-        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-        String lockKey = ADD_RETAIL_KEY;
-        try {
-            int i = 0;
-            while (i < 3) {
-                if(tryAcquireLock(lockKey)) {
-                    if(!exec(params)) break;
-                    transactionManager.commit(transaction);
-                    return Result.success();
-                }
-                i++;
-                Thread.sleep(1000);
-            }
-            if(i == 2) log.warn("try acquire lock failed!");
-
-        } catch (IllegalArgumentException e) {
-            transactionManager.rollback(transaction);
-            removeLock(lockKey);
-            return Result.failed(400, e.getMessage());
-        } catch (RuntimeException | InterruptedException e) {
-            e.printStackTrace();
-        }
-        transactionManager.rollback(transaction);
-        removeLock(lockKey);
-        return Result.failed();
+        exec(params);
+        return Result.success();
     }
 
     private Boolean exec(AddRetailParams params) throws DatabaseException {
@@ -106,53 +85,81 @@ public class Add {
         retailRecord.setUserId(LoginUser.getId());
 
         List<RetailDrugRecord> retailDrugRecords = converter.toEntity(params.getDrugList());
-        List<StockBatch> stockBatches = stockService.searchWaitUpdateStocks(params);
 
-        // 保存顾客 ID（病人）
-        Long phone = params.getPhone();
-        Patient patient = patientService.selectByPhone(String.valueOf(phone));
-        if(isNull(patient)) {
-            patient = patientConverter.toEntity(retailRecord);
-            patientService.save(patient);
+        Patient patient = savePatient(params, retailRecord);     // 保存顾客 ID（病人）
+
+        Map<Long, StockBatch> stockBatcheMap = myStockIdMap(params);
+
+        List<StockBatch> waitUpdateStockBatch = new ArrayList<>();
+        for (RetailDrugRecord retailDrugRecord : retailDrugRecords) {
+            // 判断【售卖的药品】是否属于库存中
+            if (sellDrugIsStock(retailDrugRecord)) {
+                StockBatch stockBatch = stockBatcheMap.get(retailDrugRecord.getStockBatchId());
+                retailDrugRecord.fillStockBatchInfo(stockBatch);
+
+                computeAndFillStockDrugNumber(retailDrugRecord, stockBatch);    // 计算并填充销售后的药品数量
+
+                waitUpdateStockBatch.add(stockBatch);
+            } else {
+                // 填充药品信息到零售药品记录
+                fillDrugInfoToRetailDrugRecord(retailDrugRecord);
+            }
         }
-        retailRecord.setId(patient.getId());
+        // 更新库存药品数量
+        if(isNeedUpdateStock(waitUpdateStockBatch)) updateStock(waitUpdateStockBatch);
 
-//        if(updateTargetStockIsPresent(params, stockBatches)) {
-            Map<Long, StockBatch> stockBatcheMap = stockBatches.stream().collect(Collectors.toMap(StockBatch::getId, stockBatch -> stockBatch));
+        if(!recordService.save(retailRecord)) throw new DatabaseException("零售记录入库失败");
 
-            List<StockBatch> waitUpdateStockBatch = new ArrayList<>(stockBatches.size());
-            for (int index = 0; index < retailDrugRecords.size(); index++) {
-                RetailDrugRecord retailDrugRecord = retailDrugRecords.get(index);
+        fillRetailIdToDrugRecords(retailDrugRecords, retailRecord);
 
-                if(nonNull(retailDrugRecord.getIsStock())&& retailDrugRecord.getIsStock()) {
-                    StockBatch stockBatch = stockBatcheMap.get(retailDrugRecord.getStockBatchId());
-                    retailDrugRecord.fillStockBatchInfo(stockBatch);
+        if(!drugRecordService.saveBatch(retailDrugRecords))  throw new DatabaseException("零售药品记录入库失败");
+        LogUtil.Operation.retailDrug(nonNull(patient) ? patient.getId() : null, retailRecord.getTotalPrice(), "{}新增一条零售记录：零售记录id={}", LoginUser.get().getName(), retailRecord.getId());
+        return true;
+    }
 
-                    long number = computeSellAfterStockNumber(retailDrugRecord, stockBatch);
+    private void computeAndFillStockDrugNumber(RetailDrugRecord retailDrugRecord, StockBatch stockBatch) {
+        long number = computeSellAfterStockNumber(retailDrugRecord, stockBatch);    // 计算药品更新后的数量
 
-                    Preconditions.checkArgument(sellAfterStockNumberIsNormal(number), "库存数量不足，无法执行操作");
+        Preconditions.checkArgument(sellAfterStockNumberIsNormal(number), "库存数量不足，无法执行操作");
 
-                    stockBatch.setNumber(number);
+        stockBatch.setNumber(number);
+    }
 
-                    waitUpdateStockBatch.add(stockBatch);
-                }else{
-                    Drug drug = drugService.getById(retailDrugRecord.getStockBatchId());
-                    retailDrugRecord.fillDrugInfo(drug);
-                }
+    private void fillDrugInfoToRetailDrugRecord(RetailDrugRecord retailDrugRecord) {
+        Drug drug = drugService.getById(retailDrugRecord.getStockBatchId());
+        retailDrugRecord.fillDrugInfo(drug);
+    }
+
+    private Boolean isNeedUpdateStock(List<StockBatch> waitUpdateStockBatch) {
+        return CollUtil.isNotEmpty(waitUpdateStockBatch);
+    }
+
+    private void updateStock(List<StockBatch> waitUpdateStockBatch) throws DatabaseException {
+        if(!stockService.update(waitUpdateStockBatch)) throw new DatabaseException("库存数量更新失败");
+    }
+
+    private Patient savePatient(AddRetailParams params, RetailRecord retailRecord) {
+        Patient patient = null;
+        Long phone = params.getPhone();
+        if(nonNull(phone)) {
+            patient = patientService.selectByPhone(String.valueOf(phone));
+            if(isNull(patient)) {
+                patient = patientConverter.toEntity(retailRecord);
+                patientService.save(patient);
             }
-            if(CollUtil.isNotEmpty(waitUpdateStockBatch)){
-                if(!stockService.update(waitUpdateStockBatch)) throw new DatabaseException("库存数量更新失败");
-            }
+            retailRecord.setUserId(patient.getId());
+        }
+        return patient;
+    }
 
-            if(!recordService.save(retailRecord)) throw new DatabaseException("零售记录入库失败");
+    private Map<Long, StockBatch> myStockIdMap(AddRetailParams params) {
+        List<StockBatch> stockBatches = stockService.searchWaitUpdateStocks(params);
+        return stockBatches.stream().collect(Collectors.toMap(StockBatch::getId, stockBatch -> stockBatch));
+    }
 
-            fillRetailIdToDrugRecords(retailDrugRecords, retailRecord);
-
-            if(!drugRecordService.saveBatch(retailDrugRecords))  throw new DatabaseException("零售药品记录入库失败");
-            LogUtil.Operation.retailDrug(patient.getId(), retailRecord.getTotalPrice(), "{}新增一条零售记录：零售记录id={}", LoginUser.get().getName(), retailRecord.getId());
-            return true;
-//        }
-//        return false;
+    private Boolean sellDrugIsStock(RetailDrugRecord retailDrugRecord) {
+        Boolean isStock = retailDrugRecord.getIsStock();
+        return nonNull(isStock) && isStock;
     }
 
     private Boolean tryAcquireLock(String lockKey) {
