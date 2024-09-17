@@ -66,7 +66,11 @@ public class AppDrugServiceImpl implements AppDrugService {
             List<List<Drug>> partition = ListUtils.partition(allDrugList, 5000);
             for (List<Drug> drugList : partition) {
                 threadPoolExecutor.execute(() -> {
-                    drugService.saveBatch(drugList);
+                    for (Drug drug : drugList) {
+                        if(!drugService.get(drug.getApprovalNumber())){
+                            drugService.save(drug);
+                        }
+                    }
                 });
             }
             return success(true);

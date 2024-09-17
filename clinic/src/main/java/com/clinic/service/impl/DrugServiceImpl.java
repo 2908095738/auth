@@ -78,6 +78,11 @@ public class DrugServiceImpl extends MPJBaseServiceImpl<DrugMapper, Drug>
                 .list();
     }
 
+    @Override
+    public boolean get(String approvalNumber) {
+        return lambdaQuery().eq(Drug::getApprovalNumber, approvalNumber)!=null;
+    }
+
     private LambdaQueryWrapper<Drug> searchWrapper(String val) {
         LambdaQueryWrapper<Drug> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper

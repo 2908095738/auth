@@ -21,4 +21,6 @@ public interface DrugService extends IService<Drug> {
     Page<Drug> search(String name, Page<Drug> tPage);
 
     List<Drug> searchByName(String name);
+
+    boolean get(String approvalNumber);
 }
