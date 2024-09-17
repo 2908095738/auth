@@ -66,7 +66,7 @@ public class FeiGeYunCaptcha{// extends CaptchaUtil
         private String count;
     }
 
-    @Override
+//    @Override
     public void send(String phoneNumber, String signName, String templateCode, String templateParam) throws Exception {
         log.debug("飞鸽云短信-{}发送短信: signName={}; templateCode={}", phoneNumber, signName, templateParam);
 
