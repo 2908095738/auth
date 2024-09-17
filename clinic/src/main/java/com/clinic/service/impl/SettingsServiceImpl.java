@@ -147,7 +147,10 @@ public class SettingsServiceImpl extends MPJBaseServiceImpl<SettingsMapper, Sett
             redis.opsForValue().set(getKey(userId), JSONUtil.toJsonPrettyStr(one));
             return one;
         } else {
-            return JSONUtil.toBean(str, Settings.class);
+            Settings cache = JSONUtil.toBean(str, Settings.class);
+            cache.setBusinessDayList(JSON.parseArray(cache.getBusinessDay(), String.class));
+            cache.setBusinessTimeList(getBusinessTime(cache.getBusinessTime()));
+            return cache;
         }
     }
 
