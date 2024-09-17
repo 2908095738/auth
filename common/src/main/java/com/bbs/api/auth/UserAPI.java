@@ -23,4 +23,6 @@ public interface UserAPI {
     User getUserByName(String userName);
 
     Map<Long, User> getUserIdMap(Set<Long> ids);
+
+    void removeUserById(Long userId);
 }

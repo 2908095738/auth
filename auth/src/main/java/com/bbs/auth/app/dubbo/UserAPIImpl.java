@@ -2,6 +2,7 @@ package com.bbs.auth.app.dubbo;
 
 import com.bbs.api.auth.User;
 import com.bbs.api.auth.UserAPI;
+import com.bbs.auth.app.user.delete.UserDelete;
 import com.bbs.auth.cache.BindLoginCompanyCache;
 import com.bbs.auth.converter.UserConverter;
 import com.bbs.auth.entity.Invite;
@@ -42,6 +43,10 @@ public class UserAPIImpl implements UserAPI {
 
     @Resource
     private BindLoginCompanyCache bindLoginCompanyCache;
+
+
+    @Resource
+    private UserDelete userDelete;
 
     @Override
     public User getUserByToken(String token) {
@@ -104,5 +109,10 @@ public class UserAPIImpl implements UserAPI {
     @Override
     public Map<Long, User> getUserIdMap(Set<Long> ids) {
         return getUserList(ids).stream().collect(Collectors.toMap(User::getId, user -> user));
+    }
+
+    @Override
+    public void removeUserById(Long userId) {
+        userDelete.delete(userId);
     }
 }
