@@ -117,7 +117,7 @@ public class Add {
         }
         retailRecord.setId(patient.getId());
 
-        if(updateTargetStockIsPresent(params, stockBatches)) {
+//        if(updateTargetStockIsPresent(params, stockBatches)) {
             Map<Long, StockBatch> stockBatcheMap = stockBatches.stream().collect(Collectors.toMap(StockBatch::getId, stockBatch -> stockBatch));
 
             List<StockBatch> waitUpdateStockBatch = new ArrayList<>(stockBatches.size());
@@ -151,8 +151,8 @@ public class Add {
             if(!drugRecordService.saveBatch(retailDrugRecords))  throw new DatabaseException("零售药品记录入库失败");
             LogUtil.Operation.retailDrug(patient.getId(), retailRecord.getTotalPrice(), "{}新增一条零售记录：零售记录id={}", LoginUser.get().getName(), retailRecord.getId());
             return true;
-        }
-        return false;
+//        }
+//        return false;
     }
 
     private Boolean tryAcquireLock(String lockKey) {
