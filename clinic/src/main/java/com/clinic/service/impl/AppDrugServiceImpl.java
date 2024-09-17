@@ -8,16 +8,20 @@ import com.clinic.dto.Manufacturer;
 import com.clinic.dto.param.DrugParam;
 import com.clinic.entity.Drug;
 import com.clinic.entity.Unit;
-import com.clinic.service.*;
+import com.clinic.service.AppDrugService;
+import com.clinic.service.DrugService;
+import com.clinic.service.ManufacturerService;
+import com.clinic.service.UnitCascadeService;
+import com.clinic.service.UnitService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import static com.bbs.Result.failed;
@@ -48,6 +52,7 @@ public class AppDrugServiceImpl implements AppDrugService {
         return success(drugService.search(param));
     }
 
+    @Transactional
     @Override
     public Result excelImport(MultipartFile file) {
         if(isNull(file)){
@@ -58,10 +63,12 @@ public class AppDrugServiceImpl implements AppDrugService {
             params.setTitleRows(1);
             params.setHeadRows(2);
             List<Drug> allDrugList = ExcelImportUtil.importExcel(file.getInputStream(), Drug.class, params);
-            CompletableFuture.allOf(ListUtils.partition(allDrugList, 5000).stream()
-                    .map(drugList -> CompletableFuture.supplyAsync(() -> drugService.saveBatch(drugList), threadPoolExecutor))
-                    .toArray(CompletableFuture[]::new)
-            ).get();
+            List<List<Drug>> partition = ListUtils.partition(allDrugList, 5000);
+            for (List<Drug> drugList : partition) {
+                threadPoolExecutor.execute(() -> {
+                    drugService.saveBatch(drugList);
+                });
+            }
             return success(true);
         } catch (Exception e) {
             return failed(1004,false,e.getMessage());

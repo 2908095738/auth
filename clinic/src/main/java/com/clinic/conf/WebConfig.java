@@ -64,6 +64,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(createLoginInterceptor())
                 .addPathPatterns("/**")
                 .excludePathPatterns("/test"+ "/**")
+                .excludePathPatterns("/import/excel"+ "/**")
                 .excludePathPatterns("/admin/content"+ "/**")
                 .excludePathPatterns("/content/query"+ "/**")
                 .excludePathPatterns("/salary/temp/export"+ "/**")
