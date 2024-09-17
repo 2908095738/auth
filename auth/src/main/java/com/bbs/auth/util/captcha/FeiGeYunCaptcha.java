@@ -29,7 +29,7 @@ import static java.util.Objects.isNull;
 @Slf4j
 @RestController
 @RequestMapping
-public class FeiGeYunCaptcha extends CaptchaUtil {
+public class FeiGeYunCaptcha{// extends CaptchaUtil
 
     @Value("${code.feigeyun.apikey}")
     private String apikey;
