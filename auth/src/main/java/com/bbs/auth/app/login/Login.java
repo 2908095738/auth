@@ -75,7 +75,7 @@ public class Login {
     @Resource
     private WxUtil wxUtil;
 
-    @Value("${vx.token}")
+    @Value("${wx.oa.token}")
     private String token;
 
     @Resource
