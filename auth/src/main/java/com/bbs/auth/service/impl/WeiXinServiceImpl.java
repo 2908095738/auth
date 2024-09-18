@@ -38,7 +38,7 @@ import static java.util.Objects.isNull;
 @Slf4j
 public class WeiXinServiceImpl implements WeiXinService {
 
-    @Value("${vx.token}")
+    @Value("${wx.oa.token}")
     private String token;
 
     @Resource

@@ -19,6 +19,7 @@ import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.Node;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -41,9 +42,10 @@ import java.util.Map;
 @Component
 public class WxUtil {
 
-    private String appId = "wxbd377f32afa2d442";
-    private String appSecret = "9fe6c48d6689198f4d0022f3e809c3bb";
-
+    @Value("${wx.oa.appId}")
+    private String appId;
+    @Value("${wx.oa.appSecret}")
+    private String appSecret;
     @Resource
     private RedisUtil redisUtil;
 

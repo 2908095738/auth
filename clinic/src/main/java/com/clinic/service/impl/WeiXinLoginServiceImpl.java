@@ -25,7 +25,7 @@ import java.util.Objects;
 @Slf4j
 public class WeiXinLoginServiceImpl implements WeiXinLoginService {
 
-    @Value("${vx.token}")
+    @Value("${wx.oa.token}")
     private String token;
 
     @Resource
