@@ -8,6 +8,7 @@ import com.bbs.Result;
 import com.bbs.api.auth.User;
 import com.bbs.util.FirstWordsSqlUtils;
 import com.bbs.util.MyStringUtil;
+import com.bbs.util.PageUtil;
 import com.clinic.cache.log.admission.AdmissionLogCache;
 import com.clinic.converter.PatientConverter;
 import com.clinic.dao.PatientDao;
@@ -20,7 +21,6 @@ import com.clinic.entity.Patient;
 import com.clinic.mapper.PatientMapper;
 import com.clinic.service.PatientService;
 import com.clinic.util.LoginUser;
-import com.clinic.util.PageUtil;
 import com.clinic.util.log.LogUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
@@ -130,7 +130,7 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
         wrapper = wrapper.eq(Patient::getUserId, LoginUser.getId())
                 .groupBy(Patient::getId);
         List<Patient> list = selectJoinList(Patient.class, wrapper);
-        Page<Patient> page = PageUtil.execPage(param.getCurrent(), param.getSize(), list);
+        Page<Patient> page = PageUtil.paginateWithInfo(list, param.getCurrent(), param.getSize());
 
         updateAgeAndIsFirstToDB(page.getRecords());
         return success(page);

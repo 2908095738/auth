@@ -3,6 +3,7 @@ package com.clinic.controller;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
+import com.bbs.util.PageUtil;
 import com.clinic.app.AppPayService;
 import com.clinic.app.AppPrescriptionService;
 import com.clinic.app.AppStockService;
@@ -23,7 +24,6 @@ import com.clinic.enums.PayStateEnum;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.PayService;
 import com.clinic.util.LoginUser;
-import com.clinic.util.PageUtil;
 import com.clinic.util.WxUtil;
 import com.clinic.util.log.LogUtil;
 import lombok.AllArgsConstructor;
@@ -110,7 +110,7 @@ public class PayController {
         GetPayParam getPayParam = new GetPayParam(new Page<>(param.getCurrent(), param.getSize()), param.getVal(), param.getStartDate(), param.getEndDate());
         getPayParam.setState(INTEGER_ONE);
         List<PayAndRecordPageDto> data = payService.selectPayAndRecordDto(getPayParam);
-        return Result.success(PageUtil.execPage(param.getCurrent(), param.getSize(), data));
+        return Result.success(PageUtil.paginateWithInfo(data, param.getCurrent(), param.getSize()));
     }
 
     /**
@@ -127,7 +127,7 @@ public class PayController {
         GetPayParam param = new GetPayParam(new Page<>(current, size), val, startDate, endDate);
         param.setState(INTEGER_ZERO);
         List<PayAndRecordPageDto> data = payService.selectPayAndRecordDto(param);
-        return Result.success(PageUtil.execPage(current, size, data));
+        return Result.success(PageUtil.paginateWithInfo(data, current, size));
     }
 
     /**
