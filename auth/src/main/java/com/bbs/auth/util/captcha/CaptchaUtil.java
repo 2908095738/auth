@@ -52,7 +52,7 @@ public abstract class CaptchaUtil {
         checkPhoneFormat(phone);
         cache.checkIsCanSendCode(phone);
         Integer code = createCode();
-            send(phone, signName, templateCode,  code+"");
+            send(phone, signName, templateCode,  "{\"code\":\"" + code +"\"}");
             cache.setCode(phone, code);
             return true;
         } catch (Exception e) {
