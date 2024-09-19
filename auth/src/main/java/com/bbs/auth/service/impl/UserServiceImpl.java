@@ -242,7 +242,7 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
     public Map<Long, User> searchMap(Set<Long> ids) {
         List<User> users = search(ids);
         if(nonNull(users) && users.size() > INTEGER_ZERO) {
-            return users.stream().collect(Collectors.toMap(User::getId, user -> user));
+            return users.stream().filter(Objects::nonNull).collect(Collectors.toMap(User::getId, user -> user));
         }
         return new HashMap<>();
     }
