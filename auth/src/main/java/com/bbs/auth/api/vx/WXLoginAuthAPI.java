@@ -60,10 +60,10 @@ public class WXLoginAuthAPI {
 
     @ApiOperation("微信扫码登录，提供二维码")
     @PostMapping(value = "/weixin/getQRCode")
-    public Result<Map<String, String>> weinLogin(@RequestParam(required = false) Long phone){
+    public Result<Map<String, String>> weinLogin(){
         log.debug("微信扫码登录接口开始执行：/weixin/getQRCode");
         //获取ticket
-        Map<String, String> codeResult = weiXinService.getQrCode(phone);
+        Map<String, String> codeResult = weiXinService.getQrCode();
         log.debug("微信扫码登录接口执行结束！");
         return Result.success(codeResult);
     }
@@ -72,8 +72,13 @@ public class WXLoginAuthAPI {
     @ApiOperation("获取扫码登录状态,前端进行轮询")
     public Result<Map<String, Object>> checkLogin(@RequestParam String ticket, @RequestParam(required = false) Integer expireNumber) {
         log.debug("前端二维码轮询接口开始执行/weixin/check");
-        Map<String, Object> resultMap = weiXinService.checkLogin(ticket, expireNumber);
-        log.debug("前端二维码轮询接口执行结束！");
-        return Result.success(resultMap);
+        try {
+            Map<String, Object> resultMap = weiXinService.checkLogin(ticket, expireNumber);
+            log.debug("前端二维码轮询接口执行结束！");
+            return Result.success(resultMap);
+        }catch (Exception e){
+            log.error("前端二维码轮询接口执行失败！{}",e.getMessage());
+            return Result.failed(e.getMessage());
+        }
     }
 }

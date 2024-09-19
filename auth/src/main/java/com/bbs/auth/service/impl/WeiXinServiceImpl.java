@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.Objects.isNull;
@@ -60,7 +59,7 @@ public class WeiXinServiceImpl implements WeiXinService {
 
 
     @Override
-    public Map<String,String> getQrCode(Long phone) {
+    public Map<String,String> getQrCode() {
         log.info("getQrCode方法开始执行！");
         // 获取 AccessToken
         String accessToken;
@@ -93,11 +92,8 @@ public class WeiXinServiceImpl implements WeiXinService {
             ticket = ticketJson.getString("ticket");
             expireSeconds = ticketJson.getString("expire_seconds");
 
-            if(Objects.nonNull(phone)){
-                redisUtil.set("WX:"+ticket, "1,"+phone, Long.parseLong(expireSeconds));
-            }else{
-                redisUtil.set("WX:"+ticket, "1", Long.parseLong(expireSeconds));
-            }
+            redisUtil.set("WX:"+ticket, "1", Long.parseLong(expireSeconds));
+
             // 通过ticket换取二维码 https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=
             HashMap<String, String> map = new HashMap<>();
             map.put("ticket", ticket);
@@ -259,7 +255,7 @@ public class WeiXinServiceImpl implements WeiXinService {
         }
         User dbUser = userService.searchIdByOpenId(openId);
         // 判断用户是否存在
-        if (isNull(dbUser) | isNull(dbUser.getPhone())){
+        if (isNull(dbUser) || isNull(dbUser.getPhone())){
             HashMap<String, Object> scanResultMap3 = new HashMap<>();
             SymmetricCrypto aes = new SymmetricCrypto(SymmetricAlgorithm.AES, token.getBytes());
             scanResultMap3.put("openId", aes.encrypt(openId));
@@ -381,10 +377,4 @@ public class WeiXinServiceImpl implements WeiXinService {
         return HttpRequest.post(url).body(JSON.toJSONString(big)).execute().body();
     }
 
-    @Override
-    public String getMenu() {
-
-
-        return "";
-    }
 }

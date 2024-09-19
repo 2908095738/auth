@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.Map;
 
 public interface WeiXinService {
-    Map<String,String> getQrCode(Long phone);
+    Map<String,String> getQrCode();
 
     String receive(String signature, String timestamp, String nonce, String echostr, HttpServletRequest request) throws IOException;
 
@@ -13,5 +13,4 @@ public interface WeiXinService {
 
     String createMenu();
 
-    String getMenu();
 }
