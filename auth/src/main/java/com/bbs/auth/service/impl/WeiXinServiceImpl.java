@@ -259,7 +259,7 @@ public class WeiXinServiceImpl implements WeiXinService {
         }
         User dbUser = userService.searchIdByOpenId(openId);
         // 判断用户是否存在
-        if (isNull(dbUser) || isNull(dbUser.getPhone())){
+        if (isNull(dbUser) | isNull(dbUser.getPhone())){
             HashMap<String, Object> scanResultMap3 = new HashMap<>();
             SymmetricCrypto aes = new SymmetricCrypto(SymmetricAlgorithm.AES, token.getBytes());
             scanResultMap3.put("openId", aes.encrypt(openId));
