@@ -49,22 +49,17 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
     @Override
     public Map<String, Object> checkPhone(String ticket, Long phone, boolean isEnd) {
         // 从缓存获取扫码状态
-        String wxUser;
-        String[] openUser;
         String openId;
         try {
-            wxUser = redisUtil.get("WX:"+ticket);
+            openId = redisUtil.get("WX:"+ticket);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        log.debug("redis中的openid：{}，1表达没有扫码或没有回调或没有关注关注号",wxUser);
+        log.debug("redis中的openid：{}，1表达没有扫码或没有回调或没有关注关注号",openId);
         // 判断扫码状态
         if (StrUtil.isEmpty(ticket)){
             throw new BusinessException(phone+"WX:"+ticket+"的值为空");
         }
-        openUser = wxUser.split(",");
-        openId = openUser[0];
-
         if (openId == null){
             //说明二维码过期了，停止轮询
             HashMap<String, Object> scanResultMap2 = new HashMap<>();
@@ -92,7 +87,8 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
             admissionLogService.lambdaUpdate().set(AdmissionLog::getOpenId, openId).eq(AdmissionLog::getId, dbOne.getId()).update();
             //发送绑定成功消息
             wxUtil.sendPatientMassage(patient);
-            //发送最近一次就诊处方记录
+            //发送当天最近一次就诊处方记录
+
         }else{
             patient = patientService.selectByPhone(String.valueOf(phone));
             if(Objects.isNull(patient)){
