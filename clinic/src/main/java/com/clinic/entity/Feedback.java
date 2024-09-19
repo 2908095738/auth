@@ -34,6 +34,12 @@ public class Feedback implements Serializable {
     private Long phone;
 
     /**
+     * 用户id
+     */
+    @TableField(value = "user_id")
+    private Long userId;
+
+    /**
      * 创建时间
      */
     @TableField(value = "create_time")
