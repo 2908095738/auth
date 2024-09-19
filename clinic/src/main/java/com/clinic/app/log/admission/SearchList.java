@@ -11,23 +11,18 @@ import com.clinic.entity.AdmissionLog;
 import com.clinic.entity.Pay;
 import com.clinic.mapper.AdmissionLogMapper;
 import com.clinic.util.LoginUser;
-import com.clinic.util.ORMUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
-
 import static java.util.Objects.nonNull;
 
 /**
