@@ -11,12 +11,15 @@ import com.clinic.entity.AdmissionLog;
 import com.clinic.entity.Pay;
 import com.clinic.mapper.AdmissionLogMapper;
 import com.clinic.util.LoginUser;
+import com.clinic.util.ORMUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,7 +29,6 @@ import java.util.Date;
 import java.util.List;
 
 import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 
 /**
  * 正在接诊页面接口
@@ -96,9 +98,9 @@ public class SearchList extends MPJBaseServiceImpl<AdmissionLogMapper, Admission
                 .orderByDesc(AdmissionLog::getCreateTime);
         if(StrUtil.isNotBlank(param.value)){
             if(StringUtil.isNumeric(param.value)){
-                admissionLogMPJLambdaWrapper.eq(AdmissionLog::getPhone, Long.valueOf(param.value));
+                admissionLogMPJLambdaWrapper.like(AdmissionLog::getPhone, Long.valueOf(param.value));
             }else{
-                admissionLogMPJLambdaWrapper.likeRight(AdmissionLog::getName, param.value);
+                admissionLogMPJLambdaWrapper.like(AdmissionLog::getName, param.getValue());
             }
         }
         return selectJoinList(AdmissionLog.class, admissionLogMPJLambdaWrapper);
