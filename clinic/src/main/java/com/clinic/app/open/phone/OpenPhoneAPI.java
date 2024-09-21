@@ -2,7 +2,7 @@ package com.clinic.app.open.phone;
 
 import com.bbs.Result;
 import com.clinic.dto.PrescriptionDto;
-import com.clinic.entity.AdmissionLog;
+import com.clinic.dto.vo.PatientClinicVo;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.PrescriptionService;
 import com.clinic.service.SettingsService;
@@ -48,20 +48,11 @@ public class OpenPhoneAPI {
 
 
     /**
-     * 查去就诊记录
+     * 查历史门诊记录
      */
     @GetMapping("/open/patient/admission")
-    public Result<List<AdmissionLog>> searchHistoryAdmission(Long patientId) {
-        return Result.success(admissionLogService.selectByPatientId(patientId));
+    public Result<List<PatientClinicVo>> searchHistoryAdmission(String openId) {
+        return Result.success(admissionLogService.selectByOpenId(openId));
     }
-
-    /**
-     * 查去全部处方
-     */
-    @GetMapping("/open/patient/prescription")
-    public Result<List<PrescriptionDto>> searchHistoryPrescription(Long patientId) {
-        return Result.success(prescriptionService.select(patientId));
-    }
-
 
 }

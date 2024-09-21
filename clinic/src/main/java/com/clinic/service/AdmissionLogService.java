@@ -3,6 +3,7 @@ package com.clinic.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.clinic.dto.param.RecordAdmissionLogParam;
 import com.clinic.dto.param.SearchAdmissionParam;
+import com.clinic.dto.vo.PatientClinicVo;
 import com.clinic.entity.AdmissionLog;
 import com.github.yulichang.base.MPJBaseService;
 
@@ -25,4 +26,6 @@ public interface AdmissionLogService extends MPJBaseService<AdmissionLog> {
     boolean updateEndState(Long admissionId);
 
     List<AdmissionLog> selectByPatientId(Long patientId);
+
+    List<PatientClinicVo> selectByOpenId(String openId);
 }

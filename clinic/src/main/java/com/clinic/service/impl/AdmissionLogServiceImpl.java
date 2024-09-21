@@ -6,9 +6,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.clinic.cache.log.admission.AdmissionLogCache;
 import com.clinic.dto.param.RecordAdmissionLogParam;
 import com.clinic.dto.param.SearchAdmissionParam;
+import com.clinic.dto.vo.PatientClinicVo;
 import com.clinic.entity.AdmissionLog;
+import com.clinic.entity.Dossier;
 import com.clinic.entity.Patient;
 import com.clinic.entity.Pay;
+import com.clinic.entity.Settings;
 import com.clinic.enums.AdmissionStateEnum;
 import com.clinic.mapper.AdmissionLogMapper;
 import com.clinic.service.AdmissionLogService;
@@ -110,6 +113,20 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
                 .eq(AdmissionLog::getState, NumberUtils.INTEGER_TWO)
         );
     }
+
+    @Override
+    public List<PatientClinicVo> selectByOpenId(String openId) {
+        return selectJoinList(PatientClinicVo.class, new MPJLambdaWrapper<>(AdmissionLog.class)
+                .select("t.id","t.create_time","s.clinic_name","s.physician","d.chief_complaint")
+                .leftJoin(Settings.class, "s", Settings::getUserId, AdmissionLog::getUserId)
+                .leftJoin(Patient.class, Patient::getId, AdmissionLog::getPatientId)
+                .leftJoin(Dossier.class,"d", Dossier::getId, AdmissionLog::getDossierId)
+                .eq(Patient::getOpenId, openId)
+                .eq(AdmissionLog::getState, NumberUtils.INTEGER_TWO)
+        );
+    }
+
+
 
     @Override
     public Long save(RecordAdmissionLogParam param) {
