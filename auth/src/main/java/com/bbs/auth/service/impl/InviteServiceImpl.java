@@ -5,8 +5,10 @@ import com.bbs.auth.service.InviteService;
 import com.bbs.auth.mapper.InviteMapper;
 import com.bbs.auth.util.LoginUser;
 import com.github.yulichang.base.MPJBaseServiceImpl;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
+
+import java.util.List;
 
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 
@@ -22,6 +24,9 @@ public class InviteServiceImpl extends MPJBaseServiceImpl<InviteMapper, Invite>
 //    @Cacheable(cacheNames = "user::invite")
     @Override
     public Invite search() {
-        return lambdaQuery().eq(Invite::getUserId, LoginUser.getId()).list().get(INTEGER_ZERO);
+        List<Invite> invList = lambdaQuery().eq(Invite::getUserId, LoginUser.getId()).list();
+        if (ObjectUtils.isEmpty(invList))
+            return new Invite();
+        return invList.get(INTEGER_ZERO);
     }
 }
