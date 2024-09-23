@@ -14,6 +14,7 @@ import com.clinic.entity.Patient;
 import com.clinic.entity.Settings;
 import com.clinic.service.SettingsService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
@@ -31,11 +32,7 @@ import java.io.InputStreamReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @Slf4j
@@ -266,5 +263,54 @@ public class WxUtil {
         }
     }
 
+    /**
+     * 发送模板消息
+     *
+     * @param tempId    模板id
+     * @param extParams 额外请求参数
+     */
+    public void sendTempMsg(String openId, String tempId, Map<String, Object> data, Map<String, Object> extParams) {
+        log.debug("消息发送成功![Temp::sendTempMsg] tempId={}", JSONUtil.toJsonPrettyStr(tempId));
 
+        // 获取 AccessToken
+        String accessToken = getAccessToken();
+        String url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=" + accessToken;
+
+        //初始化请求map
+        Map<String, Object> jsonData = new HashMap<>();
+        jsonData.put("touser", openId);
+        jsonData.put("template_id", tempId);
+        jsonData.put("data", data);
+
+        if (ObjectUtils.isNotEmpty(extParams))
+            extParams.entrySet()
+                    .forEach(e -> jsonData.put(e.getKey(), e.getValue()));
+
+        // 发送请求
+        String result = HttpRequest.post(url).body(JSON.toJSONString(jsonData)).execute().body();
+
+        // 结果处理
+        JSONObject ticketJson = JSONObject.parseObject(result);
+        Integer errcode = ticketJson.getInteger("errcode");
+        if (errcode != 0) {
+            log.error(errcode + ":" + ticketJson.getString("errmsg"));
+            throw new BusinessException("消息发送失败！");
+        }
+    }
+
+    public static Map<String, Object> getDataMap(Map<String, Object> dataMap) {
+        if (ObjectUtils.isEmpty(dataMap))
+            return Collections.emptyMap();
+
+        final String KEY = "value";
+
+        Map<String, Object> result = new HashMap<>();
+        dataMap.entrySet().forEach(e -> {
+            Map<String, Object> paramMap = new HashMap();
+            paramMap.put(KEY, e.getValue());
+            result.put(e.getKey(), paramMap);
+        });
+
+        return result;
+    }
 }

@@ -4,15 +4,19 @@ package com.clinic.controller;
 import com.bbs.Result;
 import com.clinic.dto.Manufacturer;
 import com.clinic.dto.param.DrugParam;
+import com.clinic.entity.PrescriptionDrug;
 import com.clinic.service.AppDrugService;
+import com.clinic.service.PrescriptionDrugService;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.util.ObjectUtils;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.annotation.Resource;
+import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -20,6 +24,9 @@ import org.springframework.web.multipart.MultipartFile;
 public class DrugController {
 
     private AppDrugService appDrugService;
+
+    @Resource
+    private PrescriptionDrugService drugService;
 
     @GetMapping("/drug")
     public Result search(DrugParam param) {
@@ -37,6 +44,23 @@ public class DrugController {
     @PostMapping("/import/excel")
     public Result excelImport(@RequestParam("file") MultipartFile file){
         return appDrugService.excelImport(file);
+    }
+
+    /**
+     * 获取处方药列表
+     *
+     * @param presId 处方id
+     */
+    @GetMapping("/drug/wx/{presId}")
+    public Result<List<PrescriptionDrug>> getDrug(@PathVariable Long presId) {
+        List<PrescriptionDrug> drugList = drugService.selectJoinList(PrescriptionDrug.class,
+                new MPJLambdaWrapper<PrescriptionDrug>()
+                        .in(PrescriptionDrug::getPrescriptionId, presId));
+
+        if (ObjectUtils.isEmpty(drugList))
+            drugList = Collections.emptyList();
+
+        return Result.success(drugList);
     }
 
     @GetMapping("/drug/unit/list/all")

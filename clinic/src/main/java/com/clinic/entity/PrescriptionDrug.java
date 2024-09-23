@@ -4,7 +4,10 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -16,6 +19,9 @@ import java.util.List;
  */
 @TableName(value ="prescription_drug")
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@FieldNameConstants
 public class PrescriptionDrug implements Serializable {
 
     /**
