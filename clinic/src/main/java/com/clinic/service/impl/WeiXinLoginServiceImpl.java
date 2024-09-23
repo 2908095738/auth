@@ -10,6 +10,7 @@ import com.clinic.entity.Patient;
 import com.clinic.entity.PrescriptionDrug;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.PatientService;
+import com.clinic.service.PrescriptionDrugService;
 import com.clinic.service.WeiXinLoginService;
 import com.clinic.util.RedisUtil;
 import com.clinic.util.WxUtil;
@@ -45,7 +46,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
     private AdmissionLogService admissionLogService;
 
     @Resource
-    private PrescriptionDrugServiceImpl drugService;
+    private PrescriptionDrugService drugService;
 
     /**
      * 验证当前手机号的病人是否扫码关注
