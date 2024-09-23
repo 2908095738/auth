@@ -270,7 +270,9 @@ public class WxUtil {
      * @param extParams 额外请求参数
      */
     public void sendTempMsg(String openId, String tempId, Map<String, Object> data, Map<String, Object> extParams) {
-        log.debug("消息发送成功![Temp::sendTempMsg] tempId={}", JSONUtil.toJsonPrettyStr(tempId));
+        log.debug("消息发送成功![Temp::sendTempMsg] tempId={}", JSONUtil.toJsonPrettyStr(new HashMap<String, String>() {{
+            put("tempId", tempId);
+        }}));
 
         // 获取 AccessToken
         String accessToken = getAccessToken();
