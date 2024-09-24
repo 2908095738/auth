@@ -73,6 +73,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns(imageDownPrefix + "/**")
                 .excludePathPatterns("/ai/**")
                 .excludePathPatterns("/open/**")
+                .excludePathPatterns("/user")
         ;
     }
 }
