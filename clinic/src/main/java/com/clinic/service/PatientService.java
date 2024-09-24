@@ -1,13 +1,13 @@
 package com.clinic.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.bbs.Result;
 import com.clinic.dto.AddOrEditPatientVo;
 import com.clinic.dto.param.AddPatientParam;
 import com.clinic.dto.param.EditPatientParam;
 import com.clinic.dto.param.PatientParam;
 import com.clinic.entity.Patient;
+import com.github.yulichang.base.MPJBaseService;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ import java.util.List;
 * @description 针对表【patient(病人信息登记表)】的数据库操作Service
 * @createDate 2023-05-24 17:28:35
 */
-public interface PatientService extends IService<Patient> {
+public interface PatientService extends MPJBaseService<Patient> {
     Result<AddOrEditPatientVo> add(AddPatientParam param);
 
     Result<Long> edit(EditPatientParam patient);

@@ -34,6 +34,12 @@ public class LoginInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(@NotNull @org.jetbrains.annotations.NotNull HttpServletRequest request, @Nonnull HttpServletResponse response, @Nonnull Object handler) throws ReLoginException, IOException {
         String token = request.getHeader(tokenName);
+
+        //用户可查处方药页面放过
+        String uri = request.getRequestURI().toString();
+        if (uri.startsWith("/drug/wx"))
+            return true;
+
         if(StringUtils.isNotBlank(token)) {
             log.debug("拦截器request.getRequestURI(){}",request.getRequestURI());
             if(request.getRequestURI().contains("/weixin/pay/notification")){

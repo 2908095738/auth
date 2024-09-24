@@ -4,7 +4,11 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.github.yulichang.annotation.EntityMapping;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -17,6 +21,9 @@ import java.util.List;
  */
 @TableName(value = "prescription")
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@FieldNameConstants
 public class Prescription implements Serializable {
     /**
      * 编号
@@ -119,6 +126,13 @@ public class Prescription implements Serializable {
      */
     @TableField(exist = false)
     private List<Usage> usageList;
+
+    @TableField(exist = false)
+    @EntityMapping(
+            thisField = Prescription.Fields.id,
+            joinField = PrescriptionDrug.Fields.prescriptionId
+    )
+    private List<PrescriptionDrug> drugs;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
