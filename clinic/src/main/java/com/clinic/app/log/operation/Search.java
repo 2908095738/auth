@@ -25,6 +25,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static cn.hutool.core.date.DateUtil.*;
 import static com.clinic.util.log.ServiceLogEnums.*;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -77,10 +78,12 @@ public class Search {
             List<OperationLog> needFillPatientLogs = new ArrayList<>();
             Set<Long> needFillPatientLogIds = logs.stream().peek(log -> {
                 Date createTime = log.getCreateTime();
-                log.setIsCurrentDay(DateUtil.isSameDay(now, createTime));
-                log.setCreateYMD(DateUtil.formatDate(createTime));
-                log.setCreateHMS(DateUtil.formatTime(createTime));
-
+                log.setIsCurrentDay(isSameDay(now, createTime));
+                log.setIsCurrentYear(year(createTime) == thisYear());
+                log.setCreateMD(format(createTime, "MM/dd"));
+                log.setCreateYMD(formatDate(createTime));
+                log.setCreateHMS(formatTime(createTime));
+                log.setCreateHMSTwelveHourlySystem(format(createTime, "hh:mm:ss"));
             }).filter(log -> {
                 Integer serviceCode = log.getServiceCode();
                 // 零售药品

@@ -38,7 +38,16 @@ public class OperationLog implements Serializable {
     private String createYMD;
 
     @TableField(exist = false)
+    private Boolean isCurrentYear;
+
+    @TableField(exist = false)
+    private String createMD;
+
+    @TableField(exist = false)
     private String createHMS;
+
+    @TableField(exist = false)
+    private String createHMSTwelveHourlySystem;
 
     @TableField(exist = false)
     private Boolean isCurrentDay;

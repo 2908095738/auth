@@ -13,6 +13,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.io.File;
 
@@ -24,6 +25,7 @@ import java.io.File;
 @ComponentScan(value = { "com.bbs", "com.clinic"})
 @SpringBootApplication
 @EnableDubbo
+@EnableScheduling
 @EnableDiscoveryClient  //Nacos 服务发现
 public class ClinicServer implements ApplicationRunner {
     public static void main(String[] args) {
