@@ -10,7 +10,6 @@ import com.bbs.enums.CodeEnum;
 import com.clinic.converter.SettingsConverter;
 import com.clinic.dto.param.AddSettingsParam;
 import com.clinic.dto.param.UpdateSettingsParam;
-import com.clinic.entity.Patient;
 import com.clinic.entity.Settings;
 import com.clinic.enums.RedisKeys;
 import com.clinic.mapper.SettingsMapper;
@@ -19,7 +18,6 @@ import com.clinic.util.LoginUser;
 import com.clinic.util.RedisUtil;
 import com.clinic.util.log.LogUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
-import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
@@ -157,15 +155,6 @@ public class SettingsServiceImpl extends MPJBaseServiceImpl<SettingsMapper, Sett
     @Override
     public Integer getUserSettingStockExpiryAlertMonth(Settings settings) {
         return nonNull(settings) && nonNull(settings.getExpiryAlertMonth()) ? settings.getExpiryAlertMonth() : stockDefaultExpiryAlertMonth;
-    }
-
-    @Override
-    public List<String> getClinic(Long patientId) {
-        return selectJoinList(String.class,new MPJLambdaWrapper<Settings>()
-                .select(Settings::getClinicName)
-                .leftJoin(Patient.class, Patient::getUserId, Settings::getUserId)
-                .eq(Patient::getId, patientId)
-               );
     }
 
     /**

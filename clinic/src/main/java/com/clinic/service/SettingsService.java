@@ -6,8 +6,6 @@ import com.clinic.dto.param.AddSettingsParam;
 import com.clinic.dto.param.UpdateSettingsParam;
 import com.clinic.entity.Settings;
 
-import java.util.List;
-
 /**
  *
  */
@@ -22,5 +20,4 @@ public interface SettingsService extends IService<Settings> {
 
     Integer getUserSettingStockExpiryAlertMonth(Settings settings);
 
-    List<String> getClinic(Long patientId);
 }

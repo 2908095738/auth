@@ -11,14 +11,19 @@ import com.clinic.entity.AdmissionLog;
 import com.clinic.entity.Dossier;
 import com.clinic.entity.Patient;
 import com.clinic.entity.Pay;
+import com.clinic.entity.Prescription;
+import com.clinic.entity.PrescriptionDrug;
 import com.clinic.entity.Settings;
+import com.clinic.entity.Stock;
+import com.clinic.entity.StockBatch;
+import com.clinic.entity.StockUnit;
+import com.clinic.entity.Unit;
 import com.clinic.enums.AdmissionStateEnum;
 import com.clinic.mapper.AdmissionLogMapper;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.PatientService;
+import com.clinic.service.PayRecordService;
 import com.clinic.util.LoginUser;
-import com.clinic.util.RedisUtil;
-import com.clinic.util.WxUtil;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
@@ -31,6 +36,7 @@ import javax.annotation.Resource;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import static java.util.Objects.isNull;
@@ -53,10 +59,7 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
     private AdmissionLogCache admissionLogCache;
 
     @Resource
-    private RedisUtil redisUtil;
-
-    @Resource
-    private WxUtil wxUtil;
+    private PayRecordService payRecordService;
 
     @Override
     public Page<AdmissionLog> search(SearchAdmissionParam param) throws ParseException {
@@ -103,16 +106,6 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
         return lambdaUpdate().set(AdmissionLog::getState, AdmissionStateEnum.END.getCode()).eq(AdmissionLog::getId, admissionId).update();
     }
 
-    @Override
-    public List<AdmissionLog> selectByPatientId(Long patientId) {
-        return selectJoinList(AdmissionLog.class, new MPJLambdaWrapper<>(AdmissionLog.class)
-                .selectAll(AdmissionLog.class)
-                .selectAssociation(Pay.class, AdmissionLog::getPay)
-                .leftJoin(Pay.class,  Pay::getId, AdmissionLog::getPayId)
-                .eq(AdmissionLog::getPatientId, patientId)
-                .eq(AdmissionLog::getState, NumberUtils.INTEGER_TWO)
-        );
-    }
 
     @Override
     public List<PatientClinicVo> selectByOpenId(String openId) {
@@ -124,6 +117,76 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
                 .eq(Patient::getOpenId, openId)
                 .eq(AdmissionLog::getState, NumberUtils.INTEGER_TWO)
         );
+    }
+
+    @Override
+    public AdmissionLog getJoinById(Long admissionId) {
+        MPJLambdaWrapper<AdmissionLog> wrapper = Optional.of(new MPJLambdaWrapper<>(AdmissionLog.class))
+                .map(this::joinPatient)
+                .map(this::joinDossier)
+                .map(this::joinPrescription)
+                .map(this::joinPrescriptionDrugAndStockBatch)
+                .map(this::joinPay)
+                .get();
+        wrapper
+                .eq(AdmissionLog::getId, admissionId)
+                .orderByDesc(AdmissionLog::getCreateTime)
+        ;
+
+        AdmissionLog log = baseMapper.selectJoinOne(AdmissionLog.class, wrapper);
+        if(nonNull(log.getPayId())) log.setPayRecords(payRecordService.getByPayId(log.getPayId()));
+
+        return log;
+    }
+
+
+
+    private MPJLambdaWrapper<AdmissionLog> joinPatient(MPJLambdaWrapper<AdmissionLog> wrapper) {
+        wrapper
+                .selectAssociation(Patient.class, AdmissionLog::getPatient)
+                .leftJoin(Patient.class, Patient::getId, AdmissionLog::getPatientId);
+        return wrapper;
+    }
+    private MPJLambdaWrapper<AdmissionLog> joinDossier(MPJLambdaWrapper<AdmissionLog> wrapper) {
+        wrapper
+                .selectAssociation(Dossier.class, AdmissionLog::getDossier)
+                .leftJoin(Dossier.class, Dossier::getId, AdmissionLog::getDossierId);
+        return wrapper;
+    }
+    private MPJLambdaWrapper<AdmissionLog> joinPrescription(MPJLambdaWrapper<AdmissionLog> wrapper) {
+        wrapper
+                .selectAssociation(Prescription.class, AdmissionLog::getPrescription)
+                .leftJoin(Prescription.class, Prescription::getId, AdmissionLog::getPrescriptionId);
+        return wrapper;
+    }
+    private MPJLambdaWrapper<AdmissionLog> joinPrescriptionDrugAndStockBatch(MPJLambdaWrapper<AdmissionLog> wrapper) {
+        wrapper
+                .selectCollection(PrescriptionDrug.class, AdmissionLog::getPrescriptionDrugs, prescriptionDrug -> prescriptionDrug
+                        .association(StockBatch.class, PrescriptionDrug::getStockBatch, stockBatch -> stockBatch
+                                .association("unit1", Unit.class, StockBatch::getUnit)
+                                .collection(StockUnit.class, StockBatch::getStockUnitList, stockUnit ->
+                                        stockUnit.association("unit2", Unit.class, StockUnit::getUnit)
+                                )
+
+                        )
+                        .association(Stock.class, PrescriptionDrug::getStock)
+                )
+                .leftJoin(PrescriptionDrug.class, PrescriptionDrug::getPrescriptionId, Prescription::getId)
+                .leftJoin(StockBatch.class, StockBatch::getId, PrescriptionDrug::getStockBatchId)
+                .leftJoin(Unit.class, "unit1", Unit::getId, StockBatch::getUnitId)
+                .leftJoin(StockUnit.class, StockUnit::getBatchId, StockBatch::getId)
+                .leftJoin(Unit.class, "unit2", Unit::getId, StockUnit::getUnitId)
+                .leftJoin(Stock.class, Stock::getId, StockBatch::getStockId)
+        ;
+        return wrapper;
+    }
+
+    private MPJLambdaWrapper<AdmissionLog> joinPay(MPJLambdaWrapper<AdmissionLog> wrapper) {
+        wrapper
+                .selectAssociation(Pay.class, AdmissionLog::getPay)
+                .leftJoin(Pay.class, Pay::getPrescriptionId, Prescription::getId)
+        ;
+        return wrapper;
     }
 
 
