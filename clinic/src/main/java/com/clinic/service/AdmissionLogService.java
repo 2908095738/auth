@@ -25,7 +25,7 @@ public interface AdmissionLogService extends MPJBaseService<AdmissionLog> {
 
     boolean updateEndState(Long admissionId);
 
-    List<AdmissionLog> selectByPatientId(Long patientId);
-
     List<PatientClinicVo> selectByOpenId(String openId);
+
+    AdmissionLog getJoinById(Long admissionId);
 }
