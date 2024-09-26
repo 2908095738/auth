@@ -9,6 +9,7 @@ import com.clinic.entity.Patient;
 import com.clinic.service.OperationLogService;
 import com.clinic.service.PatientService;
 import com.clinic.util.LoginUser;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -100,12 +101,16 @@ public class Search {
             if(needFillPatientLogIds.size() > INTEGER_ZERO) {
                 Map<Long, Patient> patientIdMap = patientService.listByIds(needFillPatientLogIds)
                         .stream().collect(Collectors.toMap(Patient::getId, patient -> patient));
-                needFillPatientLogs.forEach(log -> {
-                    Patient patient = patientIdMap.get(log.getPatientId());
-                    if(nonNull(patient.getSex())) patient.setSexStr(Objects.equals(patient.getSex(), INTEGER_ONE) ? "男" : "女");
-                    if(nonNull(patient.getAge())) patient.setAgeStr(patient.getAge() + "岁");
-                    log.setPatient(patientIdMap.get(log.getPatientId()));
-                });
+                if(CollectionUtils.isNotEmpty(needFillPatientLogs)) {
+                    needFillPatientLogs.forEach(log -> {
+                        Patient patient = patientIdMap.get(log.getPatientId());
+                        if(nonNull(patient)) {
+                            if(nonNull(patient.getSex())) patient.setSexStr(Objects.equals(patient.getSex(), INTEGER_ONE) ? "男" : "女");
+                            if(nonNull(patient.getAge())) patient.setAgeStr(patient.getAge() + "岁");
+                            log.setPatient(patientIdMap.get(log.getPatientId()));
+                        }
+                    });
+                }
             }
         }
     }
