@@ -83,7 +83,7 @@ public class PrescriptionController {
                     admissionLogService.update(param.getAdmissionLogId(),prescription.getId(), payId, dossier.getId(), dossier.getDiagnosis());
                     LogUtil.Operation.addPrescription(admissionLog.getPatientId(), prescription.getId(), "{}添加处方并创建收费记录：处方id={}, 支付id={}", LoginUser.get().getName(), prescription.getId(), payId);
                 }
-            }else {
+            } else {
                 if(service.update(param))
                     if(!appPayService.updatePayPrescriptionRecord(param.getPayId(), param.getPrice()) )throw new RuntimeException();
                 admissionLogService.update(param.getAdmissionLogId(), param.getPrescriptionId(), param.getPayId(), dossier.getId(), dossier.getDiagnosis());

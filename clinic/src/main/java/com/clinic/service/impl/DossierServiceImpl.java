@@ -10,6 +10,7 @@ import com.clinic.converter.DossierConverter;
 import com.clinic.dao.DossierDao;
 import com.clinic.dto.PrescriptionDto;
 import com.clinic.dto.param.SaveOrUpdateDossierParam;
+import com.clinic.entity.AdmissionLog;
 import com.clinic.entity.Dossier;
 import com.clinic.mapper.DossierMapper;
 import com.clinic.service.DossierService;
@@ -59,6 +60,10 @@ public class DossierServiceImpl extends MPJBaseServiceImpl<DossierMapper, Dossie
 
     }
 
+    @Override
+    public Dossier createOrUpdateDossier(AdmissionLog admissionLog, SaveOrUpdateDossierParam param) throws BusinessException {
+        return createOrUpdateDossier(admissionLog.getId(), admissionLog.getPatientId(), param);
+    }
 
     @Override
     public Result<Page<Dossier>> select(Long userId, String id, Integer current, Integer size) {

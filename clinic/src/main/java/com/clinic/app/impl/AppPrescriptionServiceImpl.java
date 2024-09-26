@@ -22,6 +22,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -55,17 +56,21 @@ public class AppPrescriptionServiceImpl implements AppPrescriptionService {
         return null;
     }
 
-    private void fillPrescription(Prescription prescription,SaveOrUpdatePrescription param, Long patientId) {
+    public static void fillPrescription(Prescription prescription,SaveOrUpdatePrescription param, Long patientId) {
+        fillPrescription(prescription, param.getPrice(), param.getRemark(), patientId);
+    }
+    public static void fillPrescription(Prescription prescription, BigDecimal price, String remark, Long patientId) {
         LocalDate tomorrow = LocalDateTime.now().plusDays(NumberUtils.INTEGER_ONE).toLocalDate();
         Date tomo =Date.from(tomorrow.atStartOfDay(ZoneId.systemDefault()).toInstant());
         prescription.setPatientId(patientId);
-        prescription.setPrice(param.getPrice());
-        prescription.setRemark(param.getRemark());
+        prescription.setPrice(price);
+        prescription.setRemark(remark);
         prescription.setCreator(LoginUser.getId());
         prescription.setUpdator(prescription.getCreator());
         prescription.setExpiryDate(NumberUtils.INTEGER_ONE);
         prescription.setExpirationDate(tomo);
     }
+
     private Boolean saveDrug(List<PrescriptionDrug> drugList) { return prescriptionDrugService.saveBatch(drugList); }
     private Boolean saveDossierPrescription(Long id, Long dossierId) {
         return dossierPrescriptionService.save(new DossierPrescription(dossierId, id));
@@ -81,7 +86,8 @@ public class AppPrescriptionServiceImpl implements AppPrescriptionService {
     }
 
 
-    private void updateDrug(List<PrescriptionDrug> drugList, Long id) {
+    @Override
+    public void updateDrug(List<PrescriptionDrug> drugList, Long id) {
         prescriptionDrugService.lambdaUpdate().eq(PrescriptionDrug::getPrescriptionId,id).remove();
         drugList.forEach(drug-> drug.setPrescriptionId(id));
         saveDrug(drugList);

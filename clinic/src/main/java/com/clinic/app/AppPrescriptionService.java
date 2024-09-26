@@ -6,6 +6,7 @@ import com.clinic.dto.PrescriptionDrugDto;
 import com.clinic.dto.PrescriptionDto;
 import com.clinic.dto.param.SaveOrUpdatePrescription;
 import com.clinic.entity.Prescription;
+import com.clinic.entity.PrescriptionDrug;
 
 import java.util.List;
 
@@ -21,4 +22,6 @@ public interface AppPrescriptionService {
     PrescriptionDto getByPayId(Long payId);
 
     List<PrescriptionDrugDto> getDrugList(Long id);
+
+    void updateDrug(List<PrescriptionDrug> drugList, Long id);
 }

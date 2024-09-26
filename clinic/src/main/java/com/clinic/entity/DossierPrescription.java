@@ -37,6 +37,11 @@ public class DossierPrescription implements Serializable {
         this.prescriptionId = prescriptionId;
     }
 
+    public DossierPrescription(Prescription prescription, Dossier dossier) {
+        this.dossierId = dossier.getId();
+        this.prescriptionId = prescription.getId();
+    }
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

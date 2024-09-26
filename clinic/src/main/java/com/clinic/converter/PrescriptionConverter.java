@@ -1,6 +1,7 @@
 package com.clinic.converter;
 
 import com.clinic.app.porescription.file.create.CreatePrescriptionFile;
+import com.clinic.app.reception.over.PrescriptionParam;
 import com.clinic.dto.PrescriptionDrugDto;
 import com.clinic.dto.param.SaveOrUpdatePrescription;
 import com.clinic.dto.param.SaveOrUpdatePrescriptionDrug;
@@ -13,6 +14,8 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface PrescriptionConverter {
+
+    Prescription toEntity(PrescriptionParam param);
 
     Prescription toEntity(UpdatePrescription param);
 
