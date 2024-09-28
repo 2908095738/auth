@@ -23,10 +23,14 @@ public class WXAPI {
     @GetMapping("/weixin/checkPatient")
     @ApiOperation("验证当前手机号的病人是否扫码关注")
     public Result<Map<String, Object>> checkPhone(HttpServletRequest req, @RequestParam String ticket, @RequestParam Long phone, @RequestParam boolean isEnd, @RequestParam Long timestamp) {
-        log.debug("前端二维码轮询接口开始执行/weixin/checkPatient,timestamp{}",timestamp);
-        Map<String, Object> resultMap = weiXinLoginService.checkPhone(getWebsite(req), ticket, phone, isEnd);
-        log.debug("前端二维码轮询接口执行结束！");
-        return Result.success(resultMap);
+        try {
+            log.debug("前端二维码轮询接口开始执行/weixin/checkPatient,timestamp{}",timestamp);
+            Map<String, Object> resultMap = weiXinLoginService.checkPhone(getWebsite(req), ticket, phone, isEnd);
+            log.debug("前端二维码轮询接口执行结束！");
+            return Result.success(resultMap);
+        }catch (Exception e){
+            return Result.failed(e.getMessage());
+        }
     }
 
     /**

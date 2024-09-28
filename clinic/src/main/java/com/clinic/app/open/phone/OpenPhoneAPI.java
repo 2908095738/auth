@@ -4,7 +4,6 @@ import com.bbs.Result;
 import com.clinic.dto.vo.PatientClinicVo;
 import com.clinic.entity.AdmissionLog;
 import com.clinic.service.AdmissionLogService;
-import com.clinic.service.PrescriptionService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,9 +17,6 @@ import java.util.List;
 @RequestMapping
 @RestController
 public class OpenPhoneAPI {
-
-    @Resource
-    private PrescriptionService prescriptionService;
 
     @Resource
     private AdmissionLogService admissionLogService;
