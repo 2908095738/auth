@@ -20,6 +20,7 @@ import com.clinic.service.AdmissionLogService;
 import com.clinic.service.DossierService;
 import com.clinic.util.LoginUser;
 import com.clinic.util.log.LogUtil;
+import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -35,6 +36,7 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 
 import static cn.hutool.core.util.ObjectUtil.isEmpty;
+import static cn.hutool.core.util.ObjectUtil.isNotNull;
 
 
 /**
@@ -119,15 +121,19 @@ public class PrescriptionController {
 
     /**
      * 处方下载
-     * @param id 处方ID
+     * @param admissionLogId 接诊记录ID
      * @param templateIndex 处方模板下标 API:/prescription/template/name/list
      * @see PrescriptionController
      * @throws Exception 下载异常
      */
     @GetMapping("/prescription/file")
-    public void getFile(@NotNull Long id, @NotNull Integer templateIndex) throws Exception {
-        LogUtil.Operation.downloadPrescription(id, "{}下载处方：处方id={}, 模板id={}", LoginUser.get().getName(), id, templateIndex);
-        createPrescriptionFile.generation(id, templateIndex);
+    public void getFile(@NotNull Long admissionLogId, @NotNull Integer templateIndex) throws Exception {
+        AdmissionLog admissionLog = admissionLogService.getById(admissionLogId);
+        Preconditions.checkArgument(isNotNull(admissionLog), "对应接诊记录不存在");
+        Long prescriptionId = admissionLog.getPrescriptionId();
+        Preconditions.checkArgument(isNotNull(prescriptionId), "未开具处方！");
+        LogUtil.Operation.downloadPrescription(prescriptionId, "用户 {} 下载处方：处方id={}, 模板id={}", LoginUser.get().getName(), prescriptionId, templateIndex);
+        createPrescriptionFile.generation(prescriptionId, templateIndex);
     }
 
     /**
