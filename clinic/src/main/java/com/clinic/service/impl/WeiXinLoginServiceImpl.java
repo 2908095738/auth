@@ -166,9 +166,8 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
     private Map<String, Object> getDrugMapByOne(PrescriptionDrug drug, boolean isOne) {
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("thing3", drug.getName());
-        resultMap.put("thing8", String.format("单次剂量: %s%s", drug.getSingleDose(), drug.getSingleDoseUnit()));
-        resultMap.put("thing4", String.format("%s | %s", drug.getDrugUsage(), drug.getFrequency()));
-        resultMap.put("time10", String.format("%s%s", drug.getPeriod(), drug.getPeriodUnit()));
+        resultMap.put("thing8", String.format("%s | %s", drug.getDrugUsage(), drug.getFrequency()));
+        resultMap.put("thing4", String.format("单次剂量: %s%s | 天数: %s%s", drug.getSingleDose(), drug.getSingleDoseUnit(), drug.getPeriod(), drug.getPeriodUnit()));
 
         if (isOne)
             resultMap.put("thing7", "祝您早日康复");
