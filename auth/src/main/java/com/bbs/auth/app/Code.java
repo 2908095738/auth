@@ -20,6 +20,7 @@ public class Code {
 
     @GetMapping("/phone")
     public Result<Boolean> send(@RequestParam("phone") String phone) {
-        return util.send(phone) ? Result.success() : Result.failed();
+        util.send(phone);
+        return Result.success();
     }
 }
