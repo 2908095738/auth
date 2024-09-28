@@ -127,13 +127,14 @@ public class PrescriptionController {
      * @throws Exception 下载异常
      */
     @GetMapping("/prescription/file")
-    public void getFile(@NotNull Long admissionLogId, @NotNull Integer templateIndex) throws Exception {
+    public Result<Boolean> getFile(@NotNull Long admissionLogId, @NotNull Integer templateIndex) throws Exception {
         AdmissionLog admissionLog = admissionLogService.getById(admissionLogId);
         Preconditions.checkArgument(isNotNull(admissionLog), "对应接诊记录不存在");
         Long prescriptionId = admissionLog.getPrescriptionId();
         Preconditions.checkArgument(isNotNull(prescriptionId), "未开具处方！");
         LogUtil.Operation.downloadPrescription(prescriptionId, "用户 {} 下载处方：处方id={}, 模板id={}", LoginUser.get().getName(), prescriptionId, templateIndex);
         createPrescriptionFile.generation(prescriptionId, templateIndex);
+        return Result.success();
     }
 
     /**
