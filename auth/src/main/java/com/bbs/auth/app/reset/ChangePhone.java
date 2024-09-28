@@ -109,10 +109,6 @@ public class ChangePhone {
     public static class LoginChangePasswordParam {
 
         @NotBlank
-        @Length(max = 11)
-        private String phone;
-
-        @NotBlank
         private String password;
 
         @NotNull
@@ -122,15 +118,15 @@ public class ChangePhone {
     }
     @PostMapping("/login/pwd")
     public Result<Boolean> loginChangePassword(@Valid @RequestBody LoginChangePasswordParam param) throws InterruptedException, IllegalArgumentException {
-        PhoneUtil.checkPhoneFormatThrows(param.phone);
         PhoneUtil.checkPhoneCodeFormat(String.valueOf(param.code));
-        Integer code = codeCache.getCode(param.phone);
+        String phone = service.loginUser().getPhone();
+        Integer code = codeCache.getCode(phone);
         codeCache.checkIsCanSendCode(code);
         Preconditions.checkArgument(code.equals(param.code), "验证码不可用，请重新发送");
-        codeCache.delCode(param.phone);
+        codeCache.delCode(phone);
         return redissonUtil.lockExec(
                 () -> {
-                    User user = service.searchByPhone(param.phone);
+                    User user = service.searchByPhone(phone);
                     if(nonNull(user)) {
                         String password = service.encryptPassword(param.getPassword(), user.getSalt());
                         if(service.updatePasswordByID(password, user.getId())) {
@@ -141,7 +137,7 @@ public class ChangePhone {
                     return failed();
                 },
                 () -> failed(500, null, "无法获取登录锁，详情请联系客服"),
-                redisson.getSpinLock(USER_LOGIN_PHONE.LOCK.key(param.phone)),
+                redisson.getSpinLock(USER_LOGIN_PHONE.LOCK.key(phone)),
                 50000,
                 50000,
                 MILLISECONDS
