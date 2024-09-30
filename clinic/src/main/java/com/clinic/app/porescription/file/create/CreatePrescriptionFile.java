@@ -3,6 +3,7 @@ package com.clinic.app.porescription.file.create;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.system.SystemUtil;
 import com.aspose.words.Document;
 import com.aspose.words.SaveFormat;
 import com.clinic.app.AppPrescriptionService;
@@ -17,6 +18,7 @@ import com.deepoove.poi.plugin.table.LoopRowTableRenderPolicy;
 import com.deepoove.poi.util.PoitlIOUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,22 +54,22 @@ public class CreatePrescriptionFile implements ApplicationListener<ContextRefres
     @Value("${prescription.template.path}")
     private String templateAbsPath;
 
+    @Getter
     private List<String> templates;
 
     @Resource
     private HttpServletResponse response;
 
     @Override
-    public void onApplicationEvent(@NotNull ContextRefreshedEvent event) {
+    public void onApplicationEvent(@NotNull @org.jetbrains.annotations.NotNull ContextRefreshedEvent event) {
+        if(SystemUtil.getOsInfo().isWindows()) {
+            templateAbsPath = FileUtil.getAbsolutePath("templates");
+        }
         log.info("加载本地处方模板... templateAbsPath={}", templateAbsPath);
         templates = FileUtil.listFileNames(templateAbsPath);
         log.info("加载本地处方模板: templates={}", templates);
 
 
-    }
-
-    public List<String> getTemplates() {
-        return templates;
     }
 
     /**
