@@ -18,11 +18,7 @@
     <modules>
         <module>auth</module>
         <module>common</module>
-        <module>dfs-server</module>
-        <module>log-server</module>
-        <module>financial</module>
         <module>clinic</module>
-        <module>monitoring</module>
     </modules>
 
     <properties>
