@@ -1,5 +1,6 @@
 package com.clinic.app.reception.over;
 
+import cn.hutool.core.collection.CollUtil;
 import com.bbs.Result;
 import com.clinic.app.AppPayService;
 import com.clinic.app.AppPrescriptionService;
@@ -63,6 +64,9 @@ public class ReceptionOver {
     @PutMapping("/reception")
     public Result<Boolean> create(@Valid @RequestBody Params param) {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
+        if(CollUtil.isEmpty(param.getPrescription().getDrugList())){
+            return Result.failed("请检查您的开药处方是否为空");
+        }
         try {
             Long admissionIds = param.getAdmissionIds();
             AdmissionLog admissionLog = searchAdmissionLog(admissionIds);//查询接诊记录
