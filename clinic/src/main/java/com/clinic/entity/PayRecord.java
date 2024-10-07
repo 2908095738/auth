@@ -3,7 +3,6 @@ package com.clinic.entity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.clinic.dto.param.CreateOrSetPayRecord;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -72,14 +71,6 @@ public class PayRecord implements Serializable {
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
-
-    public PayRecord(Long payId, CreateOrSetPayRecord detail, Long creator) {
-        this.payId = payId;
-        this.name = detail.getName();
-        this.fee = detail.getFee();
-        this.remark = detail.getRemark();
-        this.creator = creator;
-    }
 
     public PayRecord(Long payId, BigDecimal price, Long userId) {
         this.payId = payId;

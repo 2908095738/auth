@@ -1,16 +1,13 @@
 package com.clinic.app.impl;
 
-import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
-import com.bbs.exception.BusinessException;
 import com.clinic.app.AppPayService;
 import com.clinic.converter.PayConverter;
 import com.clinic.dto.GetPayDto;
 import com.clinic.dto.PayAndRecordPageDto;
 import com.clinic.dto.PayRecordPatientDto;
-import com.clinic.dto.param.CreateOrSetPayRecord;
 import com.clinic.dto.param.GetPayParam;
 import com.clinic.dto.param.PatientPayRecordParam;
 import com.clinic.dto.param.UpdatePayById;
@@ -22,14 +19,11 @@ import com.clinic.service.PayRecordService;
 import com.clinic.service.PayService;
 import com.clinic.util.LoginUser;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -75,33 +69,8 @@ public class AppPayServiceImpl implements AppPayService {
         return Result.success(result);
     }
 
-    /**
-     * 其他收费-项目创建
-     */
-    @Override
-    public Boolean createPayOther(List<CreateOrSetPayRecord> payOther, Long payId) {
-        if(CollectionUtils.isNotEmpty(payOther)){
-            List<PayRecord> payDetails = payOther.stream().map(other->
-                    new PayRecord(payId,other,LoginUser.getId())).collect(Collectors.toList());
-            return payRecordService.saveBatch(payDetails);
-        }
-        return false;
-    }
 
 
-    /**
-     * 其他收费-项目修改
-     */
-    @Override
-    public List<PayRecord> updatePayOther(List<CreateOrSetPayRecord> payOther, Long payId) {
-        removePayOther(payId);
-        createPayOtherThrowable(payOther,payId);
-        return payRecordService.searchByPayId(payId);
-    }
-
-    private void createPayOtherThrowable(List<CreateOrSetPayRecord> payOther, Long payId) throws BusinessException {
-        if(!createPayOther(payOther,payId)) throw new BusinessException("新增其他收费记录失败！");
-    }
 
     private void removePayOther(Long payId){
         payRecordService.lambdaUpdate().eq(PayRecord::getPayId,payId).remove();
@@ -112,11 +81,6 @@ public class AppPayServiceImpl implements AppPayService {
      */
     @Override
     public boolean updatePayById(UpdatePayById param) {
-        List<CreateOrSetPayRecord> payRecords = param.getPayRecords();
-        if(CollUtil.isNotEmpty(payRecords)){
-            removePayOther(param.getId());
-            createPayOtherThrowable(payRecords,param.getId());
-        }
         return payService.updateById(payConverter.toPayEntity(param));
     }
 

@@ -13,13 +13,11 @@ import com.clinic.dto.GetPayDto;
 import com.clinic.dto.PayAndRecordPageDto;
 import com.clinic.dto.PayRecordPatientDto;
 import com.clinic.dto.PrescriptionDto;
-import com.clinic.dto.param.CreateOrSetPayOtherParam;
 import com.clinic.dto.param.GetPayParam;
 import com.clinic.dto.param.PatientPayRecordParam;
 import com.clinic.dto.param.ReturnPayRecordParam;
 import com.clinic.dto.param.UpdatePayById;
 import com.clinic.entity.AdmissionLog;
-import com.clinic.entity.PayRecord;
 import com.clinic.enums.PayStateEnum;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.PayService;
@@ -36,13 +34,11 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -141,44 +137,6 @@ public class PayController {
 
 
     /**
-     * 其他收费-项目创建
-     */
-    @PutMapping("/pay/other")
-    public Result<Boolean> createPayOther(@RequestBody @Valid CreateOrSetPayOtherParam param){
-        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-        try {
-            if(!service.createPayOther(param.getPayOther(), param.getPayId())) throw new RuntimeException();
-            LogUtil.Operation.newPayItem(param.getPayId(), "{}其他收费项创建：收费id={}", LoginUser.get().getName(), param.getPayId());
-            transactionManager.commit(transaction);
-            return Result.success(true);
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-            return Result.failed();
-        }
-    }
-
-
-    /**
-     * 其他收费-项目修改
-     */
-    @PostMapping("/pay/other")
-    public Result<List<PayRecord>> updatePayOther(@RequestBody @Valid CreateOrSetPayOtherParam param){
-        TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
-        try {
-            List<PayRecord> payRecordList = service.updatePayOther(param.getPayOther(), param.getPayId());
-            LogUtil.Operation.updatePayItem(param.getPayId(),"{}其他收费项修改：收费id={}", LoginUser.get().getName(), param.getPayId());
-            transactionManager.commit(transaction);
-            return Result.success(payRecordList);
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-            return Result.failedNull();
-        }
-    }
-
-
-    /**
      * 本次收费-修改收费状态和收费方式
      */
     @PostMapping("/pay")
@@ -189,7 +147,7 @@ public class PayController {
             //收费-扣库存
             param.setState(PayStateEnum.IS_PAY.getCode());
             //修改收费
-            if(!payCache.updatePayById(param))throw new RuntimeException();
+            if(!service.updatePayById(param))throw new RuntimeException();
             //根据支付id,查出处方数据
             PrescriptionDto prescriptionDto = appPrescriptionService.getByPayId(param.getId());
             Long patientId = prescriptionDto.getPatientId();
