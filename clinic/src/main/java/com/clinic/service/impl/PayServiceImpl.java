@@ -5,9 +5,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.clinic.dto.GetPayDto;
 import com.clinic.dto.PayAndRecordPageDto;
 import com.clinic.dto.param.GetPayParam;
+import com.clinic.entity.AdmissionLog;
 import com.clinic.entity.Patient;
 import com.clinic.entity.Pay;
 import com.clinic.entity.PayRecord;
+import com.clinic.entity.Prescription;
+import com.clinic.entity.PrescriptionDrug;
 import com.clinic.mapper.PayMapper;
 import com.clinic.service.PayService;
 import com.clinic.util.LoginUser;
@@ -17,6 +20,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 import static java.util.Objects.nonNull;
 
@@ -33,7 +37,6 @@ public class PayServiceImpl extends MPJBaseServiceImpl<PayMapper, Pay>
         return baseMapper.selectJoinPage(param.toPage(), PayAndRecordPageDto.class, new MPJLambdaWrapper<Pay>()
                 .select(Patient::getName, Patient::getSex, Patient::getAge, Patient::getAddress, Patient::getPhone)
                 .select(Pay::getDossierTime, Pay::getFee)
-                .selectCollection(PayRecord.class, PayAndRecordPageDto::getPayRecordList)
                 .leftJoin(Patient.class, Patient::getId, Pay::getPatientId)
                 .leftJoin(PayRecord.class, PayRecord::getPayId, Pay::getId)
                 .eq(nonNull(param.getState()), Pay::getState, param.getState())
@@ -52,13 +55,16 @@ public class PayServiceImpl extends MPJBaseServiceImpl<PayMapper, Pay>
         Long uid = LoginUser.getId();
         return baseMapper.selectJoinList(PayAndRecordPageDto.class, new MPJLambdaWrapper<Pay>()
                 .select(Patient::getName, Patient::getSex, Patient::getAge, Patient::getAddress, Patient::getPhone)
-                .select(Pay::getDossierTime, Pay::getFee, Pay::getWay)
-                .selectCollection(PayRecord.class, PayAndRecordPageDto::getPayRecordList)
+                .select(Pay::getDossierTime, Pay::getFee, Pay::getWay, Pay::getId, Pay::getState)
+                .selectAssociation(AdmissionLog.class, PayAndRecordPageDto::getAdmissionId,ext->ext.result(AdmissionLog::getId))
+                .selectAssociation(Prescription.class, PayAndRecordPageDto::getPrescription,ext->ext.collection(PrescriptionDrug.class, Prescription::getDrugs))
                 .leftJoin(Patient.class, Patient::getId, Pay::getPatientId)
-                .leftJoin(PayRecord.class, PayRecord::getPayId, Pay::getId)
+                .leftJoin(AdmissionLog.class, AdmissionLog::getPayId, Pay::getId)
+                .leftJoin(Prescription.class, Prescription::getId, AdmissionLog::getPrescriptionId)
+                .leftJoin(PrescriptionDrug.class, PrescriptionDrug::getPrescriptionId, Prescription::getId)
                 .eq(nonNull(param.getState()), Pay::getState, param.getState())
 
-                .and(nonNull(param.getStartDate()) && nonNull(param.getEndDate()) && param.getState() == NumberUtils.INTEGER_ONE,
+                .and(nonNull(param.getStartDate()) && nonNull(param.getEndDate()) && Objects.equals(param.getState(), NumberUtils.INTEGER_ONE),
                         wrapper -> wrapper
                                 .ge(Pay::getDossierTime,
                                         nonNull(param.getStartDate()) ?
@@ -67,7 +73,7 @@ public class PayServiceImpl extends MPJBaseServiceImpl<PayMapper, Pay>
                                         nonNull(param.getEndDate()) ?
                                                 DateUtil.endOfDay(param.getEndDate()).toJdkDate() : null))
 
-                .and(nonNull(param.getStartDate()) && nonNull(param.getEndDate()) && param.getState() != NumberUtils.INTEGER_ONE, ext -> ext
+                .and(nonNull(param.getStartDate()) && nonNull(param.getEndDate()) && !Objects.equals(param.getState(), NumberUtils.INTEGER_ONE), ext -> ext
                         .ge(Pay::getUpdateTime, param.getStartDate())
                         .lt(Pay::getUpdateTime, param.getEndDate())
                 )

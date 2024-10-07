@@ -1,17 +1,19 @@
 package com.clinic.dto;
 
+import com.clinic.entity.Prescription;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.List;
 
 /**
  * 全部收费列表返回
  */
 @Data
 public class PayAndRecordPageDto {
+
+    private Long id;
 
     /**
      * 就诊时间，既创建病例时间
@@ -49,12 +51,20 @@ public class PayAndRecordPageDto {
      */
     private BigDecimal fee;
 
+    private Integer state;
+
     /**
      * 收费方式
      */
     private String way;
 
-
-    private List<PayRecordDto> payRecordList;
+    /**
+     * 门诊日志d
+     */
+    private Long admissionId;
+    /**
+     * 处方
+     */
+    private Prescription prescription;
 
 }
