@@ -18,10 +18,10 @@ public enum PayWay {
     CASH(4, "现金"),
     ;
 
-
+    @EnumValue
     private final Integer code;
 
-    @EnumValue
+
     @JsonValue
     private final String msg;
 
