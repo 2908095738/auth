@@ -1,5 +1,6 @@
 package com.clinic.dto.param;
 
+import com.clinic.enums.PayWay;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
@@ -29,7 +30,7 @@ public class UpdatePayById {
     /**
      * 收费方式
      */
-    private Integer way;
+    private PayWay way;
     /**
      * 备注
      */

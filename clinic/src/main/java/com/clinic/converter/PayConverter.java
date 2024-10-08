@@ -12,8 +12,6 @@ import com.clinic.enums.PayStateEnum;
 import com.clinic.enums.PayWay;
 import com.clinic.util.LoginUser;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
 
 import java.util.Optional;
 
@@ -21,11 +19,9 @@ import java.util.Optional;
 public interface PayConverter {
 
     Page<PayRecordPatientDto> ToDtoPage(Page<Pay> page);
-    @Mappings({
-            @Mapping(target = "state", expression = "java(pay.getState() != null?PayStateEnum.getMsgByCode(pay.getState()):null)"),
-            @Mapping(target = "way", expression = "java(pay.getWay() != null?PayWay.getMsgByCode(pay.getWay()):null)")
-    })
+
     PayRecordPatientDto payRecordToPayRecordDto(Pay pay);
+
 
     Pay toPayEntity(UpdatePayById param);
 

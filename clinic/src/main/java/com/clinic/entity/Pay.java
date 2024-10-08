@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.clinic.enums.PayWay;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -51,7 +52,7 @@ public class Pay implements Serializable {
      * 收费方式：1微信，2支付宝，3挂账，4现金
      */
     @TableField(value = "way")
-    private Integer way;
+    private PayWay way;
 
     /**
      * 备注

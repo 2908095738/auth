@@ -4,12 +4,13 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import lombok.Data;
 
 /**
  * 诊所设置
@@ -55,7 +56,7 @@ public class Settings implements Serializable {
     private String clinicName;
 
     /**
-     * 科别：内科，中西医结合，中医
+     * 科别：内科，外科，中医
      */
     @TableField(value = "division")
     private String division;
@@ -113,6 +114,12 @@ public class Settings implements Serializable {
      */
     @TableField(value = "addr")
     private String addr;
+
+    /**
+     * 是否由药房收费，0否1是
+     */
+    @TableField(value = "is_pharmacy_pay")
+    private Integer isPharmacyPay;
 
     /**
      * 营业天数列表

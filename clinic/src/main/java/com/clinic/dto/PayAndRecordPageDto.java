@@ -1,6 +1,7 @@
 package com.clinic.dto;
 
 import com.clinic.entity.Prescription;
+import com.clinic.enums.PayWay;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
@@ -56,7 +57,7 @@ public class PayAndRecordPageDto {
     /**
      * 收费方式
      */
-    private String way;
+    private PayWay way;
 
     /**
      * 门诊日志d

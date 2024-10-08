@@ -1,5 +1,6 @@
 package com.clinic.dto;
 
+import com.clinic.enums.PayWay;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
@@ -27,7 +28,7 @@ public class PayRecordPatientDto {
     /**
      * 收费方式：1微信，2支付宝，3挂账，4现金
      */
-    private String way;
+    private PayWay way;
 
     /**
      * 备注

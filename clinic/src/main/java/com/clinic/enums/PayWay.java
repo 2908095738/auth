@@ -1,28 +1,28 @@
 package com.clinic.enums;
 
+import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/**
+ * 收费方式：1微信，2支付宝，3挂账，4现金
+ */
 @Getter
 @AllArgsConstructor
 public enum PayWay {
 
-
     WECHAT(1, "微信"),
     ALIPAY(2, "支付宝"),
-    CREDIT(3, "挂账"),
-    CASH(4, "现金");
+    BANK(3, "挂账"),
+    CASH(4, "现金"),
+    ;
+
 
     private final Integer code;
 
+    @EnumValue
+    @JsonValue
     private final String msg;
 
-    public static String getMsgByCode(Integer code){
-        for (PayWay obj : PayWay.values()) {
-            if(obj.getCode().intValue() == code.intValue()){
-                return obj.getMsg();
-            }
-        }
-        return null;
-    }
 }

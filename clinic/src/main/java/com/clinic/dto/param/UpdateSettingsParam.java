@@ -57,6 +57,16 @@ public class UpdateSettingsParam {
     private String physician;
 
     /**
+     * 详细地址
+     */
+    private String addr;
+
+    /**
+     * 是否由药房收费，0否1是
+     */
+    private Integer isPharmacyPay;
+
+    /**
      * 营业天数
      */
     private List<Integer> businessDayList;
@@ -65,4 +75,6 @@ public class UpdateSettingsParam {
      * 营业时间
      */
     private List<Map<Integer, List<String>>> businessTimes;
+
+
 }
