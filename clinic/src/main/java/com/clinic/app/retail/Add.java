@@ -15,8 +15,8 @@ import com.clinic.service.PatientService;
 import com.clinic.service.RetailDrugRecordService;
 import com.clinic.service.RetailRecordService;
 import com.clinic.service.StockBatchService;
-import com.clinic.util.log.LogUtil;
 import com.clinic.util.LoginUser;
+import com.clinic.util.log.LogUtil;
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.util.validation.metadata.DatabaseException;
@@ -24,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -147,7 +146,7 @@ public class Add {
                 patient = patientConverter.toEntity(retailRecord);
                 patientService.save(patient);
             }
-            retailRecord.setUserId(patient.getId());
+            retailRecord.setPatientId(patient.getId());
         }
         return patient;
     }
