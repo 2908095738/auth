@@ -127,6 +127,12 @@ public class AdmissionLog implements Serializable {
     @TableField(value = "open_id")
     private String openId;
 
+    /**
+     * 是否由药房收费，0否1是
+     */
+    @TableField(exist = false)
+    private Integer isPharmacyPay;
+
 
     @TableField(exist = false)
     private Patient patient;

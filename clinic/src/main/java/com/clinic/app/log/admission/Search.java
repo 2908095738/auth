@@ -8,6 +8,7 @@ import com.clinic.entity.Patient;
 import com.clinic.entity.Pay;
 import com.clinic.entity.Prescription;
 import com.clinic.entity.PrescriptionDrug;
+import com.clinic.entity.Settings;
 import com.clinic.entity.Stock;
 import com.clinic.entity.StockBatch;
 import com.clinic.entity.StockUnit;
@@ -61,6 +62,7 @@ public class Search extends MPJBaseServiceImpl<AdmissionLogMapper, AdmissionLog>
     @GetMapping("/log/admission/join")
     public Result<AdmissionLog> search(Param param) {
         MPJLambdaWrapper<AdmissionLog> wrapper = Optional.of(new MPJLambdaWrapper<>(AdmissionLog.class))
+                .map(this::joinSetting)
                 .map(this::joinPatient)
                 .map(this::joinDossier)
                 .map(this::joinPrescription)
@@ -102,6 +104,13 @@ public class Search extends MPJBaseServiceImpl<AdmissionLogMapper, AdmissionLog>
             if(nonNull(log.getPayId())) log.setPayRecords(payRecordService.getByPayId(log.getPayId()));
         }
         return Result.success(log);
+    }
+
+    private MPJLambdaWrapper<AdmissionLog> joinSetting(MPJLambdaWrapper<AdmissionLog> wrapper) {
+        wrapper
+                .selectAssociation(Settings.class, AdmissionLog::getIsPharmacyPay,e->e.result(Settings::getIsPharmacyPay))
+                .leftJoin(Settings.class, Settings::getUserId, AdmissionLog::getUserId);
+        return wrapper;
     }
 
     private MPJLambdaWrapper<AdmissionLog> joinPatient(MPJLambdaWrapper<AdmissionLog> wrapper) {
