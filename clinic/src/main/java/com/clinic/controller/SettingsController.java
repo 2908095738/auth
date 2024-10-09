@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
+import java.math.BigInteger;
+import java.util.Map;
 
 
 @Slf4j
@@ -52,4 +54,24 @@ public class SettingsController {
     public Result<Settings> getByUserId(){
         return Result.success(service.getByUserId());
     }
+
+    /**
+     * 查询地址
+     * @return
+     */
+    @GetMapping("/settings/addr")
+    public Result<Map<String, Object>> getAddr(){
+        return Result.success(service.selectAddr());
+    }
+
+    /**
+     * 修改地址
+     * @return
+     */
+    @PutMapping("/settings/addr")
+    public Result<Boolean> updateAddr(BigInteger provinceId, String addr){
+        return Result.success(service.updateAddr(provinceId,addr));
+    }
+
+
 }

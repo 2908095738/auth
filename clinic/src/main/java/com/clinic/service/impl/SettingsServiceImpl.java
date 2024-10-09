@@ -31,6 +31,7 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -155,6 +156,27 @@ public class SettingsServiceImpl extends MPJBaseServiceImpl<SettingsMapper, Sett
     @Override
     public Integer getUserSettingStockExpiryAlertMonth(Settings settings) {
         return nonNull(settings) && nonNull(settings.getExpiryAlertMonth()) ? settings.getExpiryAlertMonth() : stockDefaultExpiryAlertMonth;
+    }
+
+    @Override
+    public Map<String, Object> selectAddr() {
+        Settings one = lambdaQuery()
+                .select(Settings::getProvinceId, Settings::getAddr)
+                .eq(Settings::getUserId, LoginUser.getId())
+                .one();
+        return new HashMap<String, Object>(){{
+            put("provinceId", one.getProvinceId());
+            put("addr", one.getAddr());
+        }};
+    }
+
+    @Override
+    public Boolean updateAddr(BigInteger provinceId, String addr) {
+        return lambdaUpdate()
+                .set(Settings::getAddr, addr)
+                .set(Settings::getProvinceId, provinceId)
+                .eq(Settings::getUserId, LoginUser.getId())
+                .update();
     }
 
     /**
