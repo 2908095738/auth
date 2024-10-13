@@ -40,6 +40,11 @@ public class LoginInterceptor implements HandlerInterceptor {
         if (uri.startsWith("/drug/wx"))
             return true;
 
+        //支付接口处理
+        String referer = request.getHeader("referer");
+        if (uri.equals("/pay") && StringUtils.isNotBlank(referer) && referer.contains("/open/drug?"))
+            return payProcess(request.getParameter("uid"));
+
         if(StringUtils.isNotBlank(token)) {
             log.debug("拦截器request.getRequestURI(){}",request.getRequestURI());
             if(request.getRequestURI().contains("/weixin/pay/notification")){
@@ -60,6 +65,23 @@ public class LoginInterceptor implements HandlerInterceptor {
         return false;
     }
 
+
+    private boolean payProcess(String uid) {
+        //getPay(Long)接口直接过
+        if (StringUtils.isBlank(uid))
+            return true;
+
+        List<User> userTmpList = userAPI.getUserList(Collections.singletonList(Long.valueOf(uid)));
+        if (ObjectUtils.isEmpty(userTmpList) || userTmpList.size() > NumberUtils.INTEGER_ONE)
+            return false;
+
+        User user = userTmpList.get(NumberUtils.INTEGER_ZERO);
+        if (nonNull(user)) {
+            LoginUser.set(user);
+            return true;
+        }
+        return false;
+    }
 
     /**
      * 接口访问结束后，从ThreadLocal中删除用户信息
