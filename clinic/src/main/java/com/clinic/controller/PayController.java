@@ -1,6 +1,9 @@
 package com.clinic.controller;
 
+import cn.hutool.core.lang.Opt;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.util.PageUtil;
@@ -19,9 +22,11 @@ import com.clinic.dto.param.ReturnPayRecordParam;
 import com.clinic.dto.param.UpdatePayById;
 import com.clinic.entity.AdmissionLog;
 import com.clinic.enums.PayStateEnum;
+import com.clinic.enums.RedisKeys;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.PayService;
 import com.clinic.util.LoginUser;
+import com.clinic.util.RedisUtil;
 import com.clinic.util.WxUtil;
 import com.clinic.util.log.LogUtil;
 import lombok.AllArgsConstructor;
@@ -68,6 +73,10 @@ public class PayController {
     private WxUtil wxUtil;
     @Resource
     private PayService payService;
+
+    @Autowired
+    private RedisUtil redis;
+
     /**
      * 本次收费-数据回显
      */
@@ -161,12 +170,34 @@ public class PayController {
                 wxUtil.sendPrescriptionMassage(admissionLog,prescriptionDto);
             }
             transactionManager.commit(transaction);
+
+            updOpenDrug(admissionLog.getPrescriptionId());
+
             return Result.success(true);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
             transactionManager.rollback(transaction);
             return Result.failed();
+        }
+    }
+
+    /**
+     * 更新药房使用的处方
+     *
+     * @param presId 处方ID
+     */
+    private void updOpenDrug(Long presId) {
+        Opt<String> get = redis.hashGet(RedisKeys.DRUG_OPEN_BY_ID.key(LoginUser.getId()),
+                presId.toString());
+        if (!get.isEmpty()) {
+            JSONObject jObj = JSONUtil.parseObj(get.get());
+            jObj.set("payStatus", INTEGER_ONE);
+
+            redis.hashSet(
+                    RedisKeys.DRUG_OPEN_BY_ID.key(LoginUser.getId()),
+                    presId.toString(),
+                    jObj.toString());
         }
     }
 

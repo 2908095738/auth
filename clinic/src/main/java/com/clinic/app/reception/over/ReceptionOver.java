@@ -1,6 +1,7 @@
 package com.clinic.app.reception.over;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.json.JSONUtil;
 import com.bbs.Result;
 import com.clinic.app.AppPayService;
 import com.clinic.app.AppPrescriptionService;
@@ -8,10 +9,17 @@ import com.clinic.app.impl.AppPrescriptionServiceImpl;
 import com.clinic.cache.pay.PayCache;
 import com.clinic.converter.PrescriptionConverter;
 import com.clinic.entity.*;
+import com.clinic.enums.RedisKeys;
 import com.clinic.service.*;
 import com.clinic.util.LoginUser;
+import com.clinic.util.RedisUtil;
+import com.clinic.util.WebSocketUtil;
 import com.clinic.util.log.LogUtil;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.math.NumberUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -22,7 +30,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
-import java.util.List;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static cn.hutool.core.util.ObjectUtil.isNotNull;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -61,6 +72,12 @@ public class ReceptionOver {
     @Resource
     private AppPayService appPayService;
 
+    @Autowired
+    private RedisUtil redis;
+
+    @Autowired
+    private WebSocketUtil webSocket;
+
     @PutMapping("/reception")
     public Result<Boolean> create(@Valid @RequestBody Params param) {
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
@@ -68,6 +85,8 @@ public class ReceptionOver {
             return Result.failed("请检查您的开药处方是否为空");
         }
         try {
+            Long payIdByOpenDrug= null;
+
             Long admissionIds = param.getAdmissionIds();
             AdmissionLog admissionLog = searchAdmissionLog(admissionIds);//查询接诊记录
             Dossier dossier = saveOrUpdateDossier(admissionLog, param);//保存病例
@@ -79,16 +98,29 @@ public class ReceptionOver {
                 updatePayRecord(admissionLog, prescriptionParam);
                 updateAdmissionLog(admissionLog, prescriptionId, dossier);
                 recordLog(admissionLog);
+
+                payIdByOpenDrug=admissionLog.getPayId();
             } else { // 保存处方
                 if(isNeedSavePrescription(param)){  //是否需要保存处方
                     com.clinic.entity.Prescription prescription = savePrescription(param, admissionLog, dossier);   // 保存处方
                     Long payId = createPayRecord(prescription,dossier); //创建支付记录，并返回支付ID（用户后续更新支付状态）
                     updateAdmissionLog(param, prescription, payId, dossier); //更新接诊记录
                     LogUtil.Operation.addPrescription(admissionLog.getPatientId(), prescription.getId(), "{}添加处方并创建收费记录：处方id={}, 支付id={}", LoginUser.get().getName(), prescription.getId(), payId);
+
+                    prescriptionId=prescription.getId();
+                    payIdByOpenDrug=payId;
                 }
             }
             commit(transaction);
+
+            //给药房发送处方
+            sendDrug(prescriptionId, admissionLog.getSex(), admissionLog.getPhone(),
+                    param.getPrescription().getPrice(), admissionIds, payIdByOpenDrug, admissionLog.getName());
+
             return Result.success();
+        } catch (IOException e) {
+            rollback(transaction);
+            return Result.failed("给药房发送处方信息失败");
         } catch (IllegalArgumentException e) {
             rollback(transaction);
             return Result.success(400, e.getMessage());
@@ -97,6 +129,61 @@ public class ReceptionOver {
             e.printStackTrace();
             return Result.failed();
         }
+    }
+
+    /**
+     * 获取处方药列表
+     *
+     * @param presId 处方id
+     */
+    private List<PrescriptionDrug> getDrugList(Long presId) {
+        List<PrescriptionDrug> resultList = prescriptionDrugService.selectJoinList(PrescriptionDrug.class,
+                new MPJLambdaWrapper<PrescriptionDrug>()
+                        .eq(PrescriptionDrug::getPrescriptionId, presId));
+
+        if (ObjectUtils.isEmpty(resultList))
+            resultList = Collections.emptyList();
+
+        return resultList;
+    }
+
+    /**
+     * 给药房发处方信息
+     *
+     * @param prescriptionId 处方id
+     * @param sexStatus      性别状态: 1.男;0.女;
+     * @param phone          手机号
+     * @param fee            费用
+     * @param admissId       接诊日志id
+     * @param payId          收费id
+     * @param dossierName    病人姓名
+     */
+    private void sendDrug(Long prescriptionId, Integer sexStatus, Long phone, BigDecimal fee, Long admissId, Long payId, String dossierName) throws IOException {
+        List<PrescriptionDrug> drugList = getDrugList(prescriptionId);
+        Map<String, Object> map = new HashMap<>();
+
+        map.put("name", dossierName);
+        map.put("drugs", drugList);
+
+        map.put("sexStatus", sexStatus);
+        map.put("phone", phone);
+        map.put("fee", fee);
+
+        map.put("admissId", admissId);
+        map.put("payId", payId);
+        map.put("payStatus", INTEGER_ZERO);
+        map.put("time", new Date().getTime());
+
+        String drugJsonStr = JSONUtil.toJsonStr(map);
+
+        redis.hashSet(
+                RedisKeys.DRUG_OPEN_BY_ID.key(LoginUser.getId()),
+                prescriptionId.toString(),
+                drugJsonStr);
+
+        redis.expire(RedisKeys.DRUG_OPEN_BY_ID.key(LoginUser.getId()), NumberUtils.INTEGER_ONE, TimeUnit.DAYS);
+
+        webSocket.sendMessageTo(drugJsonStr, LoginUser.getId());
     }
 
     private void recordLog(AdmissionLog admissionLog) {

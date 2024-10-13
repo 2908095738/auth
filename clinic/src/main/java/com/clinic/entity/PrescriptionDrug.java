@@ -103,6 +103,12 @@ public class PrescriptionDrug implements Serializable {
     private String periodUnit;
 
     /**
+     * 生产单位
+     */
+    @TableField(value = "manufacturer")
+    private String manufacturer;
+
+    /**
      * 单价
      */
     @TableField(value = "price")

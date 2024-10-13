@@ -6,7 +6,9 @@ import com.bbs.api.auth.UserAPI;
 import com.bbs.exception.ReLoginException;
 import com.clinic.util.LoginUser;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -17,6 +19,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 import static java.util.Objects.nonNull;
 
@@ -39,6 +43,8 @@ public class LoginInterceptor implements HandlerInterceptor {
         String uri = request.getRequestURI().toString();
         if (uri.startsWith("/drug/wx"))
             return true;
+        if (uri.startsWith("/drug/open"))
+            return openDrugProcess(request.getQueryString());
 
         //支付接口处理
         String referer = request.getHeader("referer");
@@ -65,6 +71,32 @@ public class LoginInterceptor implements HandlerInterceptor {
         return false;
     }
 
+    /**
+     * 给药房的处方药拦截处理
+     */
+    private boolean openDrugProcess(String queryStr) {
+        String[] queryParams = queryStr.split("&");
+        Long uid = 0L;
+        for (String query : queryParams) {
+            if (query.startsWith("uid")) {
+                uid = Long.valueOf(query.split("=")[NumberUtils.INTEGER_ONE]);
+                break;
+            }
+        }
+        if (uid < NumberUtils.LONG_ONE)
+            return false;
+
+        List<User> userTmpList = userAPI.getUserList(Collections.singletonList(uid));
+        if (ObjectUtils.isEmpty(userTmpList) || userTmpList.size() > NumberUtils.INTEGER_ONE)
+            return false;
+
+        User user = userTmpList.get(NumberUtils.INTEGER_ZERO);
+        if (nonNull(user)) {
+            LoginUser.set(user);
+            return true;
+        }
+        return false;
+    }
 
     private boolean payProcess(String uid) {
         //getPay(Long)接口直接过

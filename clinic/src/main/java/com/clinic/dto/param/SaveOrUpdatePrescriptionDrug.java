@@ -79,6 +79,12 @@ public class SaveOrUpdatePrescriptionDrug {
     private String periodUnit;
 
     /**
+     * 生产单位
+     */
+    @NotNull(message = "生产单位不能为空")
+    private String manufacturer;
+
+    /**
      * 成本
      */
     private BigDecimal cost;

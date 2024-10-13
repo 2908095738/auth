@@ -1,10 +1,16 @@
 package com.clinic.util;
 
 import cn.hutool.core.lang.Opt;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.math.NumberUtils;
+import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -91,13 +97,33 @@ public class RedisUtil {
         return redis.opsForValue().setIfPresent(key, value);
     }
 
+    public void hashSet(String key, String hashKey, String value) {
+        redis.opsForHash().put(key, hashKey, value);
+    }
 
     public void hashSet(String key, Map<String, String> values) {
         redis.opsForHash().putAll(key, values);
     }
 
-    public Object hashGet(String key, String hashKey) {
-        return redis.opsForHash().get(key, hashKey);
+    public Opt<Map<String, String>> hashGet(String key) {
+        Map<String, String> resultMap = new HashMap<>();
+
+        Map<Object, Object> tmpMap = redis.opsForHash().entries(key);
+        if (tmpMap.isEmpty())
+            return Opt.ofNullable(resultMap);
+
+        tmpMap.forEach((k, v) -> {
+            resultMap.put(String.valueOf(k), String.valueOf(v));
+        });
+
+        return Opt.ofNullable(resultMap);
+    }
+
+    public Opt<String> hashGet(String key, String hashKey) {
+        Object value = redis.opsForHash().get(key, hashKey);
+        if (ObjectUtils.isEmpty(value))
+            return Opt.empty();
+        return Opt.of(String.valueOf(value));
     }
 
     public void multiSet(Map<String, String> map) {
@@ -106,5 +132,41 @@ public class RedisUtil {
 
     public void expire(String key, long timeout, TimeUnit unit) {
         redis.expire(key, timeout, unit);
+    }
+
+    public boolean listLPush(String key, List<String> valueList) {
+        Long size = redis.opsForList().leftPushAll(key, valueList.toArray(new String[valueList.size()]));
+        if (size > NumberUtils.LONG_ZERO)
+            return true;
+        else
+            return false;
+    }
+
+    public boolean listRPush(String key, List<String> valueList) {
+        Long size = redis.opsForList().rightPushAll(key, valueList.toArray(new String[valueList.size()]));
+        if (size > NumberUtils.LONG_ZERO)
+            return true;
+        else
+            return false;
+    }
+
+    public List<String> listGet(String key) {
+        ListOperations<String, String> tmpList = redis.opsForList();
+        Long size = tmpList.size(key);
+        List<String> resultList = tmpList.range(key, NumberUtils.INTEGER_ZERO, size - NumberUtils.INTEGER_ONE);
+
+        if (ObjectUtils.isEmpty(resultList))
+            return Collections.emptyList();
+        return resultList;
+    }
+
+    /**
+     * get
+     *
+     * @param key 键
+     * @return 为空则返回 Opt<Null>，不空返回 Opt
+     */
+    public Opt<List<String>> getOptList(String key) {
+        return Opt.ofNullable(listGet(key));
     }
 }

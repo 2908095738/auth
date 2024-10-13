@@ -2,14 +2,18 @@ package com.clinic.controller;
 
 
 import com.bbs.Result;
+import com.clinic.cache.open.drug.OpenDrugCache;
 import com.clinic.dto.Manufacturer;
+import com.clinic.dto.OpenDrugVO;
 import com.clinic.dto.param.DrugParam;
 import com.clinic.entity.PrescriptionDrug;
 import com.clinic.service.AppDrugService;
 import com.clinic.service.PrescriptionDrugService;
+import com.clinic.util.SpringUtil;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,6 +31,9 @@ public class DrugController {
 
     @Resource
     private PrescriptionDrugService drugService;
+
+    @Resource
+    private ApplicationContext appContext;
 
     @GetMapping("/drug")
     public Result search(DrugParam param) {
@@ -76,6 +83,14 @@ public class DrugController {
     @GetMapping("/drug/unit/trace")
     public Result getUnitTrace() {
         return appDrugService.getDefUnitTrace();
+    }
+
+    /**
+     * 查询给药房的处方药列表
+     */
+    @GetMapping("/drug/open")
+    public Result<List<OpenDrugVO>> searchDrug(@RequestParam Long uid) {
+        return SpringUtil.getResp(OpenDrugCache.class, appContext, d -> d.get(uid));
     }
 
     @Autowired

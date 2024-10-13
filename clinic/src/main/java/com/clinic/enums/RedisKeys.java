@@ -28,6 +28,7 @@ public enum RedisKeys {
     INFORM("inform:", "通知缓存"),
     INFORM_USER("inform:user:", "通知用户缓存"),
 
+    DRUG_OPEN_BY_ID("drug:open:uid:", "药房开药缓存"),
     ;
 
     private final String prefix;
