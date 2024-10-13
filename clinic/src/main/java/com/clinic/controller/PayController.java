@@ -27,6 +27,7 @@ import com.clinic.service.AdmissionLogService;
 import com.clinic.service.PayService;
 import com.clinic.util.LoginUser;
 import com.clinic.util.RedisUtil;
+import com.clinic.util.WebSocketUtil;
 import com.clinic.util.WxUtil;
 import com.clinic.util.log.LogUtil;
 import lombok.AllArgsConstructor;
@@ -45,6 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.validation.constraints.NotNull;
+import java.io.IOException;
 import java.util.List;
 
 import static com.baomidou.mybatisplus.core.toolkit.ObjectUtils.isNull;
@@ -76,6 +78,9 @@ public class PayController {
 
     @Autowired
     private RedisUtil redis;
+
+    @Autowired
+    private WebSocketUtil webSocket;
 
     /**
      * 本次收费-数据回显
@@ -174,6 +179,9 @@ public class PayController {
             updOpenDrug(admissionLog.getPrescriptionId());
 
             return Result.success(true);
+        } catch (IOException e) {
+            transactionManager.rollback(transaction);
+            return Result.failed("给药房发送处方信息失败");
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -187,7 +195,7 @@ public class PayController {
      *
      * @param presId 处方ID
      */
-    private void updOpenDrug(Long presId) {
+    private void updOpenDrug(Long presId) throws IOException {
         Opt<String> get = redis.hashGet(RedisKeys.DRUG_OPEN_BY_ID.key(LoginUser.getId()),
                 presId.toString());
         if (!get.isEmpty()) {
@@ -198,6 +206,8 @@ public class PayController {
                     RedisKeys.DRUG_OPEN_BY_ID.key(LoginUser.getId()),
                     presId.toString(),
                     jObj.toString());
+
+            webSocket.sendMessageTo(jObj.toString(), LoginUser.getId());
         }
     }
 
