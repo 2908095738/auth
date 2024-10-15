@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.db.DbRuntimeException;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.clinic.converter.StockConverter;
 import com.clinic.dto.QueryStockInDto;
 import com.clinic.dto.param.PutStockList;
 import com.clinic.dto.param.PutStockParam;
@@ -20,6 +21,10 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import static com.alibaba.fastjson2.JSON.toJSONString;
 
 /**
@@ -31,6 +36,9 @@ import static com.alibaba.fastjson2.JSON.toJSONString;
 @Service
 public class StockInServiceImpl extends ServiceImpl<StockInMapper, StockIn>
     implements StockInService{
+
+    @Resource
+    private StockConverter stockConverter;
 
     @Override
     public StockIn saveBatch(String no, PutStockList param) throws DbRuntimeException {
@@ -54,7 +62,7 @@ public class StockInServiceImpl extends ServiceImpl<StockInMapper, StockIn>
     public Page<QueryStockInDto> query(QueryStockInParam param) {
         MPJLambdaWrapper<StockIn> wrapper = new MPJLambdaWrapper<StockIn>()
                 .selectAll(StockIn.class)
-                .selectAssociation(StockInDrug.class, QueryStockInDto::getStockInDrugs)
+                .selectAssociation(StockInDrug.class, StockIn::getStockInDrugs)
                 .leftJoin(StockInDrug.class, StockInDrug::getStockInId, StockIn::getId)
                 .eq(StockIn::getUserId, LoginUser.getId())
 
@@ -72,7 +80,19 @@ public class StockInServiceImpl extends ServiceImpl<StockInMapper, StockIn>
                     DateUtil.date(param.getCreateTimes().get(NumberUtils.INTEGER_ONE)).toJdkDate());
         }
 
-        return baseMapper.selectJoinPage(param.toPage(), QueryStockInDto.class, wrapper);
+        Page<StockIn> page = baseMapper.selectJoinPage(param.toPage(), StockIn.class, wrapper);
+        return getPageByQuery(page);
+    }
+
+    private Page<QueryStockInDto> getPageByQuery(Page<StockIn> page) {
+        List<QueryStockInDto> queryList = page.getRecords().stream().map(stockConverter::getQueryStockInDto).collect(Collectors.toList());
+        Page<QueryStockInDto> resultPage = new Page<QueryStockInDto>();
+        resultPage.setCurrent(page.getCurrent());
+        resultPage.setPages(page.getPages());
+        resultPage.setSize(page.getSize());
+        resultPage.setTotal(page.getTotal());
+        resultPage.setRecords(queryList);
+        return resultPage;
     }
 }
 

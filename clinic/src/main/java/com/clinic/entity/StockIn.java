@@ -8,9 +8,11 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
+import com.github.yulichang.annotation.EntityMapping;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 
 /**
  * 库存：入库
@@ -20,6 +22,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldNameConstants
 public class StockIn implements Serializable {
     /**
      * 编号
@@ -59,4 +62,17 @@ public class StockIn implements Serializable {
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+    @TableField(exist = false)
+    @EntityMapping(thisField = StockIn.Fields.id, joinField = StockInDrug.Fields.stockInId)
+    private StockInDrug stockInDrugs;
+
+    public StockIn(Long id, String no, BigDecimal totalCost, Long userId, String remark, Date createTime) {
+        this.id = id;
+        this.no = no;
+        this.totalCost = totalCost;
+        this.userId = userId;
+        this.remark = remark;
+        this.createTime = createTime;
+    }
 }

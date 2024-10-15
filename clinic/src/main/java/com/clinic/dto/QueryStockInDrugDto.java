@@ -68,6 +68,11 @@ public class QueryStockInDrugDto {
     private Long costUnit;
 
     /**
+     * 验收结论
+     */
+    private String acceptResult;
+
+    /**
      * 总进价
      */
     private BigDecimal totalCost;
@@ -115,4 +120,13 @@ public class QueryStockInDrugDto {
     @JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss")
     private Date createTime;
 
+    /**
+     * 验收人签名
+     */
+    private String createName;
+
+    /**
+     * 备注
+     */
+    private String remark;
 }

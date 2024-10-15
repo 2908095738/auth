@@ -1,13 +1,13 @@
 package com.clinic.converter;
 
+import com.clinic.dto.QueryStockInDrugDto;
+import com.clinic.dto.QueryStockInDto;
 import com.clinic.dto.param.PutStockParam;
 import com.clinic.dto.vo.PrescriptionSearchDrugVO;
-import com.clinic.entity.Drug;
-import com.clinic.entity.Stock;
-import com.clinic.entity.StockBatch;
-import com.clinic.entity.StockInDrug;
+import com.clinic.entity.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 
 import java.util.List;
 
@@ -39,4 +39,14 @@ public interface StockConverter {
 
     @Mapping(source = "type", target = "dosageForm")
     PrescriptionSearchDrugVO drugToPrescriptionSearchDrugVO(Drug drug);
+
+    @Mapping(source = "stockInDrugs", target = "stockInDrugs", qualifiedByName = "getQueryStockInDrug")
+    QueryStockInDto getQueryStockInDto(StockIn stockIn);
+
+    @Named("getQueryStockInDrug")
+    default QueryStockInDrugDto getQueryStockInDrug(StockInDrug drug) {
+        return getQueryStockInDrugDto(drug);
+    }
+
+    QueryStockInDrugDto getQueryStockInDrugDto(StockInDrug drug);
 }
