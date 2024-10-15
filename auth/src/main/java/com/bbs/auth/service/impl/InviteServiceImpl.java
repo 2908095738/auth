@@ -26,7 +26,7 @@ public class InviteServiceImpl extends MPJBaseServiceImpl<InviteMapper, Invite>
     public Invite search() {
         List<Invite> invList = lambdaQuery().eq(Invite::getUserId, LoginUser.getId()).list();
         if (ObjectUtils.isEmpty(invList))
-            return new Invite();
+            return null;
         return invList.get(INTEGER_ZERO);
     }
 }

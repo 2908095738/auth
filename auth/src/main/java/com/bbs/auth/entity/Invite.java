@@ -54,4 +54,10 @@ public class Invite implements Serializable {
         this.userId = userId;
         this.inviteCode = inviteCode;
     }
+
+    public Invite(Long userId, String inviteCode, Date validEndTime) {
+        this.userId = userId;
+        this.inviteCode = inviteCode;
+        this.validEndTime = validEndTime;
+    }
 }

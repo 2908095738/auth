@@ -1,5 +1,6 @@
 package com.bbs.auth.app.user;
 
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -17,10 +18,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -37,6 +41,9 @@ import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 @RequestMapping
 public class GetInvite {
 
+    @Value(value = "${user.register.inviteValidDay}")
+    private Integer invValidDay;
+
     @Resource
     private InviteService orm;
 
@@ -44,6 +51,10 @@ public class GetInvite {
     private InviteUserService inviteUserService;
     @Resource
     private UserService userService;
+
+    private static final class StringConstant {
+        private static final String SHI_QU = "+8";
+    }
 
     /**
      * 获取邀请码
@@ -54,10 +65,19 @@ public class GetInvite {
         Invite invite = orm.search();
         if(isNull(invite)) {
             UserVO loginUser = userService.loginUser();
-            invite = new Invite(loginUser.getId(), IdUtil.randomUUID());
+            invite = new Invite(loginUser.getId(), IdUtil.randomUUID(), getValidDate());
             orm.save(invite);
         }
         return Result.success(invite.getInviteCode());
+    }
+
+    /**
+     * 获取邀请码失效时间
+     */
+    private Date getValidDate() {
+        LocalDateTime validLDT = DateTime.now().toLocalDateTime().plusDays(invValidDay);
+        Long milliSecond = validLDT.toInstant(ZoneOffset.of(StringConstant.SHI_QU)).toEpochMilli();
+        return new Date(milliSecond);
     }
 
     @Data
