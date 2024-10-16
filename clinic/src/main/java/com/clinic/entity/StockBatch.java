@@ -6,9 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.clinic.app.AppStockService;
-import com.clinic.cache.unit.UnitCache;
 import com.clinic.dto.PrescriptionDrugDto;
-import com.clinic.dto.vo.PrescriptionSearchDrugVO;
 import com.clinic.enums.DrugExpiryStateEnum;
 import com.clinic.enums.DrugStockRule;
 import com.clinic.enums.DrugTypeEnum;
@@ -18,15 +16,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
-import static cn.hutool.core.lang.ansi.AnsiStyle.NORMAL;
 import static com.clinic.enums.DrugExpiryStateEnum.ABOUT_EXPIRES;
 import static com.clinic.enums.DrugExpiryStateEnum.EXPIRES;
 import static java.util.Objects.isNull;
@@ -132,6 +127,12 @@ public class StockBatch implements Serializable {
      */
     @TableField(value = "price")
     private BigDecimal price;
+
+    /**
+     *售价单位
+     */
+    @TableField(value = "price_unit")
+    private Long priceUnit;
 
     /**
      * 用法

@@ -163,6 +163,12 @@ public class PutStockParam {
     private BigDecimal price;
 
     /**
+     *售价单位
+     */
+    @NotNull(message = "售价单位不能为空！")
+    private Long priceUnit;
+
+    /**
      *供货单位
      */
     private String provider;
