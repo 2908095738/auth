@@ -1,6 +1,7 @@
 package com.clinic.app.reception.over;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.lang.Opt;
 import cn.hutool.json.JSONUtil;
 import com.bbs.Result;
 import com.clinic.app.AppPayService;
@@ -174,7 +175,7 @@ public class ReceptionOver {
         map.put("payStatus", INTEGER_ZERO);
         map.put("time", new Date().getTime());
 
-        String drugJsonStr = JSONUtil.toJsonStr(map);
+        String drugJsonStr = getJsonByDrug(map,prescriptionId);
 
         redis.hashSet(
                 RedisKeys.DRUG_OPEN_BY_ID.key(LoginUser.getId()),
@@ -184,6 +185,21 @@ public class ReceptionOver {
         redis.expire(RedisKeys.DRUG_OPEN_BY_ID.key(LoginUser.getId()), NumberUtils.INTEGER_ONE, TimeUnit.DAYS);
 
         webSocket.sendMessageTo(drugJsonStr, LoginUser.getId());
+    }
+
+    /**
+     * 获取药房开药用的处方JSON
+     *
+     * @param drugMap        处方信息映射
+     * @param prescriptionId 处方id
+     */
+    private String getJsonByDrug(Map<String, Object> drugMap, Long prescriptionId) {
+        Opt<String> drugOpt = redis.hashGet(RedisKeys.DRUG_OPEN_BY_ID.key(LoginUser.getId()), prescriptionId.toString());
+        if (!drugOpt.isEmpty()) {
+            drugMap.put("payStatus", JSONUtil.parseObj(drugOpt.get()).get("payStatus"));
+            return JSONUtil.toJsonStr(drugMap);
+        } else
+            return JSONUtil.toJsonStr(drugMap);
     }
 
     private void recordLog(AdmissionLog admissionLog) {
