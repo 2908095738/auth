@@ -221,13 +221,21 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock>
     @NoArgsConstructor
     @AllArgsConstructor
     public static class DrugExpiryGroup {
-
+        /**
+         * 正常
+         */
         private List<StockBatch> normal;
-
+        /**
+         * 即将到期
+         */
         private List<StockBatch> aboutExpires;
-
+        /**
+         *过期
+         */
         private List<StockBatch> expires;
-
+        /**
+         *库存不足
+         */
         private List<StockBatch> stockShortage;
     }
 
