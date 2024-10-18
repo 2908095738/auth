@@ -1,5 +1,6 @@
 package com.clinic.dto.vo;
 
+import com.clinic.entity.StockUnit;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -78,6 +79,11 @@ public class PrescriptionSearchDrugVO {
     private BigDecimal price;
 
     /**
+     * 零售价
+     */
+    private Long priceUnit;
+
+    /**
      * 进价
      */
     private BigDecimal cost;
@@ -101,6 +107,11 @@ public class PrescriptionSearchDrugVO {
      * 单位列表
      */
     private List<Unit> units;
+
+    /**
+     * 单位列表
+     */
+    private List<StockUnit> stockUnitList;
 
     /**
      * 最小单位
