@@ -106,7 +106,6 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
         LambdaQueryChainWrapper<Patient> wrapper = lambdaQuery()
                 .eq(nonNull(patient.getName()), Patient::getName, patient.getName())
                 .eq(nonNull(patient.getSex()), Patient::getSex, patient.getSex())
-                .eq(nonNull(patient.getAge()), Patient::getAge, patient.getAge())
                 .likeRight(nonNull(patient.getPhone()), Patient::getPhone, patient.getPhone());
         return wrapper.exists();
     }
