@@ -3,6 +3,6 @@ singleServerConfig:
   # 数据库编号
   database: 0
   # 节点地址
-  address: redis://172.31.62.123:16379
+  address: redis://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:16379
   # 密码
-  password: shenbimaliang
+  password: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
