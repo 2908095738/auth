@@ -2,12 +2,11 @@
 
 # 诊所系统开源项目文档
 
-欢迎来到码良科技的诊所管理系统开源项目！本项目旨在为中小型诊所提供高效的管理工具。通过现代化的技术栈（包括 Spring Boot、MyBatis Plus、Vue 3、Nacos 等），我们力求为用户打造一套稳定、灵活的诊所管理解决方案。
+欢迎来到L的诊所管理系统开源项目！本项目旨在为中小型诊所提供高效的管理工具。通过现代化的技术栈（包括 Spring Boot、MyBatis Plus、Vue 3、Nacos 等），我们力求为用户打造一套稳定、灵活的诊所管理解决方案。
 
 ## Links
-[English Document](BE_English.md)
 
-[官网](https://www.maliang.work)  | [前端文档](FE_Chinese.md)
+[官网](https://www.maliang.work) 
 
 
 ## 项目简介
@@ -21,7 +20,7 @@
 - **配置中心**: Nacos 2.3.2
 - **数据库**: MySQL 8.0.22
 - **缓存**: Redis 6.2.14
-
+- **nginx**: 1.24.0
 ### 项目结构（包含图片展示）
 
 您所提供的项目图片展示了项目的主要目录结构：
@@ -63,10 +62,10 @@ clinic/
 
 ### 1. 克隆项目
 
-首先，从 GitHub 上克隆项目的代码库：
+首先，从 gitee 上克隆项目的代码库：
 
 ```bash
-git clone https://github.com/MaLiangKeJi/Ma-Liang-Clinic.git
+git clone https://gitee.com/lu-zimu/clinic-system.git
 ```
 
 ### 2. 数据库初始化
@@ -197,7 +196,7 @@ mvn spring-boot:run
 1. **Fork 项目**: 在 GitHub 上 fork 该仓库到您的个人账户。
 2. **克隆仓库**: 将 fork 的仓库克隆到您的本地开发环境：
    ```bash
-   git clone https://github.com/yourGitHubAccount/clinic-management-system.git
+   git clone https://gitee.com/yourGitHubAccount/clinic-system.git
    ```
 3. **创建新分支**: 每个新功能或 bug 修复都应在一个独立的分支上进行：
    ```bash
