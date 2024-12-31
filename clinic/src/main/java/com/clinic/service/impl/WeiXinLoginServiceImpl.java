@@ -31,8 +31,6 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
     @Value("${wx.oa.token}")
     private String token;
 
-    @Value("${wx.drug.tempId}")
-    private String tempIdByDrug;//处方药模板id
 
     @Resource
     private RedisUtil redisUtil;
@@ -154,7 +152,7 @@ public class WeiXinLoginServiceImpl implements WeiXinLoginService {
             extParams.put("url", String.format("%s/clinic/drug?presId=%d", website, presId));
 
         PrescriptionDrug drugByOne = drugList.get(NumberUtils.INTEGER_ZERO);
-        wxUtil.sendTempMsg(openId, tempIdByDrug, WxUtil.getDataMap(getDrugMapByOne(drugByOne, !isMore)), extParams);
+        wxUtil.sendTempMsg(openId, "***************", WxUtil.getDataMap(getDrugMapByOne(drugByOne, !isMore)), extParams);
     }
 
     /**

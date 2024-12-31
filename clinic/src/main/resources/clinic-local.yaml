@@ -1,36 +1,32 @@
 server:
-  port: 8084
+  port: 8081
   error:
     include-message: always
 spring:
   application:
-    name: auth
+    name: clinic
   main:
     allow-bean-definition-overriding: true
+  boot:
+    admin:
+      client:
+        url: http://172.31.62.123:32148
+        instance:
+          service-base-url: http://47.105.39.255:32149
+          prefer-ip: true
+          metadata:
+            logfiles:
+              info: http://47.105.39.255:32146/logfile/info
+              error: http://47.105.39.255:32146/logfile/error
   datasource:
-    url: jdbc:mysql://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/ml_auth?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://192.168.31.35:3306/clinic?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
-    druid:
-      initial-size: 5
-      min-idle: 5
-      max-active: 25
-      max-wait: 1000
-      time-between-eviction-runs-millis: 60000
-      validation-query: SELECT 1 as nums
-      test-while-idle: true
-      test-on-borrow: false
-      test-on-return: false
-      pool-prepared-statements: true
-      max-pool-prepared-statement-per-connection-size: 20
-      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
-      filters: stat # 拦截sql的开关
-    initialization-mode: always
   redis:
-    host: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    host: 192.168.31.191
     port: 6551
-    password: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    # password: 5mCw8N8h
     timeout: 10000
     redisson:
       config:
@@ -40,8 +36,8 @@ spring:
           timeout: 3000
           retryAttempts: 3
           retryInterval: 1500
-          address: redis://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:6551
-          password: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+          address: redis://192.168.31.191:6551
+          # password: 5mCw8N8h
           clientName: null
           keepAlive: false
           tcpNoDelay: false
@@ -58,6 +54,30 @@ logging:
   file:
     path: logs/auth
   config: classpath:logback-spring.xml
+prescription:
+  template:
+    path: templates
+  image:
+    path: preview
+    down:
+      prefix: /image
+  file:
+    path: prescriptions
+    down:
+      prefix: /file
+diagnosis:
+  template:
+    path: diagnosis
+auth:
+  host: 172.31.62.123:32149
+  api:
+    verify:
+      path: /verify
+      token: Authorization
+      timeout: 10000
+    search:
+      id: /server/
+      list: /server/list
 jwt:
   #  token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9
   name: Authorization
@@ -75,6 +95,11 @@ management:
       error-file: /home/auth/logs/auth/error
     health:
       show-details: always
+setting:
+  stock:
+    expiry:
+      alert:
+        month: 3
 
 
 dubbo:
@@ -85,37 +110,32 @@ dubbo:
     name: dubbo
     port: -1
   registry:
-    address: nacos://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:8848?namespace=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    address: nacos://192.168.31.191:8848?namespace=3feadc28-5122-4134-97b0-011ed4169b8b
     timeout: 50000
     parameters:
       blockUntilConnectedWait: 50
   config-center:
-    address: nacos://123.60.155.123:8848
+    address: nacos://192.168.31.191:8848
   metadata-report:
-    address: nacos://123.60.155.123:8848
+    address: nacos://192.168.31.191:8848
 code:
   alibaba:
-    endpoint: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    endpoint: dysmsapi.aliyuncs.com
     access:
-      key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-      secret: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    sign: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    template: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      key: LTAI5t8Rqfdfm1Mdd1Lke4K5
+      secret: LmxzctYpuvEfRGUBRPB71JVgKgpTKM
+    sign: 济源商业平台
+    template: SMS_465343610
   feigeyun:
-    apikey: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    secret: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    sign: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    template: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    apikey: N120300ed85
+    secret: 120300cf44753590d
+    sign: 212925
+    template: 190260
 wx:
   oa:
-    appId: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    appSecret: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-  pay:
-    merchantId: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-    privateKeyPath: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    merchantSerialNumber: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    apiV3Key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    appId: wxbd377f32afa2d442
+    appSecret: 9fe6c48d6689198f4d0022f3e809c3bb
+    token: nKjjt1fBXVxyyLC4
 filter:
   bloom:
     phone:
@@ -123,11 +143,6 @@ filter:
       expected: 100000
       probability: 0.0001
       threshold: 0.75
-user:
-  register:
-    inviteValidDay: 365
-    try:
-      day: 7
 api:
   management:
     permission:
