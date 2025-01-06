@@ -215,20 +215,6 @@ public class Login {
         return new String(aes.decrypt(openId));
     }
 
-    private void checkPhoneAndPWDFormat(Param param) {
-        checkPhoneFormatThrows(param.getPhone());
-        checkArgument(StringUtils.isNoneBlank(param.getPassword()));
-    }
-
-    private void checkUserPWD(Param param, User user) throws IllegalArgumentException {
-        String encryptPassword = service.encryptPassword(param.getPassword(), user.getSalt());
-        checkArgument(user.getPassword().equals(encryptPassword), FAILED_LOGIN_PWD_ERROR);
-    }
-
-    private void checkUserState(User user) throws IllegalArgumentException {
-        checkArgument(UserStateEnum.STATUS_NORMAL.getCode().equals(user.getState()), FAILED_LOGIN_USER_STATUS_ERROR);
-    }
-
     private User searchUser(String phone) {
         User user = userCache.searchByPhoneNoLockNoLoad(phone);
         if(isNull(user)) user = db.selectByPhone(phone);
