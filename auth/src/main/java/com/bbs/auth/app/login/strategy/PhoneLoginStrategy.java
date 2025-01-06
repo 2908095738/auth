@@ -3,6 +3,8 @@ package com.bbs.auth.app.login.strategy;
 import com.bbs.auth.app.login.AbstractLoginStrategy;
 import com.bbs.auth.app.login.param.Param;
 import com.bbs.auth.entity.User;
+import com.bbs.enums.LoginType;
+import org.springframework.stereotype.Component;
 
 import static com.bbs.auth.app.login.util.PhoneCodeUtil.checkCodeConsistent;
 import static com.bbs.auth.app.login.util.UserUtil.isNormal;
@@ -15,8 +17,13 @@ import static java.util.Objects.nonNull;
  * 策略模式：登录场景下，使用手机号验证码登录
  * @author luchenlin
  */
+@Component
 public class PhoneLoginStrategy extends AbstractLoginStrategy {
 
+    @Override
+    protected LoginType getLoginType() {
+        return LoginType.PHONE;
+    }
 
     @Override
     public void checkParam(Param param) throws IllegalArgumentException {

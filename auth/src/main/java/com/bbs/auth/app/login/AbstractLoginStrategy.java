@@ -5,6 +5,7 @@ import com.bbs.auth.cache.code.PhoneCodeCache;
 import com.bbs.auth.cache.user.UserCache;
 import com.bbs.auth.entity.User;
 import com.bbs.auth.service.UserService;
+import com.bbs.enums.LoginType;
 
 import javax.annotation.Resource;
 
@@ -23,6 +24,8 @@ public abstract class AbstractLoginStrategy {
 
     @Resource
     protected UserService userService;
+
+    protected abstract LoginType getLoginType();
 
     protected abstract void checkParam(Param param) throws IllegalArgumentException;
 

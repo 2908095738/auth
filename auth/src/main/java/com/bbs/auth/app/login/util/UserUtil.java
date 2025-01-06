@@ -18,8 +18,9 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 public class UserUtil {
 
-    public static void isNormal(User user) throws IllegalArgumentException {
+    public static Boolean isNormal(User user) throws IllegalArgumentException {
         checkArgument(UserStateEnum.STATUS_NORMAL.getCode().equals(user.getState()), FAILED_LOGIN_USER_STATUS_ERROR);
+        return true;
     }
 
     public static void checkUserPWD(Param param, User user) throws IllegalArgumentException {

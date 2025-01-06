@@ -4,6 +4,7 @@ import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
 import cn.hutool.crypto.symmetric.SymmetricCrypto;
+import cn.hutool.extra.spring.SpringUtil;
 import com.bbs.Result;
 import com.bbs.auth.app.login.param.Param;
 import com.bbs.auth.app.login.vo.VO;
@@ -19,9 +20,11 @@ import com.bbs.enums.UserStateEnum;
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.dubbo.rpc.protocol.tri.stream.Stream;
 import org.redisson.api.RDeque;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,7 +34,9 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.bbs.Result.failed;
 import static com.bbs.Result.success;
@@ -84,85 +89,21 @@ public class Login {
     @Resource
     private InviteUserService inviteUserService;
 
+    private final Map<String, AbstractLoginStrategy> loginStrategyMapping = SpringUtil
+            .getBean(ApplicationContext.class).getBeansOfType(AbstractLoginStrategy.class).values()
+            .stream().collect(Collectors.toMap(type -> type.getLoginType().getCode(), type -> type));
+
     @PostMapping("/login")
     public Result<VO> login(@Valid @RequestBody Param param) throws InterruptedException, IllegalArgumentException {
         String loginTime = DateUtil.now();
         String phone = param.getPhone();
         String loginType = param.getLoginType();
-        String paramCode = param.getCode();
         return redissonUtil.lockExec(
             () -> {
                 try {
-                    User user;
-                    Integer code;
-                    if(LoginType.PHONE.getCode().equals(loginType)) {
-                        checkPhoneFormatThrows(phone);
-                        checkPhoneCodeFormat(paramCode);
-                        code = phoneCodeCache.getCode(phone);
-                        checkArgument(nonNull(code) && code.equals(Integer.valueOf(paramCode)), FAILED_AUTH_PHONE_CODE_NOT_AVAILABLE);
-                        phoneCodeCache.delCode(phone);
-                        user = userCache.searchByPhoneNoLockNoLoad(phone);
 
-                        if(nonNull(user)) {
-                            // 用户已注册
-                            checkUserState(user);
-                        } else {
-                            // 用户未注册
-                            user = new User(phone, Long.valueOf(phone));
-                            service.save(user);
-                        }
-
-                    } else if (LoginType.WX.getCode().equals(loginType)) {
-                        // 场景1：未注册（手机号未注册，且微信未绑定）
-                        // 场景2：手机号已注册，但微信未绑定
-                        // PS：不需要【响应用户未绑定手机号，需要绑定手机号】步骤，已在上个步骤【轮询扫码状态】中判断并响应
-
-                        // 1. 校验手机号 & 验证码格式
-                        checkPhoneFormatThrows(phone);
-                        checkPhoneCodeFormat(paramCode);
-                        // 2. 查询验证码，并比较
-                        code = phoneCodeCache.getCode(phone);
-                        checkArgument(nonNull(code) && code.equals(Integer.valueOf(paramCode)), FAILED_AUTH_PHONE_CODE_NOT_AVAILABLE);
-                        // 3. 删除验证码
-                        phoneCodeCache.delCode(phone);
-                        // 4. 解码 VXOpenId
-                        String openId = decryptOpenId(param);
-                        // 5. 根据手机号查询用户
-                        user = userCache.searchByPhoneNoLockNoLoad(phone);
-                        if(nonNull(user)) {
-                            // 存在用户，直接绑定 VX
-                            service.bindUser(user.getId(), openId);
-                            //公众号下发绑定成功
-                            wxUtil.sendBindingMassage(openId, user);
-                        } else {
-                            // 不存在则注册用户
-                            user = new User(phone, Long.valueOf(phone), openId);
-                            service.save(user);
-                            //公众号下发注册成功
-                            wxUtil.sendRegisterMassage(openId, user);
-                        }
-
-                    } else if(LoginType.PASSWORD.getCode().equals(loginType)) {
-                        checkPhoneAndPWDFormat(param);
-                        user = searchUser(phone);
-                        checkArgument(nonNull(user), FAILED_LOGIN_USER_NEED_REGISTER);
-                        checkArgument(nonNull(user.getPassword()), FAILED_LOGIN_USER_NOT_SET_PWD);
-                        checkUserState(user);
-                        checkUserPWD(param, user);
-                    } else if(LoginType.PASSWORD_CREATE.getCode().equals(loginType)) {
-                        checkPhoneAndPWDFormat(param);
-                        user = searchUser(phone);
-                        if(nonNull(user)) {
-                            // 用户已注册
-                            checkUserState(user);
-                            checkUserPWD(param, user);
-                        } else {
-                            // 用户未注册
-                            throw new IllegalArgumentException(FAILED_LOGIN_USER_NEED_REGISTER.getMsg());
-                        }
-                    } else {
-                        throw new IllegalArgumentException(FAILED_LOGIN_TYPE_NOT_AVAILABLE.getMsg());
-                    }
+                    AbstractLoginStrategy loginStrategy = loginStrategyMapping.get(loginType);
+                    User user = loginStrategy.tryLogin(param);
                     Date expirationTime = user.getExpirationTime();
                     if(nonNull(expirationTime)) {
                         long between = DateUtil.between(expirationTime, new Date(), DateUnit.DAY);
@@ -208,27 +149,8 @@ public class Login {
         );
     }
 
-    private String decryptOpenId(Param param) {
-        String openId = param.getOpenId();
-        Preconditions.checkArgument(StringUtils.isNotBlank(param.getOpenId()), "缺少微信用户ID");
-        SymmetricCrypto aes = new SymmetricCrypto(SymmetricAlgorithm.AES, token.getBytes());
-        return new String(aes.decrypt(openId));
-    }
-
-    private User searchUser(String phone) {
-        User user = userCache.searchByPhoneNoLockNoLoad(phone);
-        if(isNull(user)) user = db.selectByPhone(phone);
-        return user;
-    }
-
-    private static final String LOG_DEQUE_KEY = "LOG:LOGIN";
-
     private List<UserCompany> searchUserCompany(Long uid) {
         return companyService.searchCompany(uid);
-    }
-
-    private RDeque<String> deque() {
-        return redisson.getDeque(LOG_DEQUE_KEY);
     }
 
     private void searchIsSetCompanyStructure(boolean checkCompanyStructure, List<UserCompany> userCompanyList) {
