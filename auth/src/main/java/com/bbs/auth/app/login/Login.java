@@ -89,10 +89,6 @@ public class Login {
     @Resource
     private InviteUserService inviteUserService;
 
-    private final Map<String, AbstractLoginStrategy> loginStrategyMapping = SpringUtil
-            .getBean(ApplicationContext.class).getBeansOfType(AbstractLoginStrategy.class).values()
-            .stream().collect(Collectors.toMap(type -> type.getLoginType().getCode(), type -> type));
-
     @PostMapping("/login")
     public Result<VO> login(@Valid @RequestBody Param param) throws InterruptedException, IllegalArgumentException {
         String loginTime = DateUtil.now();
@@ -102,8 +98,7 @@ public class Login {
             () -> {
                 try {
 
-                    AbstractLoginStrategy loginStrategy = loginStrategyMapping.get(loginType);
-                    User user = loginStrategy.tryLogin(param);
+                    User user = AbstractLoginStrategy.getInstance(loginType).tryLogin(param);
                     Date expirationTime = user.getExpirationTime();
                     if(nonNull(expirationTime)) {
                         long between = DateUtil.between(expirationTime, new Date(), DateUnit.DAY);
