@@ -1,8 +1,12 @@
 package com.bbs.util;
 
+import cn.hutool.extra.spring.SpringUtil;
+
 import java.util.regex.Pattern;
 
+import static com.bbs.enums.CodeEnum.FAILED_AUTH_PHONE_CODE_NOT_AVAILABLE;
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -36,7 +40,7 @@ public class PhoneUtil {
         checkArgument(isNoneBlank(phone) && PHONE_MAX_LENGTH == phone.length() && isNumber(phone), "手机号格式异常");
     }
 
-    public static Boolean checkPhoneFormat(String phone) throws IllegalArgumentException {
+    public static Boolean checkCodeFormat(String phone) throws IllegalArgumentException {
         return isNoneBlank(phone) && PHONE_MAX_LENGTH == phone.length() && isNumber(phone);
     }
 
