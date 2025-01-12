@@ -58,7 +58,6 @@ public class SearchSystemRouter {
 
     @GetMapping("/system/router/user")
     public Result<VO> search(@RequestParam String systemCode,Long time) {
-        log.debug("time:{}", time);
         User user = userService.loginEntityUser();
         System system = systemService.searchBySystemCode(systemCode);
         Long systemId = system.getId();
@@ -68,19 +67,12 @@ public class SearchSystemRouter {
                     !o.getId().equals(77L)
                     &&!o.getId().equals(84L)
                     &&!o.getId().equals(100L)).collect(Collectors.toList());
-            return Result.success(new VO(systemRouters, systemRouterService.toTree(systemRouters)));
         }
         return Result.success(new VO(systemRouters, systemRouterService.toTree(systemRouters)));
     }
 
     private List<SystemRouter> searchRouter(Long systemId) {
         return systemRouterService.searchBySystemId(systemId);
-    }
-
-    private Long searchCompanyId(Long uid) throws IllegalArgumentException {
-        Long companyId = bindLoginCompanyCache.get(uid);
-        userIsBindCompany(companyId);
-        return companyId;
     }
 
     private void userIsBindCompany(Long companyId) throws IllegalArgumentException {

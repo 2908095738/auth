@@ -17,9 +17,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <modules>
-
-    </modules>
+    <version>2.1</version>
 
     <dependencies>
         <dependency>
