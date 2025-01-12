@@ -21,8 +21,8 @@ import static java.util.Objects.nonNull;
 public class PhoneLoginStrategy extends AbstractLoginStrategy {
 
     @Override
-    protected LoginType getLoginType() {
-        return LoginType.PHONE;
+    protected String getLoginTypeCode() {
+        return LoginType.PHONE.getCode();
     }
 
     @Override

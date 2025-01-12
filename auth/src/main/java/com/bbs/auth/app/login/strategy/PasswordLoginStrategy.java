@@ -21,8 +21,8 @@ import static java.util.Objects.nonNull;
 public class PasswordLoginStrategy extends AbstractLoginStrategy {
 
     @Override
-    protected LoginType getLoginType() {
-        return LoginType.PASSWORD;
+    protected String getLoginTypeCode() {
+        return LoginType.PASSWORD.getCode();
     }
 
     @Override

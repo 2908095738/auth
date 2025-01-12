@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 
-import static com.bbs.auth.app.login.util.UserUtil.*;
 import static com.bbs.enums.CodeEnum.*;
 import static com.bbs.util.PhoneUtil.checkPhoneCodeFormat;
 import static com.bbs.util.PhoneUtil.checkPhoneFormatThrows;
@@ -36,8 +35,8 @@ public class WXLoginStrategy extends AbstractLoginStrategy {
     private WxUtil wxUtil;
 
     @Override
-    protected LoginType getLoginType() {
-        return LoginType.WX;
+    protected String getLoginTypeCode() {
+        return LoginType.WX.getCode();
     }
 
     @Override
