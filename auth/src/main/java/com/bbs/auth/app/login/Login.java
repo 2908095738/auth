@@ -2,9 +2,6 @@ package com.bbs.auth.app.login;
 
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
-import cn.hutool.crypto.symmetric.SymmetricCrypto;
-import cn.hutool.extra.spring.SpringUtil;
 import com.bbs.Result;
 import com.bbs.auth.app.login.param.Param;
 import com.bbs.auth.app.login.vo.VO;
@@ -15,16 +12,10 @@ import com.bbs.auth.entity.*;
 import com.bbs.auth.service.*;
 import com.bbs.auth.util.RedisUtil;
 import com.bbs.auth.util.WxUtil;
-import com.bbs.enums.LoginType;
-import com.bbs.enums.UserStateEnum;
-import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.dubbo.rpc.protocol.tri.stream.Stream;
-import org.redisson.api.RDeque;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,17 +25,12 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static com.bbs.Result.failed;
 import static com.bbs.Result.success;
 import static com.bbs.auth.enums.RedisKeys.USER_LOGIN_PHONE;
 import static com.bbs.enums.CodeEnum.*;
-import static com.bbs.util.PhoneUtil.*;
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
@@ -56,10 +42,6 @@ public class Login {
 
     @Resource
     private UserCache userCache;
-    @Resource
-    private UserService service;
-    @Resource
-    private PhoneCodeCache phoneCodeCache;
 
     @Resource
     private TokenService tokenService;
@@ -89,6 +71,9 @@ public class Login {
     @Resource
     private InviteUserService inviteUserService;
 
+    @Resource
+    private LoginStrategy loginStrategy;
+
     @PostMapping("/login")
     public Result<VO> login(@Valid @RequestBody Param param) throws InterruptedException, IllegalArgumentException {
         String loginTime = DateUtil.now();
@@ -98,7 +83,7 @@ public class Login {
             () -> {
                 try {
 
-                    User user = AbstractLoginStrategy.getInstance(loginType).tryLogin(param);
+                    User user = loginStrategy.getInstance(loginType).tryLogin(param);
                     Date expirationTime = user.getExpirationTime();
                     if(nonNull(expirationTime)) {
                         long between = DateUtil.between(expirationTime, new Date(), DateUnit.DAY);
