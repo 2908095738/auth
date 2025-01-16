@@ -23,6 +23,12 @@ public class Role implements Serializable {
     private Long id;
 
     /**
+     * 系统编码
+     */
+    @TableField(value = "system_code")
+    private String systemCode;
+
+    /**
      * 编码
      */
     @TableField(value = "code")
@@ -39,6 +45,9 @@ public class Role implements Serializable {
      */
     @TableField(value = "state")
     private Integer state;
+
+    @TableField(exist = false)
+    private System system;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
