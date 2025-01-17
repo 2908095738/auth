@@ -4,15 +4,19 @@ import cn.hutool.core.lang.tree.Tree;
 import cn.hutool.core.lang.tree.TreeNodeConfig;
 import cn.hutool.core.lang.tree.TreeUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.bbs.auth.app.role.system.SearchRoleMenuVO;
+import com.bbs.auth.entity.RoleMenu;
 import com.bbs.auth.entity.SystemRouter;
 import com.bbs.auth.service.SystemRouterService;
 import com.bbs.auth.mapper.SystemRouterMapper;
 import com.bbs.auth.service.UserService;
 import com.github.yulichang.base.MPJBaseServiceImpl;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -40,6 +44,29 @@ public class SystemRouterServiceImpl extends MPJBaseServiceImpl<SystemRouterMapp
     }
 
     @Override
+    public List<SystemRouter> searchBySystemAndRoleId(Long systemId, Long roleId) {
+        Boolean loginUserNotIsAdmin = userService.loginUserNotIsAdmin();
+        return selectJoinList(SystemRouter.class, new MPJLambdaWrapper<SystemRouter>()
+                .selectAll(SystemRouter.class)
+                .leftJoin(RoleMenu.class, on -> on
+                        .eq(RoleMenu::getMenuId, SystemRouter::getId)
+                        .eq(RoleMenu::getRoleId, roleId)
+                )
+                .selectAssociation(RoleMenu.class, SystemRouter::getRoleMenu)
+                .eq(SystemRouter::getSystemId, systemId)
+                .eq(SystemRouter::getState, INTEGER_ONE)
+                .eq(loginUserNotIsAdmin, SystemRouter::getIsAdmin, 0)
+        );
+    }
+
+    @Override
+    public SearchRoleMenuVO searchTreeBySystemAndRoleId(Long systemId, Long roleId) {
+        List<SystemRouter> routers = searchBySystemAndRoleId(systemId, roleId);
+        List<Long> menuIdList = routers.stream().filter(systemRouter -> nonNull(systemRouter.getRoleMenu())).map(SystemRouter::getId).collect(Collectors.toList());
+        return new SearchRoleMenuVO(toTree(routers), menuIdList);
+    }
+
+    @Override
     public List<Tree<Long>> toTree(List<SystemRouter> routers) {
         TreeNodeConfig treeNodeConfig = new TreeNodeConfig();
         treeNodeConfig.setDeep(5);
@@ -54,19 +81,26 @@ public class SystemRouterServiceImpl extends MPJBaseServiceImpl<SystemRouterMapp
                 tree.setName(router.getCode());
                 tree.putExtra("code", router.getCode());
 
-                if(isNotBlank(router.getIconName())) tree.putExtra("iconName", router.getIconName());
-                if(isNotBlank(router.getTitle())) tree.putExtra("title", router.getTitle());
-                if(nonNull(router.getType())) tree.putExtra("type", router.getType());
-                if(nonNull(router.getSystemId())) tree.putExtra("systemId", router.getSystemId());
-                if(isNotBlank(router.getPath())) tree.putExtra("path", router.getPath());
-                if(isNotBlank(router.getComponentPath())) tree.putExtra("componentPath", router.getComponentPath());
+                if(isNotBlank(router.getIconName())) {
+                    tree.putExtra("iconName", router.getIconName());
+                }
+                if(isNotBlank(router.getTitle())) {
+                    tree.putExtra("title", router.getTitle());
+                }
+                if(nonNull(router.getType())) {
+                    tree.putExtra("type", router.getType());
+                }
+                if(nonNull(router.getSystemId())) {
+                    tree.putExtra("systemId", router.getSystemId());
+                }
+                if(isNotBlank(router.getPath())) {
+                    tree.putExtra("path", router.getPath());
+                }
+                if(isNotBlank(router.getComponentPath())) {
+                    tree.putExtra("componentPath", router.getComponentPath());
+                }
             }
         });
-    }
-
-    @Override
-    public List<Tree<Long>> searchTreeBySystemId(Long systemId) {
-        return toTree(searchBySystemId(systemId));
     }
 }
 

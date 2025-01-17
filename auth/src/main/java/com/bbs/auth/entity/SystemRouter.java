@@ -9,6 +9,7 @@ import lombok.Data;
 
 /**
  * 路由：元数据
+ * @author ext.luchenlin5
  * @TableName system_router
  */
 @TableName(value ="back_system_router")
@@ -65,6 +66,9 @@ public class SystemRouter implements Serializable {
     @TableField(value = "icon_name")
     private String iconName;
 
+    @TableField(value = "state")
+    private Integer state;
+
     /**
      * 是否需要管理员权限
      */
@@ -76,6 +80,9 @@ public class SystemRouter implements Serializable {
 
     @TableField(exist = false)
     private System system;
+
+    @TableField(exist = false)
+    private RoleMenu roleMenu;
 
     @TableField(exist = false)
     private SystemRouter parent;

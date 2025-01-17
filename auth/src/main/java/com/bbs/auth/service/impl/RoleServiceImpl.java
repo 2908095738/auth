@@ -1,8 +1,6 @@
 package com.bbs.auth.service.impl;
 
 
-import com.bbs.auth.controller.RoleController;
-import com.bbs.auth.entity.RoleGroup;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.auth.entity.Role;
 import com.bbs.auth.entity.System;
@@ -12,8 +10,6 @@ import com.bbs.Result;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.stereotype.Service;
-
-import static java.util.Objects.isNull;
 
 /**
  *
@@ -31,6 +27,16 @@ public class RoleServiceImpl extends MPJBaseServiceImpl<RoleMapper, Role>
                 .selectAssociation(System.class, Role::getSystem)
                 .eq(Role::getId, param.getId())
         ));
+    }
+
+    @Override
+    public Role search(Long id) {
+        return selectJoinOne(Role.class, new MPJLambdaWrapper<Role>()
+                .selectAll(Role.class)
+                .leftJoin(System.class, System::getCode, Role::getSystemCode)
+                .selectAssociation(System.class, Role::getSystem)
+                .eq(Role::getId, id)
+        );
     }
 
     @Override
