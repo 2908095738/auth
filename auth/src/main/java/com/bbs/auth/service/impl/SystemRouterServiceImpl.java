@@ -4,7 +4,7 @@ import cn.hutool.core.lang.tree.Tree;
 import cn.hutool.core.lang.tree.TreeNodeConfig;
 import cn.hutool.core.lang.tree.TreeUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.bbs.auth.app.role.system.SearchRoleMenuVO;
+import com.bbs.auth.app.rbac.role.SearchRoleAllMenu;
 import com.bbs.auth.entity.RoleMenu;
 import com.bbs.auth.entity.SystemRouter;
 import com.bbs.auth.service.SystemRouterService;
@@ -60,10 +60,10 @@ public class SystemRouterServiceImpl extends MPJBaseServiceImpl<SystemRouterMapp
     }
 
     @Override
-    public SearchRoleMenuVO searchTreeBySystemAndRoleId(Long systemId, Long roleId) {
+    public SearchRoleAllMenu.VO searchTreeBySystemAndRoleId(Long systemId, Long roleId) {
         List<SystemRouter> routers = searchBySystemAndRoleId(systemId, roleId);
         List<Long> menuIdList = routers.stream().filter(systemRouter -> nonNull(systemRouter.getRoleMenu())).map(SystemRouter::getId).collect(Collectors.toList());
-        return new SearchRoleMenuVO(toTree(routers), menuIdList);
+        return new SearchRoleAllMenu.VO(toTree(routers), menuIdList);
     }
 
     @Override

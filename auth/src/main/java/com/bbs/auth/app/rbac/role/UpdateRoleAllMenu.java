@@ -1,24 +1,31 @@
-package com.bbs.auth.app.role.system;
+package com.bbs.auth.app.rbac.role;
 
 import com.bbs.Result;
-import com.bbs.auth.entity.Role;
+import com.bbs.auth.entity.rbac.Role;
 import com.bbs.auth.entity.RoleMenu;
 import com.bbs.auth.service.RoleMenuService;
 import com.bbs.auth.service.RoleService;
 import com.bbs.auth.service.SystemRouterService;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 /**
- * @author lcl
+ * 更新角色的全部权限
+ * @author ext.luchenlin5
  */
 @RestController
-public class SearchRoleMenu {
+public class UpdateRoleAllMenu {
 
     @Resource
     private RoleService roleService;
@@ -29,15 +36,19 @@ public class SearchRoleMenu {
     @Resource
     private RoleMenuService roleMenuService;
 
-    @GetMapping("/role/menu")
-    public Result<SearchRoleMenuVO> search(@RequestParam Long roleId) {
-        Role role = roleService.search(roleId);
-        return Result.success(systemRouterService.searchTreeBySystemAndRoleId(role.getSystem().getId(), roleId));
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Param {
+
+        private Long roleId;
+
+        private List<Long> menuIds;
     }
 
     @PostMapping("/role/menu")
     @Transactional
-    public Result<Boolean> edit(@RequestBody EditRoleMenuParam param) {
+    public Result<Boolean> edit(@RequestBody Param param) {
         Role role = roleService.search(param.getRoleId());
         // 如果传输的是部分菜单id，则先删除该角色下所有的菜单，再新增
         // 如果传输的时空集，则删除该角色所有的菜单

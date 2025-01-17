@@ -2,7 +2,7 @@ package com.bbs.auth.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
-import com.bbs.auth.entity.Role;
+import com.bbs.auth.entity.rbac.Role;
 import com.bbs.auth.service.RoleResourceService;
 import com.bbs.auth.service.RoleService;
 import com.bbs.auth.service.SystemService;
@@ -55,7 +55,7 @@ public class RoleController {
 
     @GetMapping("/page")
     public Result<Page<Role>> queryRolePage(@RequestParam Integer current, @RequestParam Integer size){
-        return Result.success(roleService.searchJoinSystem(current, size));
+        return Result.success(roleService.searchJoinSystemPage(current, size));
     }
 
 

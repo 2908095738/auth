@@ -1,8 +1,9 @@
-package com.bbs.auth.entity;
+package com.bbs.auth.entity.rbac;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.bbs.auth.entity.System;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -12,7 +13,7 @@ import java.io.Serializable;
  * 角色
  * @TableName role
  */
-@TableName(value ="role")
+@TableName(value ="rbac_role")
 @Data
 @Accessors(chain = true)
 public class Role implements Serializable {
