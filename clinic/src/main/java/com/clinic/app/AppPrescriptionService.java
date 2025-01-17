@@ -17,7 +17,7 @@ public interface AppPrescriptionService {
 
     Result<IPage<PrescriptionDto>> selectOr(Long dossierId, Long patientId, Integer current, Integer size);
 
-    List<PrescriptionDto> selectByIds(Long id, List<Long> dossierIds);
+    List<PrescriptionDto> selectByIds(List<Long> dossierIds);
 
     PrescriptionDto getByPayId(Long payId);
 

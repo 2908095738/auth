@@ -160,6 +160,7 @@ public class ReceptionOver {
      * @param dossierName    病人姓名
      */
     private void sendDrug(Long prescriptionId, Integer sexStatus, Long phone, BigDecimal fee, Long admissId, Long payId, String dossierName) throws IOException {
+        Long userId = LoginUser.getId();
         List<PrescriptionDrug> drugList = getDrugList(prescriptionId);
         Map<String, Object> map = new HashMap<>();
 
@@ -178,13 +179,13 @@ public class ReceptionOver {
         String drugJsonStr = getJsonByDrug(map,prescriptionId);
 
         redis.hashSet(
-                RedisKeys.DRUG_OPEN_BY_ID.key(LoginUser.getId()),
+                RedisKeys.DRUG_OPEN_BY_ID.key(userId),
                 prescriptionId.toString(),
                 drugJsonStr);
 
-        redis.expire(RedisKeys.DRUG_OPEN_BY_ID.key(LoginUser.getId()), NumberUtils.INTEGER_ONE, TimeUnit.DAYS);
+        redis.expire(RedisKeys.DRUG_OPEN_BY_ID.key(userId), NumberUtils.INTEGER_ONE, TimeUnit.DAYS);
 
-        webSocket.sendMessageTo(drugJsonStr, LoginUser.getId());
+        webSocket.sendMessageTo(drugJsonStr, userId);
     }
 
     /**

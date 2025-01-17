@@ -5,6 +5,7 @@ import com.clinic.dto.param.RecordAdmissionLogParam;
 import com.clinic.dto.param.SearchAdmissionParam;
 import com.clinic.dto.vo.PatientClinicVo;
 import com.clinic.entity.AdmissionLog;
+import com.clinic.entity.Patient;
 import com.github.yulichang.base.MPJBaseService;
 
 import java.text.ParseException;
@@ -16,6 +17,10 @@ import java.util.List;
 * @createDate 2023-11-03 18:41:33
 */
 public interface AdmissionLogService extends MPJBaseService<AdmissionLog> {
+
+    Long save(RecordAdmissionLogParam param);
+
+    Long saveLogFormAddPatient(Patient patient);
 
     Page<AdmissionLog> search(SearchAdmissionParam param) throws ParseException;
 

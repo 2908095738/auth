@@ -91,9 +91,9 @@ public class PatientCallbackJob {
      * 创建回访任务
      */
     public void setCallbackJon(Long patient, PatientCallbackTypeEnum callbackType, Date callbackDate, Object methodReference, Object... args) {
-        Long loginUserId = LoginUser.getId();
+//        Long loginUserId = LoginUser.getId();
         /// 转换方法引用为全限定名
         String methodReferenceStr = MethodReferenceUtils.convertMethodReferenceToQualifiedName(methodReference);
-        patientCallbackService.save(new PatientCallback(loginUserId, patient, callbackType.getCode(), methodReferenceStr, JSONObject.toJSONString(args), callbackDate));
+        patientCallbackService.save(new PatientCallback(patient, callbackType.getCode(), methodReferenceStr, JSONObject.toJSONString(args), callbackDate));
     }
 }

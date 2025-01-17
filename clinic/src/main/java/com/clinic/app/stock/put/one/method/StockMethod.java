@@ -34,15 +34,15 @@ public class StockMethod {
         return SpringUtil.getBean(StockService.class);
     }
 
-    public static Stock fillUserID(Stock param) {
-        param.setUserId(LoginUser.getId());
-        return param;
-    }
+//    public static Stock fillUserID(Stock param) {
+//        param.setUserId(LoginUser.getId());
+//        return param;
+//    }
 
     public static StockBatch converterAndFill(PutStockParam param, Long stockID, Long drugNumber) {
         StockConverter converter = SpringUtil.getBean(StockConverter.class);
         return converter.toBatchEntity(param)
-                .setUserId(LoginUser.getId())
+//                .setUserId(LoginUser.getId())
                 .setStockId(stockID)
                 .setNumber(drugNumber)
                 .setTotalNumber(drugNumber)

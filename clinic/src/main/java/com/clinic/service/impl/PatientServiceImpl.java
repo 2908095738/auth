@@ -126,8 +126,7 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
             }
             wrapper = wrapper.like(NumberUtil.isNumber(name), Patient::getPhone, name);
         }
-        wrapper = wrapper.eq(Patient::getUserId, LoginUser.getId())
-                .groupBy(Patient::getId);
+        wrapper = wrapper.groupBy(Patient::getId);
         List<Patient> list = selectJoinList(Patient.class, wrapper);
         Page<Patient> page = PageUtil.paginateWithInfo(list, param.getCurrent(), param.getSize());
 
@@ -138,7 +137,7 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
     @Override
     public List<Patient> select(String val) {
         return lambdaQuery()
-                .eq(Patient::getUserId, LoginUser.getId())
+//                .eq(Patient::getUserId, LoginUser.getId())
                 .like(Patient::getName, val)
                 .or()
                 .like(Patient::getPhone, val)
@@ -150,7 +149,7 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
     @Override
     public List<Patient> selectListByPhone(String phone) {
         return lambdaQuery()
-                .eq(Patient::getUserId, LoginUser.getId())
+//                .eq(Patient::getUserId, LoginUser.getId())
                 .likeRight(Patient::getPhone, phone)
                 .list();
     }
@@ -158,7 +157,7 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
     @Override
     public Patient selectByPhone(String phone) {
         return lambdaQuery()
-                .eq(Patient::getUserId, LoginUser.getId())
+//                .eq(Patient::getUserId, LoginUser.getId())
                 .eq(Patient::getPhone, phone)
                 .one();
     }
@@ -171,7 +170,7 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
     @Override
     public List<Patient> selectByName(String name, Long userId) {
         return lambdaQuery()
-                .eq(Patient::getUserId, nonNull(userId) ? userId :LoginUser.getId())
+//                .eq(Patient::getUserId, nonNull(userId) ? userId :LoginUser.getId())
                 .like(Patient::getName, name)
                 .list();
     }

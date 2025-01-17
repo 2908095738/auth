@@ -62,7 +62,7 @@ public class LogController {
         try {
             if(isNull(param.getPatientId())) {
                 Patient patient = param.getPatient();
-                patient.setUserId(loginUser.getId());
+//                patient.setUserId(loginUser.getId());
                 patientService.save(patient);
                 param.setPatientId(patient.getId());
                 LogUtil.Operation.addPatient(patient.getId(), "{}添加病人：病人id={}", loginUser.getName(), patient.getId());
@@ -93,13 +93,13 @@ public class LogController {
     @EqualsAndHashCode(callSuper = true)
     public static class SearchOperationLogParam extends BaseParam {
 
-        private Long userId = LoginUser.getId();
+//        private Long userId = LoginUser.getId();
     }
 
     @GetMapping("/log/operation")
     public Result<Page<OperationLog>> searchOperationLog(SearchOperationLogParam param) {
         return Result.success(operationLogService.lambdaQuery()
-                .eq(nonNull(param.userId), OperationLog::getUserId, param.userId)
+//                .eq(nonNull(param.userId), OperationLog::getUserId, param.userId)
                 .orderByDesc(OperationLog::getCreateTime)
                 .page(param.toPage())
         );

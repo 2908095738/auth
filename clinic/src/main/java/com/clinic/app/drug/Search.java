@@ -80,7 +80,7 @@ public class Search {
                 )
                 .selectAssociation(Stock.class , StockBatch::getName,ext->ext.result(Stock::getName))
                 .leftJoin(Stock.class, "st",Stock::getId, StockBatch::getStockId)
-                .eq(StockBatch::getUserId, LoginUser.getId())
+//                .eq(StockBatch::getUserId, LoginUser.getId())
                 ;
 
         if(StringUtils.isNotBlank(name)) {

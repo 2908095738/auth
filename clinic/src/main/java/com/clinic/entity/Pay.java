@@ -87,8 +87,8 @@ public class Pay implements Serializable {
     /**
      * 用户id
      */
-    @TableField(value = "creator")
-    private Long creator;
+    @TableField(value = "user_id")
+    private Long userId;
 
     /**
      * 病人编号
@@ -102,11 +102,10 @@ public class Pay implements Serializable {
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
-    public Pay(Long userId, Dossier dossier, Prescription prescription) {
+    public Pay(Dossier dossier, Prescription prescription) {
         this.prescriptionId = prescription.getId();
         this.dossierTime = dossier.getCreateTime()==null?new Date():dossier.getCreateTime();
         this.diagnosis = dossier.getDiagnosis();
-        this.creator = userId;
         this.fee = prescription.getPrice();
         this.patientId = prescription.getPatientId();
     }

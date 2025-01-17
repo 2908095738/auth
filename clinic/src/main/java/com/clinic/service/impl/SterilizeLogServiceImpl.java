@@ -40,7 +40,6 @@ public class SterilizeLogServiceImpl extends ServiceImpl<SterilizeLogMapper, Ste
     @Override
     public Result<Boolean> add(AddSterilizeLogParam param) {
         SterilizeLog sterilizeLog = converter.toSterilizeEntity(param);
-        sterilizeLog.setUserId(LoginUser.getId());
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             if(!save(sterilizeLog))throw new DbRuntimeException("添加失败！");
@@ -70,7 +69,6 @@ public class SterilizeLogServiceImpl extends ServiceImpl<SterilizeLogMapper, Ste
             }
         }
         wrapper
-                .eq(SterilizeLog::getUserId, LoginUser.get().getId())
                 .eq(SterilizeLog::getIsDelete, 0);
         return Result.success(wrapper.page(param.toPage()));
     }

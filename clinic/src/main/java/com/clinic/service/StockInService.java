@@ -19,7 +19,7 @@ public interface StockInService extends IService<StockIn> {
     StockIn saveBatch(String no, PutStockList param) throws DbRuntimeException;
 
 
-    Long save(String no, PutStockParam param, Long uid) throws DbRuntimeException;
+    Long save(String no, PutStockParam param) throws DbRuntimeException;
 
     Page<QueryStockInDto> query(QueryStockInParam param);
 }

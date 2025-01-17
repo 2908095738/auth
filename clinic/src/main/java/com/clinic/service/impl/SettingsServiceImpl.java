@@ -76,7 +76,6 @@ public class SettingsServiceImpl extends MPJBaseServiceImpl<SettingsMapper, Sett
     public Result<Boolean> add(AddSettingsParam param) {
         Settings settings = settingsConverter.toEntity(param);
         Long userId = LoginUser.getId();
-        settings.setUserId(userId);
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             settings.setInviteUid(api.getUidByInvite(param.getInviteCode()));
@@ -139,7 +138,7 @@ public class SettingsServiceImpl extends MPJBaseServiceImpl<SettingsMapper, Sett
         String str = redis.opsForValue().get(getKey(userId));
         //不存在再从数据库中取
         if(Objects.isNull(str)){
-            Settings one = lambdaQuery().eq(Settings::getUserId, userId).one();
+            Settings one = lambdaQuery().one();
             if(isNull(one)) return null;
             one.setBusinessDayList(JSON.parseArray(one.getBusinessDay(), String.class));
             one.setBusinessTimeList(getBusinessTime(one.getBusinessTime()));
@@ -162,7 +161,7 @@ public class SettingsServiceImpl extends MPJBaseServiceImpl<SettingsMapper, Sett
     public Map<String, Object> selectAddr() {
         Settings one = lambdaQuery()
                 .select(Settings::getProvinceId, Settings::getAddr)
-                .eq(Settings::getUserId, LoginUser.getId())
+//                .eq(Settings::getUserId, LoginUser.getId())
                 .one();
         return new HashMap<String, Object>(){{
             put("provinceId", one.getProvinceId());

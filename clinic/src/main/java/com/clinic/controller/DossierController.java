@@ -29,6 +29,6 @@ public class DossierController {
      */
     @GetMapping
     public Result<Page<Dossier>> selectDossier(String id, Integer current, Integer size){
-        return service.select(LoginUser.getId(), id, current, size);
+        return service.select( id, current, size);
     }
 }

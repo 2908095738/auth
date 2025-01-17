@@ -53,15 +53,15 @@ public class FeedbackController {
         Feedback feed = feedConverter.toEntity(param);
 
         boolean hasPhone = Objects.nonNull(param.getPhone());
-        Long userId = LoginUser.getId();
+//        Long userId = LoginUser.getId();
         if (!hasPhone) {
-            if (Objects.nonNull(userId)) {
-                feed.setUserId(userId);
+//            if (Objects.nonNull(userId)) {
+//                feed.setUserId(userId);
                 feed.setPhone(LoginUser.get().getPhone());
-            }
-        } else {
-            if (Objects.nonNull(userId))
-                feed.setUserId(userId);
+//            }
+//        } else {
+//            if (Objects.nonNull(userId))
+//                feed.setUserId(userId);
         }
 
         return Result.success(feedService.save(feed));

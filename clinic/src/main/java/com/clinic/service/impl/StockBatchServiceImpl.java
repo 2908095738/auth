@@ -39,7 +39,6 @@ public class StockBatchServiceImpl extends MPJBaseServiceImpl<StockBatchMapper, 
     @Override
     public List<StockBatch> searchByApprovalNumbers(List<String> approvalNumbers, List<String> batchNumbers) {
         return lambdaQuery()
-                .eq(StockBatch::getUserId, LoginUser.getId())
                 .in(StockBatch::getApprovalNumber, approvalNumbers)
                 .in(StockBatch::getBatchNumber, batchNumbers)
                 .list();
@@ -48,7 +47,7 @@ public class StockBatchServiceImpl extends MPJBaseServiceImpl<StockBatchMapper, 
     @Override
     public StockBatch searchByApprovalNumber(String approvalNumber) {
         return lambdaQuery()
-                .eq(StockBatch::getUserId, LoginUser.getId())
+//                .eq(StockBatch::getUserId, LoginUser.getId())
                 .eq(StockBatch::getApprovalNumber, approvalNumber)
                 .one();
     }
@@ -56,7 +55,7 @@ public class StockBatchServiceImpl extends MPJBaseServiceImpl<StockBatchMapper, 
     @Override
     public StockBatch getByApprovalNumberAndBatchNumber(String approvalNumber, String batchNumber) {
         return lambdaQuery()
-                .eq(StockBatch::getUserId, LoginUser.getId())
+//                .eq(StockBatch::getUserId, LoginUser.getId())
                 .eq(StockBatch::getApprovalNumber, approvalNumber)
                 .eq(StockBatch::getBatchNumber, batchNumber)
                 .one();
@@ -88,7 +87,7 @@ public class StockBatchServiceImpl extends MPJBaseServiceImpl<StockBatchMapper, 
                 .selectAssociation("t1", Stock.class, StockBatch::getStock)
                 .leftJoin(Stock.class, Stock::getId, StockBatch::getStockId)
                 .in(StockBatch::getId, params.getStockIDs())
-                .eq(StockBatch::getUserId, LoginUser.getId())
+//                .eq(StockBatch::getUserId, LoginUser.getId())
         ;
         return baseMapper.selectJoinList(StockBatch.class, wrapper);
     }
@@ -129,7 +128,7 @@ public class StockBatchServiceImpl extends MPJBaseServiceImpl<StockBatchMapper, 
         return selectJoinList(StockBatch.class, new MPJLambdaWrapper<StockBatch>()
                 .selectAll(StockBatch.class)
                 .innerJoin(Stock.class, Stock::getId, StockBatch::getStockId)
-                .eq(StockBatch::getUserId, nonNull(userId) ? userId : LoginUser.getId())
+//                .eq(StockBatch::getUserId, nonNull(userId) ? userId : LoginUser.getId())
                 .like(Stock::getName, val)
                 .or()
                 .like(Stock::getAlias, val)

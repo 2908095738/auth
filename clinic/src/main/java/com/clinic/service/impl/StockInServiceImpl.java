@@ -43,15 +43,15 @@ public class StockInServiceImpl extends ServiceImpl<StockInMapper, StockIn>
     @Override
     public StockIn saveBatch(String no, PutStockList param) throws DbRuntimeException {
         Long uid = LoginUser.getId();
-        StockIn stockIn = new StockIn(null, no, param.getTotalCost(), uid, param.getRemark(), null);
+        StockIn stockIn = new StockIn(null, no, param.getTotalCost(), param.getRemark(), null);
         if(save(stockIn)) return stockIn;
         log.error("药品入库【入库单】异常! stockInService::save(stockIn={}; param={}))", toJSONString(stockIn), toJSONString(param));
         throw new DbRuntimeException("药品入库【入库单】异常！");
     }
 
     @Override
-    public Long save(String no, PutStockParam param, Long uid) throws DbRuntimeException {
-        StockIn stockIn = new StockIn(null, no, param.getTotalCost(), uid, param.getRemark(), null);
+    public Long save(String no, PutStockParam param) throws DbRuntimeException {
+        StockIn stockIn = new StockIn(null, no, param.getTotalCost(), param.getRemark(), null);
         if(save(stockIn)) return stockIn.getId();
         log.error("药品入库【入库单】异常! stockInService::save(stockIn={}; param={}))", toJSONString(stockIn), toJSONString(param));
         throw new DbRuntimeException("药品入库【入库单】异常！");
@@ -64,7 +64,7 @@ public class StockInServiceImpl extends ServiceImpl<StockInMapper, StockIn>
                 .selectAll(StockIn.class)
                 .selectAssociation(StockInDrug.class, StockIn::getStockInDrugs)
                 .leftJoin(StockInDrug.class, StockInDrug::getStockInId, StockIn::getId)
-                .eq(StockIn::getUserId, LoginUser.getId())
+//                .eq(StockIn::getUserId, LoginUser.getId())
 
                 //药品名称或生产批号查询
                 .and(StrUtil.isNotBlank(param.getName()), e -> e

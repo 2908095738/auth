@@ -81,7 +81,6 @@ public class Add {
 
     private Boolean exec(AddRetailParams params) throws DatabaseException {
         RetailRecord retailRecord = converter.toEntity(params);
-        retailRecord.setUserId(LoginUser.getId());
 
         List<RetailDrugRecord> retailDrugRecords = converter.toEntity(params.getDrugList());
 

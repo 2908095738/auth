@@ -162,7 +162,7 @@ public class AdmissionLog implements Serializable {
     private static final long serialVersionUID = 1L;
 
 
-    public AdmissionLog(Patient patient, Long userId) {
+    public AdmissionLog(Patient patient) {
         this.name = patient.getName();
         this.sex = patient.getSex();
         this.age = patient.getAge();
@@ -170,16 +170,12 @@ public class AdmissionLog implements Serializable {
         this.address = patient.getAddress();
         this.birthDate = patient.getBirthDate();
         this.patientId = patient.getId();
-        this.userId = userId;
     }
 
     public AdmissionLog(RecordAdmissionLogParam param, Patient patient) {
         this.patientId = param.getPatientId();
         this.isFirst = param.getIsFirst();
-
-        this.userId = LoginUser.getId();
         this.state = AdmissionStateEnum.RUN;
-
         this.name = patient.getName();
         this.sex = patient.getSex();
         this.age = patient.getAge();

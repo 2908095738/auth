@@ -10,10 +10,6 @@ import java.text.ParseException;
 
 public interface AdmissionLogCache {
 
-    Page<AdmissionLog> search(SearchAdmissionParam param) throws InterruptedException, ParseException;
-
-    void remove();
-
     Long save(RecordAdmissionLogParam param);
 
     Long saveLogFormAddPatient(Patient patient);

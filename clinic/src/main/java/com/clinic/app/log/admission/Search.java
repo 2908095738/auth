@@ -70,7 +70,7 @@ public class Search extends MPJBaseServiceImpl<AdmissionLogMapper, AdmissionLog>
                 .map(this::joinPay)
                 .get();
         wrapper
-                .eq(AdmissionLog::getUserId, LoginUser.getId())
+//                .eq(AdmissionLog::getUserId, LoginUser.getId())
                 .eq(AdmissionLog::getId, param.getId())
                 .orderByDesc(AdmissionLog::getCreateTime)
         ;

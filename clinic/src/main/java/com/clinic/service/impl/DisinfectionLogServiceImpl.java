@@ -40,7 +40,6 @@ public class DisinfectionLogServiceImpl extends ServiceImpl<DisinfectionLogMappe
     @Override
     public Result<Boolean> add(@RequestBody @Valid  AddDisinfectionLogParam param) {
         DisinfectionLog log = converter.toDisinfectionEntity(param);
-        log.setUserId(LoginUser.getId());
         log.setTimeRange(DateUtil.format(param.getStartTimeRange(), "HH:mm:ss") + "~" + DateUtil.format(param.getEndTimeRange(), "HH:mm:ss"));
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
@@ -57,7 +56,7 @@ public class DisinfectionLogServiceImpl extends ServiceImpl<DisinfectionLogMappe
     @Override
     public Result<Page<DisinfectionLog>> search(SearchDisinfectionLogParam param) {
         LambdaQueryChainWrapper<DisinfectionLog> wrapper = lambdaQuery();
-        wrapper.eq(DisinfectionLog::getUserId, LoginUser.getId());
+//        wrapper.eq(DisinfectionLog::getUserId, LoginUser.getId());
         wrapper.eq(StrUtil.isNotBlank(param.getCreateTime()),DisinfectionLog::getCreateTime, param.getCreateTime());
         return Result.success(wrapper.page(param.toPage()));
     }

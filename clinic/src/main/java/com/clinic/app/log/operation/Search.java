@@ -53,7 +53,7 @@ public class Search {
             size = 10;
         }
         List<OperationLog> logs = operationLogService.lambdaQuery()
-                .eq(OperationLog::getUserId, LoginUser.getId())
+//                .eq(OperationLog::getUserId, LoginUser.getId())
                 .and(ObjUtil.isNotEmpty(patientId),o->o.eq(OperationLog::getPatientId, patientId).in(OperationLog::getServiceCode, Collections.singletonList(ADMISSION.getServiceCode())))
                 // 只筛选部分，对诊所医生有用的操作日志类型
                 .in(ObjUtil.isEmpty(patientId),OperationLog::getServiceCode, Arrays.asList(

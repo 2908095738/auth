@@ -43,7 +43,7 @@ public class RetailRecordServiceImpl extends ServiceImpl<RetailRecordMapper, Ret
                 .selectCollection("t1", RetailDrugRecord.class, RetailRecord::getRetailDrugRecords)
                 .leftJoin(RetailDrugRecord.class, RetailDrugRecord::getRetailId, RetailRecord::getId)
 
-                .eq(RetailRecord::getUserId, LoginUser.getId())
+//                .eq(RetailRecord::getUserId, LoginUser.getId())
                 .and(StringUtils.isNotBlank(val), ext -> ext
                         .like(RetailRecord::getName, val)
                         .or(NumberUtil.isNumber(val), ext2 -> ext2

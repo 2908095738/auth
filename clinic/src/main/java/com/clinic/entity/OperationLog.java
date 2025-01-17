@@ -117,7 +117,7 @@ public class OperationLog implements Serializable {
         this.location = location;
         this.service = service;
         this.about = about;
-        this.userId = LoginUser.getId();
+//        this.userId = LoginUser.getId();
         this.operation = operation;
         this.level = level.toInt();
         this.patientId = patientId;

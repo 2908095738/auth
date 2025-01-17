@@ -67,7 +67,6 @@ public class CountTow {
 
         Date now = new Date();
         List<Pay> currentDayFrees = payService.list(new LambdaQueryWrapper<Pay>()
-                .eq(Pay::getCreator, LoginUser.getId())
                 .and(ext -> ext
                         .ge(Pay::getCreateTime, DateUtil.beginOfDay(now))
                         .lt(Pay::getCreateTime, DateUtil.endOfDay(now))

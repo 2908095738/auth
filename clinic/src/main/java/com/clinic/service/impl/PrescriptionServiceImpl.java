@@ -66,13 +66,12 @@ public class PrescriptionServiceImpl extends MPJBaseServiceImpl<PrescriptionMapp
     private UnitCache unitCache;
 
     @Override
-    public IPage<PrescriptionDto> selectPage(Long id, Long dossierId, Long patientId, Integer current, Integer size) {
+    public IPage<PrescriptionDto> selectPage(Long dossierId, Long patientId, Integer current, Integer size) {
         return selectJoinListPage(new Page<>(current, size), PrescriptionDto.class,
                 new MPJLambdaWrapper<Prescription>()
                         .selectAll(Prescription.class)
                         .select(DossierPrescription::getDossierId)
                         .leftJoin(DossierPrescription.class, DossierPrescription::getPrescriptionId, Prescription::getId)
-                        .eq(nonNull(id),Prescription::getCreator, id)
                         .eq(nonNull(patientId), Prescription::getPatientId, patientId)
                         .eq(nonNull(dossierId), DossierPrescription::getDossierId, dossierId));
     }
@@ -86,13 +85,12 @@ public class PrescriptionServiceImpl extends MPJBaseServiceImpl<PrescriptionMapp
     }
 
     @Override
-    public List<PrescriptionDto> select(Long id, List<Long> dossierIds) {
+    public List<PrescriptionDto> select(List<Long> dossierIds) {
         return selectJoinList(PrescriptionDto.class,
                 new MPJLambdaWrapper<Prescription>()
                         .selectAll(Prescription.class)
                         .select(DossierPrescription::getDossierId)
                         .leftJoin(DossierPrescription.class, DossierPrescription::getPrescriptionId, Prescription::getId)
-                        .eq(Prescription::getCreator, id)
                         .in(nonNull(dossierIds), DossierPrescription::getDossierId, dossierIds));
     }
 
@@ -155,10 +153,10 @@ public class PrescriptionServiceImpl extends MPJBaseServiceImpl<PrescriptionMapp
 
                 .leftJoin(StockUnit.class, StockUnit::getBatchId, StockBatch::getId, ext -> ext
                         .selectCollection(StockUnit.class, StockBatch::getStockUnitList)
-                )
+                );
                 // 不再关联单位表，转而从缓存获取（unit.table）
 
-                .eq(Stock::getUserId, LoginUser.getId());
+//                .eq(Stock::getUserId, LoginUser.getId());
                 if(StringUtils.isNotBlank(drugName)){
                     if(isWord(drugName)){
                         String sql = FirstWordsSqlUtils.getSql(drugName);

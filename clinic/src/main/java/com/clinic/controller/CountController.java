@@ -52,7 +52,6 @@ public class CountController {
         // 库存不足
         StockServiceImpl.DrugExpiryGroup drugExpiryGroup = stockService.countAndUpdateDrugExpiryState();
         Map<String, List<AdmissionLog>> map = admissionLogService.list(new LambdaQueryWrapper<AdmissionLog>()
-                .eq(AdmissionLog::getUserId, LoginUser.getId())
                 .and(ext -> ext
                         .ge(AdmissionLog::getCreateTime, DateUtil.beginOfMonth(now))
                         .lt(AdmissionLog::getCreateTime, DateUtil.beginOfMonth(DateUtil.offsetMonth(now, INTEGER_ONE)))
@@ -92,7 +91,6 @@ public class CountController {
 
         // 本月销售额（柱状图数据）
         List<Pay> currentMonthPayList = payService.lambdaQuery()
-                .eq(Pay::getCreator, LoginUser.getId())
                 .and(ext -> ext
                         .ge(Pay::getUpdateTime, DateUtil.beginOfMonth(now))
                         .lt(Pay::getUpdateTime, DateUtil.beginOfMonth(DateUtil.offsetMonth(now, INTEGER_ONE)))
@@ -130,12 +128,10 @@ public class CountController {
         int stockUnderDrugNumber = drugExpiryGroup.getStockShortage().size();
         boolean existUnderStockDrug = stockUnderDrugNumber  > INTEGER_ZERO;
         boolean isDisinfection = disinfectionLogService.lambdaQuery()
-                .eq(DisinfectionLog::getUserId, LoginUser.getId())
                 .eq(DisinfectionLog::getCreateTime, now)
                 .exists();
 
         boolean isSterilize = sterilizeLogService.lambdaQuery()
-                .eq(SterilizeLog::getUserId, LoginUser.getId())
                 .eq(SterilizeLog::getCreateTime, now)
                 .exists();
         VO vo = new VO(

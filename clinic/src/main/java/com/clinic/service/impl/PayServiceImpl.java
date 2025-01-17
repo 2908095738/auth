@@ -33,7 +33,6 @@ public class PayServiceImpl extends MPJBaseServiceImpl<PayMapper, Pay>
 
     @Override
     public Page<PayAndRecordPageDto> selectPayAndRecordPageDto(GetPayParam param) {
-        Long uid = LoginUser.getId();
         return baseMapper.selectJoinPage(param.toPage(), PayAndRecordPageDto.class, new MPJLambdaWrapper<Pay>()
                 .select(Patient::getName, Patient::getSex, Patient::getAge, Patient::getAddress, Patient::getPhone)
                 .select(Pay::getDossierTime, Pay::getFee)
@@ -46,13 +45,11 @@ public class PayServiceImpl extends MPJBaseServiceImpl<PayMapper, Pay>
                 )
                 .eq(nonNull(param.getName()), Patient::getName, param.getName())
                 .eq(nonNull(param.getPhone()), Patient::getPhone, param.getPhone())
-                .eq(Pay::getCreator, uid
-                ));
+                );
     }
 
     @Override
     public List<PayAndRecordPageDto> selectPayAndRecordDto(GetPayParam param) {
-        Long uid = LoginUser.getId();
         return baseMapper.selectJoinList(PayAndRecordPageDto.class, new MPJLambdaWrapper<Pay>()
                 .select(Patient::getName, Patient::getSex, Patient::getAge, Patient::getAddress, Patient::getPhone)
                 .select(Pay::getDossierTime, Pay::getFee, Pay::getWay, Pay::getId, Pay::getState)
@@ -85,7 +82,6 @@ public class PayServiceImpl extends MPJBaseServiceImpl<PayMapper, Pay>
                         .or()
                         .like(nonNull(param.getAddress()), Patient::getAddress,param.getAddress())
                 )
-                .eq(Pay::getCreator, uid)
         );
     }
 
@@ -104,7 +100,6 @@ public class PayServiceImpl extends MPJBaseServiceImpl<PayMapper, Pay>
         return selectJoinList(Pay.class, new MPJLambdaWrapper<Pay>()
                 .selectAll(Pay.class)
                 .leftJoin(Patient.class, Patient::getId, Pay::getPatientId, ext -> ext.selectAssociation(Patient.class, Pay::getPatient))
-                .eq(Pay::getCreator, LoginUser.getId())
                 .eq(Pay::getState, 0));
     }
 }

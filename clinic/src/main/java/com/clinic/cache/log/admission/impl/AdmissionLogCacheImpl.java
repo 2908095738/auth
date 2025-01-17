@@ -32,36 +32,6 @@ public class AdmissionLogCacheImpl implements AdmissionLogCache {
     @Resource(name = "protoStuffTemplate")
     private RedisTemplate<String, String> redis;
 
-    @Override
-    public Page<AdmissionLog> search(SearchAdmissionParam param) throws InterruptedException, ParseException {
-        Long id = LoginUser.getId();
-        int tryNum = 3;
-        while (tryNum > 0) {
-            Object resourceStr = redis.opsForHash().get(getKey(id),JSONUtil.toJsonPrettyStr(param));
-            if(Objects.nonNull(resourceStr)) {
-                return JSONUtil.toBean(resourceStr.toString(), new TypeReference<Page<AdmissionLog>>() {}, true);
-            }
-
-            if(tryAcquire(id)) {
-                Page<AdmissionLog> page = database.search(param);
-                redis.opsForHash().put(getKey(id),JSONUtil.toJsonPrettyStr(param), JSONUtil.toJsonPrettyStr(page));
-                if(!tryRelease(id)) {
-                    log.error("尝试删除分布式锁失败！key={}", getLockKey(id));
-                    throw new RedisException("尝试删除分布式锁失败！key=" + getLockKey(id));
-                }
-                return page;
-            }
-            tryNum--;
-            Thread.sleep(300);
-        }
-        return database.search(param);
-    }
-
-    @Override
-    public void remove() {
-        redis.delete(getKey(LoginUser.getId()));
-    }
-
 
     @Override
     public Long save(RecordAdmissionLogParam param) {

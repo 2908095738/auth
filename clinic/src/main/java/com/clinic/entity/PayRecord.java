@@ -64,18 +64,17 @@ public class PayRecord implements Serializable {
     /**
      * 用户id
      */
-    @TableField(value = "creator")
-    private Long creator;
+    @TableField(value = "user_id")
+    private Long userId;
 
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
 
-    public PayRecord(Long payId, BigDecimal price, Long userId) {
+    public PayRecord(Long payId, BigDecimal price) {
         this.payId = payId;
         this.name = "处方";
         this.fee = price;
-        this.creator = userId;
     }
 }

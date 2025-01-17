@@ -53,7 +53,6 @@ public class AppPayServiceImpl implements AppPayService {
     public Result<Page<PayRecordPatientDto>> selectPayPatient(PatientPayRecordParam param) {
         LambdaQueryChainWrapper<Pay> lambdaQuery = payService.lambdaQuery();
         lambdaQuery.eq(Objects.nonNull(param.getPatientId()), Pay::getPatientId,param.getPatientId())
-                .eq(Pay::getCreator, LoginUser.getId())
                 .orderByAsc(Pay::getState);
         Page<Pay> page = lambdaQuery.page(param.toPage());
         Page<PayRecordPatientDto> result = payConverter.ToDtoPage(page);
@@ -90,10 +89,9 @@ public class AppPayServiceImpl implements AppPayService {
      */
     @Override
     public Long createPayAndPrescriptionRecord(Prescription prescription, Dossier dossier) {
-        Long userId = LoginUser.getId();
-        Pay pay = new Pay(userId,dossier,prescription);
+        Pay pay = new Pay(dossier,prescription);
         boolean b = payService.save(pay);
-        boolean payDetails = payRecordService.save(new PayRecord(pay.getId(), prescription.getPrice(), userId));
+        boolean payDetails = payRecordService.save(new PayRecord(pay.getId(), prescription.getPrice()));
         return b&payDetails? pay.getId():null;
     }
 

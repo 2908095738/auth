@@ -17,6 +17,6 @@ public interface DossierService extends IService<Dossier> {
 
     Dossier createOrUpdateDossier(AdmissionLog admissionLog, SaveOrUpdateDossierParam param) throws BusinessException;
 
-    Result<Page<Dossier>> select(Long userId, String id, Integer current, Integer size);
+    Result<Page<Dossier>> select(String id, Integer current, Integer size);
 
 }

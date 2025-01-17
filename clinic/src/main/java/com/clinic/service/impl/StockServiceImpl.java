@@ -59,7 +59,7 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock>
 
     @Override
     public void saveBatch(PutStockList param) throws DbRuntimeException {
-        Long uid = LoginUser.getId();
+//        Long uid = LoginUser.getId();
 
         Map<Stock, List<StockBatch>> oldStock = new HashMap<>(), newStock = new HashMap<>();
 
@@ -81,16 +81,13 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock>
                         .setId(stockBatch.getId())
                         .setNumber(stockNumber)
                         .setTotalNumber(stockNumber)
-                        .setUserId(uid)
                 ;
 
                 stockBatchList.add(inputBatch);
             } else {
                 newStock.putIfAbsent(inputDrug, stockBatchList);
                 stockBatchList = newStock.get(inputDrug);
-                inputBatch
-                        .setTotalNumber(inputBatch.getNumber())
-                        .setUserId(uid);
+                inputBatch.setTotalNumber(inputBatch.getNumber());
                 stockBatchList.add(inputBatch);
             }
         }));
@@ -247,7 +244,7 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock>
                         .selectAll(StockBatch.class)
                         .selectAssociation(Stock.class, StockBatch::getName,ext->ext.result(Stock::getName))
                         .leftJoin(Stock.class, Stock::getId, StockBatch::getStockId)
-                        .eq(StockBatch::getUserId, LoginUser.getId())
+//                        .eq(StockBatch::getUserId, LoginUser.getId())
         );
 
         List<StockBatch> shortageStockDrugs = new ArrayList<>();                // 库存状态短缺

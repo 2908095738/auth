@@ -26,6 +26,7 @@ import com.clinic.service.PayRecordService;
 import com.clinic.util.LoginUser;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import io.lettuce.core.RedisException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -54,25 +55,22 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
 
     private PatientService patientService;
 
-    @Lazy
-    @Resource
-    private AdmissionLogCache admissionLogCache;
-
     @Resource
     private PayRecordService payRecordService;
+
+
+
 
     @Override
     public Page<AdmissionLog> search(SearchAdmissionParam param) throws ParseException {
         MPJLambdaWrapper<AdmissionLog> wrapper = new MPJLambdaWrapper<>(AdmissionLog.class);
-
         if(nonNull(param.getId())) {
             wrapper.eq(AdmissionLog::getId, param.getId());
         } else {
             addNameOrPhoneCondition(param, wrapper);
-
             if(nonNull(param.getCreateTime())) addDateCondition(param, wrapper);
         }
-        wrapper.orderByDesc(AdmissionLog::getCreateTime).eq(AdmissionLog::getUserId, LoginUser.getId());
+        wrapper.orderByDesc(AdmissionLog::getCreateTime);
         Page<AdmissionLog> page = wrapper.page(param.toPage());
         page.getRecords().forEach(item -> item.setCreateTimeStr(DateUtil.formatDateTime(item.getCreateTime())));
         return page;
@@ -128,14 +126,10 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
                 .map(this::joinPrescriptionDrugAndStockBatch)
                 .map(this::joinPay)
                 .get();
-        wrapper
-                .eq(AdmissionLog::getId, admissionId)
-                .orderByDesc(AdmissionLog::getCreateTime)
-        ;
-
+        wrapper.eq(AdmissionLog::getId, admissionId)
+                .orderByDesc(AdmissionLog::getCreateTime);
         AdmissionLog log = baseMapper.selectJoinOne(AdmissionLog.class, wrapper);
         if(nonNull(log.getPayId())) log.setPayRecords(payRecordService.getByPayId(log.getPayId()));
-
         return log;
     }
 
@@ -167,7 +161,6 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
                                 .collection(StockUnit.class, StockBatch::getStockUnitList, stockUnit ->
                                         stockUnit.association("unit2", Unit.class, StockUnit::getUnit)
                                 )
-
                         )
                         .association(Stock.class, PrescriptionDrug::getStock)
                 )
@@ -193,17 +186,30 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
 
     @Override
     public Long save(RecordAdmissionLogParam param) {
-        Long loginUID = LoginUser.getId();
         Patient patient = patientService.getById(param.getPatientId());
         if (StrUtil.isNotBlank(patient.getOpenId())) {
             patient.setOpenId(param.getOpenId());
             patientService.updateById(patient);
         }
         AdmissionLog log = new AdmissionLog(param, patient);
-        if(isNull(param.getIsFirst())) log.setIsFirst(computeIsFirst(param, loginUID));
+        if(isNull(param.getIsFirst())) log.setIsFirst(computeIsFirst(param));
         save(log);
         return log.getId();
     }
+
+    @Override
+    public Long save(RecordAdmissionLogParam param) {
+        Long save = database.save(param);
+        return save;
+    }
+
+    @Override
+    public Long saveLogFormAddPatient(Patient patient) {
+        AdmissionLog admissionLog = new AdmissionLog(patient);
+        database.save(admissionLog);
+        return admissionLog.getId();
+    }
+
 
     @Override
     public void update(Long id, Long prescriptionId, Long payId, Long dossierId,String diagnosis) {
@@ -213,14 +219,12 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
                 .set(AdmissionLog::getDossierId, dossierId)
                 .set(AdmissionLog::getDiagnosis, diagnosis)
                 .eq(AdmissionLog::getId, id).update();
-        admissionLogCache.remove();
     }
 
 
-    private Integer computeIsFirst(RecordAdmissionLogParam param, Long loginUID) {
+    private Integer computeIsFirst(RecordAdmissionLogParam param) {
         return (
                 lambdaQuery()
-                        .eq(AdmissionLog::getUserId, loginUID)
                         .eq(AdmissionLog::getPatientId, param.getPatientId())
                         .count() > 0
                 ) ? 1 : 0;

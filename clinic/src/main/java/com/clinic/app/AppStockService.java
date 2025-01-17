@@ -194,8 +194,7 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
                 .leftJoin(StockBatch.class, StockBatch::getStockId, Stock::getId)
                 .leftJoin(StockUnit.class, StockUnit::getBatchId, StockBatch::getId)
                 .leftJoin(Unit.class, Unit::getId, StockUnit::getUnitId)
-                .leftJoin(StockInDrug.class, StockInDrug::getApprovalNumber, StockBatch::getApprovalNumber)
-                .eq(StockBatch::getUserId, LoginUser.getId());
+                .leftJoin(StockInDrug.class, StockInDrug::getApprovalNumber, StockBatch::getApprovalNumber);
     }
 
     public Result queryStockIn(QueryStockInParam param) {
@@ -280,7 +279,7 @@ public class AppStockService extends ServiceImpl<StockMapper, Stock> {
         Map<String, List<StockBatch>> drugNameAndStockMap = param.getBatchList().stream().collect(Collectors.groupingBy(StockBatch::getName));
 
         List<Stock> drugs = drugNameAndStockMap.entrySet().stream()
-                .map(entry -> new Stock(LoginUser.getId(), entry.getKey(), entry.getValue()))
+                .map(entry -> new Stock(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
         param.setDrugs(drugs);
 

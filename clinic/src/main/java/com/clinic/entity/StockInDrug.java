@@ -207,6 +207,6 @@ public class StockInDrug implements Serializable {
         this.approvalNumber = approvalNumber;
         this.dosageForm = dosageForm;
         this.spec = spec;
-        this.userId = LoginUser.getId();
+//        this.userId = LoginUser.getId();
     }
 }
