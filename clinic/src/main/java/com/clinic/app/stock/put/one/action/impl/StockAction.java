@@ -43,7 +43,7 @@ public class StockAction implements AddStockAction, UpdateStockAction {
         if(nonNull(stock)) {    // 库存中，是否有存在，相同名称的药品（不同厂家/规格）
             return stock.getId();
         } else {
-            stockService().save(fillUserID(param));
+            stockService().save(param);
             return param.getId();
         }
     }

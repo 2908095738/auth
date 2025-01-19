@@ -48,11 +48,15 @@ public class DossierServiceImpl extends MPJBaseServiceImpl<DossierMapper, Dossie
         if(nonNull(param.getId())){
             Dossier dossierDB = getById(param.getId());
             Preconditions.checkArgument(nonNull(dossierDB), "病例不存在，可能已删除");
-            if(!updateById(dossier)) throw new BusinessException("更新病历失败！");
+            if(!updateById(dossier)) {
+                throw new BusinessException("更新病历失败！");
+            }
             LogUtil.Operation.updateDossier(dossierDB.getPatientId(), dossierDB.getId(), "{}修改病例：病例id={}", user.getName(), param.getId());
         }else{
             dossier.setPatientId(patientId);
-            if(!save(dossier)) throw new BusinessException("添加病历失败！");
+            if(!save(dossier)) {
+                throw new BusinessException("添加病历失败！");
+            }
             LogUtil.Operation.addDossier(patientId ,dossier.getId(), "{}添加病例：病例id={}, 门诊日志id={}", user.getName(), dossier.getId(), admissionID);
         }
         return dossier;

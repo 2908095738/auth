@@ -6,11 +6,7 @@ import com.clinic.dto.param.UpdateSettingsParam;
 import com.clinic.entity.Settings;
 import com.clinic.service.SettingsService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
@@ -24,6 +20,7 @@ public class SettingsController {
 
     @Resource
     private SettingsService service;
+
 
     /**
      * 添加设置

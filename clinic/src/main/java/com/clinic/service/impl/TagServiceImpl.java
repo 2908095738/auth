@@ -20,10 +20,8 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     public Result selectTag(Tag tag) {
         Long id = tag.getId();
         String name = tag.getName();
-        Long userId = tag.getUserId();
         return Result.success(
                 lambdaQuery()
-                        .eq(Tag::getUserId,userId)
                         .eq(nonNull(id), Tag::getId, id)
                         .like(isNull(id) && StringUtils.isNotEmpty(name), Tag::getName, name)
                         .list()

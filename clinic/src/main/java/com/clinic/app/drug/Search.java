@@ -12,7 +12,6 @@ import com.clinic.enums.StockStateEnum;
 import com.clinic.service.DrugService;
 import com.clinic.service.SettingsService;
 import com.clinic.service.StockBatchService;
-import com.clinic.util.LoginUser;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
@@ -80,7 +79,6 @@ public class Search {
                 )
                 .selectAssociation(Stock.class , StockBatch::getName,ext->ext.result(Stock::getName))
                 .leftJoin(Stock.class, "st",Stock::getId, StockBatch::getStockId)
-//                .eq(StockBatch::getUserId, LoginUser.getId())
                 ;
 
         if(StringUtils.isNotBlank(name)) {

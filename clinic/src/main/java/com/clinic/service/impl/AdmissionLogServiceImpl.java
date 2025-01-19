@@ -3,30 +3,17 @@ package com.clinic.service.impl;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.clinic.cache.log.admission.AdmissionLogCache;
 import com.clinic.dto.param.RecordAdmissionLogParam;
 import com.clinic.dto.param.SearchAdmissionParam;
 import com.clinic.dto.vo.PatientClinicVo;
-import com.clinic.entity.AdmissionLog;
-import com.clinic.entity.Dossier;
-import com.clinic.entity.Patient;
-import com.clinic.entity.Pay;
-import com.clinic.entity.Prescription;
-import com.clinic.entity.PrescriptionDrug;
-import com.clinic.entity.Settings;
-import com.clinic.entity.Stock;
-import com.clinic.entity.StockBatch;
-import com.clinic.entity.StockUnit;
-import com.clinic.entity.Unit;
+import com.clinic.entity.*;
 import com.clinic.enums.AdmissionStateEnum;
 import com.clinic.mapper.AdmissionLogMapper;
 import com.clinic.service.AdmissionLogService;
 import com.clinic.service.PatientService;
 import com.clinic.service.PayRecordService;
-import com.clinic.util.LoginUser;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
-import io.lettuce.core.RedisException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -68,7 +55,9 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
             wrapper.eq(AdmissionLog::getId, param.getId());
         } else {
             addNameOrPhoneCondition(param, wrapper);
-            if(nonNull(param.getCreateTime())) addDateCondition(param, wrapper);
+            if(nonNull(param.getCreateTime())) {
+                addDateCondition(param, wrapper);
+            }
         }
         wrapper.orderByDesc(AdmissionLog::getCreateTime);
         Page<AdmissionLog> page = wrapper.page(param.toPage());
@@ -192,21 +181,17 @@ public class AdmissionLogServiceImpl extends MPJBaseServiceImpl<AdmissionLogMapp
             patientService.updateById(patient);
         }
         AdmissionLog log = new AdmissionLog(param, patient);
-        if(isNull(param.getIsFirst())) log.setIsFirst(computeIsFirst(param));
+        if(isNull(param.getIsFirst())) {
+            log.setIsFirst(computeIsFirst(param));
+        }
         save(log);
         return log.getId();
     }
 
     @Override
-    public Long save(RecordAdmissionLogParam param) {
-        Long save = database.save(param);
-        return save;
-    }
-
-    @Override
     public Long saveLogFormAddPatient(Patient patient) {
         AdmissionLog admissionLog = new AdmissionLog(patient);
-        database.save(admissionLog);
+        save(admissionLog);
         return admissionLog.getId();
     }
 

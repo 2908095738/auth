@@ -10,7 +10,6 @@ import com.bbs.util.PageUtil;
 import com.clinic.app.AppPayService;
 import com.clinic.app.AppPrescriptionService;
 import com.clinic.app.AppStockService;
-import com.clinic.cache.pay.PayCache;
 import com.clinic.converter.PayConverter;
 import com.clinic.dto.GetPayDto;
 import com.clinic.dto.PayAndRecordPageDto;
@@ -38,11 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.constraints.NotNull;
@@ -61,7 +56,6 @@ public class PayController {
     private final AdmissionLogService admissionLogService;
     private final AppPayService service;
 
-    private final PayCache payCache;
     private final PayConverter payConverter;
 
     private final AppStockService appStockService;
@@ -94,8 +88,8 @@ public class PayController {
      * 病人收费记录
      */
     @GetMapping("/pay/patient")
-    public Result<Page<PayRecordPatientDto>> getPayPatient(PatientPayRecordParam param) throws InterruptedException {
-        return payCache.selectPayPatient(param);
+    public Result<Page<PayRecordPatientDto>> getPayPatient(PatientPayRecordParam param) {
+        return service.selectPayPatient(param);
     }
 
     @Data
@@ -115,8 +109,12 @@ public class PayController {
      */
     @GetMapping("/pay/all/is")
     public Result<Page<PayAndRecordPageDto>> getPay(AllIsPayParam param){
-        if(isNull(param.getCurrent())) param.setCurrent(INTEGER_ONE);
-        if(isNull(param.getSize())) param.setCurrent(10);
+        if(isNull(param.getCurrent())) {
+            param.setCurrent(INTEGER_ONE);
+        }
+        if(isNull(param.getSize())) {
+            param.setCurrent(10);
+        }
         GetPayParam getPayParam = new GetPayParam(new Page<>(param.getCurrent(), param.getSize()), param.getVal(), param.getStartDate(), param.getEndDate());
         getPayParam.setState(INTEGER_ONE);
         List<PayAndRecordPageDto> data = payService.selectPayAndRecordDto(getPayParam);
@@ -161,14 +159,20 @@ public class PayController {
             //收费-扣库存
             param.setState(PayStateEnum.IS_PAY.getCode());
             //修改收费
-            if(!service.updatePayById(param))throw new RuntimeException();
+            if(!service.updatePayById(param)){
+                throw new RuntimeException();
+            }
             //根据支付id,查出处方数据
             PrescriptionDto prescriptionDto = appPrescriptionService.getByPayId(param.getId());
             Long patientId = prescriptionDto.getPatientId();
             //根据处方数据，扣库存
-            if(!appStockService.updateNum(prescriptionDto))throw new RuntimeException();
+            if(!appStockService.updateNum(prescriptionDto)){
+                throw new RuntimeException();
+            }
             //修改门诊日志状态
-            if (!admissionLogService.updateEndState(param.getAdmissionId()))throw new RuntimeException();
+            if (!admissionLogService.updateEndState(param.getAdmissionId())){
+                throw new RuntimeException();
+            }
             LogUtil.Operation.pay(patientId, param.getAdmissionId(), "{}就诊收费-修改收费状态和收费方式：收费id={}, 处方id={}", LoginUser.get().getName(), param.getId(), prescriptionDto.getId());
             // 发送微信消息
             if(StrUtil.isNotBlank(admissionLog.getOpenId())){
@@ -212,10 +216,9 @@ public class PayController {
     }
 
     @Autowired
-    public PayController(AdmissionLogService admissionLogService, AppPayService service, PayCache payCache, PayConverter payConverter, AppStockService appStockService, AppPrescriptionService appPrescriptionService, DataSourceTransactionManager transactionManager, TransactionDefinition transactionDefinition) {
+    public PayController(AdmissionLogService admissionLogService, AppPayService service, PayConverter payConverter, AppStockService appStockService, AppPrescriptionService appPrescriptionService, DataSourceTransactionManager transactionManager, TransactionDefinition transactionDefinition) {
         this.admissionLogService = admissionLogService;
         this.service = service;
-        this.payCache = payCache;
         this.payConverter = payConverter;
         this.appStockService = appStockService;
         this.appPrescriptionService = appPrescriptionService;

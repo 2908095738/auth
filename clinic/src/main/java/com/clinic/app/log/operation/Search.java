@@ -1,6 +1,5 @@
 package com.clinic.app.log.operation;
 
-import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
@@ -8,7 +7,6 @@ import com.clinic.entity.OperationLog;
 import com.clinic.entity.Patient;
 import com.clinic.service.OperationLogService;
 import com.clinic.service.PatientService;
-import com.clinic.util.LoginUser;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,14 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static cn.hutool.core.date.DateUtil.*;
@@ -53,7 +44,6 @@ public class Search {
             size = 10;
         }
         List<OperationLog> logs = operationLogService.lambdaQuery()
-//                .eq(OperationLog::getUserId, LoginUser.getId())
                 .and(ObjUtil.isNotEmpty(patientId),o->o.eq(OperationLog::getPatientId, patientId).in(OperationLog::getServiceCode, Collections.singletonList(ADMISSION.getServiceCode())))
                 // 只筛选部分，对诊所医生有用的操作日志类型
                 .in(ObjUtil.isEmpty(patientId),OperationLog::getServiceCode, Arrays.asList(

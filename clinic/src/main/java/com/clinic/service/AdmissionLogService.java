@@ -18,8 +18,6 @@ import java.util.List;
 */
 public interface AdmissionLogService extends MPJBaseService<AdmissionLog> {
 
-    Long save(RecordAdmissionLogParam param);
-
     Long saveLogFormAddPatient(Patient patient);
 
     Page<AdmissionLog> search(SearchAdmissionParam param) throws ParseException;

@@ -21,6 +21,8 @@ public interface SettingsService extends IService<Settings> {
 
     Settings getByUserId();
 
+
+
     Integer getUserSettingStockExpiryAlertMonth(Settings settings);
 
     Map<String, Object> selectAddr();

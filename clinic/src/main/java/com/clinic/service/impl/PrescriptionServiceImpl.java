@@ -11,21 +11,9 @@ import com.clinic.converter.StockConverter;
 import com.clinic.dto.PrescriptionDto;
 import com.clinic.dto.PrescriptionFileVo;
 import com.clinic.dto.vo.PrescriptionSearchDrugVO;
-import com.clinic.entity.AdmissionLog;
-import com.clinic.entity.Clinic;
-import com.clinic.entity.Dossier;
-import com.clinic.entity.DossierPrescription;
-import com.clinic.entity.Patient;
-import com.clinic.entity.Pay;
-import com.clinic.entity.Prescription;
-import com.clinic.entity.PrescriptionDrug;
-import com.clinic.entity.Stock;
-import com.clinic.entity.StockBatch;
-import com.clinic.entity.StockUnit;
-import com.clinic.entity.Unit;
+import com.clinic.entity.*;
 import com.clinic.mapper.PrescriptionMapper;
 import com.clinic.service.PrescriptionService;
-import com.clinic.util.LoginUser;
 import com.deepoove.poi.XWPFTemplate;
 import com.deepoove.poi.config.Configure;
 import com.deepoove.poi.plugin.table.LoopRowTableRenderPolicy;
@@ -155,8 +143,6 @@ public class PrescriptionServiceImpl extends MPJBaseServiceImpl<PrescriptionMapp
                         .selectCollection(StockUnit.class, StockBatch::getStockUnitList)
                 );
                 // 不再关联单位表，转而从缓存获取（unit.table）
-
-//                .eq(Stock::getUserId, LoginUser.getId());
                 if(StringUtils.isNotBlank(drugName)){
                     if(isWord(drugName)){
                         String sql = FirstWordsSqlUtils.getSql(drugName);

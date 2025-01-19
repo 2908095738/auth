@@ -103,8 +103,8 @@ public class UserDelete {
             admissionLogService.lambdaUpdate().eq(AdmissionLog::getUserId, loginUserId).remove();   // 删接诊日志
             operationLogService.lambdaUpdate().eq(OperationLog::getUserId, loginUserId).remove();   // 删操作日志
             patientService.lambdaUpdate().eq(Patient::getUserId, loginUserId).remove(); //删病人信息
-            payService.lambdaUpdate().eq(Pay::getCreator, loginUserId).remove(); //删病人支付记录
-            payRecordService.lambdaUpdate().eq(PayRecord::getCreator, loginUserId).remove();    //删除病人其他收费记录
+            payService.lambdaUpdate().eq(Pay::getUserId, loginUserId).remove(); //删病人支付记录
+            payRecordService.lambdaUpdate().eq(PayRecord::getUserId, loginUserId).remove();    //删除病人其他收费记录
 
             List<RetailRecord> retailRecords = retailRecordService.lambdaQuery().eq(RetailRecord::getUserId, loginUserId).list();
             Set<Long> retailRecordIds = retailRecords.stream().map(RetailRecord::getId).collect(Collectors.toSet());

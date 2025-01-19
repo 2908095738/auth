@@ -7,7 +7,6 @@ import com.bbs.Result;
 import com.clinic.app.AppPayService;
 import com.clinic.app.AppPrescriptionService;
 import com.clinic.app.impl.AppPrescriptionServiceImpl;
-import com.clinic.cache.pay.PayCache;
 import com.clinic.converter.PrescriptionConverter;
 import com.clinic.entity.*;
 import com.clinic.enums.RedisKeys;
@@ -33,7 +32,10 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static cn.hutool.core.util.ObjectUtil.isNotNull;
@@ -66,8 +68,6 @@ public class ReceptionOver {
     private PrescriptionDrugService prescriptionDrugService;
     @Resource
     private DossierPrescriptionService dossierPrescriptionService;
-    @Resource
-    private PayCache payCache;
     @Resource
     private AppPrescriptionService appPrescriptionService;
     @Resource
@@ -142,8 +142,9 @@ public class ReceptionOver {
                 new MPJLambdaWrapper<PrescriptionDrug>()
                         .eq(PrescriptionDrug::getPrescriptionId, presId));
 
-        if (ObjectUtils.isEmpty(resultList))
+        if (ObjectUtils.isEmpty(resultList)) {
             resultList = Collections.emptyList();
+        }
 
         return resultList;
     }
@@ -174,7 +175,7 @@ public class ReceptionOver {
         map.put("admissId", admissId);
         map.put("payId", payId);
         map.put("payStatus", INTEGER_ZERO);
-        map.put("time", new Date().getTime());
+        map.put("time", System.currentTimeMillis());
 
         String drugJsonStr = getJsonByDrug(map,prescriptionId);
 
@@ -199,8 +200,10 @@ public class ReceptionOver {
         if (!drugOpt.isEmpty()) {
             drugMap.put("payStatus", JSONUtil.parseObj(drugOpt.get()).get("payStatus"));
             return JSONUtil.toJsonStr(drugMap);
-        } else
+        } else{
             return JSONUtil.toJsonStr(drugMap);
+        }
+
     }
 
     private void recordLog(AdmissionLog admissionLog) {
@@ -232,7 +235,7 @@ public class ReceptionOver {
     }
 
     private Long createPayRecord(Prescription prescription, Dossier dossier) {
-        return payCache.createPayAndPrescriptionRecord(prescription,dossier);
+        return appPayService.createPayAndPrescriptionRecord(prescription,dossier);
     }
 
     /**

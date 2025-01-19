@@ -8,17 +8,12 @@ import com.clinic.entity.Settings;
 import com.clinic.entity.Stock;
 import com.clinic.entity.StockBatch;
 import com.clinic.entity.StockUnit;
-import com.clinic.enums.DrugExpiryStateEnum;
-import com.clinic.enums.DrugStockRule;
-import com.clinic.enums.DrugTypeEnum;
-import com.clinic.enums.StockStateCountTypeEnum;
-import com.clinic.enums.StockStateEnum;
+import com.clinic.enums.*;
 import com.clinic.mapper.StockMapper;
 import com.clinic.service.SettingsService;
 import com.clinic.service.StockBatchService;
 import com.clinic.service.StockService;
 import com.clinic.service.StockUnitService;
-import com.clinic.util.LoginUser;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -28,11 +23,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.clinic.enums.DrugExpiryStateEnum.*;
@@ -59,8 +50,6 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock>
 
     @Override
     public void saveBatch(PutStockList param) throws DbRuntimeException {
-//        Long uid = LoginUser.getId();
-
         Map<Stock, List<StockBatch>> oldStock = new HashMap<>(), newStock = new HashMap<>();
 
         List<StockBatch> stockBatches = batchService.searchByApprovalNumbers(param.getApprovalNumbers(), param.getBatchNumbers());
@@ -244,7 +233,6 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock>
                         .selectAll(StockBatch.class)
                         .selectAssociation(Stock.class, StockBatch::getName,ext->ext.result(Stock::getName))
                         .leftJoin(Stock.class, Stock::getId, StockBatch::getStockId)
-//                        .eq(StockBatch::getUserId, LoginUser.getId())
         );
 
         List<StockBatch> shortageStockDrugs = new ArrayList<>();                // 库存状态短缺

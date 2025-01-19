@@ -34,10 +34,11 @@ public class DiagnosisProofServiceImpl extends MPJBaseServiceImpl<DiagnosisProof
     private TransactionDefinition transactionDefinition;
     @Override
     public Result<Long> add(DiagnosisProof param) {
-//        param.setUserId(LoginUser.getId());
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
-            if(!save(param))throw new DbRuntimeException("添加失败！");
+            if(!save(param)){
+                throw new DbRuntimeException("添加失败！");
+            }
             LogUtil.Operation.addDiagnosisProof(null, param.getId(), "{}新增一条诊断证明：证明id={}", LoginUser.get().getName(), param.getId());
             transactionManager.commit(transaction);
             return Result.success(param.getId());
@@ -50,7 +51,6 @@ public class DiagnosisProofServiceImpl extends MPJBaseServiceImpl<DiagnosisProof
     @Override
     public Result<Page<DiagnosisProof>> queryList(QueryDiagnosisProofParam param) {
         return Result.success(lambdaQuery()
-//                .eq(DiagnosisProof::getUserId,LoginUser.getId())
                 .likeRight(StringUtils.isNotBlank(param.getVal()),DiagnosisProof::getName,param.getVal())
                 .eq(StringUtils.isNotBlank(param.getCreateTime()),DiagnosisProof::getVisitDate, param.getCreateTime())
                 .page(param.toPage()));

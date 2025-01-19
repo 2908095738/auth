@@ -109,8 +109,9 @@ public class RedisUtil {
         Map<String, String> resultMap = new HashMap<>();
 
         Map<Object, Object> tmpMap = redis.opsForHash().entries(key);
-        if (tmpMap.isEmpty())
+        if (tmpMap.isEmpty()) {
             return Opt.ofNullable(resultMap);
+        }
 
         tmpMap.forEach((k, v) -> {
             resultMap.put(String.valueOf(k), String.valueOf(v));
@@ -121,8 +122,9 @@ public class RedisUtil {
 
     public Opt<String> hashGet(String key, String hashKey) {
         Object value = redis.opsForHash().get(key, hashKey);
-        if (ObjectUtils.isEmpty(value))
+        if (ObjectUtils.isEmpty(value)) {
             return Opt.empty();
+        }
         return Opt.of(String.valueOf(value));
     }
 
@@ -136,18 +138,22 @@ public class RedisUtil {
 
     public boolean listLPush(String key, List<String> valueList) {
         Long size = redis.opsForList().leftPushAll(key, valueList.toArray(new String[valueList.size()]));
-        if (size > NumberUtils.LONG_ZERO)
+        if (size > NumberUtils.LONG_ZERO) {
             return true;
-        else
+        }
+        else {
             return false;
+        }
     }
 
     public boolean listRPush(String key, List<String> valueList) {
         Long size = redis.opsForList().rightPushAll(key, valueList.toArray(new String[valueList.size()]));
-        if (size > NumberUtils.LONG_ZERO)
+        if (size > NumberUtils.LONG_ZERO) {
             return true;
-        else
+        }
+        else {
             return false;
+        }
     }
 
     public List<String> listGet(String key) {
@@ -155,8 +161,9 @@ public class RedisUtil {
         Long size = tmpList.size(key);
         List<String> resultList = tmpList.range(key, NumberUtils.INTEGER_ZERO, size - NumberUtils.INTEGER_ONE);
 
-        if (ObjectUtils.isEmpty(resultList))
+        if (ObjectUtils.isEmpty(resultList)) {
             return Collections.emptyList();
+        }
         return resultList;
     }
 

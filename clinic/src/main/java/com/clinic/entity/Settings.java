@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 诊所设置
@@ -121,6 +120,19 @@ public class Settings implements Serializable {
     @TableField(value = "is_pharmacy_pay")
     private Integer isPharmacyPay;
 
+
+    /**
+     * 当日时间戳
+     */
+    @TableField(exist = false)
+    private Long dayTime;
+
+    /**
+     * 手动修改营业状态的标识符
+     */
+    @TableField(exist = false)
+    private Boolean isWork;
+
     /**
      * 营业天数列表
      */
@@ -131,7 +143,7 @@ public class Settings implements Serializable {
      * 营业时间列表
      */
     @TableField(exist = false)
-    private List<Map<Integer, List<String>>> businessTimeList;
+    private List<List<String>> businessTimeList;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

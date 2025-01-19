@@ -56,7 +56,6 @@ public class DisinfectionLogServiceImpl extends ServiceImpl<DisinfectionLogMappe
     @Override
     public Result<Page<DisinfectionLog>> search(SearchDisinfectionLogParam param) {
         LambdaQueryChainWrapper<DisinfectionLog> wrapper = lambdaQuery();
-//        wrapper.eq(DisinfectionLog::getUserId, LoginUser.getId());
         wrapper.eq(StrUtil.isNotBlank(param.getCreateTime()),DisinfectionLog::getCreateTime, param.getCreateTime());
         return Result.success(wrapper.page(param.toPage()));
     }

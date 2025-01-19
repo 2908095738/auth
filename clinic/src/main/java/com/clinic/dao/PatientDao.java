@@ -6,7 +6,6 @@ import com.bbs.util.FirstWordsSqlUtils;
 import com.clinic.entity.Dossier;
 import com.clinic.entity.Patient;
 import com.clinic.mapper.PatientMapper;
-import com.clinic.util.LoginUser;
 import com.github.yulichang.toolkit.JoinWrappers;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
@@ -46,7 +45,6 @@ public class PatientDao extends ServiceImpl<PatientMapper, Patient> {
                 .select(Patient::getId)
                 .selectCount(Dossier::getId,Patient::getDossierNum)
                 .leftJoin(Dossier.class,Dossier::getPatientId,Patient::getId)
-//                .eq(Patient::getUserId, LoginUser.getId())
                 .eq(nonNull(sex), Patient::getSex, sex)
                 .eq(nonNull(age) && age >= 0 && age <= 120, Patient::getAge, age)
                 .likeRight(nonNull(phone) && phone.toString().length() <= 11, Patient::getPhone, phone)

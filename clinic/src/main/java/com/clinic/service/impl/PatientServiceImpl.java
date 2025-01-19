@@ -7,9 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
 import com.bbs.api.auth.User;
 import com.bbs.util.FirstWordsSqlUtils;
-import com.bbs.util.MyStringUtil;
 import com.bbs.util.PageUtil;
-import com.clinic.cache.log.admission.AdmissionLogCache;
 import com.clinic.converter.PatientConverter;
 import com.clinic.dao.PatientDao;
 import com.clinic.dto.AddOrEditPatientVo;
@@ -19,6 +17,7 @@ import com.clinic.dto.param.PatientParam;
 import com.clinic.entity.Dossier;
 import com.clinic.entity.Patient;
 import com.clinic.mapper.PatientMapper;
+import com.clinic.service.AdmissionLogService;
 import com.clinic.service.PatientService;
 import com.clinic.util.LoginUser;
 import com.clinic.util.log.LogUtil;
@@ -55,7 +54,7 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
     private PatientDao dao;
 
     @Resource
-    private AdmissionLogCache admissionLogCache;
+    private AdmissionLogService admissionLogService;
 
     @Resource
     private PatientConverter converter;
@@ -70,12 +69,13 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
     public Result<AddOrEditPatientVo> add(AddPatientParam param) {
         User user = LoginUser.get();
         Patient patient = converter.toEntity(param);
-        if(patientExists(patient)) return failed(400, "病人信息已存在！");
-        patient.setUserId(user.getId());
+        if(patientExists(patient)) {
+            return failed(400, "病人信息已存在！");
+        }
         TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
         try {
             save(patient);
-            Long logId = admissionLogCache.saveLogFormAddPatient(patient);
+            Long logId = admissionLogService.saveLogFormAddPatient(patient);
             LogUtil.Operation.addPatient(patient.getId(), "{}添加病人：病人id={}, 门诊日志id={}", user.getName(), patient.getId(), logId);
             transactionManager.commit(transaction);
             return success(new AddOrEditPatientVo(patient.getId(), logId));
@@ -137,7 +137,6 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
     @Override
     public List<Patient> select(String val) {
         return lambdaQuery()
-//                .eq(Patient::getUserId, LoginUser.getId())
                 .like(Patient::getName, val)
                 .or()
                 .like(Patient::getPhone, val)
@@ -149,7 +148,6 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
     @Override
     public List<Patient> selectListByPhone(String phone) {
         return lambdaQuery()
-//                .eq(Patient::getUserId, LoginUser.getId())
                 .likeRight(Patient::getPhone, phone)
                 .list();
     }
@@ -157,7 +155,6 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
     @Override
     public Patient selectByPhone(String phone) {
         return lambdaQuery()
-//                .eq(Patient::getUserId, LoginUser.getId())
                 .eq(Patient::getPhone, phone)
                 .one();
     }
@@ -170,7 +167,6 @@ public class PatientServiceImpl extends MPJBaseServiceImpl<PatientMapper, Patien
     @Override
     public List<Patient> selectByName(String name, Long userId) {
         return lambdaQuery()
-//                .eq(Patient::getUserId, nonNull(userId) ? userId :LoginUser.getId())
                 .like(Patient::getName, name)
                 .list();
     }

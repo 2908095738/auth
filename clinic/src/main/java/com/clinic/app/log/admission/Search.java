@@ -2,20 +2,9 @@ package com.clinic.app.log.admission;
 
 import cn.hutool.core.date.DateUtil;
 import com.bbs.Result;
-import com.clinic.entity.AdmissionLog;
-import com.clinic.entity.Dossier;
-import com.clinic.entity.Patient;
-import com.clinic.entity.Pay;
-import com.clinic.entity.Prescription;
-import com.clinic.entity.PrescriptionDrug;
-import com.clinic.entity.Settings;
-import com.clinic.entity.Stock;
-import com.clinic.entity.StockBatch;
-import com.clinic.entity.StockUnit;
-import com.clinic.entity.Unit;
+import com.clinic.entity.*;
 import com.clinic.mapper.AdmissionLogMapper;
 import com.clinic.service.PayRecordService;
-import com.clinic.util.LoginUser;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.AllArgsConstructor;
@@ -69,9 +58,7 @@ public class Search extends MPJBaseServiceImpl<AdmissionLogMapper, AdmissionLog>
                 .map(this::joinPrescriptionDrugAndStockBatch)
                 .map(this::joinPay)
                 .get();
-        wrapper
-//                .eq(AdmissionLog::getUserId, LoginUser.getId())
-                .eq(AdmissionLog::getId, param.getId())
+        wrapper.eq(AdmissionLog::getId, param.getId())
                 .orderByDesc(AdmissionLog::getCreateTime)
         ;
 
