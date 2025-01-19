@@ -66,7 +66,6 @@ public class StockInDrugServiceImpl extends ServiceImpl<StockInDrugMapper, Stock
         PutStockParam.StockUnitParam minUnit = param.getStockUnit().get(0);
         record.setNo(no);
         record.setStockBatchId(stockBatchID);
-        record.setUserId(user.getId());
         record.setStockInId(stockInID);
         record.setNumber(maxUnit.getStepSize());
         record.setCost(computeCost(param, drugNumber));

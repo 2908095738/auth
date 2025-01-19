@@ -11,21 +11,9 @@ import com.clinic.converter.StockConverter;
 import com.clinic.dto.PrescriptionDto;
 import com.clinic.dto.PrescriptionFileVo;
 import com.clinic.dto.vo.PrescriptionSearchDrugVO;
-import com.clinic.entity.AdmissionLog;
-import com.clinic.entity.Clinic;
-import com.clinic.entity.Dossier;
-import com.clinic.entity.DossierPrescription;
-import com.clinic.entity.Patient;
-import com.clinic.entity.Pay;
-import com.clinic.entity.Prescription;
-import com.clinic.entity.PrescriptionDrug;
-import com.clinic.entity.Stock;
-import com.clinic.entity.StockBatch;
-import com.clinic.entity.StockUnit;
-import com.clinic.entity.Unit;
+import com.clinic.entity.*;
 import com.clinic.mapper.PrescriptionMapper;
 import com.clinic.service.PrescriptionService;
-import com.clinic.util.LoginUser;
 import com.deepoove.poi.XWPFTemplate;
 import com.deepoove.poi.config.Configure;
 import com.deepoove.poi.plugin.table.LoopRowTableRenderPolicy;
@@ -66,13 +54,12 @@ public class PrescriptionServiceImpl extends MPJBaseServiceImpl<PrescriptionMapp
     private UnitCache unitCache;
 
     @Override
-    public IPage<PrescriptionDto> selectPage(Long id, Long dossierId, Long patientId, Integer current, Integer size) {
+    public IPage<PrescriptionDto> selectPage(Long dossierId, Long patientId, Integer current, Integer size) {
         return selectJoinListPage(new Page<>(current, size), PrescriptionDto.class,
                 new MPJLambdaWrapper<Prescription>()
                         .selectAll(Prescription.class)
                         .select(DossierPrescription::getDossierId)
                         .leftJoin(DossierPrescription.class, DossierPrescription::getPrescriptionId, Prescription::getId)
-                        .eq(nonNull(id),Prescription::getCreator, id)
                         .eq(nonNull(patientId), Prescription::getPatientId, patientId)
                         .eq(nonNull(dossierId), DossierPrescription::getDossierId, dossierId));
     }
@@ -86,13 +73,12 @@ public class PrescriptionServiceImpl extends MPJBaseServiceImpl<PrescriptionMapp
     }
 
     @Override
-    public List<PrescriptionDto> select(Long id, List<Long> dossierIds) {
+    public List<PrescriptionDto> select(List<Long> dossierIds) {
         return selectJoinList(PrescriptionDto.class,
                 new MPJLambdaWrapper<Prescription>()
                         .selectAll(Prescription.class)
                         .select(DossierPrescription::getDossierId)
                         .leftJoin(DossierPrescription.class, DossierPrescription::getPrescriptionId, Prescription::getId)
-                        .eq(Prescription::getCreator, id)
                         .in(nonNull(dossierIds), DossierPrescription::getDossierId, dossierIds));
     }
 
@@ -155,10 +141,8 @@ public class PrescriptionServiceImpl extends MPJBaseServiceImpl<PrescriptionMapp
 
                 .leftJoin(StockUnit.class, StockUnit::getBatchId, StockBatch::getId, ext -> ext
                         .selectCollection(StockUnit.class, StockBatch::getStockUnitList)
-                )
+                );
                 // 不再关联单位表，转而从缓存获取（unit.table）
-
-                .eq(Stock::getUserId, LoginUser.getId());
                 if(StringUtils.isNotBlank(drugName)){
                     if(isWord(drugName)){
                         String sql = FirstWordsSqlUtils.getSql(drugName);

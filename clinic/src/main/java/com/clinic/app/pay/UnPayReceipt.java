@@ -3,7 +3,6 @@ package com.clinic.app.pay;
 import com.bbs.Result;
 import com.clinic.entity.Pay;
 import com.clinic.service.PayService;
-import com.clinic.util.LoginUser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -36,7 +35,6 @@ public class UnPayReceipt {
     @PostMapping("/pay/receipt")
     public Result<List<Pay>> payReceipt(@RequestBody Param param) {
         payService.lambdaUpdate()
-                .eq(Pay::getCreator, LoginUser.getId())
                 .eq(Pay::getId, param.getId())
                 .set(Pay::getState, 1)
                 .update();

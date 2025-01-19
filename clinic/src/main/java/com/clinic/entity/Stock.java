@@ -69,8 +69,7 @@ public class Stock implements Serializable {
     @TableField(exist = false)
     private List<StockBatch> batchList;
 
-    public Stock(Long userId, String name, List<StockBatch> batchList) {
-        this.userId = userId;
+    public Stock(String name, List<StockBatch> batchList) {
         this.name = name;
         this.batchList = batchList;
     }

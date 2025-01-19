@@ -11,8 +11,7 @@ public class StockRecordMethod {
 
     public static Long saveInStockRecord(String inStockNO, PutStockParam param) {
         StockInService service = getBean(StockInService.class);
-
-        return service.save(inStockNO, param, LoginUser.getId());
+        return service.save(inStockNO, param);
     }
 
     public static void saveInStockDrugRecord(String inStockNO, PutStockParam param, Long stockInID, Long drugNumber,Long stockBatchID) {

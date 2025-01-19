@@ -72,8 +72,7 @@ public class PatientCallback implements Serializable {
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
-    public PatientCallback(Long userId, Long patientId, Integer type, String classMethodName, String params, Date callbackDate) {
-        this.userId = userId;
+    public PatientCallback(Long patientId, Integer type, String classMethodName, String params, Date callbackDate) {
         this.patientId = patientId;
         this.type = type;
         this.classMethodName = classMethodName;

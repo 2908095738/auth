@@ -4,7 +4,6 @@ import com.bbs.Result;
 import com.clinic.converter.FeedbackConverter;
 import com.clinic.entity.Feedback;
 import com.clinic.service.FeedbackService;
-import com.clinic.util.LoginUser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.Objects;
 
 /**
  * 用户意见与反馈控制器
@@ -51,19 +49,6 @@ public class FeedbackController {
     @PutMapping
     public Result<Boolean> addPatient(@RequestBody @Valid AddFeedbackParam param) {
         Feedback feed = feedConverter.toEntity(param);
-
-        boolean hasPhone = Objects.nonNull(param.getPhone());
-        Long userId = LoginUser.getId();
-        if (!hasPhone) {
-            if (Objects.nonNull(userId)) {
-                feed.setUserId(userId);
-                feed.setPhone(LoginUser.get().getPhone());
-            }
-        } else {
-            if (Objects.nonNull(userId))
-                feed.setUserId(userId);
-        }
-
         return Result.success(feedService.save(feed));
     }
 }

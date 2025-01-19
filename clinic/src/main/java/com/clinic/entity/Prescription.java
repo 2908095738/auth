@@ -85,6 +85,13 @@ public class Prescription implements Serializable {
     @TableField(value = "price")
     private BigDecimal price;
 
+
+    /**
+     * 创建者（用户）编号
+     */
+    @TableField(value = "user_id")
+    private Long userId;
+
     /**
      * 创建者（用户）编号
      */

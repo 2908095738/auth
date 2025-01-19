@@ -48,12 +48,15 @@ public class DossierServiceImpl extends MPJBaseServiceImpl<DossierMapper, Dossie
         if(nonNull(param.getId())){
             Dossier dossierDB = getById(param.getId());
             Preconditions.checkArgument(nonNull(dossierDB), "病例不存在，可能已删除");
-            if(!updateById(dossier)) throw new BusinessException("更新病历失败！");
-            LogUtil.Operation.updateDossier(dossierDB.getPatientId(), dossierDB.getId(), "{}修改病例：病例id={}", LoginUser.get().getName(), param.getId());
+            if(!updateById(dossier)) {
+                throw new BusinessException("更新病历失败！");
+            }
+            LogUtil.Operation.updateDossier(dossierDB.getPatientId(), dossierDB.getId(), "{}修改病例：病例id={}", user.getName(), param.getId());
         }else{
-            dossier.setUserId(user.getId());
             dossier.setPatientId(patientId);
-            if(!save(dossier)) throw new BusinessException("添加病历失败！");
+            if(!save(dossier)) {
+                throw new BusinessException("添加病历失败！");
+            }
             LogUtil.Operation.addDossier(patientId ,dossier.getId(), "{}添加病例：病例id={}, 门诊日志id={}", user.getName(), dossier.getId(), admissionID);
         }
         return dossier;
@@ -66,17 +69,17 @@ public class DossierServiceImpl extends MPJBaseServiceImpl<DossierMapper, Dossie
     }
 
     @Override
-    public Result<Page<Dossier>> select(Long userId, String id, Integer current, Integer size) {
-        return Result.success(selectPatientDossier(userId, id, current, size));
+    public Result<Page<Dossier>> select(String id, Integer current, Integer size) {
+        return Result.success(selectPatientDossier(id, current, size));
     }
 
 
-    private Page<Dossier> selectPatientDossier(Long userId,String patientId,Integer pageNo,Integer pageSize) {
-        Page<Dossier> dossierPage = dao.selectedById(userId, patientId, pageNo, pageSize);
+    private Page<Dossier> selectPatientDossier(String patientId,Integer pageNo,Integer pageSize) {
+        Page<Dossier> dossierPage = dao.selectedById(patientId, pageNo, pageSize);
         List<Dossier> dossiers = dossierPage.getRecords();
         if (CollectionUtil.isNotEmpty(dossiers)){
             List<Long> idList = dossiers.stream().map(Dossier::getId).collect(Collectors.toList());
-            List<PrescriptionDto> prescriptionParams = appPrescriptionService.selectByIds(userId, idList);
+            List<PrescriptionDto> prescriptionParams = appPrescriptionService.selectByIds(idList);
             if(CollectionUtil.isNotEmpty(prescriptionParams)){
                 Map<Long, PrescriptionDto> prescriptionMap = prescriptionParams.stream().collect(Collectors.toMap(PrescriptionDto::getDossierId, o1 -> o1));
                 for (Dossier dossier : dossierPage.getRecords()) {

@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.clinic.util.LoginUser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -117,7 +116,6 @@ public class OperationLog implements Serializable {
         this.location = location;
         this.service = service;
         this.about = about;
-        this.userId = LoginUser.getId();
         this.operation = operation;
         this.level = level.toInt();
         this.patientId = patientId;

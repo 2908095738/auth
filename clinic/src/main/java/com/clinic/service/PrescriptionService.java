@@ -17,11 +17,11 @@ import java.util.List;
  */
 public interface PrescriptionService extends MPJBaseService<Prescription> {
 
-    IPage<PrescriptionDto> selectPage(Long id, Long dossierId, Long patientId, Integer current, Integer size);
+    IPage<PrescriptionDto> selectPage(Long dossierId, Long patientId, Integer current, Integer size);
 
     List<PrescriptionDto> select(Long patientId);
 
-    List<PrescriptionDto> select(Long id, List<Long> dossierIds);
+    List<PrescriptionDto> select(List<Long> dossierIds);
 
     PrescriptionFileVo getFileInfo(Long id);
 

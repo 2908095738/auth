@@ -67,11 +67,10 @@ public class StockIn implements Serializable {
     @EntityMapping(thisField = StockIn.Fields.id, joinField = StockInDrug.Fields.stockInId)
     private StockInDrug stockInDrugs;
 
-    public StockIn(Long id, String no, BigDecimal totalCost, Long userId, String remark, Date createTime) {
+    public StockIn(Long id, String no, BigDecimal totalCost, String remark, Date createTime) {
         this.id = id;
         this.no = no;
         this.totalCost = totalCost;
-        this.userId = userId;
         this.remark = remark;
         this.createTime = createTime;
     }

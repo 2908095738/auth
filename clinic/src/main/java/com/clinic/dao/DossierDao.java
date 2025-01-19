@@ -16,9 +16,8 @@ public class DossierDao extends ServiceImpl<DossierMapper, Dossier> {
      * @param patientId 病人id
      * @return DossierList
      */
-    public Page<Dossier> selectedById(Long userId, String patientId, Integer pageNo, Integer size){
+    public Page<Dossier> selectedById(String patientId, Integer pageNo, Integer size){
         return lambdaQuery()
-                .eq(Dossier::getUserId,userId)
                 .eq(isNotBlank(patientId),Dossier::getPatientId,patientId).orderByDesc(Dossier::getCreateTime)
                 .page(new Page<>(pageNo, size));
     }

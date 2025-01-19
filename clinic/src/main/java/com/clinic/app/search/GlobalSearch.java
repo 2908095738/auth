@@ -1,15 +1,10 @@
 package com.clinic.app.search;
 
-import cn.hutool.core.date.DateUtil;
 import com.bbs.Result;
-import com.bbs.api.auth.User;
-import com.clinic.app.ai.CloudFlare;
 import com.clinic.cache.unit.UnitCache;
 import com.clinic.entity.*;
 import com.clinic.service.*;
 import com.clinic.service.impl.StockServiceImpl;
-import com.clinic.util.LoginUser;
-import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -94,9 +89,7 @@ public class GlobalSearch {
         VO vo = new VO();
 //        try {
 //            if(val.equals("我需要最近3天的就诊记录")) {
-//                User user = LoginUser.get();
 //                vo.setAdmissionLogs(admissionLogService.lambdaQuery()
-//                        .eq(AdmissionLog::getUserId, user.getId())
 //                        .ge(AdmissionLog::getCreateTime, DateUtil.beginOfDay(DateUtil.parse("2024-08-11", "yyyy-MM-dd")))
 //                        .lt(AdmissionLog::getCreateTime, DateUtil.endOfDay(DateUtil.parse("2024-08-13", "yyyy-MM-dd")))
 //                        .list());
@@ -108,7 +101,6 @@ public class GlobalSearch {
 //                List<PrescriptionDrug> prescriptionDrugs = prescriptionDrugService.selectJoinList(PrescriptionDrug.class, new MPJLambdaWrapper<PrescriptionDrug>()
 //                        .selectAll(PrescriptionDrug.class)
 //                        .rightJoin(Prescription.class, Prescription::getId, PrescriptionDrug::getPrescriptionId)
-//                        .eq(Prescription::getCreator, LoginUser.getId())
 //                        .ge(Prescription::getCreateTime, DateUtil.beginOfYear(new Date()))
 //                        .isNotNull(PrescriptionDrug::getName)
 //                );

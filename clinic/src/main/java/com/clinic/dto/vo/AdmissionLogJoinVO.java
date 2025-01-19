@@ -127,7 +127,6 @@ public class AdmissionLogJoinVO implements Serializable {
 //        this.phone = patient.getPhone();
 //        this.address = patient.getAddress();
 //        this.birthDate = patient.getBirthDate();
-//        this.patientId = patient.getId();
 //        this.userId = userId;
 //    }
 //
@@ -135,7 +134,6 @@ public class AdmissionLogJoinVO implements Serializable {
 //        this.patientId = param.getPatientId();
 //        this.isFirst = param.getIsFirst();
 //
-//        this.userId = LoginUser.getId();
 //        this.state = AdmissionStateEnum.RUN.getCode();
 //
 //        this.name = patient.getName();

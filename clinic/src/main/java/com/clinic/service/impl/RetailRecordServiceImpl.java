@@ -8,7 +8,6 @@ import com.clinic.entity.RetailDrugRecord;
 import com.clinic.entity.RetailRecord;
 import com.clinic.mapper.RetailRecordMapper;
 import com.clinic.service.RetailRecordService;
-import com.clinic.util.LoginUser;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -42,8 +41,6 @@ public class RetailRecordServiceImpl extends ServiceImpl<RetailRecordMapper, Ret
                 .selectAll(RetailRecord.class)
                 .selectCollection("t1", RetailDrugRecord.class, RetailRecord::getRetailDrugRecords)
                 .leftJoin(RetailDrugRecord.class, RetailDrugRecord::getRetailId, RetailRecord::getId)
-
-                .eq(RetailRecord::getUserId, LoginUser.getId())
                 .and(StringUtils.isNotBlank(val), ext -> ext
                         .like(RetailRecord::getName, val)
                         .or(NumberUtil.isNumber(val), ext2 -> ext2

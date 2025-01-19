@@ -4,7 +4,6 @@ import cn.hutool.extra.spring.SpringUtil;
 import com.clinic.converter.StockConverter;
 import com.clinic.converter.UnitConverter;
 import com.clinic.dto.param.PutStockParam;
-import com.clinic.entity.Stock;
 import com.clinic.entity.StockBatch;
 import com.clinic.entity.StockUnit;
 import com.clinic.enums.DrugStockRule;
@@ -12,7 +11,6 @@ import com.clinic.enums.DrugTypeEnum;
 import com.clinic.service.StockBatchService;
 import com.clinic.service.StockService;
 import com.clinic.service.StockUnitService;
-import com.clinic.util.LoginUser;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,15 +32,11 @@ public class StockMethod {
         return SpringUtil.getBean(StockService.class);
     }
 
-    public static Stock fillUserID(Stock param) {
-        param.setUserId(LoginUser.getId());
-        return param;
-    }
+
 
     public static StockBatch converterAndFill(PutStockParam param, Long stockID, Long drugNumber) {
         StockConverter converter = SpringUtil.getBean(StockConverter.class);
         return converter.toBatchEntity(param)
-                .setUserId(LoginUser.getId())
                 .setStockId(stockID)
                 .setNumber(drugNumber)
                 .setTotalNumber(drugNumber)

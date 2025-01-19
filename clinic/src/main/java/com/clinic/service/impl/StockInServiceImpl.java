@@ -14,7 +14,6 @@ import com.clinic.entity.StockIn;
 import com.clinic.entity.StockInDrug;
 import com.clinic.mapper.StockInMapper;
 import com.clinic.service.StockInService;
-import com.clinic.util.LoginUser;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -42,16 +41,17 @@ public class StockInServiceImpl extends ServiceImpl<StockInMapper, StockIn>
 
     @Override
     public StockIn saveBatch(String no, PutStockList param) throws DbRuntimeException {
-        Long uid = LoginUser.getId();
-        StockIn stockIn = new StockIn(null, no, param.getTotalCost(), uid, param.getRemark(), null);
-        if(save(stockIn)) return stockIn;
+        StockIn stockIn = new StockIn(null, no, param.getTotalCost(), param.getRemark(), null);
+        if(save(stockIn)) {
+            return stockIn;
+        }
         log.error("药品入库【入库单】异常! stockInService::save(stockIn={}; param={}))", toJSONString(stockIn), toJSONString(param));
         throw new DbRuntimeException("药品入库【入库单】异常！");
     }
 
     @Override
-    public Long save(String no, PutStockParam param, Long uid) throws DbRuntimeException {
-        StockIn stockIn = new StockIn(null, no, param.getTotalCost(), uid, param.getRemark(), null);
+    public Long save(String no, PutStockParam param) throws DbRuntimeException {
+        StockIn stockIn = new StockIn(null, no, param.getTotalCost(), param.getRemark(), null);
         if(save(stockIn)) return stockIn.getId();
         log.error("药品入库【入库单】异常! stockInService::save(stockIn={}; param={}))", toJSONString(stockIn), toJSONString(param));
         throw new DbRuntimeException("药品入库【入库单】异常！");
@@ -64,8 +64,6 @@ public class StockInServiceImpl extends ServiceImpl<StockInMapper, StockIn>
                 .selectAll(StockIn.class)
                 .selectAssociation(StockInDrug.class, StockIn::getStockInDrugs)
                 .leftJoin(StockInDrug.class, StockInDrug::getStockInId, StockIn::getId)
-                .eq(StockIn::getUserId, LoginUser.getId())
-
                 //药品名称或生产批号查询
                 .and(StrUtil.isNotBlank(param.getName()), e -> e
                         .like(StockInDrug::getName, param.getName())

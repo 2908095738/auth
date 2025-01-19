@@ -4,22 +4,16 @@ import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import com.clinic.dto.param.AddRetailParams;
-import com.clinic.entity.Settings;
-import com.clinic.entity.Stock;
-import com.clinic.entity.StockBatch;
-import com.clinic.entity.StockUnit;
-import com.clinic.entity.Unit;
+import com.clinic.entity.*;
 import com.clinic.mapper.StockBatchMapper;
 import com.clinic.service.SettingsService;
 import com.clinic.service.StockBatchService;
-import com.clinic.util.LoginUser;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -39,7 +33,6 @@ public class StockBatchServiceImpl extends MPJBaseServiceImpl<StockBatchMapper, 
     @Override
     public List<StockBatch> searchByApprovalNumbers(List<String> approvalNumbers, List<String> batchNumbers) {
         return lambdaQuery()
-                .eq(StockBatch::getUserId, LoginUser.getId())
                 .in(StockBatch::getApprovalNumber, approvalNumbers)
                 .in(StockBatch::getBatchNumber, batchNumbers)
                 .list();
@@ -48,7 +41,6 @@ public class StockBatchServiceImpl extends MPJBaseServiceImpl<StockBatchMapper, 
     @Override
     public StockBatch searchByApprovalNumber(String approvalNumber) {
         return lambdaQuery()
-                .eq(StockBatch::getUserId, LoginUser.getId())
                 .eq(StockBatch::getApprovalNumber, approvalNumber)
                 .one();
     }
@@ -56,7 +48,6 @@ public class StockBatchServiceImpl extends MPJBaseServiceImpl<StockBatchMapper, 
     @Override
     public StockBatch getByApprovalNumberAndBatchNumber(String approvalNumber, String batchNumber) {
         return lambdaQuery()
-                .eq(StockBatch::getUserId, LoginUser.getId())
                 .eq(StockBatch::getApprovalNumber, approvalNumber)
                 .eq(StockBatch::getBatchNumber, batchNumber)
                 .one();
@@ -88,7 +79,6 @@ public class StockBatchServiceImpl extends MPJBaseServiceImpl<StockBatchMapper, 
                 .selectAssociation("t1", Stock.class, StockBatch::getStock)
                 .leftJoin(Stock.class, Stock::getId, StockBatch::getStockId)
                 .in(StockBatch::getId, params.getStockIDs())
-                .eq(StockBatch::getUserId, LoginUser.getId())
         ;
         return baseMapper.selectJoinList(StockBatch.class, wrapper);
     }
@@ -129,7 +119,6 @@ public class StockBatchServiceImpl extends MPJBaseServiceImpl<StockBatchMapper, 
         return selectJoinList(StockBatch.class, new MPJLambdaWrapper<StockBatch>()
                 .selectAll(StockBatch.class)
                 .innerJoin(Stock.class, Stock::getId, StockBatch::getStockId)
-                .eq(StockBatch::getUserId, nonNull(userId) ? userId : LoginUser.getId())
                 .like(Stock::getName, val)
                 .or()
                 .like(Stock::getAlias, val)

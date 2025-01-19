@@ -80,10 +80,9 @@ public class DrugOrder implements Serializable {
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
-    public DrugOrder(String name, String receiverAddress, OrderStatus status, Long userId) {
+    public DrugOrder(String name, String receiverAddress, OrderStatus status) {
         this.name = name;
         this.receiverAddress = receiverAddress;
         this.status = status;
-        this.userId = userId;
     }
 }

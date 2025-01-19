@@ -24,7 +24,7 @@ public class AppDrugOrderService {
      * 下单，保存订单记录
      */
     public Long add(DrugOrderController.AddDrugOrderParam param) {
-        DrugOrder drugOrder = new DrugOrder(param.getName(), param.getReceiverAddress(),null, LoginUser.getId());
+        DrugOrder drugOrder = new DrugOrder(param.getName(), param.getReceiverAddress(),null);
         //TODO 保存订单记录
         drugOrderService.save(drugOrder);
         drugOrderDetailService.save(new DrugOrderDetail(drugOrder.getId(), param.getOrderDetail()));

@@ -69,9 +69,7 @@ public class SearchList extends MPJBaseServiceImpl<AdmissionLogMapper, Admission
         MPJLambdaWrapper<AdmissionLog> admissionLogMPJLambdaWrapper = new MPJLambdaWrapper<AdmissionLog>()
                 .selectAll(AdmissionLog.class)
                 .selectAssociation(Pay.class, AdmissionLog::getPay)
-                .eq(AdmissionLog::getUserId, LoginUser.getId())
                 .eq(nonNull(param.state), AdmissionLog::getState, param.state)
-                .eq(AdmissionLog::getUserId, LoginUser.getId())
                 .eq(nonNull(param.patientId),AdmissionLog::getPatientId, nonNull(param.patientId) ? param.patientId : null)
 
                 .and(StringUtils.isNotBlank(param.getCreateTime()) && StringUtils.isBlank(param.getEndTime()),

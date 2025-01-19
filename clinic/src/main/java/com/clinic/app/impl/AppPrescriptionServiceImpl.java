@@ -65,8 +65,6 @@ public class AppPrescriptionServiceImpl implements AppPrescriptionService {
         prescription.setPatientId(patientId);
         prescription.setPrice(price);
         prescription.setRemark(remark);
-        prescription.setCreator(LoginUser.getId());
-        prescription.setUpdator(prescription.getCreator());
         prescription.setExpiryDate(NumberUtils.INTEGER_ONE);
         prescription.setExpirationDate(tomo);
     }
@@ -95,7 +93,7 @@ public class AppPrescriptionServiceImpl implements AppPrescriptionService {
 
 
     public Result<IPage<PrescriptionDto>> selectOr(Long dossierId, Long patientId, Integer current, Integer size) {
-        IPage<PrescriptionDto> result = prescriptionService.selectPage(LoginUser.getId(), dossierId, patientId, current, size);
+        IPage<PrescriptionDto> result = prescriptionService.selectPage(dossierId, patientId, current, size);
         if (CollectionUtil.isNotEmpty(result.getRecords())){
             result.getRecords().forEach(prescription-> prescription.setDrugList(getDrugList(prescription.getId())));
         }
@@ -103,8 +101,8 @@ public class AppPrescriptionServiceImpl implements AppPrescriptionService {
     }
 
 
-    public List<PrescriptionDto> selectByIds(Long id, List<Long> dossierIds){
-        List<PrescriptionDto> prescriptionList = prescriptionService.select(id, dossierIds);
+    public List<PrescriptionDto> selectByIds(List<Long> dossierIds){
+        List<PrescriptionDto> prescriptionList = prescriptionService.select(dossierIds);
         if (CollectionUtil.isNotEmpty(prescriptionList)){
             prescriptionList.forEach(prescription-> prescription.setDrugList(getDrugList(prescription.getId())));
         }
