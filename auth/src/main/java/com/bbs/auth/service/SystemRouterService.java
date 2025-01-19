@@ -14,6 +14,8 @@ import java.util.List;
 */
 public interface SystemRouterService extends MPJBaseService<SystemRouter> {
 
+    List<SystemRouter> searchBySystemAndUserId(Long systemId, Long userId);
+
     List<SystemRouter> searchBySystemId(Long systemId);
 
     List<SystemRouter> searchBySystemAndRoleId(Long systemId, Long roleId);

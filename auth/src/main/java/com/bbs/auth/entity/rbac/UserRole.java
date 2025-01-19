@@ -26,11 +26,23 @@ public class UserRole implements Serializable {
      * 用户ID
      */
     @TableField(value = "user_id")
-    private String userId;
+    private Long userId;
+
+    /**
+     * 系统编码
+     */
+    @TableField(value = "system_code")
+    private String systemCode;
 
     /**
      * 角色ID
      */
     @TableField(value = "role_id")
-    private String roleId;
+    private Long roleId;
+
+    public UserRole(Long userId, String systemCode, Long roleId) {
+        this.userId = userId;
+        this.systemCode = systemCode;
+        this.roleId = roleId;
+    }
 }

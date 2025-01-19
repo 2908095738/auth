@@ -66,9 +66,7 @@ public class RoleServiceImpl extends MPJBaseServiceImpl<RoleMapper, Role>
         return selectJoinList(Role.class, new MPJLambdaWrapper<Role>()
                 .selectAll(Role.class)
                 .rightJoin(UserRole.class, UserRole::getRoleId, Role::getId)
-                .leftJoin(System.class, System::getCode, Role::getSystemCode)
-                .selectAssociation(System.class, Role::getSystem)
-                .eq(Role::getSystemCode, systemCode)
+                .eq(UserRole::getSystemCode, systemCode)
                 .eq(UserRole::getUserId, userId)
         );
     }

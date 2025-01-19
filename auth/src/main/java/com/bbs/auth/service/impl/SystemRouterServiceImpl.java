@@ -7,15 +7,20 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.bbs.auth.app.rbac.role.SearchRoleAllMenu;
 import com.bbs.auth.entity.RoleMenu;
 import com.bbs.auth.entity.SystemRouter;
+import com.bbs.auth.entity.rbac.Role;
+import com.bbs.auth.entity.rbac.UserRole;
 import com.bbs.auth.service.SystemRouterService;
 import com.bbs.auth.mapper.SystemRouterMapper;
+import com.bbs.auth.service.UserRoleService;
 import com.bbs.auth.service.UserService;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.nonNull;
@@ -35,11 +40,24 @@ public class SystemRouterServiceImpl extends MPJBaseServiceImpl<SystemRouterMapp
     private UserService userService;
 
     @Override
+    public List<SystemRouter> searchBySystemAndUserId(Long systemId, Long userId) {
+        return selectJoinList(SystemRouter.class, new MPJLambdaWrapper<SystemRouter>()
+                .selectAll(SystemRouter.class)
+                .leftJoin(RoleMenu.class, RoleMenu::getMenuId, SystemRouter::getId)
+                .leftJoin(UserRole.class, UserRole::getRoleId, RoleMenu::getRoleId)
+                .leftJoin(Role.class, Role::getId, UserRole::getRoleId)
+                .eq(UserRole::getUserId, userId)
+                .eq(Role::getState, INTEGER_ONE)    //启用角色
+                .eq(SystemRouter::getSystemId, systemId)
+                .eq(SystemRouter::getState, INTEGER_ONE)    //启用菜单
+        );
+    }
+
+    @Override
     public List<SystemRouter> searchBySystemId(Long systemId) {
-        boolean loginUserIsNotAdmin = (!userService.loginUserIsAdmin());
         return list(new LambdaQueryWrapper<SystemRouter>()
                 .eq(nonNull(systemId), SystemRouter::getSystemId, systemId)
-                .eq(loginUserIsNotAdmin, SystemRouter::getIsAdmin, INTEGER_ZERO)
+                .eq(userService.loginUserNotIsAdmin(), SystemRouter::getIsAdmin, INTEGER_ZERO)
         );
     }
 
