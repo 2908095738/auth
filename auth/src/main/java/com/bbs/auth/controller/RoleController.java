@@ -2,21 +2,16 @@ package com.bbs.auth.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbs.Result;
-import com.bbs.auth.entity.Role;
+import com.bbs.auth.entity.rbac.Role;
 import com.bbs.auth.service.RoleResourceService;
 import com.bbs.auth.service.RoleService;
+import com.bbs.auth.service.SystemService;
 import com.bbs.vo.BaseParam;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
@@ -34,6 +29,9 @@ public class RoleController {
     @Resource
     private RoleResourceService roleResourceService;
 
+    @Resource
+    private SystemService systemService;
+
 
     @Data
     @NoArgsConstructor
@@ -41,15 +39,23 @@ public class RoleController {
     @EqualsAndHashCode(callSuper = true)
     public static class QueryRoleParam extends BaseParam {
 
+        private Long id;
+
         private Long groupId;
+
     }
 
     /**
      * 查询所有角色
      */
     @GetMapping
-    public Result<Page<Role>> queryRole(QueryRoleParam param){
+    public Result<Role> queryRole(Role param){
         return roleService.search(param);
+    }
+
+    @GetMapping("/page")
+    public Result<Page<Role>> queryRolePage(@RequestParam Integer current, @RequestParam Integer size){
+        return Result.success(roleService.searchJoinSystemPage(current, size));
     }
 
 

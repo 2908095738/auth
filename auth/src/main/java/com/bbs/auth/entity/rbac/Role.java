@@ -1,8 +1,9 @@
-package com.bbs.auth.entity;
+package com.bbs.auth.entity.rbac;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.bbs.auth.entity.System;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -12,7 +13,7 @@ import java.io.Serializable;
  * 角色
  * @TableName role
  */
-@TableName(value ="role")
+@TableName(value ="rbac_role")
 @Data
 @Accessors(chain = true)
 public class Role implements Serializable {
@@ -21,6 +22,12 @@ public class Role implements Serializable {
      */
     @TableId(value = "id")
     private Long id;
+
+    /**
+     * 系统编码
+     */
+    @TableField(value = "system_code")
+    private String systemCode;
 
     /**
      * 编码
@@ -39,6 +46,9 @@ public class Role implements Serializable {
      */
     @TableField(value = "state")
     private Integer state;
+
+    @TableField(exist = false)
+    private System system;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

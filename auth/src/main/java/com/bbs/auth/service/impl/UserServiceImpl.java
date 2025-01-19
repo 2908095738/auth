@@ -31,7 +31,6 @@ import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -295,6 +294,11 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, User> implem
         User user = loginEntityUser();
         if(isNull(user)) throw new ReLoginException(FAILED_LOGIN_USER_NEED_REGISTER);
         return user.isSupperAdmin();
+    }
+
+    @Override
+    public Boolean loginUserNotIsAdmin() throws IllegalArgumentException, ReLoginException {
+        return !loginUserIsAdmin();
     }
 
     @Override
