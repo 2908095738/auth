@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.bbs.Result;
 import com.bbs.auth.entity.System;
 import com.bbs.auth.entity.SystemRouter;
+import com.bbs.auth.service.RoleService;
 import com.bbs.auth.service.SystemRouterService;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,12 +18,18 @@ import java.util.List;
 
 import static java.util.Objects.nonNull;
 
+/**
+ * @author ext.luchenlin5
+ */
 @RestController("searchSystemRouter")
 @RequestMapping
 public class Search {
 
     @Resource
     private SystemRouterService systemRouterService;
+
+    @Resource
+    private RoleService roleService;
 
     @GetMapping("/back/system/router")
     public Result<SystemRouter> searchById(@RequestParam(required = false) Long id) {

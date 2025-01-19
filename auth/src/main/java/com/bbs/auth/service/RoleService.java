@@ -1,16 +1,26 @@
 package com.bbs.auth.service;
 
 
-import com.bbs.auth.controller.RoleController;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.IService;
-import com.bbs.auth.entity.Role;
+import com.bbs.auth.entity.rbac.Role;
 import com.bbs.Result;
+import com.github.yulichang.base.MPJBaseService;
+
+import java.util.List;
 
 /**
  *
+ * @author ext.luchenlin5
  */
-public interface RoleService extends IService<Role> {
+public interface RoleService extends MPJBaseService<Role> {
 
-    Result<Page<Role>> search(RoleController.QueryRoleParam param);
+    Result<Role> search(Role param);
+
+    Role search(Long id);
+
+    Page<Role> searchJoinSystemPage(Integer current, Integer size);
+
+    List<Role> searchBySystemCodeJoinSystemList(String systemCode);
+
+    List<Role> searchBySystemCodeAndUidJoinSystemList(String systemCode, Long userId);
 }

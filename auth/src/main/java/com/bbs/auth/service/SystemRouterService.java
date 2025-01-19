@@ -1,6 +1,7 @@
 package com.bbs.auth.service;
 
 import cn.hutool.core.lang.tree.Tree;
+import com.bbs.auth.app.rbac.role.SearchRoleAllMenu;
 import com.bbs.auth.entity.SystemRouter;
 import com.github.yulichang.base.MPJBaseService;
 
@@ -13,9 +14,13 @@ import java.util.List;
 */
 public interface SystemRouterService extends MPJBaseService<SystemRouter> {
 
+    List<SystemRouter> searchBySystemAndUserId(Long systemId, Long userId);
+
     List<SystemRouter> searchBySystemId(Long systemId);
 
-    List<Tree<Long>> toTree(List<SystemRouter> routers);
+    List<SystemRouter> searchBySystemAndRoleId(Long systemId, Long roleId);
 
-    List<Tree<Long>> searchTreeBySystemId(Long systemId);
+    SearchRoleAllMenu.VO searchTreeBySystemAndRoleId(Long systemId, Long roleId);
+
+    List<Tree<Long>> toTree(List<SystemRouter> routers);
 }

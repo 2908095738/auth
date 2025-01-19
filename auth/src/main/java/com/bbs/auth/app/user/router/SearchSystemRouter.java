@@ -12,6 +12,7 @@ import com.bbs.auth.service.SystemCompanyService;
 import com.bbs.auth.service.SystemRouterService;
 import com.bbs.auth.service.SystemService;
 import com.bbs.auth.service.UserService;
+import com.bbs.auth.util.LoginUser;
 import com.google.common.base.Preconditions;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -57,12 +58,10 @@ public class SearchSystemRouter {
     }
 
     @GetMapping("/system/router/user")
-    public Result<VO> search(@RequestParam String systemCode,Long time) {
+    public Result<VO> search(@RequestParam String systemCode, Long time) {
         User user = userService.loginEntityUser();
-        System system = systemService.searchBySystemCode(systemCode);
-        Long systemId = system.getId();
-        List<SystemRouter> systemRouters = searchRouter(systemId);
-        if(!user.isSupperAdmin()&&CollUtil.isNotEmpty(systemRouters)){
+        List<SystemRouter> systemRouters = searchRouter(systemCode);
+        if(!user.isSupperAdmin() && CollUtil.isNotEmpty(systemRouters)){
             systemRouters = systemRouters.stream().filter(o->
                     !o.getId().equals(77L)
                     &&!o.getId().equals(84L)
@@ -71,8 +70,9 @@ public class SearchSystemRouter {
         return Result.success(new VO(systemRouters, systemRouterService.toTree(systemRouters)));
     }
 
-    private List<SystemRouter> searchRouter(Long systemId) {
-        return systemRouterService.searchBySystemId(systemId);
+    private List<SystemRouter> searchRouter(String systemCode) {
+        Long systemId = systemService.searchBySystemCode(systemCode).getId();
+        return systemRouterService.searchBySystemAndUserId(systemId, userService.loginEntityUser().getId());
     }
 
     private void userIsBindCompany(Long companyId) throws IllegalArgumentException {

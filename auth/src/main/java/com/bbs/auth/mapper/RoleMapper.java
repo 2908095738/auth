@@ -1,7 +1,7 @@
 package com.bbs.auth.mapper;
 
 
-import com.bbs.auth.entity.Role;
+import com.bbs.auth.entity.rbac.Role;
 import com.github.yulichang.base.MPJBaseMapper;
 
 /**
