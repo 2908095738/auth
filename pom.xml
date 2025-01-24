@@ -17,9 +17,11 @@
 
     <modules>
         <module>common</module>
-        <module>token</module>
         <module>user</module>
         <module>phone</module>
+        <module>web</module>
+        <module>token</module>
+        <module>rbac</module>
     </modules>
 
     <properties>
@@ -85,11 +87,6 @@
             <groupId>com.github.yulichang</groupId>
             <artifactId>mybatis-plus-join-boot-starter</artifactId>
             <version>1.4.6</version>
-        </dependency>
-        <dependency>
-            <groupId>com.bbs</groupId>
-            <artifactId>common</artifactId>
-            <version>1.0</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
         <dependency>
@@ -268,7 +265,7 @@
             <dependency>
                 <groupId>org.redisson</groupId>
                 <artifactId>redisson-spring-boot-starter</artifactId>
-                <version>3.25.2</version>
+                <version>3.16.8</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework.session</groupId>

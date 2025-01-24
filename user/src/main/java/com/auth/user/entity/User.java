@@ -17,6 +17,7 @@ import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 
 /**
  * 用户表
+ * @author ext.luchenlin5
  * @TableName user
  */
 @TableName(value ="user")

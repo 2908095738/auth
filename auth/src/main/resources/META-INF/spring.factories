@@ -1,3 +1,0 @@
-# ApplicationContextInitializer ??
-org.springframework.context.ApplicationContextInitializer=\
-com.bbs.auth.conf.ConfigCheckInitializer
