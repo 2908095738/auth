@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: auth
+  profiles:
+    active: local
+  cloud:
+    nacos:
+      config:
+        server-addr: 101.43.152.48:8848
+        username: nacos
+        password: nacos
+        timeout: 10000
+        namespace: 3feadc28-5122-4134-97b0-011ed4169b8b
+        group: DEFAULT_GROUP
+        file-extension: yaml
+      discovery:
+        service: auth
+        server-addr: 101.43.152.48:8848
+        username: nacos
+        password: nacos
+        namespace: f4f7acbc-33f7-4991-a274-584a6fb4a37d
+        group: DEFAULT_GROUP
