@@ -3,6 +3,7 @@ package com.auth.redis;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.TimeInterval;
 import cn.hutool.core.lang.Opt;
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -65,7 +66,17 @@ public class RedisUtil {
      */
     public <T> T get(String key, Class<T> classes) {
         String str = redis.opsForValue().get(key);
-        return StringUtils.isNotBlank(str) ? JSONUtil.toBean(str, classes) : null;
+        if(StringUtils.isNotBlank(str)) {
+
+            if(Long.class.equals(classes) || Integer.class.equals(classes) || Double.class.equals(classes)) {
+                if(NumberUtil.isNumber(str)) {
+                    return JSONUtil.toBean(str, classes);
+                }
+            } else {
+                return JSONUtil.toBean(str, classes);
+            }
+        }
+        return null;
     }
 
     public String get(String key) {

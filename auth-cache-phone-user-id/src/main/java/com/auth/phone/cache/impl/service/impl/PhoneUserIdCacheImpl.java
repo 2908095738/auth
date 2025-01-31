@@ -7,6 +7,7 @@ import com.auth.phone.cache.PhoneUserIdCache;
 import com.auth.redis.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 
@@ -14,8 +15,9 @@ import javax.annotation.Resource;
 
 @Slf4j
 @Order(1)
+@Primary
 @Service
-public class PhoneCacheImpl implements PhoneUserIdCache, InitializingBean {
+public class PhoneUserIdCacheImpl implements PhoneUserIdCache, InitializingBean {
 
     @Resource
     private RedisUtil redisUtil;

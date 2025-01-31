@@ -22,7 +22,7 @@ public class LoginStrategy implements InitializingBean {
     public void afterPropertiesSet() {
         Map<String, AbstractLoginStrategy> loginStrategyMap = applicationContext.getBeansOfType(AbstractLoginStrategy.class);
         loginStrategyMapping = loginStrategyMap.values()
-                .stream().collect(Collectors.toMap(AbstractLoginStrategy::getLoginTypeCode, type -> type));
+                .stream().collect(Collectors.toMap(AbstractLoginStrategy::getLoginTypeCode, strategy -> strategy));
         log.info("登录策略 - 加载登录策略：{}", JSONUtil.toJsonStr(loginStrategyMapping));
     }
 
