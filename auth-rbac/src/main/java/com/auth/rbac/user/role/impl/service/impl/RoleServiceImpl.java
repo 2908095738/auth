@@ -37,7 +37,7 @@ public class RoleServiceImpl extends MPJBaseServiceImpl<RoleMapper, RoleEntity> 
                 .selectAll(RoleEntity.class)
                 .rightJoin(UserRoleEntity.class, UserRoleEntity::getRoleId, RoleEntity::getId)
                 .leftJoin(SystemEntity.class, SystemEntity::getCode, RoleEntity::getSystemCode)
-                .selectAssociation(System.class, RoleEntity::getSystemEntity)
+                .selectAssociation(SystemEntity.class, RoleEntity::getSystemEntity)
                 .eq(RoleEntity::getSystemCode, systemCode)
                 .eq(UserRoleEntity::getUserId, userId)
         );

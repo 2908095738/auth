@@ -21,6 +21,8 @@ public interface RBAC {
 
         Page<SystemDTO> searchSystemPage(Integer current, Integer size);
 
+        List<SystemDTO> searchSystem();
+
         Boolean save(SystemDTO system);
 
         Boolean updateSystemAdmin(Long systemId, Long userId);
@@ -37,9 +39,19 @@ public interface RBAC {
 
     interface Menu {
 
-        List<MenuDTO> searchBySystemIdAndUserId(Long systemId, Long userId);
+        Boolean add(MenuDTO menuDTO);
 
-        List<MenuDTO> search(Long systemId);
+        Boolean del(Long id);
+
+        Boolean updateById(MenuDTO menuDTO);
+
+        Boolean updateTypeById(List<Long> ids, Integer type);
+
+        List<MenuDTO> all();
+
+        List<MenuDTO> searchBySystemId(Long systemId);
+
+        MenuDTO searchById(Long id);
 
         List<MenuDTO> searchBySystemIdAndRoleId(Long systemId, Long roleId);
 

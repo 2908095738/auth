@@ -2,8 +2,8 @@ package com.auth.user.impl.converter;
 
 import com.auth.user.dto.UserDTO;
 import com.auth.user.entity.UserEntity;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.mapstruct.Mapper;
-import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 
@@ -11,12 +11,12 @@ import java.util.List;
  * 用户信息转换
  * @author ext.luchenlin5
  */
-@Mapper
+@Mapper(componentModel = "spring")
 public interface UserConverter {
 
-    UserConverter CONVERTER = Mappers.getMapper(UserConverter.class);
-
     UserDTO toDTO(UserEntity entity);
+
+    Page<UserDTO> toDTO(Page<UserEntity> entity);
 
     List<UserDTO> toDTO(List<UserEntity> entity);
 

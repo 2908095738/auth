@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 @RestController
 @RequestMapping
@@ -19,7 +20,12 @@ public class SearchSystem {
     private RBAC.System rbacSystem;
 
     @GetMapping("/system/list")
-    public Result<Page<SystemDTO>> search(@RequestParam Integer current, @RequestParam Integer size) {
+    public Result<List<SystemDTO>> list() {
+        return Result.success(rbacSystem.searchSystem());
+    }
+
+    @GetMapping("/system/page")
+    public Result<Page<SystemDTO>> page(@RequestParam Integer current, @RequestParam Integer size) {
         return Result.success(rbacSystem.searchSystemPage(current, size));
     }
 }

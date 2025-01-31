@@ -54,6 +54,7 @@ public class MenuEntity implements Serializable {
 
     /**
      * 类型（页面、弹窗、组件）
+     * @see com.auth.rbac.enums.MenuType
      */
     @TableField(value = "type")
     private Integer type;

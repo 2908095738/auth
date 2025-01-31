@@ -39,9 +39,21 @@ public class SystemServiceImpl extends MPJBaseServiceImpl<SystemMapper, SystemEn
                 .page(new Page<>(current, size));
 
         Page<SystemDTO> result = converter.toSystemDTOPage(page);
+        fillUserInfo(result.getRecords());
+        return result;
+    }
 
+    @Override
+    public List<SystemDTO> searchSystem() {
+        List<SystemEntity> list = lambdaQuery().eq(SystemEntity::getState, NumberUtils.INTEGER_ZERO).list();
+        List<SystemDTO> result = converter.toSystemDTOList(list);
+        fillUserInfo(result);
+        return result;
+    }
+
+    private void fillUserInfo(List<SystemDTO> systemList) {
         List<Long> userIds = new ArrayList<>();
-        result.getRecords().forEach(system ->{
+        systemList.forEach(system ->{
             if(nonNull(system.getAdminId())) {
                 userIds.add(system.getAdminId());
             }
@@ -56,7 +68,7 @@ public class SystemServiceImpl extends MPJBaseServiceImpl<SystemMapper, SystemEn
             }
         });
         Map<Long, UserDTO> mapping = searchUser.byIds(userIds).stream().collect(Collectors.toMap(UserDTO::getId, dto -> dto));
-        result.getRecords().forEach(system ->{
+        systemList.forEach(system ->{
             UserDTO adminUserInfo = mapping.get(system.getAdminId());
             system.setAdmin(adminUserInfo);
             UserDTO createUser = mapping.get(system.getCreateBy());
@@ -64,7 +76,6 @@ public class SystemServiceImpl extends MPJBaseServiceImpl<SystemMapper, SystemEn
             UserDTO updateUser = mapping.get(system.getUpdateBy());
             system.setUpdateUser(updateUser);
         });
-        return result;
     }
 
     @Override

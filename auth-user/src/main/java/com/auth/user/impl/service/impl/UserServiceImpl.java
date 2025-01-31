@@ -3,16 +3,17 @@ package com.auth.user.impl.service.impl;
 import com.auth.user.User;
 import com.auth.user.dto.UserDTO;
 import com.auth.user.entity.UserEntity;
+import com.auth.user.impl.converter.UserConverter;
 import com.auth.user.impl.mapper.UserMapper;
 import com.auth.user.menu.UserStateEnum;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.List;
-
-import static com.auth.user.impl.converter.UserConverter.CONVERTER;
 
 /**
  * 查询用户
@@ -23,24 +24,27 @@ import static com.auth.user.impl.converter.UserConverter.CONVERTER;
 @Service
 public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, UserEntity> implements User.Search, User.Edit, User.Save {
 
+    @Resource
+    private UserConverter converter;
+
     @Override
     public UserDTO byPhone(String phone) {
-        return CONVERTER.toDTO(lambdaQuery().eq(UserEntity::getState, UserStateEnum.STATUS_NORMAL).eq(UserEntity::getPhone, phone).one());
+        return converter.toDTO(lambdaQuery().eq(UserEntity::getState, UserStateEnum.STATUS_NORMAL).eq(UserEntity::getPhone, phone).one());
     }
     @Override
     public UserDTO byId(Long id) {
         UserEntity entity = super.getById(id);
-        return CONVERTER.toDTO(entity);
+        return converter.toDTO(entity);
     }
 
     @Override
     public List<UserDTO> byIds(List<Long> ids) {
-        return CONVERTER.toDTO(super.listByIds(ids));
+        return converter.toDTO(super.listByIds(ids));
     }
 
     @Override
-    public UserDTO byOpenId(String openId) {
-        return null;
+    public Page<UserDTO> page(Integer current, Integer size) {
+        return converter.toDTO(super.page(new Page<>(current, size)));
     }
 
     @Override
@@ -57,7 +61,7 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, UserEntity> 
     }
     @Override
     public void save(UserDTO userDTO) {
-        UserEntity entity = CONVERTER.toEntity(userDTO);
+        UserEntity entity = converter.toEntity(userDTO);
         entity.setId(null);
         entity.setCreateBy(null);
         entity.setUpdateBy(null);

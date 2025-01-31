@@ -3,6 +3,7 @@ package com.auth.user;
 import com.auth.user.dto.UserDTO;
 import com.auth.user.exception.UserNotLoginException;
 import com.auth.user.impl.config.threadlocal.LoginUserThreadLocal;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import java.util.List;
 import java.util.Objects;
@@ -32,7 +33,7 @@ public interface User {
 
         List<UserDTO> byIds(List<Long> id);
 
-        UserDTO byOpenId(String openId);
+        Page<UserDTO> page(Integer current, Integer size);
     }
 
     class LoginUserUtil {

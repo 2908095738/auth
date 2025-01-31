@@ -25,9 +25,15 @@ public interface Converter {
 
     RoleDTO toRoleDTO(RoleEntity entity);
 
+    MenuEntity toMenuEntity(MenuDTO dto);
+
+    MenuDTO toMenuDTO(MenuEntity entity);
+
     List<MenuDTO> toMenuDTO(List<MenuEntity> entityList);
 
     SystemEntity toEntity(SystemDTO dto);
 
     Page<SystemDTO> toSystemDTOPage(Page<SystemEntity> entityPage);
+
+    List<SystemDTO> toSystemDTOList(List<SystemEntity> entityList);
 }
