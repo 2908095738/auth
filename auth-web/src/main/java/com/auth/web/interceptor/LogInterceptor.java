@@ -22,7 +22,9 @@ public class LogInterceptor implements HandlerInterceptor {
     public boolean preHandle(@NotNull @org.jetbrains.annotations.NotNull HttpServletRequest request, @Nonnull HttpServletResponse response, @Nonnull Object handler) {
         // 生成追踪ID，如果客户端传入了追踪ID，则使用客户端传入的追踪ID，否则使用默认的ULID生成
         // 将追踪ID放入MDC中
-        MDC.put(TRACE_ID, IdUtil.getSnowflakeNextIdStr());
+        String traceId = IdUtil.getSnowflakeNextIdStr();
+        MDC.put(TRACE_ID, traceId);
+        response.addHeader("Requset-Id", traceId);
         return true;
     }
 

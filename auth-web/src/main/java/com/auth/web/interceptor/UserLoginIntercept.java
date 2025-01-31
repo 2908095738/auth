@@ -1,4 +1,4 @@
-package com.auth.user.interceptor;
+package com.auth.web.interceptor;
 
 import com.auth.token.Token;
 import com.auth.token.impl.dto.UserLoginToken;

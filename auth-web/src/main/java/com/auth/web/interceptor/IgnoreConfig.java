@@ -1,4 +1,4 @@
-package com.auth.user.interceptor;
+package com.auth.web.interceptor;
 
 import com.auth.user.entity.LoginInterceptIgnoreConfig;
 import com.auth.user.impl.service.LoginInterceptIgnoreConfigService;
@@ -9,7 +9,9 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -42,5 +44,9 @@ public class IgnoreConfig implements ApplicationListener<ContextRefreshedEvent> 
             }
         }
         return false;
+    }
+
+    public static List<String> getIgnoreApiPaths() {
+        return new ArrayList<>(IGNORE_API_PATHS);
     }
 }

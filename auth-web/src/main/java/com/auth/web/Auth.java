@@ -5,6 +5,7 @@ import cn.hutool.extra.spring.EnableSpringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.mybatis.spring.annotation.MapperScan;
+import org.mybatis.spring.annotation.MapperScans;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
@@ -19,11 +20,15 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import java.io.File;
 
 @Slf4j
-@MapperScan({"com.auth"})
+@MapperScans({
+        @MapperScan(basePackages = "com.auth.config.impl.mapper"),
+        @MapperScan(basePackages = "com.auth.rbac.user.role.impl.mapper"),
+        @MapperScan(basePackages = "com.auth.user.impl.mapper"),
+})
 @EnableAsync
 @EnableSpringUtil
 @EnableCaching
-@ComponentScan(value = { "com.auth" })
+@ComponentScan("com.auth")
 @SpringBootApplication
 @EnableDubbo
 @EnableScheduling

@@ -25,7 +25,7 @@ public interface Token {
      */
     interface ParseUserLoginToken {
 
-        UserLoginToken parse(String token);
+        UserLoginToken parse(String token) throws UserTokenParseException;
 
         UserLoginToken parse(HttpServletRequest request) throws UserTokenParseException;
     }

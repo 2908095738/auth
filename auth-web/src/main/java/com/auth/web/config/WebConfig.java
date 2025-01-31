@@ -1,10 +1,10 @@
 package com.auth.web.config;
 
 
-import com.auth.user.interceptor.UserLoginIntercept;
+import com.auth.web.interceptor.IgnoreConfig;
+import com.auth.web.interceptor.UserLoginIntercept;
 import com.auth.web.interceptor.LogInterceptor;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mobile.device.DeviceResolverHandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -41,7 +41,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(userLoginIntercept).addPathPatterns("/**");
+        registry.addInterceptor(userLoginIntercept).addPathPatterns("/**").excludePathPatterns(IgnoreConfig.getIgnoreApiPaths());
         registry.addInterceptor(new DeviceResolverHandlerInterceptor());
         registry.addInterceptor(new LogInterceptor());
     }

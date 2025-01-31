@@ -4,6 +4,7 @@ import com.auth.user.User;
 import com.auth.user.dto.UserDTO;
 import com.auth.user.entity.UserEntity;
 import com.auth.user.impl.mapper.UserMapper;
+import com.auth.user.menu.UserStateEnum;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
@@ -24,7 +25,7 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, UserEntity> 
 
     @Override
     public UserDTO byPhone(String phone) {
-        return null;
+        return CONVERTER.toDTO(lambdaQuery().eq(UserEntity::getState, UserStateEnum.STATUS_NORMAL).eq(UserEntity::getPhone, phone).one());
     }
     @Override
     public UserDTO byId(Long id) {

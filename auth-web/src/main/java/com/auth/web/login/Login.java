@@ -1,4 +1,4 @@
-package com.auth.login;
+package com.auth.web.login;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.TimeInterval;
@@ -8,6 +8,8 @@ import com.auth.Result;
 import com.auth.config.Config;
 import com.auth.config.impl.entity.RedisLockConfig;
 import com.auth.log.Log;
+import com.auth.login.AbstractLoginStrategy;
+import com.auth.login.LoginStrategy;
 import com.auth.login.param.Param;
 import com.auth.login.vo.VO;
 import com.auth.token.Token;

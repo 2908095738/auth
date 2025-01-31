@@ -72,15 +72,19 @@ public class TokenServiceImpl implements Token.CreateUserLoginAuthToken, Token.V
     }
 
     @Override
-    public UserLoginToken parse(String token) {
-        JWT jwt = JWTUtil.parseToken(token);
-        JWTPayload payload = jwt.getPayload();
-        JSONObject claimsJson = payload.getClaimsJson();
-        Long userId = claimsJson.getBean(TOKEN_PAYLOAD_UID_KEY, Long.class);
-        Date issuedAt = claimsJson.getDate(JWTPayload.ISSUED_AT);
-        Date notBefore = claimsJson.getDate(JWTPayload.NOT_BEFORE);
-        Date expiresAt = claimsJson.getDate(JWTPayload.EXPIRES_AT);
-        return new UserLoginToken(userId, issuedAt, notBefore, expiresAt);
+    public UserLoginToken parse(String token) throws UserTokenParseException {
+        try {
+            JWT jwt = JWTUtil.parseToken(token);
+            JWTPayload payload = jwt.getPayload();
+            JSONObject claimsJson = payload.getClaimsJson();
+            Long userId = claimsJson.getBean(TOKEN_PAYLOAD_UID_KEY, Long.class);
+            Date issuedAt = claimsJson.getDate(JWTPayload.ISSUED_AT);
+            Date notBefore = claimsJson.getDate(JWTPayload.NOT_BEFORE);
+            Date expiresAt = claimsJson.getDate(JWTPayload.EXPIRES_AT);
+            return new UserLoginToken(userId, issuedAt, notBefore, expiresAt);
+        } catch (Exception e) {
+            throw new UserTokenParseException();
+        }
     }
 
     @Override
