@@ -18,6 +18,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.nonNull;
@@ -49,6 +50,12 @@ public class SystemServiceImpl extends MPJBaseServiceImpl<SystemMapper, SystemEn
         List<SystemDTO> result = converter.toSystemDTOList(list);
         fillUserInfo(result);
         return result;
+    }
+
+    @Override
+    public Map<String, SystemDTO> searchBySystemCode(Set<String> systemCodes) {
+        List<SystemEntity> list = lambdaQuery().in(SystemEntity::getCode, systemCodes).list();
+        return list.stream().collect(Collectors.toMap(SystemEntity::getCode, converter::toSystemDTO));
     }
 
     private void fillUserInfo(List<SystemDTO> systemList) {

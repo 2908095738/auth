@@ -10,6 +10,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * rbac
@@ -23,6 +25,8 @@ public interface RBAC {
 
         List<SystemDTO> searchSystem();
 
+        Map<String, SystemDTO> searchBySystemCode(Set<String> systemCodes);
+
         Boolean save(SystemDTO system);
 
         Boolean updateSystemAdmin(Long systemId, Long userId);
@@ -35,6 +39,8 @@ public interface RBAC {
         List<RoleDTO> searchList(String systemCode, Long userId);
 
         RoleDTO searchById(Long id);
+
+        Page<RoleDTO> page(Integer current, Integer size);
     }
 
     interface Menu {

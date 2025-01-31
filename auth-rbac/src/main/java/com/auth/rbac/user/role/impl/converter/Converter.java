@@ -8,7 +8,6 @@ import com.auth.rbac.user.role.enetity.RoleEntity;
 import com.auth.rbac.user.role.enetity.SystemEntity;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.mapstruct.Mapper;
-import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 
@@ -19,9 +18,9 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface Converter {
 
-    Converter CONVERTER = Mappers.getMapper(Converter.class);
-
     List<RoleDTO> toRoleDTO(List<RoleEntity> entity);
+
+    Page<RoleDTO> toRoleDTO(Page<RoleEntity> entity);
 
     RoleDTO toRoleDTO(RoleEntity entity);
 
@@ -32,6 +31,8 @@ public interface Converter {
     List<MenuDTO> toMenuDTO(List<MenuEntity> entityList);
 
     SystemEntity toEntity(SystemDTO dto);
+
+    SystemDTO toSystemDTO(SystemEntity dto);
 
     Page<SystemDTO> toSystemDTOPage(Page<SystemEntity> entityPage);
 

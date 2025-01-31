@@ -1,4 +1,4 @@
-package com.auth.web.rbac.role.menu;
+package com.auth.web.rbac.roleMenu;
 
 import com.auth.Result;
 import com.auth.rbac.dto.RoleDTO;
@@ -25,6 +25,6 @@ public class SearchRoleAllMenu {
     @GetMapping("/role/menu")
     public Result<RBAC.Menu.SearchTreeBySystemAndRoleIdVO> search(@RequestParam Long roleId) {
         RoleDTO role = rbacRole.searchById(roleId);
-        return Result.success(rbacMenu.searchTree(role.getSystemEntity().getId(), roleId));
+        return Result.success(rbacMenu.searchTree(role.getSystemDTO().getId(), roleId));
     }
 }

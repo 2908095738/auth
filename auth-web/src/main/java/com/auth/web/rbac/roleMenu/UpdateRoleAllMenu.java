@@ -1,4 +1,4 @@
-package com.auth.web.rbac.role.menu;
+package com.auth.web.rbac.roleMenu;
 
 import com.auth.Result;
 import com.auth.rbac.dto.RoleDTO;

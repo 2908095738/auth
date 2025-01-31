@@ -1,4 +1,4 @@
-package com.auth.web.rbac.user.role;
+package com.auth.web.rbac.userRole;
 
 import com.auth.Result;
 import com.auth.rbac.dto.RoleDTO;

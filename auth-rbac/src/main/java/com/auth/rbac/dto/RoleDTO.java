@@ -1,6 +1,5 @@
 package com.auth.rbac.dto;
 
-import com.auth.rbac.user.role.enetity.SystemEntity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.AllArgsConstructor;
@@ -46,5 +45,5 @@ public class RoleDTO {
      * 系统信息
      */
     @TableField(exist = false)
-    private SystemEntity systemEntity;
+    private SystemDTO systemDTO;
 }
