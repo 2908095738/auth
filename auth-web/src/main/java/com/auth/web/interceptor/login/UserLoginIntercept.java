@@ -1,4 +1,4 @@
-package com.auth.web.interceptor;
+package com.auth.web.interceptor.login;
 
 import com.auth.token.Token;
 import com.auth.token.impl.dto.UserLoginToken;
@@ -27,6 +27,9 @@ public class UserLoginIntercept implements HandlerInterceptor {
     private Token.ParseUserLoginToken parseUserLoginToken;
 
     @Resource
+    private Token.VerifyUserLoginAuthToken verifyUserLoginAuthToken;
+
+    @Resource
     private User.Search searchUser;
 
     @Override
@@ -35,10 +38,13 @@ public class UserLoginIntercept implements HandlerInterceptor {
             return true;
         }
         try {
-            UserLoginToken token = parseUserLoginToken.parse(request);
-            UserDTO user = searchUser.byId(token.getUid());
-            LoginUserThreadLocal.set(user);
-            return true;
+            if(verifyUserLoginAuthToken.verify(request)) {
+                UserLoginToken token = parseUserLoginToken.parse(request);
+                UserDTO user = searchUser.byId(token.getUid());
+                LoginUserThreadLocal.set(user);
+                return true;
+            }
+            return false;
         } catch (Exception e) {
             log.warn("[UserServiceImpl::loginUser] 用户登录信息获取异常 ", e);
             throw new UserNotLoginException();

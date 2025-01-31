@@ -17,6 +17,8 @@ public interface Token {
      */
     interface VerifyUserLoginAuthToken {
 
+        Boolean verify(HttpServletRequest request) throws UserTokenParseException;
+
         Boolean verify(String token) throws UserTokenParseException;
     }
 

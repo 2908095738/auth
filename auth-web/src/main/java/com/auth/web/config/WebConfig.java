@@ -1,8 +1,8 @@
 package com.auth.web.config;
 
 
-import com.auth.web.interceptor.IgnoreConfig;
-import com.auth.web.interceptor.UserLoginIntercept;
+import com.auth.web.interceptor.login.IgnoreConfig;
+import com.auth.web.interceptor.login.UserLoginIntercept;
 import com.auth.web.interceptor.LogInterceptor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Configuration;

@@ -72,17 +72,23 @@ public class TokenServiceImpl implements Token.CreateUserLoginAuthToken, Token.V
     }
 
     @Override
-    public UserLoginToken parse(String token) throws UserTokenParseException {
+    public UserLoginToken parse(String inputToken) throws UserTokenParseException {
+        String token = inputToken;
         try {
+            // 校验：token 字符串是否为空
+            checkArgument(isNotBlank(token), "Token 字符串为空");
+            // 如果 token 包含 Bearer，则移除
+            token = tryDeleteAuth2TokenPrefix(token);
             JWT jwt = JWTUtil.parseToken(token);
             JWTPayload payload = jwt.getPayload();
             JSONObject claimsJson = payload.getClaimsJson();
-            Long userId = claimsJson.getBean(TOKEN_PAYLOAD_UID_KEY, Long.class);
+            Long userId = claimsJson.getLong(TOKEN_PAYLOAD_UID_KEY);
             Date issuedAt = claimsJson.getDate(JWTPayload.ISSUED_AT);
             Date notBefore = claimsJson.getDate(JWTPayload.NOT_BEFORE);
             Date expiresAt = claimsJson.getDate(JWTPayload.EXPIRES_AT);
             return new UserLoginToken(userId, issuedAt, notBefore, expiresAt);
         } catch (Exception e) {
+            log.debug("用户 Token 解析失败：{}!", e.getMessage(), e);
             throw new UserTokenParseException();
         }
     }
@@ -91,6 +97,12 @@ public class TokenServiceImpl implements Token.CreateUserLoginAuthToken, Token.V
     public UserLoginToken parse(HttpServletRequest request) throws UserTokenParseException {
         String token = request.getHeader(Header.AUTHORIZATION.getValue());
         return parse(token);
+    }
+
+    @Override
+    public Boolean verify(HttpServletRequest request) throws UserTokenParseException {
+        String token = request.getHeader(Header.AUTHORIZATION.getValue());
+        return verify(token);
     }
 
     @Override
