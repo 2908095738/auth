@@ -20,12 +20,7 @@
     <dependencies>
         <dependency>
             <groupId>com.auth</groupId>
-            <artifactId>auth-common</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.auth</groupId>
-            <artifactId>auth-user</artifactId>
+            <artifactId>auth-login</artifactId>
             <version>1.0</version>
         </dependency>
         <dependency>
