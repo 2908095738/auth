@@ -21,6 +21,12 @@ public class WebConfig implements WebMvcConfigurer {
     @Resource
     private UserLoginIntercept userLoginIntercept;
 
+    @Resource
+    private LogInterceptor logInterceptor;
+
+    @Resource
+    private CheckSuperAdminInterceptor checkSuperAdminInterceptor;
+
     @Override
     public void addResourceHandlers(@NotNull ResourceHandlerRegistry registry) {
 
@@ -42,10 +48,10 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new LogInterceptor());
+        registry.addInterceptor(logInterceptor);
         registry.addInterceptor(userLoginIntercept).addPathPatterns("/**").excludePathPatterns(IgnoreConfig.getIgnoreApiPaths());
         registry.addInterceptor(new DeviceResolverHandlerInterceptor());
-        registry.addInterceptor(new CheckSuperAdminInterceptor());
+        registry.addInterceptor(checkSuperAdminInterceptor);
     }
 }
 

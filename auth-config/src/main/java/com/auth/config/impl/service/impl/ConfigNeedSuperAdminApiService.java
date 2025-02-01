@@ -6,6 +6,7 @@ import com.auth.config.impl.mapper.ConfigNeedSuperAdminApiMapper;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -14,7 +15,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Service
+@Primary
+@Service("needSuperAdminConfig")
 public class ConfigNeedSuperAdminApiService extends MPJBaseServiceImpl<ConfigNeedSuperAdminApiMapper, ConfigNeedSuperAdminApi> implements Config.NeedSuperAdminConfig, InitializingBean {
 
     private static final Set<String> NEED_SUPER_ADMIN_API_PATH_SET = new HashSet<>();
