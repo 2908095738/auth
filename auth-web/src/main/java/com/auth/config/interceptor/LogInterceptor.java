@@ -1,4 +1,4 @@
-package com.auth.web.interceptor;
+package com.auth.config.interceptor;
 
 import cn.hutool.core.util.IdUtil;
 import lombok.extern.slf4j.Slf4j;

@@ -1,9 +1,10 @@
 package com.auth.config;
 
 
-import com.auth.web.interceptor.login.IgnoreConfig;
-import com.auth.web.interceptor.login.UserLoginIntercept;
-import com.auth.web.interceptor.LogInterceptor;
+import com.auth.config.interceptor.checkSuperAdmin.CheckSuperAdminInterceptor;
+import com.auth.config.interceptor.login.IgnoreConfig;
+import com.auth.config.interceptor.login.UserLoginIntercept;
+import com.auth.config.interceptor.LogInterceptor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mobile.device.DeviceResolverHandlerInterceptor;
@@ -41,9 +42,10 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new LogInterceptor());
         registry.addInterceptor(userLoginIntercept).addPathPatterns("/**").excludePathPatterns(IgnoreConfig.getIgnoreApiPaths());
         registry.addInterceptor(new DeviceResolverHandlerInterceptor());
-        registry.addInterceptor(new LogInterceptor());
+        registry.addInterceptor(new CheckSuperAdminInterceptor());
     }
 }
 

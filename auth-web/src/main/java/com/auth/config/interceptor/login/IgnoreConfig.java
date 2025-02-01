@@ -1,4 +1,4 @@
-package com.auth.web.interceptor.login;
+package com.auth.config.interceptor.login;
 
 import com.auth.user.entity.LoginInterceptIgnoreConfig;
 import com.auth.user.impl.service.LoginInterceptIgnoreConfigService;
