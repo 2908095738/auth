@@ -61,7 +61,7 @@ public class TokenServiceImpl implements Token.CreateUserLoginAuthToken, Token.V
     @Override
     public UserLoginToken create(Long userId) {
         Date now = new Date();
-        DateTime expireDate = DateUtil.offsetDay(now, tokenTimeoutDayConfig.getIntValue());
+        DateTime expireDate = DateUtil.offsetDay(now, tokenTimeoutDayConfig.intValue());
         String token = AUTH2_TOKEN_PREFIX + JWT.create()
                 .setIssuedAt(now)   //设置签发时间
                 .setExpiresAt(expireDate)   //设置过期时间

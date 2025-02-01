@@ -1,9 +1,8 @@
-package com.auth.web.config;
+package com.auth.config;
 
 import cn.hutool.http.HttpStatus;
 import cn.hutool.jwt.JWTException;
 import com.auth.Result;
-import com.auth.exception.BusinessException;
 import com.auth.token.impl.exception.UserTokenParseException;
 import com.auth.user.exception.UserNotLoginException;
 import lombok.extern.slf4j.Slf4j;
@@ -19,13 +18,6 @@ public class SystemExceptionHandler {
 
 
     @ResponseBody
-    @ExceptionHandler(value = BusinessException.class)
-    public Result<Object> errorHandler(BusinessException exception) {
-        exception.printStackTrace();
-        return Result.failed(exception.getCode(), exception.getMessage());
-    }
-
-    @ResponseBody
     @ExceptionHandler(value = { UserNotLoginException.class, JWTException.class, UserTokenParseException.class})
     public Result<Object> errorHandler(Exception e, HttpServletResponse response) {
         log.warn("全局异常拦截 - 拦截登录相关异常！msg={}", e.getMessage());
@@ -37,5 +29,12 @@ public class SystemExceptionHandler {
     @ExceptionHandler(value = IllegalArgumentException.class)
     public Result<Object> errorHandler(IllegalArgumentException ignoredException) {
         return Result.success(400, ignoredException.getMessage());
+    }
+
+    @ResponseBody
+    @ExceptionHandler(value = Exception.class)
+    public Result<Object> errorHandler(Exception exception) {
+        exception.printStackTrace();
+        return Result.failed("服务器异常!");
     }
 }

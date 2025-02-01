@@ -42,7 +42,7 @@ public class UserCacheImpl implements UserCache, InitializingBean {
     @Override
     public void reload(UserDTO user) throws IllegalArgumentException {
         String key = cacheConfig.generateKey(user.getId());
-        redis.set(key, toJsonPrettyStr(user), cacheConfig.getRandomTimeout(), cacheConfig.getTimeoutUnit());
+        redis.set(key, toJsonPrettyStr(user), cacheConfig.generateRandomTimeout(), cacheConfig.getTimeoutUnit());
     }
 
     @Override
@@ -71,6 +71,6 @@ public class UserCacheImpl implements UserCache, InitializingBean {
 
     @Override
     public void expire(Long userId) {
-        redis.expire(cacheConfig.generateKey(userId), cacheConfig.getRandomTimeout(), cacheConfig.getTimeoutUnit());
+        redis.expire(cacheConfig.generateKey(userId), cacheConfig.generateRandomTimeout(), cacheConfig.getTimeoutUnit());
     }
 }

@@ -44,7 +44,7 @@ public class SystemConfigItem {
     @TableField(value = "state")
     private Integer state;
 
-    public Integer getIntValue() {
+    public Integer intValue() {
         return Integer.valueOf(value);
     }
 }

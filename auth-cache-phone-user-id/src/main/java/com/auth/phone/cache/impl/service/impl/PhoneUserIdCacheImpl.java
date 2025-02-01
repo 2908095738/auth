@@ -43,12 +43,12 @@ public class PhoneUserIdCacheImpl implements PhoneUserIdCache, InitializingBean 
 
     @Override
     public void expire(String phone) {
-        redisUtil.expire(cacheConfig.generateKey(phone), cacheConfig.getRandomTimeout(), cacheConfig.getTimeoutUnit());
+        redisUtil.expire(cacheConfig.generateKey(phone), cacheConfig.generateRandomTimeout(), cacheConfig.getTimeoutUnit());
     }
 
     @Override
     public void reload(String phone, Long userId) {
-        redisUtil.set(cacheConfig.generateKey(phone), userId, cacheConfig.getRandomTimeout(), cacheConfig.getTimeoutUnit());
+        redisUtil.set(cacheConfig.generateKey(phone), userId, cacheConfig.generateRandomTimeout(), cacheConfig.getTimeoutUnit());
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.auth.config.impl.service.impl;
 import com.auth.config.Config;
 import com.auth.config.enums.ConfigStateEnum;
 import com.auth.config.impl.entity.RedisLockConfig;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.auth.config.impl.mapper.ConfigRedisLockMapper;
@@ -35,5 +36,10 @@ public class ConfigRedisLockServiceImpl extends ServiceImpl<ConfigRedisLockMappe
     @Override
     public RedisLockConfig getConfig(String cacheCode) {
         return configMap.get(cacheCode);
+    }
+
+    @Override
+    public Page<RedisLockConfig> page(Integer current, Integer size) {
+        return page(new Page<>(current, size));
     }
 }

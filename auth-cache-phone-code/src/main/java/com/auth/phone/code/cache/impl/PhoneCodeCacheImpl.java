@@ -34,7 +34,7 @@ public class PhoneCodeCacheImpl implements PhoneCodeCache, InitializingBean {
     @Override
     public void reload(String phone, Integer code) throws IllegalArgumentException {
         String key = cacheConfig.generateKey(phone);
-        redis.set(key, code, cacheConfig.getRandomTimeout(), cacheConfig.getTimeoutUnit());
+        redis.set(key, code, cacheConfig.generateRandomTimeout(), cacheConfig.getTimeoutUnit());
     }
 
     @Override
@@ -53,6 +53,6 @@ public class PhoneCodeCacheImpl implements PhoneCodeCache, InitializingBean {
 
     @Override
     public void expire(String phone) {
-        redis.expire(cacheConfig.generateKey(phone), cacheConfig.getRandomTimeout(), cacheConfig.getTimeoutUnit());
+        redis.expire(cacheConfig.generateKey(phone), cacheConfig.generateRandomTimeout(), cacheConfig.getTimeoutUnit());
     }
 }

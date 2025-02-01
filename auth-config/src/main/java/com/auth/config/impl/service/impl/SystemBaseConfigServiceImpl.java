@@ -4,6 +4,7 @@ import com.auth.config.Config;
 import com.auth.config.enums.ConfigStateEnum;
 import com.auth.config.impl.entity.SystemConfigItem;
 import com.auth.config.impl.mapper.SystemBaseConfigMapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -37,5 +38,10 @@ public class SystemBaseConfigServiceImpl extends MPJBaseServiceImpl<SystemBaseCo
     @Override
     public SystemConfigItem getConfig(String code) {
         return configMap.get(code);
+    }
+
+    @Override
+    public Page<SystemConfigItem> page(Integer current, Integer size) {
+        return page(new Page<>(current, size));
     }
 }

@@ -1,4 +1,4 @@
-package com.auth.web.config;
+package com.auth.config;
 
 
 import com.auth.web.interceptor.login.IgnoreConfig;

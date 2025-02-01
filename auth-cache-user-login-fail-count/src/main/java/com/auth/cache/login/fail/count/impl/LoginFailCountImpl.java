@@ -45,8 +45,8 @@ public class LoginFailCountImpl implements LoginFailCount, InitializingBean {
     @Override
     public void afterPropertiesSet() {
         cacheConfig = SpringUtil.getBean(Config.CacheConfig.class).getKeyConfig(CACHE_CODE);
-        loginFailThreshold = SpringUtil.getBean(Config.SystemConfig.class).getConfig(LOGIN_FAIL_THRESHOLD_CODE).getIntValue();
-        loginFailTimeWindow = SpringUtil.getBean(Config.SystemConfig.class).getConfig(LOGIN_FAIL_TIME_WINDOW_CODE).getIntValue();
+        loginFailThreshold = SpringUtil.getBean(Config.SystemConfig.class).getConfig(LOGIN_FAIL_THRESHOLD_CODE).intValue();
+        loginFailTimeWindow = SpringUtil.getBean(Config.SystemConfig.class).getConfig(LOGIN_FAIL_TIME_WINDOW_CODE).intValue();
     }
 
     @Override

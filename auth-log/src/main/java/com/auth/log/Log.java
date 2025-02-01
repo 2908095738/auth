@@ -39,7 +39,7 @@ public interface Log {
             RedisUtil redisUtil = SpringUtil.getBean(RedisUtil.class);
             String ip = IpUtil.getIp(request);
             LoginLog loginLog = new LoginLog(userId, createTime, ip, RequestID.getRequestID(), loginTime);
-            redisUtil.set(cacheConfig.generateKey(userId), JSONUtil.toJsonStr(loginLog), cacheConfig.getRandomTimeout(), cacheConfig.getTimeoutUnit());
+            redisUtil.set(cacheConfig.generateKey(userId), JSONUtil.toJsonStr(loginLog), cacheConfig.generateRandomTimeout(), cacheConfig.getTimeoutUnit());
         }
     }
 }

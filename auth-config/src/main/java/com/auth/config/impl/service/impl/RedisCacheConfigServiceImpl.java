@@ -4,6 +4,7 @@ import com.auth.config.Config;
 import com.auth.config.enums.ConfigStateEnum;
 import com.auth.config.impl.entity.RedisCacheConfig;
 import com.auth.config.impl.mapper.RedisCacheConfigMapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -36,5 +37,10 @@ public class RedisCacheConfigServiceImpl extends MPJBaseServiceImpl<RedisCacheCo
     @Override
     public RedisCacheConfig getKeyConfig(String cacheCode) {
         return redisConfigMap.get(cacheCode);
+    }
+
+    @Override
+    public Page<RedisCacheConfig> page(Integer current, Integer size) {
+        return page(new Page<>(current, size));
     }
 }
