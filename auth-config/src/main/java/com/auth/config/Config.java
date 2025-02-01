@@ -33,4 +33,8 @@ public interface Config {
 
         Boolean isNeedSuperAdmin(String apiPath);
     }
+
+    interface TaskConfig {
+
+    }
 }
