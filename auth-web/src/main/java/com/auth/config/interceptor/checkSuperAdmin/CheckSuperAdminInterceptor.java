@@ -1,6 +1,7 @@
 package com.auth.config.interceptor.checkSuperAdmin;
 
 import cn.hutool.core.annotation.AnnotationUtil;
+import com.auth.config.Config;
 import com.auth.config.NeedSuperAdmin;
 import com.auth.user.User;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +10,7 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -20,11 +22,14 @@ import static java.util.Objects.nonNull;
 @Component
 public class CheckSuperAdminInterceptor implements HandlerInterceptor {
 
+    @Resource
+    private Config.NeedSuperAdminConfig needSuperAdminConfig;
+
     @Override
     public boolean preHandle(@Nonnull HttpServletRequest request, @Nonnull HttpServletResponse response, @Nonnull Object handler) throws IOException {
         if(handler instanceof HandlerMethod) {
             HandlerMethod handlerMethod = (HandlerMethod) handler;
-            if(getClassNeedSuperAdminAnnotationNotNull(handlerMethod) || methodNeedSuperAdminAnnotationNotNull(handlerMethod)) {
+            if(getClassNeedSuperAdminAnnotationNotNull(handlerMethod) || methodNeedSuperAdminAnnotationNotNull(handlerMethod) || needSuperAdminConfig.isNeedSuperAdmin(request.getRequestURI())) {
                 if(User.LoginUserUtil.loginUserNotIsAdmin()) {
                     response.sendError(400,"您没有权限访问该 API");
                     return false;

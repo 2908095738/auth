@@ -28,4 +28,9 @@ public interface Config {
 
         Page<RedisLockConfig> page(Integer current, Integer size);
     }
+
+    interface NeedSuperAdminConfig {
+
+        Boolean isNeedSuperAdmin(String apiPath);
+    }
 }
