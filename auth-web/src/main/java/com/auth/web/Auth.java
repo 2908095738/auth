@@ -24,6 +24,7 @@ import java.io.File;
         @MapperScan(basePackages = "com.auth.config.impl.mapper"),
         @MapperScan(basePackages = "com.auth.rbac.user.role.impl.mapper"),
         @MapperScan(basePackages = "com.auth.user.impl.mapper"),
+        @MapperScan(basePackages = "com.auth.log.mapper"),
 })
 @EnableAsync
 @EnableSpringUtil

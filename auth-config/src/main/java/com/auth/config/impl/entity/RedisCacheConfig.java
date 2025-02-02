@@ -67,6 +67,10 @@ public class RedisCacheConfig {
         return generateKey(key.toString());
     }
 
+    public String generateKey() {
+        return keyPrefix.substring(0, keyPrefix.length() - 1);
+    }
+
     public Integer generateRandomTimeout() {
         if(timeout.equals(timeoutScope)) {
             return timeout;

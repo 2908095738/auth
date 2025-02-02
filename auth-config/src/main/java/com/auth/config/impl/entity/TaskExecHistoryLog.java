@@ -38,6 +38,25 @@ public class TaskExecHistoryLog {
     private String taskDesc;
 
     /**
+     * cron 表达式
+     */
+    @TableField(value = "cron")
+    private String cron;
+
+    /**
+     * 类名和方法名表达式
+     * 格式：com.auth.test.StrUtil#isEmpty
+     */
+    @TableField(value = "class_name_with_method_name")
+    private String classNameWithMethodName;
+
+    /**
+     * 执行时间描述
+     */
+    @TableField(value = "exec_descriptor")
+    private String execDescriptor;
+
+    /**
      * 执行结果（0失败；1成功）
      * @see com.auth.config.enums.TaskExecResultEnum
      */
@@ -72,6 +91,9 @@ public class TaskExecHistoryLog {
     public TaskExecHistoryLog(TaskConfig taskConfig, TaskExecResultEnum execResultEnum, Long time, TaskTimeUnitEnum timeUnitEnum, String traceId) {
         this.taskId = taskConfig.getId();
         this.taskDesc = taskConfig.getTaskDescriptor();
+        this.cron = taskConfig.getCron();
+        this.classNameWithMethodName = taskConfig.getClassNameWithMethodName();
+        this.execDescriptor = taskConfig.getExecDescriptor();
         this.execResult = execResultEnum.getExecResult();
         this.time = time;
         this.timeUnit = timeUnitEnum.getCode();
@@ -81,6 +103,9 @@ public class TaskExecHistoryLog {
     public TaskExecHistoryLog(TaskConfig taskConfig, TaskExecResultEnum execResultEnum, String traceId) {
         this.taskId = taskConfig.getId();
         this.taskDesc = taskConfig.getTaskDescriptor();
+        this.cron = taskConfig.getCron();
+        this.classNameWithMethodName = taskConfig.getClassNameWithMethodName();
+        this.execDescriptor = taskConfig.getExecDescriptor();
         this.execResult = execResultEnum.getExecResult();
         this.traceId = traceId;
     }

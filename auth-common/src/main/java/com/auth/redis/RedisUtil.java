@@ -134,6 +134,10 @@ public class RedisUtil {
         redis.opsForValue().set(key, data, timeout, unit);
     }
 
+    public void zSet(String key, String value, Double score) {
+        redis.opsForZSet().add(key, value, score);
+    }
+
     public void zSet(String key, Set<ZSetOperations.TypedTuple<String>> tuples) {
         redis.opsForZSet().add(key, tuples);
     }
@@ -152,6 +156,16 @@ public class RedisUtil {
 
     public Long increment(String key) {
         return redis.boundValueOps(key).increment();
+    }
+
+    public void listAdd(String key, Object value) {
+        String val;
+        if(value instanceof String) {
+            val = value.toString();
+        } else {
+            val = JSONUtil.toJsonStr(value);
+        }
+        redis.opsForList().leftPush(key, val);
     }
 
     @Slf4j
