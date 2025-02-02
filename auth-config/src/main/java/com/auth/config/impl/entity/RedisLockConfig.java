@@ -16,7 +16,6 @@ import static org.apache.commons.lang3.math.NumberUtils.LONG_ZERO;
 
 /**
  * 配置：分布式锁
- * @TableName config_redis_lock
  */
 @TableName(value ="config_redis_lock")
 @Data
@@ -62,8 +61,8 @@ public class RedisLockConfig implements Serializable {
      */
     private Integer state;
 
-    public String generateKey(Long suffix) {
-        return generateKey(suffix.toString());
+    public String generateKey() {
+        return keyPrefix.substring(0, keyPrefix.length() - 1);
     }
 
     public String generateKey(String suffix) {

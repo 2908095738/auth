@@ -1,15 +1,19 @@
 package com.auth.log;
 
 import cn.hutool.core.lang.TypeReference;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import cn.hutool.json.JSONUtil;
 import com.auth.config.Config;
 import com.auth.config.impl.entity.RedisCacheConfig;
+import com.auth.config.impl.entity.RedisLockConfig;
 import com.auth.log.entity.LoginLog;
 import com.auth.log.impl.LoginLogServiceImpl;
 import com.auth.log.util.IpUtil;
 import com.auth.redis.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.slf4j.MDC;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -48,15 +52,18 @@ public interface Log {
 
         private static final RedisCacheConfig cacheConfig = SpringUtil.getBean(Config.CacheConfig.class).getKeyConfig(CACHE_CODE);
 
+        private static final RedisLockConfig taskLockConfig = SpringUtil.getBean(Config.LockConfig.class).getConfig("lock_task_log_login_clean");
+
         /**
          * 记录登录日志
          */
-        public static void record(Long userId, Date createTime, Long loginTime) {
+        public static void record(Long userId, Date loginTime, Long tripTime) {
             HttpServletRequest request = ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
             RedisUtil redisUtil = SpringUtil.getBean(RedisUtil.class);
             String ip = IpUtil.getIp(request);
-            LoginLog loginLog = new LoginLog(userId, createTime, ip, RequestID.getRequestID(), loginTime);
-            redisUtil.zSet(cacheConfig.generateKey(), JSONUtil.toJsonStr(loginLog), userId.doubleValue());
+            LoginLog loginLog = new LoginLog(userId, loginTime, ip, RequestID.getRequestID(), tripTime);
+            long score = loginTime.getTime() + IdUtil.getSnowflakeNextId();
+            redisUtil.zSet(cacheConfig.generateKey(), JSONUtil.toJsonStr(loginLog), (double) score);
         }
 
         public static final Integer SCAN_BATCH_NUMBER = 1000;
@@ -69,11 +76,14 @@ public interface Log {
             TransactionDefinition transactionDefinition = SpringUtil.getBean(TransactionDefinition.class);
             RedisTemplate<String, String> redisTemplate = SpringUtil.getBean(new TypeReference<RedisTemplate<String, String>>() {});
             TransactionStatus transaction = transactionManager.getTransaction(transactionDefinition);
+
+            RLock lock = getLock();
             try {
-                Long total = redisTemplate.opsForZSet().size(redisKey);
-                if(nonNull(total)) {
-                    long pageTotal = computerTotalPage(total);
-                    if(pageTotal > LONG_ZERO) {
+                if(lock.tryLock(taskLockConfig.getWaitTime(), taskLockConfig.getLeaseTime(), taskLockConfig.getUnit())) {
+                    log.info("定时任务 - 登录日志 - 批量保存: 成功获取到分布式锁，开始执行...");
+                    Long total = redisTemplate.opsForZSet().size(redisKey);
+                    if(nonNull(total) && total > LONG_ZERO) {
+                        long pageTotal = computerTotalPage(total);
                         for (int currentPage = INTEGER_ONE; currentPage <= pageTotal; currentPage++) {
                             // 通过 scan 命令，分页读取 zSet 中的日志（每批上限 1000）
                             Cursor<ZSetOperations.TypedTuple<String>> data = page(redisKey);
@@ -85,18 +95,31 @@ public interface Log {
                                 throw new RuntimeException("保存登录日志失败!");
                             }
                         }
+                        redisTemplate.opsForZSet().removeRange(redisKey, 0, total - 1);
                         log.info("定时任务 - 登录日志 - 批量保存: 任务执行结束！共{}条数据，分{}批", total, pageTotal);
+                    } else {
+                        log.info("定时任务 - 登录日志 - 批量保存: 任务无需执行，缓存无日志！");
                     }
+                    transactionManager.commit(transaction);
+                    return true;
                 } else {
-                    log.info("定时任务 - 登录日志 - 批量保存: 任务无需执行，缓存无日志！");
+                    log.error("定时任务 - 登录日志 - 批量保存: 任务可能正在执行（无法获取到分布式锁!）放弃执行");
+                    return false;
                 }
-                transactionManager.commit(transaction);
-                return true;
             } catch (Exception e) {
                 e.printStackTrace();
                 transactionManager.rollback(transaction);
                 return false;
+            } finally {
+                if(lock.isLocked()) {
+                    lock.unlock();
+                }
             }
+        }
+
+        private static RLock getLock() {
+            RedissonClient redisson = SpringUtil.getBean(RedissonClient.class);
+            return redisson.getSpinLock(taskLockConfig.generateKey());
         }
 
         private static long computerTotalPage(Long total) {

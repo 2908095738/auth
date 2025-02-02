@@ -55,14 +55,14 @@ public class LoginLog {
     /**
      * 登录耗时
      */
-    @TableField(value = "login_time")
-    private Long loginTime;
+    @TableField(value = "trip_time")
+    private Long tripTime;
 
-    public LoginLog(Long userId, Date createTime, String ip, String requestId, Long loginTime) {
+    public LoginLog(Long userId, Date createTime, String ip, String requestId, Long tripTime) {
         this.userId = userId;
         this.createTime = createTime;
         this.ip = ip;
         this.requestId = requestId;
-        this.loginTime = loginTime;
+        this.tripTime = tripTime;
     }
 }
