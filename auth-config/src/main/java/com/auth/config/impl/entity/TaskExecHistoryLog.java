@@ -1,5 +1,6 @@
 package com.auth.config.impl.entity;
 
+import com.auth.config.enums.TaskExecResultEnum;
 import com.auth.config.enums.TaskTimeUnitEnum;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -67,4 +68,20 @@ public class TaskExecHistoryLog {
      */
     @TableField(value = "create_time")
     private Date createTime;
+
+    public TaskExecHistoryLog(TaskConfig taskConfig, TaskExecResultEnum execResultEnum, Long time, TaskTimeUnitEnum timeUnitEnum, String traceId) {
+        this.taskId = taskConfig.getId();
+        this.taskDesc = taskConfig.getTaskDescriptor();
+        this.execResult = execResultEnum.getExecResult();
+        this.time = time;
+        this.timeUnit = timeUnitEnum.getCode();
+        this.traceId = traceId;
+    }
+
+    public TaskExecHistoryLog(TaskConfig taskConfig, TaskExecResultEnum execResultEnum, String traceId) {
+        this.taskId = taskConfig.getId();
+        this.taskDesc = taskConfig.getTaskDescriptor();
+        this.execResult = execResultEnum.getExecResult();
+        this.traceId = traceId;
+    }
 }

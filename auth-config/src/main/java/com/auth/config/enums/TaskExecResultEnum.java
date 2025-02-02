@@ -19,4 +19,9 @@ public enum TaskExecResultEnum {
     public String toString() {
         return desc;
     }
+
+
+    public static TaskExecResultEnum getEnum(Boolean execResult) {
+        return execResult ? SUCCESS : FAIL;
+    }
 }
