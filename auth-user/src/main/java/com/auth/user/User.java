@@ -34,6 +34,8 @@ public interface User {
         List<UserDTO> byIds(List<Long> id);
 
         Page<UserDTO> page(Integer current, Integer size);
+
+        List<Long> searchAllID();
     }
 
     class LoginUserUtil {

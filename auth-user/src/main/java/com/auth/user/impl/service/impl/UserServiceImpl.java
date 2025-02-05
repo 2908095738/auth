@@ -6,6 +6,7 @@ import com.auth.user.entity.UserEntity;
 import com.auth.user.impl.converter.UserConverter;
 import com.auth.user.impl.mapper.UserMapper;
 import com.auth.user.menu.UserStateEnum;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +46,11 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, UserEntity> 
     @Override
     public Page<UserDTO> page(Integer current, Integer size) {
         return converter.toDTO(super.page(new Page<>(current, size)));
+    }
+
+    @Override
+    public List<Long> searchAllID() {
+        return super.listObjs(new LambdaQueryWrapper<UserEntity>().select(UserEntity::getId));
     }
 
     @Override

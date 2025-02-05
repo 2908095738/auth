@@ -1,4 +1,4 @@
-package com.auth.config.interceptor;
+package com.auth.config.interceptor.log;
 
 import cn.hutool.core.util.IdUtil;
 import lombok.extern.slf4j.Slf4j;

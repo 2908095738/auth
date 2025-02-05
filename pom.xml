@@ -28,6 +28,7 @@
         <module>auth-cache-phone-user-id</module>
         <module>auth-cache-user</module>
         <module>auth-cache-user-login-fail-count</module>
+        <module>auth-bloom-filter</module>
     </modules>
 
     <properties>

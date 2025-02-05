@@ -4,7 +4,7 @@ package com.auth.config;
 import com.auth.config.interceptor.checkSuperAdmin.CheckSuperAdminInterceptor;
 import com.auth.config.interceptor.login.IgnoreConfig;
 import com.auth.config.interceptor.login.UserLoginIntercept;
-import com.auth.config.interceptor.LogInterceptor;
+import com.auth.config.interceptor.log.LogInterceptor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mobile.device.DeviceResolverHandlerInterceptor;
