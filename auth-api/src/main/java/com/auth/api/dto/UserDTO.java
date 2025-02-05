@@ -1,4 +1,4 @@
-package com.auth.user.dto;
+package com.auth.api.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -6,10 +6,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
-/**
- * 用户信息
- * @author ext.luchenlin5
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -130,15 +126,4 @@ public class UserDTO {
      * 盐
      */
     private Integer salt;
-
-    public UserDTO(String inputPhone) {
-        this.name = "用户 " + phone;
-        this.phone = Long.valueOf(inputPhone);
-    }
-
-    public UserDTO(String inputPhone, String openId) {
-        this.name = "用户 " + phone;
-        this.phone = Long.valueOf(inputPhone);
-        this.openId = openId;
-    }
 }

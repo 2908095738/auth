@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -19,6 +20,10 @@ public interface User {
         void save(UserDTO userDTO);
     }
 
+    interface Delete {
+        void del(Long id);
+    }
+
     interface Edit {
 
         void updateAvatar(Long userId, String avatar);
@@ -27,11 +32,15 @@ public interface User {
     }
 
     interface Search {
+        List<UserDTO> byName(String name);
+
         UserDTO byPhone(String phone);
 
         UserDTO byId(Long id);
 
         List<UserDTO> byIds(List<Long> id);
+
+        List<UserDTO> byIds(Set<Long> id);
 
         Page<UserDTO> page(Integer current, Integer size);
 

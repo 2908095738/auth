@@ -29,6 +29,8 @@
         <module>auth-cache-user</module>
         <module>auth-cache-user-login-fail-count</module>
         <module>auth-bloom-filter</module>
+        <module>auth-api</module>
+        <module>auth-api-impl</module>
     </modules>
 
     <properties>

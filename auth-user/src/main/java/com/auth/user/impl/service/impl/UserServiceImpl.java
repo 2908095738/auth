@@ -14,7 +14,9 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 查询用户
@@ -23,10 +25,15 @@ import java.util.List;
 @Slf4j
 @Primary
 @Service
-public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, UserEntity> implements User.Search, User.Edit, User.Save {
+public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, UserEntity> implements User.Search, User.Edit, User.Save, User.Delete {
 
     @Resource
     private UserConverter converter;
+
+    @Override
+    public List<UserDTO> byName(String name) {
+        return converter.toDTO(lambdaQuery().eq(UserEntity::getState, UserStateEnum.STATUS_NORMAL).like(UserEntity::getName, name).list());
+    }
 
     @Override
     public UserDTO byPhone(String phone) {
@@ -41,6 +48,11 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, UserEntity> 
     @Override
     public List<UserDTO> byIds(List<Long> ids) {
         return converter.toDTO(super.listByIds(ids));
+    }
+
+    @Override
+    public List<UserDTO> byIds(Set<Long> id) {
+        return byIds(new ArrayList<>(id));
     }
 
     @Override
@@ -72,5 +84,10 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, UserEntity> 
         entity.setCreateBy(null);
         entity.setUpdateBy(null);
         super.save(entity);
+    }
+
+    @Override
+    public void del(Long id) {
+        removeById(id);
     }
 }

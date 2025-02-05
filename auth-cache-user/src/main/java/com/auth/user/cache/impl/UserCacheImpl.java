@@ -14,8 +14,10 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static cn.hutool.json.JSONUtil.toJsonPrettyStr;
@@ -61,6 +63,11 @@ public class UserCacheImpl implements UserCache, InitializingBean {
 
     @Override
     public List<UserDTO> get(List<Long> ids) {
+        return get(new HashSet<>(ids));
+    }
+
+    @Override
+    public List<UserDTO> get(Set<Long> ids) {
         List<String> idStrList = ids.stream().filter(Objects::nonNull).map(cacheConfig::generateKey).collect(Collectors.toList());
         return redis.multiGet(idStrList).stream()
                 .filter(Objects::nonNull)
