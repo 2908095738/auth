@@ -264,6 +264,12 @@
             <artifactId>spring-mobile-device</artifactId>
             <version>1.1.5.RELEASE</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.github.gavlyukovskiy</groupId>
+            <artifactId>p6spy-spring-boot-starter</artifactId>
+            <version>1.10.0</version>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
@@ -379,22 +385,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <includeSystemScope>true</includeSystemScope>
-                    <mainClass>com.bbs.auth.Auth</mainClass>
-                </configuration>
             </plugin>
         </plugins>
     </build>

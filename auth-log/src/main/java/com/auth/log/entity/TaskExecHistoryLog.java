@@ -1,7 +1,8 @@
-package com.auth.config.impl.entity;
+package com.auth.log.entity;
 
 import com.auth.config.enums.TaskExecResultEnum;
 import com.auth.config.enums.TaskTimeUnitEnum;
+import com.auth.config.impl.entity.TaskConfig;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;

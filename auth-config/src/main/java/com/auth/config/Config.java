@@ -5,6 +5,8 @@ import com.auth.config.impl.entity.RedisLockConfig;
 import com.auth.config.impl.entity.SystemConfigItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
+import java.util.List;
+
 
 public interface Config {
 
@@ -36,5 +38,6 @@ public interface Config {
 
     interface TaskConfig {
 
+        List<com.auth.config.impl.entity.TaskConfig> list();
     }
 }
