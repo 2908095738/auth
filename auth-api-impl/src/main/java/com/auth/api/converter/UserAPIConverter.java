@@ -6,7 +6,7 @@ import org.mapstruct.Mapper;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
-public interface UserConverter {
+public interface UserAPIConverter {
 
     UserDTO toDTO(com.auth.user.dto.UserDTO userDTO);
 

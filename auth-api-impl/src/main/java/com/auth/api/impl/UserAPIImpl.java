@@ -1,7 +1,7 @@
 package com.auth.api.impl;
 
 import com.auth.api.UserAPI;
-import com.auth.api.converter.UserConverter;
+import com.auth.api.converter.UserAPIConverter;
 import com.auth.api.dto.UserDTO;
 import com.auth.token.Token;
 import com.auth.token.impl.dto.UserLoginToken;
@@ -24,7 +24,7 @@ import static java.util.Objects.isNull;
 public class UserAPIImpl implements UserAPI {
 
     @Resource
-    private UserConverter converter;
+    private UserAPIConverter converter;
 
     @Resource
     private User.Search searchUser;
